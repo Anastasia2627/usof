@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, StatusBadges, fmt, go } from '../ui.jsx';
+import { Avatar, ErrorBox, StatusBadges, TrustBadge, fmt, go } from '../ui.jsx';
 
 const REACTIONS = [
   ['like', '▲ Like'],
@@ -116,13 +116,18 @@ function CommentNode({ comment, allComments, postId, auth, reload, depth = 0 }) 
   return <div className="commentBranch" style={{ '--depth': Math.min(depth, 5) }}>
     <article className="card commentCard">
       <div className="commentTop">
-        <div className="authorLine"><Avatar user={{ login: comment.author_login, avatar: comment.author_avatar }} size="sm" /><b>{comment.author_login}</b><span className="muted">{fmt(comment.created_at)}</span></div>
+        <div className="authorLine">
+          <Avatar user={{ login: comment.author_login, avatar: comment.author_avatar }} size="sm" />
+          <b>{comment.author_login}</b>
+          {comment.author_rating !== undefined && <TrustBadge rating={comment.author_rating} />}
+          <span className="muted">{fmt(comment.created_at)}</span>
+        </div>
         <StatusBadges item={comment} />
       </div>
       <p className="commentContent">{comment.content}</p>
       <div className="commentActions">
-        <span className="scoreText">Score {comment.score || 0}</span>
-        {auth && canInteract && <ReactionButtons onReact={(type) => action(() => api(`/comments/${comment.id}/like`, { method: 'POST', token: auth.token, body: { type } }))} />}
+        <span className="scoreText">{comment.like_count || 0} likes · score {comment.score || 0}</span>
+        {auth && canInteract && !isOwner && <ReactionButtons onReact={(type) => action(() => api(`/comments/${comment.id}/like`, { method: 'POST', token: auth.token, body: { type } }))} />}
         {auth && canInteract && <button onClick={() => setReplying((value) => !value)}>Reply</button>}
         {canChangeStatus && <button onClick={() => action(() => api(`/comments/${comment.id}`, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}>{comment.status === 'active' ? 'Hide' : 'Activate'}</button>}
         {isAdmin && <button onClick={() => action(() => api(`/comments/${comment.id}`, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}>{comment.locked ? 'Unlock' : 'Lock'}</button>}
@@ -136,7 +141,7 @@ function CommentNode({ comment, allComments, postId, auth, reload, depth = 0 }) 
       </form>}
       <ErrorBox error={error} />
     </article>
-    {children.map((child) => <CommentNode key={child.id} comment={child} allComments={allComments} postId={postId} auth={auth} reload={reload} depth={depth + 1} />)}
+    {children.map((child) => <CommentNode key={child.id} comment={child} allComments={allComments} postId={postId} auth={auth} reload={load} depth={depth + 1} />)}
   </div>;
 }
 
@@ -301,14 +306,14 @@ export default function PostPage({ id }) {
   return <main className="postPage">
     <article className="card questionCard">
       <div className="questionHeading"><div><p className="eyebrow">Question #{post.id}</p><h1>{post.title}</h1></div><div className="scoreHero">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div></div>
-      <div className="postMeta"><span>by <b>{post.author_login}</b></span><span>{fmt(post.created_at)}</span><StatusBadges item={post} /></div>
+      <div className="postMeta"><span>by <b>{post.author_login}</b></span>{post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}<span>{fmt(post.created_at)}</span><StatusBadges item={post} /></div>
       <p className="content">{post.content}</p>
       <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
       <div className="questionStats">
         <span><b>{post.like_count || 0}</b> likes</span><span><b>{post.comment_count || 0}</b> answers</span><span><b>{post.favorite_count || 0}</b> saved</span><span><b>{post.follower_count || 0}</b> following</span><span><b>{post.share_count || 0}</b> shares</span>
       </div>
       <div className="questionTools">
-        {auth && canInteract && <ReactionButtons onReact={react} />}
+        {auth && canInteract && !isOwner && <ReactionButtons onReact={react} />}
         {auth && canSaveOrFollow && <div className="toolbar"><button onClick={() => toggleEngagement('favorite')}>{engagement.favorite ? '★ Saved' : '☆ Save'}</button><button onClick={() => toggleEngagement('following')}>{engagement.following ? 'Following ✓' : 'Follow'}</button></div>}
         <div className="toolbar shareTools"><button onClick={shareNative}>Share</button><button onClick={copyLink}>Copy link</button><button onClick={() => shareTo('facebook')}>Facebook</button><button onClick={() => shareTo('x')}>X</button><button onClick={() => shareTo('telegram')}>Telegram</button></div>
       </div>
