@@ -57,6 +57,7 @@ export default function DashboardPage() {
         <p>Reputation {trust.rating}{trust.nextLevelAt ? ` · ${trust.nextLevelAt - trust.rating} to the next trust level` : ' · highest trust level'}</p>
       </div>
       <div className="trustBlock">
+        <div className="trustProgress"><span>Community rank</span><strong>#{stats.communityRank} / {stats.contributors}</strong></div>
         <div className="trustProgress"><span>Trust progress</span><strong>{trust.progress}%</strong></div>
         <div className="progressTrack"><span style={{ width: `${trust.progress}%` }} /></div>
       </div>
