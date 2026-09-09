@@ -1,0 +1,8 @@
+node_modules/
+.env
+.DS_Store
+npm-debug.log*
+web/dist/
+API/uploads/*
+!API/uploads/avatars/
+!API/uploads/avatars/.gitkeep
