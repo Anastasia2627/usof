@@ -5,6 +5,7 @@ import { store } from './store.js';
 import App from './App.jsx';
 import './styles.css';
 import './extras.css';
+import './creative.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>

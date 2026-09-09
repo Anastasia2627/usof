@@ -7,6 +7,10 @@ import PostPage from './pages/PostPage.jsx';
 import PostEditor from './pages/PostEditor.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import LibraryPage from './pages/LibraryPage.jsx';
+import NotificationsPage from './pages/NotificationsPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -43,8 +47,13 @@ export default function App() {
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
   else if (path === '/profile') page = <ProfilePage />;
+  else if (path === '/dashboard') page = <DashboardPage />;
+  else if (path === '/saved') page = <LibraryPage mode="favorites" />;
+  else if (path === '/following') page = <LibraryPage mode="following" />;
+  else if (path === '/notifications') page = <NotificationsPage />;
   else if (path === '/create') page = <PostEditor />;
   else if (path === '/admin') page = <AdminPage />;
+  else if (path === '/admin/dashboard') page = <AdminDashboardPage />;
   else if (parts[0] === 'category' && parts[1]) page = <CategoryDetailPage id={parts[1]} />;
   else if (parts[0] === 'post' && parts[1]) page = <PostPage id={parts[1]} />;
   else if (parts[0] === 'edit' && parts[1]) page = <PostEditor id={parts[1]} />;

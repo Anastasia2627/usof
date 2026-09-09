@@ -75,7 +75,7 @@ export default function HomePage({ hash }) {
       {params.get('search') && <p className="searchCaption">Results for “{params.get('search')}” <button className="linkButton" onClick={() => go('/')}>clear</button></p>}
     </section>
     <form className="filterBar card" onSubmit={applyFilters}>
-      <label>Sort<select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value })}><option value="date">Newest</option><option value="likes">Score</option></select></label>
+      <label>Sort<select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value })}><option value="date">Newest</option><option value="likes">Most liked</option><option value="trending">Trending</option></select></label>
       <label>Category<select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option value="">All</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.title}</option>)}</select></label>
       <label>From<input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
       <label>To<input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>

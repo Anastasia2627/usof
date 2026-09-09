@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
 
@@ -39,7 +39,14 @@ export function PostCard({ post }) {
       </div>
       <h2>{post.title}</h2>
       <p>{post.content?.slice(0, 190)}{post.content?.length > 190 ? '…' : ''}</p>
-      <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
+      <div className="postCardBottom">
+        <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
+        <div className="postMetrics">
+          {post.like_count !== undefined && <span>{post.like_count} likes</span>}
+          {post.comment_count !== undefined && <span>{post.comment_count} answers</span>}
+          {post.favorite_count !== undefined && <span>{post.favorite_count} saved</span>}
+        </div>
+      </div>
     </div>
   </article>;
 }
@@ -48,12 +55,37 @@ export function Header() {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [search, setSearch] = useState('');
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!auth?.token) {
+      setUnread(0);
+      return undefined;
+    }
+    let active = true;
+    async function refresh() {
+      try {
+        const result = await api('/notifications?unread=1&limit=1', { token: auth.token });
+        if (active) setUnread(Number(result.unreadCount || 0));
+      } catch {
+        if (active) setUnread(0);
+      }
+    }
+    refresh();
+    const timer = window.setInterval(refresh, 45000);
+    window.addEventListener('usof:notifications', refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('usof:notifications', refresh);
+    };
+  }, [auth?.token]);
 
   async function logout() {
     try {
       if (auth?.token) await api('/auth/logout', { method: 'POST', token: auth.token });
     } catch {
-      // Always clear the local session if the server session is already invalid.
+      // The local session still needs to disappear if the token has already expired.
     } finally {
       dispatch({ type: 'AUTH_CLEAR' });
       go('/');
@@ -73,11 +105,16 @@ export function Header() {
     <nav className="mainNav" aria-label="Main navigation">
       <button onClick={() => go('/')}>Questions</button>
       <button onClick={() => go('/categories')}>Categories</button>
+      {auth && <button onClick={() => go('/dashboard')}>Dashboard</button>}
+      {auth && <button onClick={() => go('/saved')}>Saved</button>}
       {auth && <button onClick={() => go('/create')}>Ask</button>}
-      {auth?.user?.role === 'admin' && <button onClick={() => go('/admin')}>Admin</button>}
+      {auth?.user?.role === 'admin' && <button onClick={() => go('/admin/dashboard')}>Admin</button>}
     </nav>
     <div className="accountArea">
       {auth ? <>
+        <button className="notificationButton" onClick={() => go('/notifications')} aria-label={`${unread} unread notifications`}>
+          <span aria-hidden="true">◔</span>{unread > 0 && <b>{unread > 99 ? '99+' : unread}</b>}
+        </button>
         <button className="profileButton" onClick={() => go('/profile')}>
           <Avatar user={auth.user} size="sm" />
           <span><small>{auth.user.role}</small>{auth.user.login}</span>
