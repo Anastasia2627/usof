@@ -1,0 +1,83 @@
+name: Usof CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: usof_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: usof_ci
+      DB_USER: root
+      DB_PASSWORD: root
+      APP_PORT: 5000
+      AUTH_SECRET: ci-only-secret-for-usof-tests
+      CLIENT_ORIGIN: http://localhost:5173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Check backend syntax
+        run: npm run check:backend
+
+      - name: Initialize MySQL database
+        run: npm run db:init
+
+      - name: Start API
+        run: |
+          npm start > server.log 2>&1 &
+          echo $! > server.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat server.log
+          exit 1
+
+      - name: Run API smoke flow
+        run: npm run test:smoke
+
+      - name: Build React frontend
+        run: npm run build
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill -TERM "$(cat server.pid)" 2>/dev/null || true
+            sleep 1
+          fi
+          echo "--- API log ---"
+          cat server.log 2>/dev/null || true
