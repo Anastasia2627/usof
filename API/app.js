@@ -17,6 +17,10 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json({ limit: '1mb' }));
+app.use((req, res, next) => {
+  if (req.body == null) req.body = {};
+  next();
+});
 app.use('/uploads', express.static(path.resolve('API/uploads')));
 
 app.get('/api/health', async (req, res, next) => {
