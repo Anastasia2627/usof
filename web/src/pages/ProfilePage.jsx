@@ -140,7 +140,7 @@ export default function ProfilePage() {
           <div><p className="eyebrow">Your activity</p><h2>Your questions</h2></div>
           <div className="inlineFilters">
             <label className="srOnly" htmlFor="profile-sort">Sort questions</label>
-            <select id="profile-sort" value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="date">Newest</option><option value="likes">Score</option></select>
+            <select id="profile-sort" value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="date">Newest</option><option value="likes">Most liked</option></select>
             <label className="srOnly" htmlFor="profile-category">Category</label>
             <select id="profile-category" value={category} onChange={(event) => changeFilter(setCategory, event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
             <label className="srOnly" htmlFor="profile-status">Status</label>
