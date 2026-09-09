@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Header, go } from './ui.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
-import CategoriesPage from './pages/CategoriesPage.jsx';
+import CategoriesPage, { CategoryDetailPage } from './pages/CategoriesPage.jsx';
 import PostPage from './pages/PostPage.jsx';
 import PostEditor from './pages/PostEditor.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -45,6 +45,7 @@ export default function App() {
   else if (path === '/profile') page = <ProfilePage />;
   else if (path === '/create') page = <PostEditor />;
   else if (path === '/admin') page = <AdminPage />;
+  else if (parts[0] === 'category' && parts[1]) page = <CategoryDetailPage id={parts[1]} />;
   else if (parts[0] === 'post' && parts[1]) page = <PostPage id={parts[1]} />;
   else if (parts[0] === 'edit' && parts[1]) page = <PostEditor id={parts[1]} />;
   else if (parts[0] === 'verify') page = <VerifyPage token={parts[1] || ''} />;
