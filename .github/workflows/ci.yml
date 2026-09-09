@@ -76,12 +76,49 @@ jobs:
       - name: Build React frontend
         run: npm run build
 
-      - name: Stop API
+      - name: Install screenshot browser
+        run: npx -y playwright@1.55.0 install --with-deps chromium
+
+      - name: Start React frontend
+        run: |
+          npm run web -- --host 0.0.0.0 > web.log 2>&1 &
+          echo $! > web.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5173 > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat web.log
+          exit 1
+
+      - name: Capture real UI screenshots
+        run: |
+          mkdir -p screenshots
+          npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/" screenshots/home.png
+          npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/post/1" screenshots/post.png
+          npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/categories" screenshots/categories.png
+          npx -y playwright@1.55.0 screenshot --browser=chromium --device="iPhone 13" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/" screenshots/mobile-home.png
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: usof-screenshots
+          path: screenshots/*.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Stop services
         if: always()
         run: |
+          if [ -f web.pid ]; then
+            kill -TERM "$(cat web.pid)" 2>/dev/null || true
+          fi
           if [ -f server.pid ]; then
             kill -TERM "$(cat server.pid)" 2>/dev/null || true
-            sleep 1
           fi
+          sleep 1
           echo "--- API log ---"
           cat server.log 2>/dev/null || true
+          echo "--- Frontend log ---"
+          cat web.log 2>/dev/null || true
