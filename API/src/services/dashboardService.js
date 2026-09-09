@@ -85,6 +85,7 @@ export async function getUserDashboard(userId) {
       `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
               COALESCE((SELECT COUNT(*) FROM comments c WHERE c.post_id=p.id AND c.status='active'), 0) AS comment_count,
               COALESCE((SELECT COUNT(*) FROM reactions r WHERE r.post_id=p.id AND r.type='like'), 0) AS like_count,
+              COALESCE((SELECT COUNT(*) FROM favorites f WHERE f.post_id=p.id), 0) AS favorite_count,
               COALESCE((SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 WHEN 'useful' THEN 2 WHEN 'thanks' THEN 1 WHEN 'fire' THEN 1 ELSE 0 END) FROM reactions r WHERE r.post_id=p.id), 0) AS score
        FROM posts p
        JOIN users u ON u.id=p.author_id
@@ -148,6 +149,25 @@ function mergeGrowth(rowsByKey) {
   });
 }
 
+const DAILY_GROWTH_QUERIES = {
+  users: `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count
+          FROM users
+          WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')`,
+  posts: `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count
+          FROM posts
+          WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+          GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')`,
+  comments: `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count
+             FROM comments
+             WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')`,
+  reactions: `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count
+              FROM reactions
+              WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+              GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')`,
+};
+
 export async function getAdminDashboard() {
   const [[overviewRows], [usersGrowth], [postsGrowth], [commentsGrowth], [reactionsGrowth], [topContributors], [topCategories], [reactionMix], [moderationPosts], [moderationComments]] = await Promise.all([
     pool.execute(
@@ -168,10 +188,10 @@ export async function getAdminDashboard() {
          (SELECT COUNT(*) FROM post_shares) AS shares,
          (SELECT COUNT(*) FROM notifications WHERE read_at IS NULL) AS unread_notifications`,
     ),
-    pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count FROM users WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)`),
-    pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count FROM posts WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)`),
-    pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count FROM comments WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)`),
-    pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count FROM reactions WHERE created_at>=DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)`),
+    pool.execute(DAILY_GROWTH_QUERIES.users),
+    pool.execute(DAILY_GROWTH_QUERIES.posts),
+    pool.execute(DAILY_GROWTH_QUERIES.comments),
+    pool.execute(DAILY_GROWTH_QUERIES.reactions),
     pool.execute(
       `SELECT u.id, u.login, u.avatar, u.rating, COUNT(DISTINCT p.id) AS posts, COUNT(DISTINCT c.id) AS answers
        FROM users u LEFT JOIN posts p ON p.author_id=u.id LEFT JOIN comments c ON c.author_id=u.id
