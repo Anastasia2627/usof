@@ -30,6 +30,15 @@ function frontendOrigin() {
   return String(process.env.CLIENT_ORIGIN || 'http://localhost:5173').replace(/\/$/, '');
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 async function send({ to, subject, text, html }) {
   const transport = getTransporter();
   if (!transport) return { configured: false, sent: false };
@@ -54,7 +63,7 @@ export async function sendVerificationEmail({ to, login, token }) {
     to,
     subject: 'Verify your Usof email',
     text: `Hello ${login}. Verify your Usof account: ${url}`,
-    html: `<p>Hello ${login}.</p><p>Verify your Usof account:</p><p><a href="${url}">${url}</a></p>`,
+    html: `<p>Hello ${escapeHtml(login)}.</p><p>Verify your Usof account:</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
   });
 }
 
@@ -64,6 +73,6 @@ export async function sendPasswordResetEmail({ to, token }) {
     to,
     subject: 'Reset your Usof password',
     text: `Reset your Usof password: ${url}`,
-    html: `<p>Use this link to reset your Usof password:</p><p><a href="${url}">${url}</a></p>`,
+    html: `<p>Use this link to reset your Usof password:</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
   });
 }
