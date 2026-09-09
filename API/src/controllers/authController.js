@@ -4,6 +4,7 @@ import { pool } from '../config/db.js';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { signAuthToken } from '../middleware/auth.js';
+import { sendPasswordResetEmail, sendVerificationEmail } from '../services/mailService.js';
 
 const normalizeEmail = (value = '') => String(value).trim().toLowerCase();
 const normalizeLogin = (value = '') => String(value).trim();
@@ -33,7 +34,7 @@ function devTokenPayload(key, token) {
   if (process.env.NODE_ENV === 'production') return {};
   return {
     [key]: token,
-    note: 'Development mode token. Configure SMTP for real email delivery.',
+    note: 'Development mode exposes the token so the flow can be tested without SMTP.',
   };
 }
 
@@ -68,8 +69,10 @@ export async function register(req, res) {
     [login, passwordHash, String(fullName).trim(), email, verificationToken],
   );
 
+  const delivery = await sendVerificationEmail({ to: email, login, token: verificationToken });
   res.status(201).json({
     user: await User.findById(result.insertId),
+    emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
     ...devTokenPayload('verificationToken', verificationToken),
   });
 }
@@ -122,7 +125,7 @@ export async function requestPasswordReset(req, res) {
   if (!email) throw new AppError(422, 'EMAIL_REQUIRED', 'email is required');
   validateEmail(email);
 
-  const [rows] = await pool.execute('SELECT id FROM users WHERE email=?', [email]);
+  const [rows] = await pool.execute('SELECT id, login FROM users WHERE email=?', [email]);
   if (!rows[0]) {
     return res.json({ message: 'If that email exists, a reset link has been created' });
   }
@@ -136,8 +139,10 @@ export async function requestPasswordReset(req, res) {
     [hash, rows[0].id],
   );
 
+  const delivery = await sendPasswordResetEmail({ to: email, token });
   res.json({
     message: 'If that email exists, a reset link has been created',
+    emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
     ...devTokenPayload('resetToken', token),
   });
 }
