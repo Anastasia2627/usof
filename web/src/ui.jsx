@@ -5,6 +5,20 @@ import { api, assetUrl } from './api.js';
 export const go = (path) => { window.location.hash = path; };
 export const fmt = (value) => value ? new Date(value).toLocaleString() : '—';
 
+export function trustName(value) {
+  const rating = Number(value || 0);
+  if (rating >= 150) return 'Mentor';
+  if (rating >= 75) return 'Expert';
+  if (rating >= 30) return 'Trusted';
+  if (rating >= 10) return 'Contributor';
+  return 'Newcomer';
+}
+
+export function TrustBadge({ rating }) {
+  const name = trustName(rating);
+  return <span className={`trustBadge ${name.toLowerCase()}`} title={`${Number(rating || 0)} reputation`}>{name}</span>;
+}
+
 export function ErrorBox({ error }) {
   if (!error) return null;
   return <div className="card alert error" role="alert">{error.message || String(error)}</div>;
@@ -34,7 +48,9 @@ export function PostCard({ post }) {
     <div className="scoreBox">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div>
     <div>
       <div className="postMeta">
-        <span>{post.author_login}</span><span>·</span><span>{fmt(post.created_at)}</span>
+        <span>{post.author_login}</span>
+        {post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}
+        <span>·</span><span>{fmt(post.created_at)}</span>
         <StatusBadges item={post} />
       </div>
       <h2>{post.title}</h2>
