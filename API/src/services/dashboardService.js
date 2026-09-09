@@ -58,8 +58,13 @@ export async function getUserDashboard(userId) {
          (SELECT COUNT(*) FROM comments WHERE author_id=? AND YEARWEEK(created_at, 1)=YEARWEEK(NOW(), 1)) AS answers_this_week,
          (SELECT COUNT(*) FROM favorites WHERE user_id=?) AS favorites,
          (SELECT COUNT(*) FROM post_subscriptions WHERE user_id=?) AS following,
-         (SELECT COUNT(*) FROM notifications WHERE user_id=? AND read_at IS NULL) AS unread_notifications`,
-      [userId, userId, userId, userId, userId, userId],
+         (SELECT COUNT(*) FROM notifications WHERE user_id=? AND read_at IS NULL) AS unread_notifications,
+         (SELECT COUNT(*) FROM users WHERE role='user') AS contributors,
+         (SELECT 1 + COUNT(*)
+          FROM users ranked
+          WHERE ranked.role='user'
+            AND ranked.rating > COALESCE((SELECT rating FROM users WHERE id=?), 0)) AS community_rank`,
+      [userId, userId, userId, userId, userId, userId, userId],
     ),
     pool.execute(
       `SELECT r.type, COUNT(*) AS count
@@ -82,7 +87,7 @@ export async function getUserDashboard(userId) {
       [userId, userId],
     ),
     pool.execute(
-      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
+      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
               COALESCE((SELECT COUNT(*) FROM comments c WHERE c.post_id=p.id AND c.status='active'), 0) AS comment_count,
               COALESCE((SELECT COUNT(*) FROM reactions r WHERE r.post_id=p.id AND r.type='like'), 0) AS like_count,
               COALESCE((SELECT COUNT(*) FROM favorites f WHERE f.post_id=p.id), 0) AS favorite_count,
@@ -118,6 +123,8 @@ export async function getUserDashboard(userId) {
       unreadNotifications: Number(counts.unread_notifications || 0),
       positiveReactionsReceived: positiveReceived,
       contributionStreak: streak,
+      contributors: Number(counts.contributors || 0),
+      communityRank: Number(counts.community_rank || 1),
     },
     weeklyGoal: { target: weeklyTarget, current: weeklyProgress, completed: weeklyProgress >= weeklyTarget },
     reactionsReceived: reactionBreakdown,
@@ -179,9 +186,11 @@ export async function getAdminDashboard() {
          (SELECT COUNT(*) FROM posts WHERE status='active') AS active_posts,
          (SELECT COUNT(*) FROM posts WHERE status='inactive') AS inactive_posts,
          (SELECT COUNT(*) FROM posts WHERE locked=1) AS locked_posts,
+         (SELECT COUNT(*) FROM posts WHERE status='inactive' OR locked=1) AS moderation_posts,
          (SELECT COUNT(*) FROM comments) AS comments,
          (SELECT COUNT(*) FROM comments WHERE status='inactive') AS inactive_comments,
          (SELECT COUNT(*) FROM comments WHERE locked=1) AS locked_comments,
+         (SELECT COUNT(*) FROM comments WHERE status='inactive' OR locked=1) AS moderation_comments,
          (SELECT COUNT(*) FROM reactions) AS reactions,
          (SELECT COUNT(*) FROM favorites) AS favorites,
          (SELECT COUNT(*) FROM post_subscriptions) AS following,
