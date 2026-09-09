@@ -141,7 +141,7 @@ function CommentNode({ comment, allComments, postId, auth, reload, depth = 0 }) 
       </form>}
       <ErrorBox error={error} />
     </article>
-    {children.map((child) => <CommentNode key={child.id} comment={child} allComments={allComments} postId={postId} auth={auth} reload={load} depth={depth + 1} />)}
+    {children.map((child) => <CommentNode key={child.id} comment={child} allComments={allComments} postId={postId} auth={auth} reload={reload} depth={depth + 1} />)}
   </div>;
 }
 
