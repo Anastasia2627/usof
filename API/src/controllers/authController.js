@@ -125,9 +125,10 @@ export async function requestPasswordReset(req, res) {
   if (!email) throw new AppError(422, 'EMAIL_REQUIRED', 'email is required');
   validateEmail(email);
 
+  const genericMessage = 'If that email exists, a reset link has been created';
   const [rows] = await pool.execute('SELECT id, login FROM users WHERE email=?', [email]);
   if (!rows[0]) {
-    return res.json({ message: 'If that email exists, a reset link has been created' });
+    return res.json({ message: genericMessage });
   }
 
   const token = crypto.randomBytes(32).toString('hex');
@@ -140,11 +141,14 @@ export async function requestPasswordReset(req, res) {
   );
 
   const delivery = await sendPasswordResetEmail({ to: email, token });
-  res.json({
-    message: 'If that email exists, a reset link has been created',
-    emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
+  const response = {
+    message: genericMessage,
     ...devTokenPayload('resetToken', token),
-  });
+  };
+  if (process.env.NODE_ENV !== 'production') {
+    response.emailDelivery = delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured';
+  }
+  res.json(response);
 }
 
 export async function confirmPasswordReset(req, res) {
