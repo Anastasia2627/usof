@@ -1,0 +1,2 @@
+import { Router } from 'express';import * as c from '../controllers/usersController.js';import {requireAuth,requireAdmin} from '../middleware/auth.js';import {avatarUpload} from '../middleware/upload.js';
+const r=Router();r.get('/',requireAuth,requireAdmin,c.listUsers);r.get('/:user_id',requireAuth,c.getUser);r.post('/',requireAuth,requireAdmin,c.createUser);r.patch('/avatar',requireAuth,avatarUpload.single('avatar'),c.uploadAvatar);r.patch('/:user_id',requireAuth,c.updateUser);r.delete('/:user_id',requireAuth,c.deleteUser);export default r;

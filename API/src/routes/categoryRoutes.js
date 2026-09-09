@@ -1,0 +1,2 @@
+import {Router} from 'express';import * as c from '../controllers/categoriesController.js';import {optionalAuth,requireAuth,requireAdmin} from '../middleware/auth.js';
+const r=Router();r.get('/',c.listCategories);r.get('/:category_id',c.getCategory);r.get('/:category_id/posts',optionalAuth,c.postsByCategory);r.post('/',requireAuth,requireAdmin,c.createCategory);r.patch('/:category_id',requireAuth,requireAdmin,c.updateCategory);r.delete('/:category_id',requireAuth,requireAdmin,c.deleteCategory);export default r;

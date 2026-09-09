@@ -1,0 +1,2 @@
+import {Router} from 'express';import * as c from '../controllers/commentsController.js';import {optionalAuth,requireAuth} from '../middleware/auth.js';
+const r=Router();r.get('/:comment_id',optionalAuth,c.getComment);r.get('/:comment_id/like',optionalAuth,c.getCommentReactions);r.post('/:comment_id/like',requireAuth,c.reactToComment);r.patch('/:comment_id',requireAuth,c.updateComment);r.delete('/:comment_id',requireAuth,c.deleteComment);r.delete('/:comment_id/like',requireAuth,c.removeCommentReaction);export default r;
