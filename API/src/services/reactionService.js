@@ -102,6 +102,9 @@ export async function setReaction({ userId, postId = null, commentId = null, typ
   try {
     await connection.beginTransaction();
     const target = await getTarget(connection, { postId, commentId });
+    if (Number(target.author_id) === Number(userId)) {
+      throw new AppError(409, 'SELF_REACTION_NOT_ALLOWED', 'You cannot react to your own contribution');
+    }
     ensureReactable(target, isAdmin);
     const column = postId ? 'post_id' : 'comment_id';
     const targetId = Number(postId || commentId);
