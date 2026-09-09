@@ -1,16 +1,365 @@
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
-import { setReaction, deleteReaction } from '../services/reactionService.js';
+import {
+  deleteReaction,
+  recalculateAllRatings,
+  setReaction,
+} from '../services/reactionService.js';
 
-const allowedSort = { likes: 'score', date: 'p.created_at' };
-function normalizeCategories(value) { if (!Array.isArray(value) || value.length === 0) throw new AppError(422, 'CATEGORIES_REQUIRED', 'At least one category is required'); return [...new Set(value.map(Number).filter(Number.isInteger))]; }
-async function getPostById(id, user) { const [rows] = await pool.execute(`SELECT p.*, u.login author_login, COALESCE(SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END),0) score FROM posts p JOIN users u ON u.id=p.author_id LEFT JOIN reactions r ON r.post_id=p.id WHERE p.id=? GROUP BY p.id`, [id]); const post = rows[0]; if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found'); const isOwner = user && Number(user.sub) === post.author_id; if (post.status === 'inactive' && user?.role !== 'admin' && !isOwner) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found'); const [categories] = await pool.execute('SELECT c.* FROM categories c JOIN post_categories pc ON pc.category_id=c.id WHERE pc.post_id=?', [id]); return { ...post, categories }; }
-export async function listPosts(req, res) { const page = Math.max(1, Number(req.query.page) || 1); const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10)); const sort = allowedSort[req.query.sort] || 'score'; const order = String(req.query.order).toLowerCase() === 'asc' ? 'ASC' : 'DESC'; const where = []; const params = []; if (req.user?.role !== 'admin') { if (req.user) { where.push('(p.status=\'active\' OR p.author_id=?)'); params.push(Number(req.user.sub)); } else where.push('p.status=\'active\''); } if (req.query.status && req.user?.role === 'admin') { where.push('p.status=?'); params.push(req.query.status); } if (req.query.from) { where.push('p.created_at>=?'); params.push(req.query.from); } if (req.query.to) { where.push('p.created_at<=?'); params.push(req.query.to); } if (req.query.category) { where.push('EXISTS(SELECT 1 FROM post_categories fpc WHERE fpc.post_id=p.id AND fpc.category_id=?)'); params.push(Number(req.query.category)); } if (req.query.search) { where.push('(p.title LIKE ? OR p.content LIKE ?)'); const q=`%${req.query.search}%`; params.push(q,q); } const clause = where.length ? `WHERE ${where.join(' AND ')}` : ''; const [countRows] = await pool.execute(`SELECT COUNT(*) total FROM posts p ${clause}`, params); const [rows] = await pool.execute(`SELECT p.*, u.login author_login, COALESCE(SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END),0) score FROM posts p JOIN users u ON u.id=p.author_id LEFT JOIN reactions r ON r.post_id=p.id ${clause} GROUP BY p.id ORDER BY ${sort} ${order} LIMIT ? OFFSET ?`, [...params, limit, (page-1)*limit]); res.json({ data: rows, pagination: { page, limit, total: countRows[0].total, totalPages: Math.ceil(countRows[0].total/limit) } }); }
-export async function getPost(req,res){ res.json({ data: await getPostById(req.params.post_id, req.user) }); }
-export async function createPost(req,res){ const { title, content }=req.body; const categories=normalizeCategories(req.body.categories); if(!title?.trim()||!content?.trim()) throw new AppError(422,'VALIDATION_ERROR','title and content are required'); const conn=await pool.getConnection(); try{ await conn.beginTransaction(); const [result]=await conn.query('INSERT INTO posts(author_id,title,content,status) VALUES(?,?,?,\'active\')',[req.user.sub,title.trim(),content.trim()]); for(const id of categories) await conn.query('INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',[result.insertId,id]); await conn.commit(); res.status(201).json({data:await getPostById(result.insertId,req.user)}); }catch(e){await conn.rollback(); throw e;}finally{conn.release();} }
-export async function updatePost(req,res){ const post=await getPostById(req.params.post_id,req.user); const isAdmin=req.user.role==='admin'; const isOwner=Number(req.user.sub)===post.author_id; if(!isAdmin&&!isOwner) throw new AppError(403,'FORBIDDEN','Only owner or admin can update this post'); const title=isAdmin?post.title:(req.body.title??post.title); const content=isAdmin?post.content:(req.body.content??post.content); const status=isAdmin?(req.body.status??post.status):post.status; if(!['active','inactive'].includes(status)) throw new AppError(422,'INVALID_STATUS','Invalid status'); await pool.execute('UPDATE posts SET title=?, content=?, status=? WHERE id=?',[title,content,status,post.id]); if(req.body.categories){ const cats=normalizeCategories(req.body.categories); await pool.execute('DELETE FROM post_categories WHERE post_id=?',[post.id]); for(const id of cats) await pool.execute('INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',[post.id,id]); } res.json({data:await getPostById(post.id,req.user)}); }
-export async function deletePost(req,res){ const post=await getPostById(req.params.post_id,req.user); if(req.user.role!=='admin'&&Number(req.user.sub)!==post.author_id) throw new AppError(403,'FORBIDDEN','Cannot delete this post'); await pool.execute('DELETE FROM posts WHERE id=?',[post.id]); res.status(204).end(); }
-export async function getPostCategories(req,res){ const post=await getPostById(req.params.post_id,req.user); res.json({data:post.categories}); }
-export async function getPostReactions(req,res){ await getPostById(req.params.post_id,req.user); const [rows]=await pool.execute('SELECT id,author_id,type,created_at FROM reactions WHERE post_id=?',[req.params.post_id]); res.json({data:rows}); }
-export async function reactToPost(req,res){ await getPostById(req.params.post_id,req.user); await setReaction({userId:Number(req.user.sub),postId:Number(req.params.post_id),type:req.body.type}); res.json({message:'Reaction saved'}); }
-export async function removePostReaction(req,res){ await deleteReaction({userId:Number(req.user.sub),postId:Number(req.params.post_id),isAdmin:req.user.role==='admin'&&req.query.all==='1'}); res.status(204).end(); }
+const SORT_COLUMNS = {
+  likes: 'score',
+  date: 'p.created_at',
+};
+
+function positiveInt(value, code = 'INVALID_ID') {
+  const id = Number(value);
+  if (!Number.isInteger(id) || id < 1) {
+    throw new AppError(422, code, 'Expected a positive integer');
+  }
+  return id;
+}
+
+function normalizeCategories(value) {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new AppError(422, 'CATEGORIES_REQUIRED', 'At least one category is required');
+  }
+  const ids = [...new Set(value.map(Number))];
+  if (ids.some((id) => !Number.isInteger(id) || id < 1)) {
+    throw new AppError(422, 'INVALID_CATEGORY', 'Category IDs must be positive integers');
+  }
+  return ids;
+}
+
+function normalizePostText(title, content) {
+  const cleanTitle = String(title ?? '').trim();
+  const cleanContent = String(content ?? '').trim();
+  if (!cleanTitle || !cleanContent) {
+    throw new AppError(422, 'VALIDATION_ERROR', 'title and content are required');
+  }
+  if (cleanTitle.length > 180) {
+    throw new AppError(422, 'TITLE_TOO_LONG', 'title must contain at most 180 characters');
+  }
+  if (cleanContent.length > 50000) {
+    throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 50000 characters');
+  }
+  return { title: cleanTitle, content: cleanContent };
+}
+
+function assertValidDate(value, field) {
+  if (value && Number.isNaN(Date.parse(value))) {
+    throw new AppError(422, 'INVALID_DATE', `${field} must be a valid date`);
+  }
+}
+
+async function assertCategoriesExist(connection, ids) {
+  const placeholders = ids.map(() => '?').join(',');
+  const [rows] = await connection.query(
+    `SELECT id FROM categories WHERE id IN (${placeholders})`,
+    ids,
+  );
+  if (rows.length !== ids.length) {
+    throw new AppError(422, 'INVALID_CATEGORY', 'One or more categories do not exist');
+  }
+}
+
+async function attachCategories(posts) {
+  if (!posts.length) return posts;
+  const ids = posts.map((post) => Number(post.id));
+  const placeholders = ids.map(() => '?').join(',');
+  const [rows] = await pool.query(
+    `SELECT pc.post_id, c.id, c.title, c.description
+     FROM post_categories pc
+     JOIN categories c ON c.id = pc.category_id
+     WHERE pc.post_id IN (${placeholders})
+     ORDER BY c.title`,
+    ids,
+  );
+  const map = new Map(ids.map((id) => [id, []]));
+  for (const row of rows) {
+    map.get(Number(row.post_id))?.push({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+    });
+  }
+  return posts.map((post) => ({
+    ...post,
+    categories: map.get(Number(post.id)) || [],
+  }));
+}
+
+async function getPostById(idValue, user) {
+  const id = positiveInt(idValue, 'INVALID_POST_ID');
+  const [rows] = await pool.execute(
+    `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
+            COALESCE((
+              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
+              FROM reactions r
+              WHERE r.post_id = p.id
+            ), 0) AS score
+     FROM posts p
+     JOIN users u ON u.id = p.author_id
+     WHERE p.id=?`,
+    [id],
+  );
+  const post = rows[0];
+  if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
+
+  const isOwner = user && Number(user.sub) === Number(post.author_id);
+  if (post.status === 'inactive' && user?.role !== 'admin' && !isOwner) {
+    throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
+  }
+
+  return (await attachCategories([post]))[0];
+}
+
+export async function listPosts(req, res) {
+  const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 10));
+  const sort = SORT_COLUMNS[req.query.sort] || SORT_COLUMNS.likes;
+  const order = String(req.query.order || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+  const where = [];
+  const params = [];
+
+  if (req.user?.role !== 'admin') {
+    if (req.user) {
+      where.push("(p.status='active' OR p.author_id=?)");
+      params.push(Number(req.user.sub));
+    } else {
+      where.push("p.status='active'");
+    }
+  }
+
+  if (req.query.status) {
+    if (!['active', 'inactive'].includes(req.query.status)) {
+      throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
+    }
+    where.push('p.status=?');
+    params.push(req.query.status);
+  }
+
+  if (req.query.author) {
+    where.push('p.author_id=?');
+    params.push(positiveInt(req.query.author, 'INVALID_AUTHOR_ID'));
+  }
+
+  assertValidDate(req.query.from, 'from');
+  assertValidDate(req.query.to, 'to');
+  if (req.query.from && req.query.to && Date.parse(req.query.from) > Date.parse(req.query.to)) {
+    throw new AppError(422, 'INVALID_DATE_RANGE', 'from must be earlier than or equal to to');
+  }
+  if (req.query.from) {
+    where.push('p.created_at>=?');
+    params.push(req.query.from);
+  }
+  if (req.query.to) {
+    where.push('p.created_at<=?');
+    params.push(req.query.to);
+  }
+
+  if (req.query.category) {
+    where.push(
+      'EXISTS(SELECT 1 FROM post_categories fpc WHERE fpc.post_id=p.id AND fpc.category_id=?)',
+    );
+    params.push(positiveInt(req.query.category, 'INVALID_CATEGORY_ID'));
+  }
+
+  if (req.query.search) {
+    const search = String(req.query.search).trim().slice(0, 120);
+    if (search) {
+      where.push('(p.title LIKE ? OR p.content LIKE ? OR u.login LIKE ?)');
+      const q = `%${search}%`;
+      params.push(q, q, q);
+    }
+  }
+
+  const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const [countRows] = await pool.execute(
+    `SELECT COUNT(*) AS total
+     FROM posts p
+     JOIN users u ON u.id = p.author_id
+     ${clause}`,
+    params,
+  );
+
+  const [rows] = await pool.execute(
+    `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
+            COALESCE((
+              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
+              FROM reactions r
+              WHERE r.post_id = p.id
+            ), 0) AS score
+     FROM posts p
+     JOIN users u ON u.id = p.author_id
+     ${clause}
+     ORDER BY ${sort} ${order}, p.id DESC
+     LIMIT ? OFFSET ?`,
+    [...params, limit, (page - 1) * limit],
+  );
+
+  const total = Number(countRows[0].total);
+  res.json({
+    data: await attachCategories(rows),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+}
+
+export async function getPost(req, res) {
+  res.json({ data: await getPostById(req.params.post_id, req.user) });
+}
+
+export async function createPost(req, res) {
+  const { title, content } = normalizePostText(req.body.title, req.body.content);
+  const categories = normalizeCategories(req.body.categories);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await assertCategoriesExist(connection, categories);
+    const [result] = await connection.query(
+      "INSERT INTO posts(author_id,title,content,status,locked) VALUES(?,?,?,'active',0)",
+      [Number(req.user.sub), title, content],
+    );
+    for (const categoryId of categories) {
+      await connection.query(
+        'INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',
+        [result.insertId, categoryId],
+      );
+    }
+    await connection.commit();
+    res.status(201).json({ data: await getPostById(result.insertId, req.user) });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+export async function updatePost(req, res) {
+  const post = await getPostById(req.params.post_id, req.user);
+  const isAdmin = req.user.role === 'admin';
+  const isOwner = Number(req.user.sub) === Number(post.author_id);
+  if (!isAdmin && !isOwner) {
+    throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
+  }
+  if (post.locked && !isAdmin) {
+    throw new AppError(423, 'POST_LOCKED', 'This post is locked');
+  }
+
+  let title = post.title;
+  let content = post.content;
+  let status = post.status;
+  let locked = Boolean(post.locked);
+
+  if (isAdmin) {
+    if (req.body.status !== undefined) {
+      if (!['active', 'inactive'].includes(req.body.status)) {
+        throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
+      }
+      status = req.body.status;
+    }
+    if (req.body.locked !== undefined) locked = Boolean(req.body.locked);
+  } else if (req.body.title !== undefined || req.body.content !== undefined) {
+    const normalized = normalizePostText(
+      req.body.title ?? post.title,
+      req.body.content ?? post.content,
+    );
+    title = normalized.title;
+    content = normalized.content;
+  }
+
+  const categories = req.body.categories !== undefined
+    ? normalizeCategories(req.body.categories)
+    : null;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    if (categories) await assertCategoriesExist(connection, categories);
+    await connection.query(
+      'UPDATE posts SET title=?, content=?, status=?, locked=? WHERE id=?',
+      [title, content, status, locked ? 1 : 0, post.id],
+    );
+    if (categories) {
+      await connection.query('DELETE FROM post_categories WHERE post_id=?', [post.id]);
+      for (const categoryId of categories) {
+        await connection.query(
+          'INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',
+          [post.id, categoryId],
+        );
+      }
+    }
+    await connection.commit();
+    res.json({ data: await getPostById(post.id, req.user) });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+export async function deletePost(req, res) {
+  const post = await getPostById(req.params.post_id, req.user);
+  if (req.user.role !== 'admin' && Number(req.user.sub) !== Number(post.author_id)) {
+    throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    await connection.query('DELETE FROM posts WHERE id=?', [post.id]);
+    await recalculateAllRatings(connection);
+    await connection.commit();
+    res.status(204).end();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+export async function getPostCategories(req, res) {
+  const post = await getPostById(req.params.post_id, req.user);
+  res.json({ data: post.categories });
+}
+
+export async function getPostReactions(req, res) {
+  await getPostById(req.params.post_id, req.user);
+  const [rows] = await pool.execute(
+    `SELECT r.id, r.author_id, u.login AS author_login, r.type, r.created_at
+     FROM reactions r
+     JOIN users u ON u.id = r.author_id
+     WHERE r.post_id=?
+     ORDER BY r.created_at`,
+    [positiveInt(req.params.post_id, 'INVALID_POST_ID')],
+  );
+  res.json({ data: rows });
+}
+
+export async function reactToPost(req, res) {
+  const post = await getPostById(req.params.post_id, req.user);
+  await setReaction({
+    userId: Number(req.user.sub),
+    postId: Number(post.id),
+    type: req.body.type,
+    isAdmin: req.user.role === 'admin',
+  });
+  res.json({ data: await getPostById(post.id, req.user), message: 'Reaction saved' });
+}
+
+export async function removePostReaction(req, res) {
+  const post = await getPostById(req.params.post_id, req.user);
+  await deleteReaction({
+    userId: Number(req.user.sub),
+    postId: Number(post.id),
+    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+  });
+  res.status(204).end();
+}
