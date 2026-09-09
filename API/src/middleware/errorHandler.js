@@ -24,7 +24,27 @@ export function errorHandler(error, req, res, next) {
     code = 'INVALID_JSON';
     message = 'Request body contains invalid JSON';
   }
+  if (error.type === 'entity.too.large') {
+    status = 413;
+    code = 'REQUEST_TOO_LARGE';
+    message = 'Request body is too large';
+  }
 
+  if (error.code === 'ER_DUP_ENTRY') {
+    status = 409;
+    code = 'DUPLICATE_VALUE';
+    message = 'A unique value is already in use';
+  }
+  if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+    status = 422;
+    code = 'INVALID_REFERENCE';
+    message = 'A referenced entity does not exist';
+  }
+  if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+    status = 409;
+    code = 'ENTITY_IN_USE';
+    message = 'The entity is still referenced by other data';
+  }
   if (error.code === 'ER_DATA_TOO_LONG') {
     status = 422;
     code = 'VALUE_TOO_LONG';
