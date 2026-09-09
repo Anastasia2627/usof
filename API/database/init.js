@@ -215,7 +215,7 @@ try {
 
   const reactions = [
     [3, 1, null, 'like'], [4, 1, null, 'useful'], [2, 2, null, 'like'], [5, 2, null, 'dislike'],
-    [2, 3, null, 'thanks'], [5, null, 1, 'like'], [4, null, 3, 'useful'], [3, null, 5, 'fire'],
+    [2, 3, null, 'thanks'], [5, null, 1, 'like'], [4, null, 3, 'useful'], [5, null, 5, 'fire'],
   ];
   for (const reaction of reactions) await connection.query('INSERT INTO reactions(author_id,post_id,comment_id,type) VALUES(?,?,?,?)', reaction);
 
@@ -226,10 +226,10 @@ try {
   const shares = [[1,3,'copy'],[1,4,'native'],[2,2,'copy'],[3,5,'telegram'],[4,null,'facebook'],[5,2,'x']];
   for (const share of shares) await connection.query('INSERT INTO post_shares(post_id,user_id,channel) VALUES(?,?,?)', share);
   const notifications = [
-    [2,3,'comment',2,3,'New answer on a question you follow','alex replied to a question you follow.'],
+    [2,5,'comment',2,4,'New answer on a question you follow','sam replied to a question you follow.'],
     [3,4,'reply',1,2,'New reply in a discussion','maria replied in a discussion you follow.'],
-    [4,3,'reaction',1,1,'Someone found your answer useful','alex reacted to your answer.'],
-    [5,2,'post_updated',4,null,'A followed question was updated','A question you follow has new details.'],
+    [4,2,'reaction',3,6,'Someone found your answer useful','asya reacted to your answer.'],
+    [5,1,'post_updated',4,null,'A followed question was updated','A question you follow has new details.'],
     [2,5,'reaction',5,null,'Your question received a reaction','sam reacted to your question.'],
   ];
   for (const notification of notifications) {
