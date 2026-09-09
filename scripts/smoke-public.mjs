@@ -9,22 +9,46 @@ async function get(path, expected = 200) {
   return data;
 }
 
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
 const health = await get('/health');
-if (health.status !== 'ok') throw new Error('Health endpoint is not healthy');
+assert(health.status === 'ok', 'Health endpoint is not healthy');
 
 const categories = await get('/categories');
-if (!Array.isArray(categories.data) || categories.data.length < 5) {
-  throw new Error('Expected at least five seeded categories');
-}
+assert(Array.isArray(categories.data) && categories.data.length >= 5, 'Expected at least five seeded categories');
+
+const firstCategory = await get(`/categories/${categories.data[0].id}`);
+assert(firstCategory.data.title === categories.data[0].title, 'Category detail endpoint failed');
+const categoryPosts = await get(`/categories/${categories.data[0].id}/posts`);
+assert(Array.isArray(categoryPosts.data), 'Category posts endpoint failed');
 
 const posts = await get('/posts?sort=likes&order=desc&page=1&limit=5');
-if (!Array.isArray(posts.data)) throw new Error('Post list has no data array');
-if (!posts.pagination || posts.pagination.limit !== 5) throw new Error('Pagination metadata is invalid');
-if (!posts.data.every((post) => Array.isArray(post.categories))) {
-  throw new Error('Post previews must include category arrays');
-}
+assert(Array.isArray(posts.data), 'Post list has no data array');
+assert(posts.pagination?.limit === 5, 'Pagination metadata is invalid');
+assert(posts.data.every((post) => Array.isArray(post.categories)), 'Post previews must include category arrays');
 
 const byCategory = await get(`/posts?category=${categories.data[0].id}&sort=date`);
-if (!Array.isArray(byCategory.data)) throw new Error('Category filtering failed');
+assert(Array.isArray(byCategory.data), 'Category filtering failed');
 
-console.log('Public API smoke test passed.');
+const activePost = posts.data[0];
+assert(activePost?.id, 'Expected at least one public seeded post');
+const post = await get(`/posts/${activePost.id}`);
+assert(Number(post.data.id) === Number(activePost.id), 'Post detail endpoint failed');
+const postCategories = await get(`/posts/${activePost.id}/categories`);
+assert(Array.isArray(postCategories.data), 'Post categories endpoint failed');
+const postReactions = await get(`/posts/${activePost.id}/like`);
+assert(Array.isArray(postReactions.data), 'Post reactions endpoint failed');
+const comments = await get(`/posts/${activePost.id}/comments`);
+assert(Array.isArray(comments.data), 'Post comments endpoint failed');
+
+if (comments.data[0]) {
+  const commentId = comments.data[0].id;
+  const comment = await get(`/comments/${commentId}`);
+  assert(Number(comment.data.id) === Number(commentId), 'Comment detail endpoint failed');
+  const commentReactions = await get(`/comments/${commentId}/like`);
+  assert(Array.isArray(commentReactions.data), 'Comment reactions endpoint failed');
+}
+
+console.log('Public API route, filtering and pagination smoke tests passed.');
