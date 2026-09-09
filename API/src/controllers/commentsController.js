@@ -1,4 +1,7 @@
 import { pool } from '../config/db.js';
+import { Comment } from '../models/Comment.js';
+import { Post } from '../models/Post.js';
+import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
 import {
   deleteReaction,
@@ -16,11 +19,7 @@ function positiveInt(value, code = 'INVALID_ID') {
 
 async function findPost(postIdValue, user) {
   const postId = positiveInt(postIdValue, 'INVALID_POST_ID');
-  const [rows] = await pool.execute(
-    'SELECT id, author_id, status, locked FROM posts WHERE id=?',
-    [postId],
-  );
-  const post = rows[0];
+  const post = await Post.findCoreById(postId);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   const ownsPost = user && Number(user.sub) === Number(post.author_id);
   if (post.status === 'inactive' && user?.role !== 'admin' && !ownsPost) {
@@ -31,21 +30,7 @@ async function findPost(postIdValue, user) {
 
 async function findComment(idValue, user, { allowHidden = false } = {}) {
   const id = positiveInt(idValue, 'INVALID_COMMENT_ID');
-  const [rows] = await pool.execute(
-    `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar,
-            p.author_id AS post_author_id, p.status AS post_status, p.locked AS post_locked,
-            COALESCE((
-              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-              FROM reactions r
-              WHERE r.comment_id = c.id
-            ), 0) AS score
-     FROM comments c
-     JOIN users u ON u.id = c.author_id
-     JOIN posts p ON p.id = c.post_id
-     WHERE c.id=?`,
-    [id],
-  );
-  const comment = rows[0];
+  const comment = await Comment.findById(id);
   if (!comment) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
   if (allowHidden || user?.role === 'admin') return comment;
 
@@ -76,48 +61,12 @@ export async function listComments(req, res) {
     params.push(positiveInt(req.query.post_id, 'INVALID_POST_ID'));
   }
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  const [rows] = await pool.execute(
-    `SELECT c.*, u.login AS author_login, p.title AS post_title,
-            COALESCE((
-              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-              FROM reactions r
-              WHERE r.comment_id = c.id
-            ), 0) AS score
-     FROM comments c
-     JOIN users u ON u.id = c.author_id
-     JOIN posts p ON p.id = c.post_id
-     ${clause}
-     ORDER BY c.created_at DESC`,
-    params,
-  );
-  res.json({ data: rows });
+  res.json({ data: await Comment.listAdmin({ clause, params }) });
 }
 
 export async function listPostComments(req, res) {
   const post = await findPost(req.params.post_id, req.user);
-  const params = [post.id];
-  let visibility = "c.status='active'";
-  if (req.user?.role === 'admin') {
-    visibility = '1=1';
-  } else if (req.user) {
-    visibility = "(c.status='active' OR c.author_id=?)";
-    params.push(Number(req.user.sub));
-  }
-
-  const [rows] = await pool.execute(
-    `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar,
-            COALESCE((
-              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-              FROM reactions r
-              WHERE r.comment_id = c.id
-            ), 0) AS score
-     FROM comments c
-     JOIN users u ON u.id = c.author_id
-     WHERE c.post_id=? AND ${visibility}
-     ORDER BY score ASC, c.created_at ASC`,
-    params,
-  );
-  res.json({ data: rows });
+  res.json({ data: await Comment.listForPost(post.id, req.user) });
 }
 
 export async function createComment(req, res) {
@@ -220,15 +169,7 @@ export async function deleteComment(req, res) {
 
 export async function getCommentReactions(req, res) {
   const comment = await findComment(req.params.comment_id, req.user);
-  const [rows] = await pool.execute(
-    `SELECT r.id, r.author_id, u.login AS author_login, r.type, r.created_at
-     FROM reactions r
-     JOIN users u ON u.id = r.author_id
-     WHERE r.comment_id=?
-     ORDER BY r.created_at`,
-    [comment.id],
-  );
-  res.json({ data: rows });
+  res.json({ data: await Reaction.listForComment(comment.id) });
 }
 
 export async function reactToComment(req, res) {
