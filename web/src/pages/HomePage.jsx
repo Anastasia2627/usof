@@ -79,7 +79,7 @@ export default function HomePage({ hash }) {
       <label>Category<select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}><option value="">All</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.title}</option>)}</select></label>
       <label>From<input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
       <label>To<input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>
-      {auth?.user?.role === 'admin' && <label>Status<select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">All</option><option value="active">Active</option><option value="inactive">Inactive</option></select></label>}
+      {auth && <label>Status<select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">All viewable</option><option value="active">Active</option><option value="inactive">My inactive{auth.user.role === 'admin' ? ' / all inactive' : ''}</option></select></label>}
       <button className="secondary">Apply</button>
     </form>
     <ErrorBox error={error} />
