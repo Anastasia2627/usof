@@ -86,7 +86,7 @@ For routes, permissions and payload notes, see [docs/API.md](docs/API.md).
 
 ## Frontend pages and flows
 
-The React client includes the home feed with filters/search/pagination, login, registration, email verification, password reset, categories, profile editing, avatar upload, account deletion, create/edit post, post details, nested replies, post/comment reactions, moderation controls, and an admin console for users, posts, categories and comments.
+The React client includes the home feed with filters/search/pagination, login, registration, email verification, password reset, category browsing/detail pages, profile editing, avatar upload, account deletion, create/edit post, post details, nested replies, post/comment reactions, moderation controls, and an admin console for users, posts, categories and comments.
 
 The header/menu is present on every page and shows the service name, search, navigation and — for authorized users — current role, login, avatar and logout.
 
@@ -96,7 +96,7 @@ Backend request flow:
 
 `HTTP request → route → auth/validation → controller/service/model → MySQL → JSON response`
 
-The backend separates configuration, middleware, controllers, models, services, database initialization and uploads. React uses a central API client and Redux only for global authentication/session state; page-specific forms, filters and pagination remain local component state.
+The backend separates configuration, middleware, controllers, entity models (`User`, `Category`, `Post`, `Comment`, `Reaction`), services, database initialization and uploads. React uses a central API client and Redux only for global authentication/session state; page-specific forms, filters and pagination remain local component state.
 
 More detail is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -117,6 +117,8 @@ GitHub Actions independently starts MySQL 8.4, recreates and seeds the database,
 - **Engage:** defined Usof as a knowledge-exchange service for programmers.
 - **Investigate:** selected the required Node.js/Express/MySQL + React/Redux stack and a role-aware API architecture.
 - **Act:** implemented the database schema, backend modules, responsive client, validation, security checks, admin workflows and automated verification.
+
+The fuller stage-by-stage development journal and reflection are in [docs/CBL.md](docs/CBL.md).
 
 Main user flow: open app → register → verify email → login → browse/filter posts → create post → comment/reply → react → edit own content/profile → upload avatar → logout.
 
