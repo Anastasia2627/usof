@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, PostCard } from '../ui.jsx';
+import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
 
 export default function ProfilePage() {
   const auth = useSelector((state) => state.auth);
@@ -94,6 +94,22 @@ export default function ProfilePage() {
     }
   }
 
+  async function deleteAccount() {
+    if (!window.confirm('Delete your Usof account? Your posts, comments and reactions will also be deleted. This cannot be undone.')) return;
+    setError(null);
+    setMessage('');
+    try {
+      await api(`/users/${auth.user.id}`, {
+        method: 'DELETE',
+        token: auth.token,
+      });
+      dispatch({ type: 'AUTH_CLEAR' });
+      go('/');
+    } catch (err) {
+      setError(err);
+    }
+  }
+
   function changeFilter(setter, value) {
     setter(value);
     setPage(1);
@@ -113,6 +129,11 @@ export default function ProfilePage() {
         <button className="primary">Save profile</button>
         {message && <div className="alert success">{message}</div>}
         <ErrorBox error={error} />
+        <div className="dangerZone">
+          <h3>Danger zone</h3>
+          <p className="muted">Deleting the account permanently removes its posts, comments and reactions.</p>
+          <button type="button" className="dangerText" onClick={deleteAccount}>Delete account</button>
+        </div>
       </form>
       <section>
         <div className="sectionTitle">
