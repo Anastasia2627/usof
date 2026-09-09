@@ -37,16 +37,7 @@ export class Comment extends BaseModel {
     );
   }
 
-  static async listForPost(postId, user) {
-    const params = [postId];
-    let visibility = "c.status='active'";
-    if (user?.role === 'admin') {
-      visibility = '1=1';
-    } else if (user) {
-      visibility = "(c.status='active' OR c.author_id=?)";
-      params.push(Number(user.sub));
-    }
-
+  static async listForPost(postId) {
     return this.query(
       `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar,
               COALESCE((
@@ -56,9 +47,9 @@ export class Comment extends BaseModel {
               ), 0) AS score
        FROM comments c
        JOIN users u ON u.id = c.author_id
-       WHERE c.post_id=? AND ${visibility}
+       WHERE c.post_id=?
        ORDER BY score ASC, c.created_at ASC`,
-      params,
+      [postId],
     );
   }
 }
