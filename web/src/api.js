@@ -1,0 +1,2 @@
+const BASE='http://localhost:5000/api';
+export async function api(path,{method='GET',body,token,formData}={}){const headers={};if(token)headers.Authorization=`Bearer ${token}`;if(body)headers['Content-Type']='application/json';const res=await fetch(`${BASE}${path}`,{method,headers,body:formData|| (body?JSON.stringify(body):undefined)});if(res.status===204)return null;const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data?.error?.message||'Request failed');return data;}
