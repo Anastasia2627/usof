@@ -98,7 +98,7 @@ jobs:
           npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/" screenshots/home.png
           npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/post/1" screenshots/post.png
           npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,900" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/categories" screenshots/categories.png
-          npx -y playwright@1.55.0 screenshot --browser=chromium --device="iPhone 13" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/" screenshots/mobile-home.png
+          npx -y playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --wait-for-timeout=1500 --full-page "http://localhost:5173/#/" screenshots/mobile-home.png
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
