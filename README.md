@@ -11,7 +11,7 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 - nested comments through `parent_comment_id`, moderation and locking
 - like/dislike reactions for posts and comments with one reaction per user/target
 - admin user/category/post/comment management
-- responsive React UI for guest, user and admin flows
+- responsive React UI covering guest, user and admin flows
 - centralized JSON errors, input validation and parameterized SQL
 - GitHub Actions CI with MySQL 8.4, API smoke tests and React production build
 
@@ -75,6 +75,12 @@ Do not use these credentials outside local development.
 
 The post feed supports `page`, `limit`, `sort=likes|date`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. Visibility rules are always applied on the backend.
 
+## Frontend pages and flows
+
+The React client includes the home feed with filters/search/pagination, login, registration, email verification, password reset, categories, profile editing, avatar upload, create/edit post, post details, nested replies, post/comment reactions, moderation controls, and an admin console for users, posts, categories and comments.
+
+The header/menu is present on every page and shows service name, search, navigation, current role/login/avatar and logout for authorized users.
+
 ## Architecture
 
 Backend request flow:
@@ -111,4 +117,4 @@ The assignment requires real screenshots of the application in use. They should 
 
 ## Current verification status
 
-Automated CI has verified MySQL initialization/seed, backend syntax, API startup, public and authenticated smoke flows, and React production build. Manual browser visual review at mobile/tablet/desktop widths and final screenshots are still required before treating the submission as completely finished.
+Automated CI has verified MySQL initialization/seed, backend syntax, API startup, public and authenticated smoke flows, and React production build. The expanded frontend is committed and will be re-verified by CI on its latest commit. Manual browser visual review at mobile/tablet/desktop widths and final screenshots are still required before treating the submission as completely finished.
