@@ -44,7 +44,7 @@ export default function AdminDashboard({ auth }) {
   if (!data) return <ErrorBox error={error} />;
 
   const overviewEntries = Object.entries(OVERVIEW_LABELS);
-  const queueSize = Number(data.overview.inactive_posts || 0) + Number(data.overview.locked_posts || 0) + Number(data.overview.inactive_comments || 0) + Number(data.overview.locked_comments || 0);
+  const queueSize = Number(data.overview.moderation_posts || 0) + Number(data.overview.moderation_comments || 0);
 
   return <div className="adminDashboard">
     <section className="statsGrid adminStats">
