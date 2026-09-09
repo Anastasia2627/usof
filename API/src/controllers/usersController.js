@@ -50,7 +50,7 @@ export async function createUser(req, res) {
   const {
     password,
     passwordConfirmation,
-    role = 'user',
+    role,
     fullName = '',
   } = req.body;
 
@@ -61,6 +61,9 @@ export async function createUser(req, res) {
   }
   if (password !== passwordConfirmation) {
     throw new AppError(422, 'PASSWORD_MISMATCH', 'Password confirmation does not match');
+  }
+  if (role === undefined) {
+    throw new AppError(422, 'ROLE_REQUIRED', 'role is required when an admin creates an account');
   }
   if (!['user', 'admin'].includes(role)) {
     throw new AppError(422, 'INVALID_ROLE', 'Role must be user or admin');
