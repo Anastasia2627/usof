@@ -1,4 +1,6 @@
 import { pool } from '../config/db.js';
+import { Post } from '../models/Post.js';
+import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
 import {
   deleteReaction,
@@ -62,47 +64,9 @@ async function assertCategoriesExist(connection, ids) {
   }
 }
 
-async function attachCategories(posts) {
-  if (!posts.length) return posts;
-  const ids = posts.map((post) => Number(post.id));
-  const placeholders = ids.map(() => '?').join(',');
-  const [rows] = await pool.query(
-    `SELECT pc.post_id, c.id, c.title, c.description
-     FROM post_categories pc
-     JOIN categories c ON c.id = pc.category_id
-     WHERE pc.post_id IN (${placeholders})
-     ORDER BY c.title`,
-    ids,
-  );
-  const map = new Map(ids.map((id) => [id, []]));
-  for (const row of rows) {
-    map.get(Number(row.post_id))?.push({
-      id: row.id,
-      title: row.title,
-      description: row.description,
-    });
-  }
-  return posts.map((post) => ({
-    ...post,
-    categories: map.get(Number(post.id)) || [],
-  }));
-}
-
 async function getPostById(idValue, user) {
   const id = positiveInt(idValue, 'INVALID_POST_ID');
-  const [rows] = await pool.execute(
-    `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
-            COALESCE((
-              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-              FROM reactions r
-              WHERE r.post_id = p.id
-            ), 0) AS score
-     FROM posts p
-     JOIN users u ON u.id = p.author_id
-     WHERE p.id=?`,
-    [id],
-  );
-  const post = rows[0];
+  const post = await Post.findById(id);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
 
   const isOwner = user && Number(user.sub) === Number(post.author_id);
@@ -110,7 +74,7 @@ async function getPostById(idValue, user) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
 
-  return (await attachCategories([post]))[0];
+  return post;
 }
 
 export async function listPosts(req, res) {
@@ -174,32 +138,17 @@ export async function listPosts(req, res) {
   }
 
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  const [countRows] = await pool.execute(
-    `SELECT COUNT(*) AS total
-     FROM posts p
-     JOIN users u ON u.id = p.author_id
-     ${clause}`,
+  const { posts, total } = await Post.list({
+    clause,
     params,
-  );
+    sort,
+    order,
+    limit,
+    offset: (page - 1) * limit,
+  });
 
-  const [rows] = await pool.execute(
-    `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
-            COALESCE((
-              SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-              FROM reactions r
-              WHERE r.post_id = p.id
-            ), 0) AS score
-     FROM posts p
-     JOIN users u ON u.id = p.author_id
-     ${clause}
-     ORDER BY ${sort} ${order}, p.id DESC
-     LIMIT ? OFFSET ?`,
-    [...params, limit, (page - 1) * limit],
-  );
-
-  const total = Number(countRows[0].total);
   res.json({
-    data: await attachCategories(rows),
+    data: posts,
     pagination: {
       page,
       limit,
@@ -331,16 +280,8 @@ export async function getPostCategories(req, res) {
 }
 
 export async function getPostReactions(req, res) {
-  await getPostById(req.params.post_id, req.user);
-  const [rows] = await pool.execute(
-    `SELECT r.id, r.author_id, u.login AS author_login, r.type, r.created_at
-     FROM reactions r
-     JOIN users u ON u.id = r.author_id
-     WHERE r.post_id=?
-     ORDER BY r.created_at`,
-    [positiveInt(req.params.post_id, 'INVALID_POST_ID')],
-  );
-  res.json({ data: rows });
+  const post = await getPostById(req.params.post_id, req.user);
+  res.json({ data: await Reaction.listForPost(post.id) });
 }
 
 export async function reactToPost(req, res) {
