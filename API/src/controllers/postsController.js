@@ -9,7 +9,10 @@ import {
 } from '../services/reactionService.js';
 
 const SORT_COLUMNS = {
-  likes: 'score',
+  likes: `(SELECT COUNT(*)
+           FROM reactions sort_reactions
+           WHERE sort_reactions.post_id = p.id
+             AND sort_reactions.type = 'like')`,
   date: 'p.created_at',
 };
 
@@ -200,6 +203,21 @@ export async function updatePost(req, res) {
     throw new AppError(423, 'POST_LOCKED', 'This post is locked');
   }
 
+  if (isAdmin && (req.body.title !== undefined || req.body.content !== undefined)) {
+    throw new AppError(
+      403,
+      'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
+      'Admins may moderate status/categories/lock but cannot edit post title or content',
+    );
+  }
+  if (!isAdmin && (req.body.status !== undefined || req.body.locked !== undefined)) {
+    throw new AppError(
+      403,
+      'ADMIN_REQUIRED',
+      'Only admins can change post status or lock state',
+    );
+  }
+
   let title = post.title;
   let content = post.content;
   let status = post.status;
@@ -281,6 +299,9 @@ export async function getPostCategories(req, res) {
 
 export async function getPostReactions(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
+  if (post.status !== 'active' && req.user?.role !== 'admin') {
+    throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
+  }
   res.json({ data: await Reaction.listForPost(post.id) });
 }
 
