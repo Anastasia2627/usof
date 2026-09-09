@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
+import { Avatar, ErrorBox, PostCard, TrustBadge, go } from '../ui.jsx';
 
 export default function ProfilePage() {
   const auth = useSelector((state) => state.auth);
@@ -119,7 +119,7 @@ export default function ProfilePage() {
     <section className="profileHero card">
       <Avatar user={user} size="xl" />
       <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1><p>{user?.email}</p></div>
-      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong></div>
+      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} /></div>
     </section>
     <div className="twoColumn">
       <form className="card form" onSubmit={save}>
