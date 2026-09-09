@@ -215,7 +215,7 @@ try {
 
   const reactions = [
     [3, 1, null, 'like'], [4, 1, null, 'useful'], [2, 2, null, 'like'], [5, 2, null, 'dislike'],
-    [2, 3, null, 'thanks'], [5, null, 1, 'like'], [2, null, 3, 'useful'], [3, null, 5, 'fire'],
+    [2, 3, null, 'thanks'], [5, null, 1, 'like'], [4, null, 3, 'useful'], [3, null, 5, 'fire'],
   ];
   for (const reaction of reactions) await connection.query('INSERT INTO reactions(author_id,post_id,comment_id,type) VALUES(?,?,?,?)', reaction);
 
