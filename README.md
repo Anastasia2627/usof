@@ -15,7 +15,7 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 - admin user/category/post/comment management
 - responsive React UI covering guest, user and admin flows
 - centralized JSON errors, input validation and parameterized SQL
-- GitHub Actions verification with MySQL 8.4, API smoke flows, React production build and real browser screenshots
+- GitHub Actions verification with MySQL 8.4, API smoke flows, a PDF-specific backend requirement audit, React production build and real browser screenshots
 
 ## Stack
 
@@ -80,9 +80,9 @@ Do not use these credentials outside local development.
 - `/api/categories` — category CRUD and posts by category
 - `/api/comments` — admin listing, comment moderation, reactions and deletion
 
-The post feed supports `page`, `limit`, `sort=likes|date`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. Visibility and role rules are enforced by the API.
+The post feed supports `page`, `limit`, `sort=likes|date`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. `sort=likes` means positive like count and is the default, as required by the backend PDF. Visibility and role rules are enforced by the API.
 
-For routes, permissions and payload notes, see [docs/API.md](docs/API.md).
+For routes, permissions and payload notes, see [docs/API.md](docs/API.md). For the exhaustive backend-PDF requirement matrix, see [docs/BACKEND_COMPLIANCE.md](docs/BACKEND_COMPLIANCE.md).
 
 ## Frontend pages and flows
 
@@ -102,7 +102,7 @@ More detail is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Testing
 
-Run syntax checks and the smoke suite while MySQL/API are available:
+Run syntax checks and the full smoke suite while MySQL/API are available:
 
 ```bash
 npm run check:backend
@@ -110,7 +110,13 @@ npm run test:smoke
 npm run build
 ```
 
-GitHub Actions independently starts MySQL 8.4, recreates and seeds the database, checks backend syntax, starts the API, runs public and authenticated CRUD/moderation/reaction smoke flows, builds the React client, starts the real frontend and captures desktop/mobile screenshots.
+The backend-PDF-specific audit can also be run separately:
+
+```bash
+npm run test:requirements
+```
+
+GitHub Actions independently starts MySQL 8.4, recreates and seeds the database, checks backend syntax, starts the API, runs public/authenticated CRUD-moderation-reaction smoke flows and the strict backend requirement audit, builds the React client, starts the real frontend and captures desktop/mobile screenshots.
 
 ## Documentation / CBL progress
 
@@ -148,4 +154,4 @@ These are real screenshots captured automatically from the running application i
 
 ## Verification status
 
-The automated pipeline verifies database initialization/seed, backend syntax, API startup, public and authenticated smoke flows, React production build, real frontend startup and browser rendering at desktop/mobile widths. The committed screenshots are produced from that same running application rather than generated mockups.
+The automated pipeline verifies database initialization/seed, backend syntax, API startup, public/authenticated smoke flows, the PDF-specific backend compliance suite, React production build, real frontend startup and browser rendering at desktop/mobile widths. The committed screenshots are produced from that same running application rather than generated mockups.
