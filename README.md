@@ -4,15 +4,16 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 
 ## Features
 
-- registration, email verification flow, login, logout and password reset flow
-- `user` and `admin` roles with backend authorization checks
-- user profiles, avatar upload, automatically maintained rating
-- posts with many-to-many categories, active/inactive moderation, sorting, filtering and pagination
-- comments and replies through `parent_comment_id`
+- registration, email verification, login, real logout and password reset
+- `user` and `admin` roles with backend authorization and ownership checks
+- user profiles, avatar upload and automatically maintained rating
+- posts with many-to-many categories, active/inactive moderation, locking, search, sorting, filtering and pagination
+- nested comments through `parent_comment_id`, moderation and locking
 - like/dislike reactions for posts and comments with one reaction per user/target
-- admin-only user/category management endpoints and moderation capabilities
-- responsive React interface with main feed, search, auth, profile, post, create-post, categories and admin pages
-- centralized JSON errors and parameterized SQL
+- admin user/category/post/comment management
+- responsive React UI for guest, user and admin flows
+- centralized JSON errors, input validation and parameterized SQL
+- GitHub Actions CI with MySQL 8.4, API smoke tests and React production build
 
 ## Stack
 
@@ -35,7 +36,7 @@ cp .env.example .env
 
 Edit `.env` with your local MySQL credentials and a strong `AUTH_SECRET`.
 
-Initialize the development database (this recreates the tables inside the configured `DB_NAME`):
+Initialize the development database. This recreates the tables inside the configured `DB_NAME`, so use a dedicated development database:
 
 ```bash
 npm run db:init
@@ -66,30 +67,48 @@ Do not use these credentials outside local development.
 
 ## API overview
 
-- `/api/auth` — registration, verification, login/logout, password reset
-- `/api/users` — profiles and admin user management
-- `/api/posts` — post CRUD, pagination, sorting/filtering, reactions, comments
-- `/api/categories` — category CRUD and category posts
-- `/api/comments` — comment state, reactions and deletion
+- `/api/auth` — registration, verification, login/logout and password reset
+- `/api/users` — profiles, avatar upload and admin user management
+- `/api/posts` — post CRUD, pagination, sorting/filtering, reactions and comments
+- `/api/categories` — category CRUD and posts by category
+- `/api/comments` — admin listing, comment moderation, reactions and deletion
 
-The public post feed supports `page`, `limit`, `sort=likes|date`, `order=asc|desc`, `category`, `from`, `to`, `status` (admin visibility rules apply) and `search`.
+The post feed supports `page`, `limit`, `sort=likes|date`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. Visibility rules are always applied on the backend.
 
 ## Architecture
 
-The backend separates routes, middleware, controllers, models/services and database configuration. React uses a central API client and Redux for authentication/global session state. No UI framework is used.
+Backend request flow:
+
+`HTTP request → route → auth/validation → controller/service/model → MySQL → JSON response`
+
+The backend separates configuration, middleware, controllers, models, services, database initialization and uploads. React uses a central API client and Redux only for global authentication/session state. No third-party UI framework is used.
+
+## Testing
+
+Run syntax checks and the full smoke suite while the API/MySQL are available:
+
+```bash
+npm run check:backend
+npm run test:smoke
+npm run build
+```
+
+GitHub Actions runs these checks automatically on `main` using a MySQL service container. The first CI run on commit `4510998` completed successfully, including database initialization, backend syntax validation, API smoke flow and React production build.
 
 ## Documentation / CBL progress
 
 - **Engage:** defined Usof as a knowledge exchange service for programmers.
 - **Investigate:** selected the required Node.js/Express/MySQL + React/Redux stack and role-aware API architecture.
-- **Act:** implemented the database schema, backend modules and an integrated responsive client.
+- **Act:** implemented the database schema, backend modules, integrated responsive client, validation, security checks and automated verification.
 
-Main flow: browser → React/Redux → Fetch API → Express route → auth/validation → controller/service → MySQL → JSON response → UI.
+Main user flow: open app → register → verify email → login → browse/filter posts → create post → comment/reply → react → edit own content/profile → upload avatar → logout.
+
+Main admin flow: login → open admin console → manage users/roles → moderate posts/comments → manage categories → inspect inactive/locked content → logout.
 
 ## Screenshots
 
-Real application screenshots will be added after the project is run locally with MySQL and the final UI is verified.
+The assignment requires real screenshots of the application in use. They should be captured from the running local app after final visual review; fake/generated screenshots are intentionally not included.
 
 ## Current verification status
 
-Source structure and JavaScript syntax can be checked without MySQL. Full database/API integration requires a running local MySQL server and configured `.env`.
+Automated CI has verified MySQL initialization/seed, backend syntax, API startup, public and authenticated smoke flows, and React production build. Manual browser visual review at mobile/tablet/desktop widths and final screenshots are still required before treating the submission as completely finished.
