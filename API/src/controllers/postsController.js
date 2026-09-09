@@ -2,25 +2,14 @@ import { pool } from '../config/db.js';
 import { Post } from '../models/Post.js';
 import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
-import {
-  deleteReaction,
-  recalculateAllRatings,
-  setReaction,
-} from '../services/reactionService.js';
+import { deleteReaction, recalculateAllRatings, setReaction } from '../services/reactionService.js';
+import { deliverNotifications, notifyPositiveReaction, notifyPostFollowers } from '../services/notificationService.js';
 
-const SORT_COLUMNS = {
-  likes: `(SELECT COUNT(*)
-           FROM reactions sort_reactions
-           WHERE sort_reactions.post_id = p.id
-             AND sort_reactions.type = 'like')`,
-  date: 'p.created_at',
-};
+const SORT_COLUMNS = { likes: 'like_count', date: 'p.created_at', trending: 'trend_score' };
 
 function positiveInt(value, code = 'INVALID_ID') {
   const id = Number(value);
-  if (!Number.isInteger(id) || id < 1) {
-    throw new AppError(422, code, 'Expected a positive integer');
-  }
+  if (!Number.isInteger(id) || id < 1) throw new AppError(422, code, 'Expected a positive integer');
   return id;
 }
 
@@ -38,45 +27,30 @@ function normalizeCategories(value) {
 function normalizePostText(title, content) {
   const cleanTitle = String(title ?? '').trim();
   const cleanContent = String(content ?? '').trim();
-  if (!cleanTitle || !cleanContent) {
-    throw new AppError(422, 'VALIDATION_ERROR', 'title and content are required');
-  }
-  if (cleanTitle.length > 180) {
-    throw new AppError(422, 'TITLE_TOO_LONG', 'title must contain at most 180 characters');
-  }
-  if (cleanContent.length > 50000) {
-    throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 50000 characters');
-  }
+  if (!cleanTitle || !cleanContent) throw new AppError(422, 'VALIDATION_ERROR', 'title and content are required');
+  if (cleanTitle.length > 180) throw new AppError(422, 'TITLE_TOO_LONG', 'title must contain at most 180 characters');
+  if (cleanContent.length > 50000) throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 50000 characters');
   return { title: cleanTitle, content: cleanContent };
 }
 
 function assertValidDate(value, field) {
-  if (value && Number.isNaN(Date.parse(value))) {
-    throw new AppError(422, 'INVALID_DATE', `${field} must be a valid date`);
-  }
+  if (value && Number.isNaN(Date.parse(value))) throw new AppError(422, 'INVALID_DATE', `${field} must be a valid date`);
 }
 
 async function assertCategoriesExist(connection, ids) {
   const placeholders = ids.map(() => '?').join(',');
-  const [rows] = await connection.query(
-    `SELECT id FROM categories WHERE id IN (${placeholders})`,
-    ids,
-  );
-  if (rows.length !== ids.length) {
-    throw new AppError(422, 'INVALID_CATEGORY', 'One or more categories do not exist');
-  }
+  const [rows] = await connection.query(`SELECT id FROM categories WHERE id IN (${placeholders})`, ids);
+  if (rows.length !== ids.length) throw new AppError(422, 'INVALID_CATEGORY', 'One or more categories do not exist');
 }
 
 async function getPostById(idValue, user) {
   const id = positiveInt(idValue, 'INVALID_POST_ID');
   const post = await Post.findById(id);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
-
   const isOwner = user && Number(user.sub) === Number(post.author_id);
   if (post.status === 'inactive' && user?.role !== 'admin' && !isOwner) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
-
   return post;
 }
 
@@ -98,13 +72,10 @@ export async function listPosts(req, res) {
   }
 
   if (req.query.status) {
-    if (!['active', 'inactive'].includes(req.query.status)) {
-      throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
-    }
+    if (!['active', 'inactive'].includes(req.query.status)) throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
     where.push('p.status=?');
     params.push(req.query.status);
   }
-
   if (req.query.author) {
     where.push('p.author_id=?');
     params.push(positiveInt(req.query.author, 'INVALID_AUTHOR_ID'));
@@ -123,14 +94,10 @@ export async function listPosts(req, res) {
     where.push('p.created_at<=?');
     params.push(req.query.to);
   }
-
   if (req.query.category) {
-    where.push(
-      'EXISTS(SELECT 1 FROM post_categories fpc WHERE fpc.post_id=p.id AND fpc.category_id=?)',
-    );
+    where.push('EXISTS(SELECT 1 FROM post_categories fpc WHERE fpc.post_id=p.id AND fpc.category_id=?)');
     params.push(positiveInt(req.query.category, 'INVALID_CATEGORY_ID'));
   }
-
   if (req.query.search) {
     const search = String(req.query.search).trim().slice(0, 120);
     if (search) {
@@ -149,16 +116,7 @@ export async function listPosts(req, res) {
     limit,
     offset: (page - 1) * limit,
   });
-
-  res.json({
-    data: posts,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
+  res.json({ data: posts, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
 }
 
 export async function getPost(req, res) {
@@ -177,10 +135,7 @@ export async function createPost(req, res) {
       [Number(req.user.sub), title, content],
     );
     for (const categoryId of categories) {
-      await connection.query(
-        'INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',
-        [result.insertId, categoryId],
-      );
+      await connection.query('INSERT INTO post_categories(post_id,category_id) VALUES(?,?)', [result.insertId, categoryId]);
     }
     await connection.commit();
     res.status(201).json({ data: await getPostById(result.insertId, req.user) });
@@ -196,87 +151,61 @@ export async function updatePost(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
   const isAdmin = req.user.role === 'admin';
   const isOwner = Number(req.user.sub) === Number(post.author_id);
-  if (!isAdmin && !isOwner) {
-    throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
-  }
-  if (post.locked && !isAdmin) {
-    throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-  }
-
+  if (!isAdmin && !isOwner) throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
+  if (post.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
   if (isAdmin && (req.body.title !== undefined || req.body.content !== undefined)) {
-    throw new AppError(
-      403,
-      'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
-      'Admins may moderate status/categories/lock but cannot edit post title or content',
-    );
+    throw new AppError(403, 'POST_CONTENT_IMMUTABLE_FOR_ADMIN', 'Admins may moderate status/categories/lock but cannot edit post title or content');
   }
   if (!isAdmin && (req.body.status !== undefined || req.body.locked !== undefined)) {
-    throw new AppError(
-      403,
-      'ADMIN_REQUIRED',
-      'Only admins can change post status or lock state',
-    );
+    throw new AppError(403, 'ADMIN_REQUIRED', 'Only admins can change post status or lock state');
   }
 
   let title = post.title;
   let content = post.content;
   let status = post.status;
   let locked = Boolean(post.locked);
-
   if (isAdmin) {
     if (req.body.status !== undefined) {
-      if (!['active', 'inactive'].includes(req.body.status)) {
-        throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
-      }
+      if (!['active', 'inactive'].includes(req.body.status)) throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
       status = req.body.status;
     }
     if (req.body.locked !== undefined) locked = Boolean(req.body.locked);
   } else if (req.body.title !== undefined || req.body.content !== undefined) {
-    const normalized = normalizePostText(
-      req.body.title ?? post.title,
-      req.body.content ?? post.content,
-    );
+    const normalized = normalizePostText(req.body.title ?? post.title, req.body.content ?? post.content);
     title = normalized.title;
     content = normalized.content;
   }
 
-  const categories = req.body.categories !== undefined
-    ? normalizeCategories(req.body.categories)
-    : null;
-
+  const categories = req.body.categories !== undefined ? normalizeCategories(req.body.categories) : null;
+  const changedForFollowers = !isAdmin && (title !== post.title || content !== post.content || categories !== null);
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     if (categories) await assertCategoriesExist(connection, categories);
-    await connection.query(
-      'UPDATE posts SET title=?, content=?, status=?, locked=? WHERE id=?',
-      [title, content, status, locked ? 1 : 0, post.id],
-    );
+    await connection.query('UPDATE posts SET title=?, content=?, status=?, locked=? WHERE id=?', [title, content, status, locked ? 1 : 0, post.id]);
     if (categories) {
       await connection.query('DELETE FROM post_categories WHERE post_id=?', [post.id]);
       for (const categoryId of categories) {
-        await connection.query(
-          'INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',
-          [post.id, categoryId],
-        );
+        await connection.query('INSERT INTO post_categories(post_id,category_id) VALUES(?,?)', [post.id, categoryId]);
       }
     }
     await connection.commit();
-    res.json({ data: await getPostById(post.id, req.user) });
   } catch (error) {
     await connection.rollback();
     throw error;
   } finally {
     connection.release();
   }
+
+  if (changedForFollowers && status === 'active') {
+    await deliverNotifications([() => notifyPostFollowers({ postId: Number(post.id), actorId: Number(req.user.sub), type: 'post_updated' })]);
+  }
+  res.json({ data: await getPostById(post.id, req.user) });
 }
 
 export async function deletePost(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
-  if (req.user.role !== 'admin' && Number(req.user.sub) !== Number(post.author_id)) {
-    throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
-  }
-
+  if (req.user.role !== 'admin' && Number(req.user.sub) !== Number(post.author_id)) throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -299,29 +228,31 @@ export async function getPostCategories(req, res) {
 
 export async function getPostReactions(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
-  if (post.status !== 'active' && req.user?.role !== 'admin') {
-    throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
-  }
+  if (post.status !== 'active' && req.user?.role !== 'admin') throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
   res.json({ data: await Reaction.listForPost(post.id) });
 }
 
 export async function reactToPost(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
-  await setReaction({
+  const reaction = await setReaction({
     userId: Number(req.user.sub),
     postId: Number(post.id),
     type: req.body.type,
     isAdmin: req.user.role === 'admin',
   });
+  if (reaction.changed) {
+    await deliverNotifications([() => notifyPositiveReaction({
+      targetAuthorId: reaction.targetAuthorId,
+      actorId: Number(req.user.sub),
+      postId: reaction.postId,
+      type: reaction.type,
+    })]);
+  }
   res.json({ data: await getPostById(post.id, req.user), message: 'Reaction saved' });
 }
 
 export async function removePostReaction(req, res) {
   const post = await getPostById(req.params.post_id, req.user);
-  await deleteReaction({
-    userId: Number(req.user.sub),
-    postId: Number(post.id),
-    deleteAll: req.user.role === 'admin' && req.query.all === '1',
-  });
+  await deleteReaction({ userId: Number(req.user.sub), postId: Number(post.id), deleteAll: req.user.role === 'admin' && req.query.all === '1' });
   res.status(204).end();
 }

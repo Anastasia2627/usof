@@ -1,16 +1,37 @@
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 
+const REACTION_WEIGHTS = {
+  like: 1,
+  dislike: -1,
+  useful: 2,
+  fire: 1,
+  thanks: 1,
+};
+
+const RATING_CASE_SQL = `
+  CASE r.type
+    WHEN 'like' THEN 1
+    WHEN 'dislike' THEN -1
+    WHEN 'useful' THEN 2
+    WHEN 'fire' THEN 1
+    WHEN 'thanks' THEN 1
+    ELSE 0
+  END
+`;
+
+export const reactionTypes = Object.freeze(Object.keys(REACTION_WEIGHTS));
+
 export async function recalculateUserRating(connection, userId) {
   const [[row]] = await connection.query(
     `SELECT COALESCE(SUM(score), 0) AS rating
      FROM (
-       SELECT CASE r.type WHEN 'like' THEN 1 ELSE -1 END AS score
+       SELECT ${RATING_CASE_SQL} AS score
        FROM reactions r
        JOIN posts p ON p.id = r.post_id
        WHERE p.author_id = ?
        UNION ALL
-       SELECT CASE r.type WHEN 'like' THEN 1 ELSE -1 END AS score
+       SELECT ${RATING_CASE_SQL} AS score
        FROM reactions r
        JOIN comments c ON c.id = r.comment_id
        WHERE c.author_id = ?
@@ -26,14 +47,12 @@ export async function recalculateAllRatings(connection = pool) {
     SET rating = (
       SELECT COALESCE(SUM(score), 0)
       FROM (
-        SELECT p.author_id AS user_id,
-               CASE r.type WHEN 'like' THEN 1 ELSE -1 END AS score
+        SELECT p.author_id AS user_id, ${RATING_CASE_SQL} AS score
         FROM reactions r
         JOIN posts p ON p.id = r.post_id
         WHERE r.post_id IS NOT NULL
         UNION ALL
-        SELECT c.author_id AS user_id,
-               CASE r.type WHEN 'like' THEN 1 ELSE -1 END AS score
+        SELECT c.author_id AS user_id, ${RATING_CASE_SQL} AS score
         FROM reactions r
         JOIN comments c ON c.id = r.comment_id
         WHERE r.comment_id IS NOT NULL
@@ -47,18 +66,13 @@ async function getTarget(connection, { postId, commentId }) {
   if (!!postId === !!commentId) {
     throw new AppError(422, 'INVALID_TARGET', 'Choose exactly one reaction target');
   }
-
   if (postId) {
-    const [[post]] = await connection.query(
-      'SELECT id, author_id, status, locked FROM posts WHERE id=?',
-      [postId],
-    );
+    const [[post]] = await connection.query('SELECT id, author_id, status, locked FROM posts WHERE id=?', [postId]);
     if (!post) throw new AppError(404, 'TARGET_NOT_FOUND', 'Post not found');
     return { ...post, kind: 'post' };
   }
-
   const [[comment]] = await connection.query(
-    `SELECT c.id, c.author_id, c.status, c.locked,
+    `SELECT c.id, c.author_id, c.status, c.locked, c.post_id,
             p.status AS post_status, p.locked AS post_locked
      FROM comments c
      JOIN posts p ON p.id = c.post_id
@@ -79,15 +93,9 @@ function ensureReactable(target, isAdmin) {
   }
 }
 
-export async function setReaction({
-  userId,
-  postId = null,
-  commentId = null,
-  type,
-  isAdmin = false,
-}) {
-  if (!['like', 'dislike'].includes(type)) {
-    throw new AppError(422, 'INVALID_REACTION', 'Reaction type must be like or dislike');
+export async function setReaction({ userId, postId = null, commentId = null, type, isAdmin = false }) {
+  if (!reactionTypes.includes(type)) {
+    throw new AppError(422, 'INVALID_REACTION', `Reaction type must be one of: ${reactionTypes.join(', ')}`);
   }
 
   const connection = await pool.getConnection();
@@ -95,28 +103,35 @@ export async function setReaction({
     await connection.beginTransaction();
     const target = await getTarget(connection, { postId, commentId });
     ensureReactable(target, isAdmin);
-
     const column = postId ? 'post_id' : 'comment_id';
     const targetId = Number(postId || commentId);
     const [existing] = await connection.query(
       `SELECT id, type FROM reactions WHERE author_id=? AND ${column}=? FOR UPDATE`,
       [userId, targetId],
     );
-
-    if (existing[0]) {
+    const previousType = existing[0]?.type || null;
+    const changed = previousType !== type;
+    if (existing[0] && changed) {
       await connection.query(
         'UPDATE reactions SET type=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
         [type, existing[0].id],
       );
-    } else {
+    } else if (!existing[0]) {
       await connection.query(
         `INSERT INTO reactions(author_id, ${column}, type) VALUES(?,?,?)`,
         [userId, targetId, type],
       );
     }
-
-    await recalculateUserRating(connection, target.author_id);
+    if (changed) await recalculateUserRating(connection, target.author_id);
     await connection.commit();
+    return {
+      targetAuthorId: Number(target.author_id),
+      postId: target.kind === 'post' ? Number(target.id) : Number(target.post_id),
+      commentId: target.kind === 'comment' ? Number(target.id) : null,
+      type,
+      previousType,
+      changed,
+    };
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -125,30 +140,19 @@ export async function setReaction({
   }
 }
 
-export async function deleteReaction({
-  userId,
-  postId = null,
-  commentId = null,
-  deleteAll = false,
-}) {
+export async function deleteReaction({ userId, postId = null, commentId = null, deleteAll = false }) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     const target = await getTarget(connection, { postId, commentId });
     const column = postId ? 'post_id' : 'comment_id';
     const targetId = Number(postId || commentId);
-
     const [result] = deleteAll
       ? await connection.query(`DELETE FROM reactions WHERE ${column}=?`, [targetId])
-      : await connection.query(
-        `DELETE FROM reactions WHERE ${column}=? AND author_id=?`,
-        [targetId, userId],
-      );
-
+      : await connection.query(`DELETE FROM reactions WHERE ${column}=? AND author_id=?`, [targetId, userId]);
     if (!deleteAll && !result.affectedRows) {
       throw new AppError(404, 'REACTION_NOT_FOUND', 'Reaction not found');
     }
-
     await recalculateUserRating(connection, target.author_id);
     await connection.commit();
   } catch (error) {
