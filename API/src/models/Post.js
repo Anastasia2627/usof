@@ -74,7 +74,7 @@ export class Post extends BaseModel {
 
   static async findById(id) {
     const rows = await this.query(
-      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
+      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
               ${metricsSql()}
        FROM posts p
        JOIN users u ON u.id = p.author_id
@@ -115,7 +115,7 @@ export class Post extends BaseModel {
       params,
     );
     const rows = await this.query(
-      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
+      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
               ${metricsSql()}
        FROM posts p
        JOIN users u ON u.id = p.author_id
