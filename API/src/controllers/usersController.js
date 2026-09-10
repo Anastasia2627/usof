@@ -1,9 +1,11 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { pool } from '../config/db.js';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
+import { sendVerificationEmail } from '../services/mailService.js';
 import { recalculateAllRatings } from '../services/reactionService.js';
 
 function normalizeEmail(value = '') {
@@ -95,61 +97,91 @@ export async function updateUser(req, res) {
     throw new AppError(403, 'FORBIDDEN', 'You can update only your profile');
   }
 
-  const current = await User.findById(id);
-  if (!current) throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
-
-  const fullName = req.body.fullName ?? current.full_name;
-  if (String(fullName).length > 100) {
-    throw new AppError(422, 'INVALID_FULL_NAME', 'Full name must contain at most 100 characters');
-  }
-
-  let login = current.login;
-  let email = current.email;
-  let role = current.role;
-  if (isAdmin) {
-    if (req.body.login !== undefined) {
-      login = normalizeLogin(req.body.login);
-      validateLogin(login);
-    }
-    if (req.body.email !== undefined) {
-      email = normalizeEmail(req.body.email);
-      validateEmail(email);
-    }
-    if (req.body.role !== undefined) {
-      if (!['user', 'admin'].includes(req.body.role)) {
-        throw new AppError(422, 'INVALID_ROLE', 'Role must be user or admin');
-      }
-      role = req.body.role;
-    }
-  } else if (
-    req.body.login !== undefined ||
-    req.body.email !== undefined ||
-    req.body.role !== undefined
-  ) {
-    throw new AppError(
-      403,
-      'FIELD_FORBIDDEN',
-      'Regular users can update fullName here; avatar has a separate endpoint',
-    );
-  }
-
-  const invalidateSession = role !== current.role || login !== current.login;
+  const connection = await pool.getConnection();
+  let invalidateSession;
+  let verificationToken;
+  let updated;
   try {
-    await pool.execute(
+    await connection.beginTransaction();
+    const [[current]] = await connection.execute('SELECT * FROM users WHERE id=? FOR UPDATE', [id]);
+    if (!current) throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
+
+    const fullName = req.body.fullName ?? current.full_name;
+    if (String(fullName).length > 100) {
+      throw new AppError(422, 'INVALID_FULL_NAME', 'Full name must contain at most 100 characters');
+    }
+
+    let login = current.login;
+    let email = current.email;
+    let role = current.role;
+    if (isAdmin) {
+      if (req.body.login !== undefined) {
+        login = normalizeLogin(req.body.login);
+        validateLogin(login);
+      }
+      if (req.body.email !== undefined) {
+        email = normalizeEmail(req.body.email);
+        validateEmail(email);
+      }
+      if (req.body.role !== undefined) {
+        if (!['user', 'admin'].includes(req.body.role)) {
+          throw new AppError(422, 'INVALID_ROLE', 'Role must be user or admin');
+        }
+        role = req.body.role;
+      }
+    } else if (
+      req.body.login !== undefined ||
+      req.body.email !== undefined ||
+      req.body.role !== undefined
+    ) {
+      throw new AppError(
+        403,
+        'FIELD_FORBIDDEN',
+        'Regular users can update fullName here; avatar has a separate endpoint',
+      );
+    }
+
+    const emailChanged = email !== current.email;
+    invalidateSession = emailChanged || role !== current.role || login !== current.login;
+    // Saving an unverified address again lets an admin retry failed delivery.
+    const needsVerification = emailChanged || (req.body.email !== undefined && !current.email_verified);
+    verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
+    await connection.execute(
       `UPDATE users
        SET login=?, full_name=?, email=?, role=?,
-           token_version=token_version+?
+           token_version=token_version+?,
+           email_verified=IF(?,0,email_verified),
+           verification_token=IF(?,?,verification_token),
+           verification_token_expires=IF(?,DATE_ADD(NOW(), INTERVAL 24 HOUR),verification_token_expires),
+           reset_token_hash=IF(?,NULL,reset_token_hash),
+           reset_token_expires=IF(?,NULL,reset_token_expires)
        WHERE id=?`,
-      [login, String(fullName).trim(), email, role, invalidateSession ? 1 : 0, id],
+      [login, String(fullName).trim(), email, role, invalidateSession ? 1 : 0,
+        emailChanged, needsVerification, verificationToken, needsVerification, emailChanged, emailChanged, id],
     );
+    const [[row]] = await connection.execute(
+      'SELECT id, login, full_name, email, email_verified, avatar, rating, role, created_at FROM users WHERE id=?',
+      [id],
+    );
+    updated = row;
+    await connection.commit();
   } catch (error) {
+    await connection.rollback();
     if (error.code === 'ER_DUP_ENTRY') {
       throw new AppError(409, 'USER_EXISTS', 'Login or email is already used');
     }
     throw error;
+  } finally {
+    connection.release();
   }
 
-  res.json({ data: await User.findById(id), sessionInvalidated: invalidateSession });
+  const response = { data: updated, sessionInvalidated: invalidateSession };
+  if (verificationToken) {
+    const delivery = await sendVerificationEmail({ to: updated.email, login: updated.login, token: verificationToken });
+    response.emailDelivery = delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured';
+    if (process.env.NODE_ENV !== 'production') response.verificationToken = verificationToken;
+  }
+  res.json(response);
 }
 
 export async function uploadAvatar(req, res) {

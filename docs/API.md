@@ -34,7 +34,7 @@ In non-production environments the registration/reset token is also returned in 
 | GET | `/users/:user_id` | User/Admin | Read a profile. |
 | POST | `/users` | Admin | Create a verified user/admin account. Requires `login`, `email`, `password`, `passwordConfirmation` and explicit `role=user|admin`; `fullName` is optional. |
 | PATCH | `/users/avatar` | User/Admin | Upload the current user's JPEG/PNG/WEBP avatar (`multipart/form-data`, field `avatar`, max 3 MB). |
-| PATCH | `/users/:user_id` | Owner/Admin | Owner can edit `fullName`; admin can also edit login, email and role. |
+| PATCH | `/users/:user_id` | Owner/Admin | Owner can edit `fullName`; admin can also edit login, email and role. Changing email revokes sessions and reset tokens, and requires email verification. |
 | DELETE | `/users/:user_id` | Owner/Admin | Delete an account and cascading content. |
 
 The `rating` field is maintained automatically from reactions received by the user's posts and comments. Reaction weights are `like +1`, `dislike -1`, `useful +2`, `thanks +1`, `fire +1`. Self-reactions are rejected so reputation cannot be increased by reacting to your own contribution.
@@ -139,3 +139,11 @@ The user dashboard is motivational rather than administrative. The admin dashboa
 Authorization is enforced on the server rather than relying on the React interface. A regular user cannot use admin endpoints by manually calling the API. Post inactivity follows the challenge rule: all users see active posts and an authenticated owner can additionally see their own inactive posts. Comment status remains visible on a viewable post because the PDF explicitly requires users to see all comments and allows any authenticated user to change comment status. Locking prevents regular users from adding new reactions/replies/comments to locked discussions, while an admin can still moderate them.
 
 For the requirement-by-requirement source audit, see `docs/BACKEND_COMPLIANCE.md`. Creative behavior is summarized in `docs/CREATIVE_FEATURES.md`.
+
+### Email changes
+
+When an admin changes a user's email, the update clears email confirmation and existing password reset tokens, replaces the verification token (24-hour expiry), and invalidates all existing sessions. The new address receives a confirmation link; login remains blocked until confirmation. Profile updates and a normalized unchanged, verified email preserve sessions and tokens.
+
+The PATCH response includes `sessionInvalidated` and, when a verification email is attempted, `emailDelivery` (`sent`, `failed`, or `not-configured`). Non-production responses also include `verificationToken`, as registration does. If delivery fails, the address stays unverified; an admin can PATCH the same unverified email again to issue a fresh link. This invalidates the previous verification link. An admin changing their own address is also signed out and must confirm the new address.
+
+Auth regression tests: after initializing a disposable test database, run `NODE_ENV=test DB_NAME=usof_test npm run test:auth` with the matching DB connection variables. Tests require a database name ending in `_test` or `_ci`, create their own users, and remove them afterward. Never initialize a database containing data you need to keep.

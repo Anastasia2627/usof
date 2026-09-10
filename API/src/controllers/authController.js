@@ -133,12 +133,14 @@ export async function requestPasswordReset(req, res) {
 
   const token = crypto.randomBytes(32).toString('hex');
   const hash = crypto.createHash('sha256').update(token).digest('hex');
-  await pool.execute(
+  const [result] = await pool.execute(
     `UPDATE users
      SET reset_token_hash=?, reset_token_expires=DATE_ADD(NOW(), INTERVAL 30 MINUTE)
-     WHERE id=?`,
-    [hash, rows[0].id],
+     WHERE id=? AND email=?`,
+    [hash, rows[0].id, email],
   );
+  // An email change may have happened after the lookup.
+  if (!result.affectedRows) return res.json({ message: genericMessage });
 
   const delivery = await sendPasswordResetEmail({ to: email, token });
   const response = {
