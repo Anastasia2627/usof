@@ -7,8 +7,8 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 ## Features
 
 - registration, email verification, login, real logout and password reset
-- `user` and `admin` roles with backend authorization and ownership checks
-- user profiles, avatar upload, account deletion and automatically maintained reputation
+- `user` and `admin` roles with backend authorization, ownership checks and last-admin protection
+- user profiles, content-validated avatar upload, account deletion and automatically maintained reputation
 - posts with many-to-many categories, active/inactive moderation, locking, search, sorting, filtering and pagination
 - nested comments through `parent_comment_id`, moderation and locking
 - `like`, `dislike`, `useful`, `thanks` and `fire` reactions with one reaction per user/target and no self-voting
@@ -18,14 +18,16 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 - separate user contribution dashboard and admin platform dashboard
 - admin user/category/post/comment management in a dedicated moderation console
 - responsive React UI covering guest, user and admin flows
-- centralized JSON errors, input validation and parameterized SQL
-- GitHub Actions verification with MySQL 8.4, Basic/Creative API smoke flows, a PDF-specific backend requirement audit, React production build and real browser screenshots
+- centralized JSON errors, shared input validation and parameterized SQL
+- concurrency-safe password reset and reputation updates
+- non-destructive database initialization with an explicitly confirmed reset command
+- GitHub Actions verification with MySQL 8.4, hardening tests, Basic/Creative API checks, a PDF-specific backend requirement audit, React production build and real browser screenshots
 
 ## Stack
 
 JavaScript, Node.js, Express, MySQL, HTML, CSS, React and Redux.
 
-No third-party UI framework is used.
+No third-party UI framework is used. `sharp` is used on the backend to decode and normalize uploaded avatars.
 
 ## Requirements
 
@@ -44,11 +46,21 @@ cp .env.example .env
 
 Edit `.env` with your local MySQL credentials and a strong `AUTH_SECRET`.
 
-Initialize the development database. This recreates the tables inside the configured `DB_NAME`, so use a dedicated development database:
+Initialize a fresh development database:
 
 ```bash
 npm run db:init
 ```
+
+`db:init` is safe to run again. If the complete Usof schema already exists, it leaves the existing tables and data untouched. If it finds only part of the Usof schema, it refuses to continue instead of guessing how to repair or overwrite it.
+
+A full reset is intentionally separate. It deletes the Usof tables and restores the reproducible seed data, so it requires the configured database name as an explicit confirmation outside test environments:
+
+```bash
+npm run db:reset -- --confirm=usof
+```
+
+Replace `usof` with the exact value of `DB_NAME` from your `.env`. CI uses a disposable database ending in `_ci`, so its explicit reset is allowed automatically while `NODE_ENV=test`.
 
 Start the API:
 
@@ -88,7 +100,7 @@ Do not use these credentials outside local development.
 - `/api/dashboard/me` — user contribution, trust and answer-suggestion dashboard
 - `/api/dashboard/admin` — admin analytics and moderation overview
 
-The post feed supports `page`, `limit`, `sort=likes|date|trending`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. `sort=likes` means positive like count and remains the Basic default required by the backend PDF. Visibility and role rules are enforced by the API.
+The post feed supports `page`, `limit`, `sort=likes|date|trending`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. `sort=likes` means positive like count and remains the Basic default required by the backend PDF. A date-only `to=YYYY-MM-DD` includes that whole day. Visibility and role rules are enforced by the API.
 
 For routes, permissions and payload notes, see [docs/API.md](docs/API.md). For the exhaustive backend-PDF requirement matrix, see [docs/BACKEND_COMPLIANCE.md](docs/BACKEND_COMPLIANCE.md). The additional community layer is described in [docs/CREATIVE_FEATURES.md](docs/CREATIVE_FEATURES.md).
 
@@ -100,7 +112,7 @@ The header/menu is present on every page and shows the service name, search, nav
 
 ### Community and trust layer
 
-Reputation is based on reactions received on questions and answers. Users cannot react to their own contribution. Trust levels provide a readable interpretation of reputation: Newcomer, Contributor, Trusted, Expert and Mentor.
+Reputation is based on reactions received on questions and answers. Users cannot react to their own contribution. Reaction changes apply atomic rating deltas to the author row, so concurrent reactions on different contributions cannot overwrite one another. Trust levels provide a readable interpretation of reputation: Newcomer, Contributor, Trusted, Expert and Mentor.
 
 The user dashboard is designed to encourage useful participation rather than raw activity. It shows weekly answer progress, contribution streak, achievements, reaction feedback, community rank and questions the user has not answered yet. The admin dashboard stays separate and focuses on platform totals, seven-day activity, top contributors/categories, reaction mix and moderation context.
 
@@ -108,32 +120,40 @@ The user dashboard is designed to encourage useful participation rather than raw
 
 Backend request flow:
 
-`HTTP request → route → auth/validation → controller/service/model → MySQL → JSON response`
+`HTTP request → route → auth middleware → controller → service/model → MySQL → JSON response`
 
-The backend separates configuration, middleware, controllers, entity models, engagement/notification/dashboard services, database initialization and uploads. React uses a central API client and Redux only for global authentication/session state; page-specific forms, filters, pagination and dashboard state remain local component state.
+Controllers stay focused on HTTP concerns. Account lifecycle, authentication, posts, comments, categories, avatars, reactions, notifications and dashboards have dedicated service modules; reusable request validation lives in `API/src/utils/validation.js`. Models handle reusable data access, while transaction boundaries and cross-entity business rules live in services.
+
+React uses a central API client and Redux only for global authentication/session state; page-specific forms, filters, pagination and dashboard state remain local component state.
 
 More detail is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## Security and data-integrity notes
+
+- Password reset tokens are consumed with a conditional atomic update, so one reset link cannot successfully change the password twice under concurrent requests.
+- Changing an email revokes active sessions and password-reset tokens, invalidates the old verification link and requires confirmation of the new address.
+- Uploaded avatars are decoded as images and re-encoded as WebP; the client-supplied MIME type is not trusted as proof of file contents.
+- The final administrator cannot be deleted or demoted. The invariant is checked while administrator rows are locked inside the account transaction.
+- Reputation changes use atomic numeric deltas, with dedicated concurrent-reaction tests.
+- Normal database initialization never drops existing Usof data; destructive reset is a separate, guarded command.
+
 ## Testing
 
-Run syntax checks and the full smoke suite while MySQL/API are available:
+For a complete local backend check, initialize or explicitly reset a disposable database first, then run:
 
 ```bash
 npm run check:backend
-npm run test:smoke
+npm run test:auth
+npm run test:requirements
+npm run test:creative
 npm run build
 ```
 
-Individual backend verification layers can also be run separately:
+`npm run test:auth` includes password-reset race tests, email/token lifecycle tests, last-admin protection, real avatar decoding/re-encoding and concurrent reputation updates. Those tests refuse to run unless `NODE_ENV=test` and `DB_NAME` ends in `_test` or `_ci`.
 
-```bash
-npm run test:requirements
-npm run test:creative
-```
+With the API running, `npm run test:smoke` checks the public API plus the strict requirement and Creative HTTP flows.
 
-The Creative smoke suite verifies saved/followed questions, sharing validation, expanded reactions, self-vote protection, reputation changes, follower/author notifications, comment ordering by positive likes, community rank, dashboards and Trending metadata.
-
-GitHub Actions independently starts MySQL 8.4, recreates and seeds the database, checks backend syntax, starts the API, runs public/authenticated Basic + Creative smoke flows and the strict backend requirement audit, builds the React client, starts the real frontend and captures desktop/mobile screenshots.
+GitHub Actions starts a disposable MySQL 8.4 service, explicitly resets `usof_ci`, runs syntax and hardening tests, starts the API, runs requirement/Creative HTTP checks, builds and starts the React client, and captures desktop/mobile screenshots from the real application.
 
 ## Documentation / CBL progress
 
@@ -171,4 +191,4 @@ These are real screenshots captured automatically from the running application i
 
 ## Verification status
 
-The automated pipeline verifies database initialization/seed, backend syntax, API startup, public/authenticated Basic + Creative smoke flows, the PDF-specific backend compliance suite, React production build, real frontend startup and browser rendering at desktop/mobile widths. The committed screenshots are produced from that same running application rather than generated mockups.
+The automated pipeline verifies guarded database setup, backend syntax, account/data hardening, API startup, Basic + Creative requirement flows, React production build, real frontend startup and browser rendering at desktop/mobile widths. The committed screenshots are produced from that same running application rather than generated mockups.
