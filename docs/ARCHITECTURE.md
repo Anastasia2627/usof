@@ -11,72 +11,133 @@ Browser (React + Redux)
         v
 Express routes
         |
-auth + validation middleware
+auth / role middleware
         |
-controllers / services / models
+controllers
+        |
+services + models
         |
         v
-MySQL 8
+MySQL 8 / local avatar storage
 ```
 
-Uploaded avatars are stored in `API/uploads/avatars/` and only the path is stored in MySQL.
+Controllers translate HTTP requests and responses. Services own validation-heavy business flows, transaction boundaries and cross-entity rules. Models provide reusable data access. This keeps access policy and data-integrity rules from being repeated across controllers.
 
 ## Backend layout
 
 - `API/app.js` creates the Express application and mounts modules.
 - `API/server.js` validates the database connection and starts the HTTP server.
-- `API/database/init.js` recreates the schema and inserts reproducible development data.
+- `API/database/init.js` safely initializes a fresh schema; destructive reseeding is an explicit guarded reset mode.
 - `API/src/routes/` defines the public/protected endpoint surface.
-- `API/src/controllers/` contains request-specific orchestration and validation.
+- `API/src/controllers/` contains thin HTTP orchestration.
 - `API/src/models/` contains reusable entity/data-access abstractions.
-- `API/src/services/` contains cross-entity behavior such as reactions/rating and email delivery.
-- `API/src/middleware/` contains authentication, admin authorization, upload handling and centralized errors.
+- `API/src/services/` contains account lifecycle, authentication, post/comment/category behavior, avatar processing, reactions/rating, notifications and dashboards.
+- `API/src/utils/validation.js` contains shared normalization and common validators.
+- `API/src/middleware/` contains authentication, admin authorization, multipart handling and centralized errors.
 
-The separation keeps routing, authorization, request orchestration, data access and cross-cutting behavior from being mixed into one server file. The model classes use a shared `BaseModel`, and services encapsulate behavior that affects several entities. This is the project's practical MVC/OOP/SOLID boundary.
+The model classes use a shared `BaseModel`. Services are split by responsibility rather than collected into one large application service. This is the project's practical MVC/OOP/SOLID boundary without adding an unnecessary framework layer.
 
-## Authentication
+## Database initialization and reset
 
-JWT payloads contain a user id and `token_version`, not a trusted role copied permanently into the token. Every authenticated request resolves the current user from MySQL. Logout, password reset and identity/role changes increment `token_version`, which makes already issued tokens unusable.
+`npm run db:init` is non-destructive. It creates and seeds a new Usof schema only when none of the application tables exists. If the complete schema already exists, it exits without changing data. If it sees a partial Usof schema, it refuses to continue instead of silently overwriting or trying an unsafe migration.
 
-Only users with a verified email can log in. Verification and password-reset tokens expire. Passwords are hashed with bcrypt and are never returned by profile endpoints.
+Destructive development reset is separate:
 
-## Authorization
+```bash
+npm run db:reset -- --confirm=<DB_NAME>
+```
 
-The backend is the source of truth for permissions:
+The exact database name is required as confirmation outside automated tests. Under `NODE_ENV=test`, a database whose name ends in `_test` or `_ci` may be reset without the extra argument because it is explicitly disposable. CI uses this path.
 
-- public: registration, verification, login/reset, active posts/categories, comments belonging to viewable posts, and reaction lists for active targets;
-- user: create/edit/delete own posts, create comments/replies, change any accessible comment's active/inactive status as required by the PDF, react, edit own profile/avatar, delete own comments/reactions/account;
-- admin: user/category CRUD, visibility of inactive posts, moderation of posts/comments, locking, and reaction inspection/clear-all.
+## Authentication and account lifecycle
 
-Post inactivity follows the explicit challenge rule: visitors see active posts, an authenticated user additionally sees their own inactive posts, and admins see everything. The PDF separately says users must see all comments for a specified post and may “update any” comment only by changing active/inactive status, so the API returns all comments/statuses once their parent post is viewable. Comment content remains immutable.
+JWT payloads contain a user id and `token_version`, not a role that stays trusted forever. Every authenticated request resolves the current user from MySQL. Logout, password reset and identity/role changes increment `token_version`, invalidating previously issued sessions.
 
-Locking is an additional control required by the PDF: normal users cannot add replies/reactions/comments to locked targets, while admins can continue moderation.
+Only users with a verified email can log in. Passwords are hashed with bcrypt. Verification and password-reset tokens expire and are never returned in production responses.
+
+Password reset is race-safe: after bcrypt hashing, the final password update still matches both the same token hash and an unexpired timestamp. If another request has already consumed, replaced or expired the link, the update affects zero rows and the reset fails.
+
+When an admin changes a user's email, the account transaction resets email verification, replaces the verification token, removes password-reset credentials and invalidates existing sessions. Saving a normalized unchanged verified address does not revoke the account unnecessarily.
+
+## Administrator invariant
+
+The application must always retain at least one admin. Admin role changes and admin deletion run inside a transaction that locks the current admin rows before checking the invariant. A request that would demote or delete the final administrator fails with `LAST_ADMIN_REQUIRED`.
+
+This lock is important: checking only `COUNT(*)` before the update would still allow two concurrent requests to each believe another admin remains.
+
+## Avatar processing
+
+The multipart middleware holds the upload in memory and enforces the 3 MB request-file limit. It deliberately does not trust `file.mimetype` as proof of the contents.
+
+`avatarService` decodes the buffer with `sharp`. Only decoded JPEG, PNG and WebP input is accepted. Invalid bytes, unsupported formats, excessive dimensions and animated images are rejected. Valid input is rotated according to orientation, resized to at most 512 x 512 without enlargement and re-encoded as WebP before being written to `API/uploads/avatars/`. MySQL stores only the relative path.
+
+Replacing an avatar removes the previous local avatar after the new image and database update succeed. A failed save cleans up the new file instead of leaving an orphan.
+
+## Authorization and visibility
+
+The backend remains the source of truth for permissions:
+
+- public: registration, verification, login/reset, active posts/categories, comments belonging to viewable posts and reaction lists for active targets;
+- user: create/edit/delete own posts, create comments/replies, change any accessible comment's active/inactive status as required by the PDF, react, edit own profile/avatar and delete own comments/reactions/account;
+- admin: user/category CRUD, visibility of inactive posts, moderation of posts/comments, locking and reaction inspection/clear-all.
+
+Post inactivity follows the challenge rule: visitors see active posts, an authenticated user additionally sees their own inactive posts, and admins see everything. The PDF separately says users must see all comments for a specified post and may “update any” comment by changing active/inactive status, so the API returns all comments/statuses once their parent post is viewable. Comment content remains immutable.
+
+Locking prevents normal users from adding replies/reactions/comments to locked discussion targets while admins can continue moderation.
 
 ## Database model
 
-Core tables:
+Core challenge tables are:
 
 - `users`
 - `categories`
 - `posts`
-- `post_categories` (many-to-many)
-- `comments` (self-referencing `parent_comment_id` for replies)
-- `reactions` (post or comment target, `like`/`dislike`)
+- `post_categories`
+- `comments`
+- `reactions`
 
-Foreign keys use cascading deletion where dependent content belongs to the deleted parent. Unique indexes enforce one reaction per user and target. A check constraint requires every reaction to reference exactly one post or one comment. Post/category associations use a composite primary key.
+Creative/community tables are:
 
-The seed contains at least five rows for each core table and demonstrates active/inactive content, nested comments, categories and reactions. `scripts/verify-backend-requirements.mjs` verifies those seed counts and the required entity columns in CI.
+- `favorites`
+- `post_subscriptions`
+- `post_shares`
+- `notifications`
 
-## Rating
+`post_categories` implements many-to-many categories. Comments use self-referencing `parent_comment_id`. Reactions point to exactly one post or comment through a database check constraint, and unique keys enforce one reaction per user/target. Foreign keys clean dependent data when a parent is deleted.
 
-A user's rating is the sum of reactions received by all of their posts and comments:
+The seed contains at least five rows per challenge table and also seeds the Creative tables. `scripts/verify-backend-requirements.mjs` verifies the required schema and data invariants against MySQL.
+
+## Reputation and concurrency
+
+Reaction weights are:
 
 - `like` = `+1`
 - `dislike` = `-1`
+- `useful` = `+2`
+- `thanks` = `+1`
+- `fire` = `+1`
 
-Rating recalculation is performed inside the same transaction as reaction/deletion operations that can change the result. This keeps the stored rating synchronized with source data.
+Self-reactions are rejected.
 
-Post feed `sort=likes` deliberately uses the number of positive `like` reactions, not this net rating/score formula, because the PDF says sorting must be by number of likes.
+The normal reaction path does not recalculate the author's entire rating and then write an absolute value. Instead it calculates the reaction delta — for example, changing `like` to `dislike` means `-2` — and applies `UPDATE users SET rating = rating + ?`. MySQL serializes concurrent writes to the same user row, so reactions occurring at the same time on different posts/comments cannot overwrite one another's contribution.
+
+Full `recalculateUserRating` / `recalculateAllRatings` remain repair tools for destructive parent deletions. They lock the affected user rows before rebuilding the stored value from reaction source data.
+
+Post feed `sort=likes` deliberately uses positive `like` count rather than reputation score because the challenge explicitly requests sorting by number of likes. Comment ordering likewise uses positive likes ascending before deterministic date/id tie-breakers.
+
+## Service boundaries
+
+The core request path is intentionally split:
+
+- `authController` → `authService`: registration, verification, login/logout and password reset.
+- `usersController` → `accountService` / `avatarService`: account administration, session-impacting identity changes, last-admin protection and image processing.
+- `postsController` → `postService`: post validation, visibility, CRUD transactions and follower-update behavior.
+- `commentsController` → `commentService`: comment visibility, nested replies, moderation and deletion.
+- `categoriesController` → `categoryService`: category validation and CRUD behavior.
+- reaction orchestration → `reactionService`: reaction uniqueness, self-vote policy and rating mutations.
+- notification/dashboard controllers → their dedicated model/services.
+
+Small controller-specific HTTP choices stay in controllers. Cross-entity rules and transaction code do not.
 
 ## Frontend layout
 
@@ -88,35 +149,39 @@ Redux is deliberately limited to global session state. Feed filters, forms, pagi
 
 ### User
 
-1. Register.
-2. Verify email.
-3. Log in.
-4. Browse/search/filter/sort/paginate questions.
-5. Create a question with one or several categories.
-6. Comment or reply on an active, unlocked post.
-7. Like/dislike an active, unlocked post or comment.
-8. Edit own question/profile/avatar.
-9. Change a comment's active/inactive status where required by the backend assignment.
+1. Register and verify email.
+2. Log in.
+3. Browse/search/filter/sort/paginate questions.
+4. Create a question with one or several categories.
+5. Comment or reply on an active, unlocked post.
+6. React to another user's active contribution.
+7. Save/follow discussions and read notifications.
+8. Use the contribution dashboard, trust progress and answer suggestions.
+9. Edit own question/profile/avatar.
 10. Delete own content/reactions/account when needed.
 11. Log out.
 
 ### Admin
 
 1. Log in as an admin.
-2. Open the protected admin console.
-3. Create/update/delete users and change roles.
+2. Open the protected admin dashboard or CRUD console.
+3. Create/update/delete users and change roles while preserving at least one administrator.
 4. Create/update/delete categories.
 5. Inspect active/inactive posts/comments.
 6. Change post categories/status, lock/unlock discussions, moderate comments and delete content.
-7. Inspect/clear reactions from the content view.
+7. Inspect/clear reactions from content views.
 8. Log out.
 
 ## Validation and errors
 
-Client forms use native constraints where appropriate, but every important rule is also validated on the API because frontend validation can be bypassed. SQL values are parameterized. Errors are returned as JSON with stable error codes and human-readable messages. Malformed JSON, upload-limit errors and excessive database field lengths receive client-facing validation responses. Unexpected production errors do not expose stack traces or database internals.
+Client forms use native constraints where appropriate, but important rules are validated on the API because frontend validation can be bypassed. Common identifiers, email/login/password/full-name, roles and statuses reuse shared validators. Entity-specific rules remain in the corresponding service.
+
+SQL values are parameterized. Errors are returned as JSON with stable error codes and human-readable messages. Malformed JSON, upload-limit errors and database constraint failures receive client-facing responses. Unexpected production errors do not expose stack traces or database internals.
 
 ## Automated verification
 
-GitHub Actions starts MySQL 8.4, installs dependencies, checks backend syntax, recreates/seeds the database, starts the API, runs public and authenticated smoke flows, then runs the PDF-specific `scripts/verify-backend-requirements.mjs` audit. It also builds the React client and captures real browser screenshots at desktop and mobile widths.
+GitHub Actions starts a disposable MySQL 8.4 database and explicitly resets it, then runs backend syntax checks and `npm run test:auth`. The hardening suite covers password-reset races, email/token lifecycle, last-admin protection, avatar content decoding, safe database initialization and concurrent rating updates.
 
-The requirement audit checks schema/seed invariants and deliberately exercises edge cases that mirror the PDF wording: positive-like sorting vs net score, inactive-post visibility, admin content immutability, all-comments visibility, the unusual “update any comment status” rule, active-target reaction listing, locking and ownership restrictions.
+After that CI starts the API, runs the public smoke check plus PDF-specific and Creative HTTP suites, builds the React client, starts the real frontend and captures browser screenshots at desktop and mobile widths.
+
+The PDF-specific suite separately checks schema/seed invariants and requirement wording such as positive-like sorting, inactive-post visibility, admin content immutability, all-comments visibility, comment-status updates, active-target reaction listing, locking and ownership restrictions.
