@@ -1,172 +1,54 @@
-import { pool } from '../config/db.js';
-import { Comment } from '../models/Comment.js';
-import { Post } from '../models/Post.js';
 import { Reaction } from '../models/Reaction.js';
-import { AppError } from '../utils/AppError.js';
-import { deleteReaction, recalculateAllRatings, setReaction } from '../services/reactionService.js';
+import { deleteReaction, setReaction } from '../services/reactionService.js';
+import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
 import {
-  deliverNotifications,
-  notifyPositiveReaction,
-  notifyPostAuthor,
-  notifyPostFollowers,
-  notifyReplyAuthor,
-} from '../services/notificationService.js';
-
-function positiveInt(value, code = 'INVALID_ID') {
-  const id = Number(value);
-  if (!Number.isInteger(id) || id < 1) throw new AppError(422, code, 'Expected a positive integer');
-  return id;
-}
-
-async function findPost(postIdValue, user) {
-  const postId = positiveInt(postIdValue, 'INVALID_POST_ID');
-  const post = await Post.findCoreById(postId);
-  if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
-  const ownsPost = user && Number(user.sub) === Number(post.author_id);
-  if (post.status === 'inactive' && user?.role !== 'admin' && !ownsPost) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
-  return post;
-}
-
-async function findComment(idValue, user, { requireActiveComment = false, requireActivePost = false } = {}) {
-  const id = positiveInt(idValue, 'INVALID_COMMENT_ID');
-  const comment = await Comment.findById(id);
-  if (!comment) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
-  const isAdmin = user?.role === 'admin';
-  const ownsPost = user && Number(user.sub) === Number(comment.post_author_id);
-  if (comment.post_status === 'inactive' && !isAdmin && (requireActivePost || !ownsPost)) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
-  if (requireActivePost && comment.post_status !== 'active' && !isAdmin) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
-  if (requireActiveComment && comment.status !== 'active' && !isAdmin) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
-  return comment;
-}
+  createCommentForUser,
+  deleteCommentForUser,
+  getVisibleComment,
+  listAdminComments,
+  listCommentsForPost,
+  updateCommentForUser,
+} from '../services/commentService.js';
 
 export async function listComments(req, res) {
-  const where = [];
-  const params = [];
-  if (req.query.status) {
-    if (!['active', 'inactive'].includes(req.query.status)) throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
-    where.push('c.status=?');
-    params.push(req.query.status);
-  }
-  if (req.query.post_id) {
-    where.push('c.post_id=?');
-    params.push(positiveInt(req.query.post_id, 'INVALID_POST_ID'));
-  }
-  const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  res.json({ data: await Comment.listAdmin({ clause, params }) });
+  res.json({ data: await listAdminComments(req.query) });
 }
 
 export async function listPostComments(req, res) {
-  const post = await findPost(req.params.post_id, req.user);
-  res.json({ data: await Comment.listForPost(post.id) });
+  res.json({ data: await listCommentsForPost(req.params.post_id, req.user) });
 }
 
 export async function createComment(req, res) {
-  const content = String(req.body.content ?? '').trim();
-  if (!content) throw new AppError(422, 'VALIDATION_ERROR', 'content is required');
-  if (content.length > 20000) throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 20000 characters');
-
-  const post = await findPost(req.params.post_id, req.user);
-  const isAdmin = req.user.role === 'admin';
-  if (!isAdmin && post.status !== 'active') throw new AppError(404, 'POST_NOT_AVAILABLE', 'Active post not found');
-  if (!isAdmin && post.locked) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-
-  let parent = null;
-  if (req.body.parentCommentId !== undefined && req.body.parentCommentId !== null) {
-    parent = await findComment(req.body.parentCommentId, req.user);
-    if (Number(parent.post_id) !== Number(post.id)) throw new AppError(422, 'INVALID_PARENT', 'Parent comment belongs to another post');
-    if (!isAdmin && (parent.status !== 'active' || parent.locked)) throw new AppError(423, 'COMMENT_LOCKED', 'This comment cannot receive replies');
-  }
-
-  const actorId = Number(req.user.sub);
-  const [result] = await pool.execute(
-    "INSERT INTO comments(post_id,author_id,parent_comment_id,content,status,locked) VALUES(?,?,?,?,'active',0)",
-    [post.id, actorId, parent?.id || null, content],
-  );
-  const comment = await findComment(result.insertId, req.user);
-  const excludedFollowerIds = [Number(post.author_id)];
-  if (parent) excludedFollowerIds.push(Number(parent.author_id));
-
-  await deliverNotifications([
-    () => notifyPostAuthor({
-      postAuthorId: Number(post.author_id),
-      actorId,
-      postId: Number(post.id),
-      commentId: Number(comment.id),
-      isReply: Boolean(parent),
-    }),
-    () => parent
-      ? notifyReplyAuthor({
-        parentAuthorId: Number(parent.author_id),
-        actorId,
-        postId: Number(post.id),
-        commentId: Number(comment.id),
-      })
-      : Promise.resolve(false),
-    () => notifyPostFollowers({
-      postId: Number(post.id),
-      actorId,
-      type: parent ? 'reply' : 'comment',
-      commentId: Number(comment.id),
-      excludeUserIds: excludedFollowerIds,
-    }),
-  ]);
-
-  res.status(201).json({ data: comment });
+  res.status(201).json({
+    data: await createCommentForUser(req.user, req.params.post_id, req.body),
+  });
 }
 
 export async function getComment(req, res) {
-  res.json({ data: await findComment(req.params.comment_id, req.user) });
+  res.json({ data: await getVisibleComment(req.params.comment_id, req.user) });
 }
 
 export async function updateComment(req, res) {
-  const comment = await findComment(req.params.comment_id, req.user);
-  const isAdmin = req.user.role === 'admin';
-  if (req.body.content !== undefined) throw new AppError(403, 'COMMENT_CONTENT_IMMUTABLE', 'Comment content cannot be edited; only status can be changed');
-  if (!isAdmin && req.body.locked !== undefined) throw new AppError(403, 'ADMIN_REQUIRED', 'Only admins can lock comments');
-  if (comment.locked && !isAdmin) throw new AppError(423, 'COMMENT_LOCKED', 'This comment is locked');
-
-  let status = comment.status;
-  let locked = Boolean(comment.locked);
-  let changed = false;
-  if (req.body.status !== undefined) {
-    if (!['active', 'inactive'].includes(req.body.status)) throw new AppError(422, 'INVALID_STATUS', 'status must be active or inactive');
-    status = req.body.status;
-    changed = true;
-  }
-  if (req.body.locked !== undefined) {
-    locked = Boolean(req.body.locked);
-    changed = true;
-  }
-  if (!changed) throw new AppError(422, 'VALIDATION_ERROR', isAdmin ? 'Provide status or locked to update' : 'Provide status to update');
-  await pool.execute('UPDATE comments SET status=?, locked=? WHERE id=?', [status, locked ? 1 : 0, comment.id]);
-  res.json({ data: await findComment(comment.id, req.user) });
+  res.json({
+    data: await updateCommentForUser(req.user, req.params.comment_id, req.body),
+  });
 }
 
 export async function deleteComment(req, res) {
-  const comment = await findComment(req.params.comment_id, req.user);
-  if (req.user.role !== 'admin' && Number(req.user.sub) !== Number(comment.author_id)) throw new AppError(403, 'FORBIDDEN', 'Cannot delete this comment');
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-    await connection.query('DELETE FROM comments WHERE id=?', [comment.id]);
-    await recalculateAllRatings(connection);
-    await connection.commit();
-    res.status(204).end();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+  await deleteCommentForUser(req.user, req.params.comment_id);
+  res.status(204).end();
 }
 
 export async function getCommentReactions(req, res) {
-  const comment = await findComment(req.params.comment_id, req.user, { requireActiveComment: true, requireActivePost: true });
+  const comment = await getVisibleComment(req.params.comment_id, req.user, {
+    requireActiveComment: true,
+    requireActivePost: true,
+  });
   res.json({ data: await Reaction.listForComment(comment.id) });
 }
 
 export async function reactToComment(req, res) {
-  const comment = await findComment(req.params.comment_id, req.user);
+  const comment = await getVisibleComment(req.params.comment_id, req.user);
   const reaction = await setReaction({
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
@@ -174,19 +56,28 @@ export async function reactToComment(req, res) {
     isAdmin: req.user.role === 'admin',
   });
   if (reaction.changed) {
-    await deliverNotifications([() => notifyPositiveReaction({
-      targetAuthorId: reaction.targetAuthorId,
-      actorId: Number(req.user.sub),
-      postId: reaction.postId,
-      commentId: reaction.commentId,
-      type: reaction.type,
-    })]);
+    await deliverNotifications([
+      () => notifyPositiveReaction({
+        targetAuthorId: reaction.targetAuthorId,
+        actorId: Number(req.user.sub),
+        postId: reaction.postId,
+        commentId: reaction.commentId,
+        type: reaction.type,
+      }),
+    ]);
   }
-  res.json({ data: await findComment(comment.id, req.user), message: 'Reaction saved' });
+  res.json({
+    data: await getVisibleComment(comment.id, req.user),
+    message: 'Reaction saved',
+  });
 }
 
 export async function removeCommentReaction(req, res) {
-  const comment = await findComment(req.params.comment_id, req.user);
-  await deleteReaction({ userId: Number(req.user.sub), commentId: Number(comment.id), deleteAll: req.user.role === 'admin' && req.query.all === '1' });
+  const comment = await getVisibleComment(req.params.comment_id, req.user);
+  await deleteReaction({
+    userId: Number(req.user.sub),
+    commentId: Number(comment.id),
+    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+  });
   res.status(204).end();
 }
