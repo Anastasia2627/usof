@@ -1,12 +1,13 @@
 import { Notification } from '../models/Notification.js';
 import { AppError } from '../utils/AppError.js';
+import { positiveInt } from '../utils/validation.js';
 
 function notificationId(value) {
-  const id = Number(value);
-  if (!Number.isInteger(id) || id < 1) {
-    throw new AppError(422, 'INVALID_NOTIFICATION_ID', 'Notification id must be a positive integer');
-  }
-  return id;
+  return positiveInt(
+    value,
+    'INVALID_NOTIFICATION_ID',
+    'Notification id must be a positive integer',
+  );
 }
 
 export async function listNotifications(req, res) {
