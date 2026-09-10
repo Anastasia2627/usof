@@ -166,12 +166,16 @@ export async function confirmPasswordReset(req, res) {
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await pool.execute(
+  const [result] = await pool.execute(
     `UPDATE users
      SET password_hash=?, reset_token_hash=NULL, reset_token_expires=NULL,
          token_version=token_version+1
-     WHERE id=?`,
-    [passwordHash, rows[0].id],
+     WHERE id=? AND reset_token_hash=? AND reset_token_expires>NOW()`,
+    [passwordHash, rows[0].id, hash],
   );
+  // Hashing takes time: another request may have consumed or replaced the token.
+  if (!result.affectedRows) {
+    throw new AppError(400, 'INVALID_RESET_TOKEN', 'Reset token is invalid or expired');
+  }
   res.json({ message: 'Password changed' });
 }

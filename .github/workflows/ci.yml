@@ -57,6 +57,9 @@ jobs:
       - name: Initialize MySQL database
         run: npm run db:init
 
+      - name: Check password reset races
+        run: npm run test:auth
+
       - name: Start API
         run: |
           npm start > server.log 2>&1 &
