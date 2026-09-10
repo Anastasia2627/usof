@@ -54,10 +54,10 @@ jobs:
       - name: Check backend syntax
         run: npm run check:backend
 
-      - name: Initialize MySQL database
-        run: npm run db:init
+      - name: Reset disposable MySQL database
+        run: npm run db:reset
 
-      - name: Check password reset races
+      - name: Check account and data hardening
         run: npm run test:auth
 
       - name: Start API
