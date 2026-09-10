@@ -8,29 +8,43 @@ This checklist maps the Basic challenge requirements to the implementation and g
 | --- | --- |
 | JavaScript, Node.js, Express, MySQL | Root `package.json`, `API/`, MySQL schema in `API/database/init.js`. |
 | API + relational database | Express modules under `/api`; MySQL 8 schema with foreign keys, unique constraints, check constraint and indexes. |
-| Database is recreated on initialization | `npm run db:init` creates the configured DB, recreates tables and seeds data. Use a dedicated development DB. |
+| Database can be initialized/recreated | `npm run db:init` creates/seeds a fresh schema but never drops existing data. An intentional rebuild uses guarded `npm run db:reset -- --confirm=<DB_NAME>`; CI resets only a disposable `_ci` database. |
 | At least five test entries per table | Seed includes at least five records in every challenge table; dedicated requirement tests query the database directly. |
-| Local file storage for user photos | Avatar upload stores files under `API/uploads/avatars/`. |
-| Informative errors | Central JSON error handler plus validation/upload/JSON error codes/messages. |
-| MVC / OOP / SOLID-oriented structure | Separate routes/controllers/models/services/middleware/config; reusable model base and entity classes/services. See `docs/ARCHITECTURE.md`. |
-| `user` and `admin` roles | Role stored in users; default registration role is user; middleware checks current DB role on authenticated requests; only admin may change roles. |
+| Local file storage for user photos | Avatars are decoded, normalized to WebP and stored under `API/uploads/avatars/`; MySQL stores the relative path. |
+| Informative errors | Central JSON error handler plus validation/upload/JSON/database error codes/messages. |
+| MVC / OOP / SOLID-oriented structure | Routes, thin controllers, entity models, focused services, middleware, config and shared validators are separated. See `docs/ARCHITECTURE.md`. |
+| `user` and `admin` roles | Role stored in users; default registration role is user; middleware checks the current DB role; only admin may change roles; the last admin cannot be deleted or demoted. |
 | Admin panel / admin CRUD | React `/admin` console plus admin-protected API routes. |
 | Registration + confirmed email | Register → expiring verification token/link → login blocked until verified. |
-| Login / logout / reset password | Implemented under `/api/auth`; logout/reset invalidate old bearer tokens. |
-| Users CRUD | Admin: create/list/update/delete. Admin-created accounts require explicit role. User: read/edit own profile/avatar and delete own account. |
+| Login / logout / reset password | Implemented under `/api/auth`; logout/reset invalidate old bearer tokens; reset-token consumption is race-safe. |
+| Users CRUD | Admin: create/list/update/delete. User: read/edit own profile/avatar and delete own account. Email changes revoke stale credentials and require verification. |
 | Posts CRUD | Create/read/update/delete, multi-category relation, active/inactive moderation. Owner edits own content/categories; admin cannot edit user content. |
 | Categories CRUD | Full admin CRUD + public reads/category posts. |
 | Comments | Create/read/status moderation/delete plus nested replies through `parent_comment_id`; all comments/statuses are returned for a viewable post. |
 | User comment status rule | PDF's “update any” is implemented literally: any authenticated user may change active/inactive status on an accessible comment, but content is immutable. |
-| Likes/dislikes | The required `like`/`dislike` flow is present with one reaction per user/target, update/remove/list and admin clear-all. Creative reaction types extend the same mechanism. |
-| Automatic rating | Basic like/dislike behavior remains +1/-1. Creative `useful`, `thanks` and `fire` reactions extend reputation with documented weights; self-voting is rejected. |
+| Likes/dislikes | Required `like`/`dislike` flow is present with one reaction per user/target, update/remove/list and admin clear-all. Creative reaction types extend the same mechanism. |
+| Automatic rating | Basic like/dislike remains +1/-1; Creative types use documented weights. Self-voting is rejected and concurrent reactions update reputation through atomic deltas. |
 | Lock posts/comments | Admin lock/unlock controls; normal user additions/reactions are rejected on locked targets. |
-| Post sorting | `sort=likes` is the Basic default and counts positive likes exactly; `sort=date` is supported, with Creative `sort=trending` added separately. |
-| Post filtering | Category, date interval and status; author/search are useful additional filters. |
+| Post sorting | `sort=likes` is the Basic default and counts positive likes exactly; `sort=date` is supported, with Creative `sort=trending` separately. |
+| Post filtering | Category, full date interval and status; author/search are useful additional filters. |
 | Pagination | `page` + `limit`, with metadata in the response. |
-| Request validation + role-aware access | Positive IDs, content lengths, category existence, dates/status/role/file checks, backend ownership/admin checks. |
+| Request validation + role-aware access | Shared common validators plus entity-specific validation, backend ownership/admin checks and decoded avatar validation. |
 
 Exact routes and payload notes are in `docs/API.md`.
+
+## Backend hardening checks
+
+The implementation also protects several cases beyond the happy-path challenge requirements:
+
+- normal `db:init` is non-destructive and refuses partial schemas;
+- destructive reset is separate and explicitly confirmed outside disposable test databases;
+- a reset-password token can only be consumed once even under concurrent requests;
+- changing email invalidates active sessions, reset credentials and old verification credentials;
+- avatars are accepted by decoded image content rather than client-supplied MIME type and are re-encoded as WebP;
+- the system cannot lose its final administrator through delete or role change;
+- concurrent reactions on separate contributions of one author cannot overwrite the stored reputation.
+
+`npm run test:auth` contains focused regression tests for these invariants.
 
 ## Frontend — Act: Basic
 
@@ -63,12 +77,12 @@ The backend for every Creative feature is documented in `docs/API.md` and `docs/
 
 ## Documentation
 
-README contains project description, requirements/dependencies, complete local launch instructions, seed credentials, feature/architecture summary, CBL progress, and real screenshots. Detailed API/architecture/CBL/compliance notes live in `docs/`.
+README contains project description, requirements/dependencies, safe database setup/reset instructions, seed credentials, feature/architecture summary, CBL progress and real screenshots. Detailed API/architecture/CBL/compliance notes live in `docs/`.
 
 ## Quick assessor demo
 
 1. `npm install`, copy `.env.example` to `.env`, configure MySQL and `AUTH_SECRET`.
-2. `npm run db:init`.
+2. For a fresh database run `npm run db:init`. To deliberately restore seed data later, use `npm run db:reset -- --confirm=<DB_NAME>`.
 3. Terminal A: `npm start`.
 4. Terminal B: `npm run web`.
 5. Open `http://localhost:5173`.
@@ -78,11 +92,12 @@ README contains project description, requirements/dependencies, complete local l
 
 ## Automated check
 
-GitHub Actions independently verifies database initialization, API start, backend syntax, public/authenticated Basic flows, the PDF-specific backend requirements audit, Creative engagement/trust/notification/dashboard flows and the React production build. It also renders the real running app and captures desktop/mobile screenshots.
+GitHub Actions explicitly resets a disposable MySQL `_ci` database, verifies backend syntax, runs focused account/data hardening tests, starts the API, runs public/PDF-specific/Creative HTTP suites and builds the React client. It also renders the real running app and captures desktop/mobile screenshots.
 
-For focused local verification while the API/MySQL are running:
+For focused local verification on a disposable test database:
 
 ```bash
+npm run test:auth
 npm run test:requirements
 npm run test:creative
 ```
