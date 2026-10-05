@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Header, go } from './ui.jsx';
+import { Header, Icon, go } from './ui.jsx';
+import { useI18n } from './i18n.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
 import CategoriesPage, { CategoryDetailPage } from './pages/CategoriesPage.jsx';
@@ -26,18 +27,30 @@ function useHash() {
   return hash;
 }
 
-function NotFoundPage() {
-  return <main className="narrow">
-    <div className="card empty">
-      <p className="eyebrow">404</p>
-      <h1>Page not found</h1>
-      <button className="primary" onClick={() => go('/')}>Back home</button>
-    </div>
+function PlaceholderPage({ icon, eyebrow, title, copy }) {
+  return <main className="narrow compactHero">
+    <section className="card placeholderPanel">
+      <span className="placeholderIcon"><Icon name={icon} filled /></span>
+      <p className="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p>{copy}</p>
+      <button className="primary" onClick={() => go('/')}>Back to the conversation</button>
+    </section>
   </main>;
+}
+
+function NotFoundPage() {
+  return <PlaceholderPage
+    icon="wrong_location"
+    eyebrow="404 · wandered off"
+    title="This corner is empty."
+    copy="The page may have moved, or the conversation never started."
+  />;
 }
 
 export default function App() {
   const hash = useHash();
+  const { language, setLanguage } = useI18n();
   const path = hash.split('?')[0];
   const parts = path.split('/').filter(Boolean);
   let page;
@@ -51,6 +64,7 @@ export default function App() {
   else if (path === '/saved') page = <LibraryPage mode="favorites" />;
   else if (path === '/following') page = <LibraryPage mode="following" />;
   else if (path === '/notifications') page = <NotificationsPage />;
+  else if (path === '/messages') page = <PlaceholderPage icon="forum" eyebrow="Messages" title="Private conversations are next." copy="The route is reserved now so direct messages can be added without reshaping the rest of Circle." />;
   else if (path === '/create') page = <PostEditor />;
   else if (path === '/admin') page = <AdminPage />;
   else if (path === '/admin/dashboard') page = <AdminDashboardPage />;
@@ -64,6 +78,13 @@ export default function App() {
   return <>
     <Header />
     {page}
-    <footer>Usof · programming Q&amp;A · React + Redux + Express + MySQL</footer>
+    <footer className="siteFooter">
+      <button className="footerBrand" onClick={() => go('/')}>circle</button>
+      <span>A place for conversations.</span>
+      <div className="footerActions">
+        <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>
+        <button className={language === 'uk' ? 'active' : ''} onClick={() => setLanguage('uk')}>UA</button>
+      </div>
+    </footer>
   </>;
 }
