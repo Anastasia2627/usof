@@ -14,12 +14,20 @@ import {
 } from '../utils/validation.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from './mailService.js';
 
-function devTokenPayload(key, token) {
+function devTokenPayload(values) {
   if (process.env.NODE_ENV === 'production') return {};
   return {
-    [key]: token,
-    note: 'Development mode exposes the token so the flow can be tested without SMTP.',
+    ...values,
+    note: 'Development mode exposes verification credentials so the flow can be tested without SMTP.',
   };
+}
+
+function hashVerificationCode(code) {
+  return crypto.createHash('sha256').update(String(code)).digest('hex');
+}
+
+function createVerificationCode() {
+  return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 }
 
 export async function registerAccount(body) {
@@ -43,20 +51,33 @@ export async function registerAccount(body) {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const verificationToken = crypto.randomBytes(32).toString('hex');
+  const verificationCode = createVerificationCode();
+  const verificationCodeHash = hashVerificationCode(verificationCode);
+
   try {
     const [result] = await pool.execute(
       `INSERT INTO users(
          login,password_hash,full_name,email,email_verified,
-         verification_token,verification_token_expires,role
-       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 24 HOUR),'user')`,
-      [login, passwordHash, fullName, email, verificationToken],
+         verification_token,verification_token_expires,
+         verification_code_hash,verification_code_expires,role
+       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),'user')`,
+      [login, passwordHash, fullName, email, verificationToken, verificationCodeHash],
     );
 
-    const delivery = await sendVerificationEmail({ to: email, login, token: verificationToken });
+    const delivery = await sendVerificationEmail({
+      to: email,
+      login,
+      token: verificationToken,
+      code: verificationCode,
+    });
+
     return {
       user: await User.findById(result.insertId),
       emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
-      ...devTokenPayload('verificationToken', verificationToken),
+      ...devTokenPayload({
+        verificationToken,
+        verificationCode,
+      }),
     };
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -67,20 +88,53 @@ export async function registerAccount(body) {
 }
 
 export async function verifyEmailToken(tokenValue) {
-  const token = String(tokenValue || '');
+  const token = String(tokenValue || '').trim();
   if (!token) throw new AppError(400, 'INVALID_TOKEN', 'Verification token is invalid');
 
   const [result] = await pool.execute(
     `UPDATE users
      SET email_verified=1,
          verification_token=NULL,
-         verification_token_expires=NULL
-     WHERE verification_token=?
+         verification_token_expires=NULL,
+         verification_code_hash=NULL,
+         verification_code_expires=NULL
+     WHERE email_verified=0
+       AND verification_token=?
        AND verification_token_expires>NOW()`,
     [token],
   );
+
   if (!result.affectedRows) {
-    throw new AppError(400, 'INVALID_TOKEN', 'Verification token is invalid or expired');
+    throw new AppError(400, 'INVALID_TOKEN', 'Verification link is invalid, expired, or already used');
+  }
+}
+
+export async function verifyEmailCode(body) {
+  const email = normalizeEmail(body.email);
+  const code = String(body.code || '').replace(/\D/g, '');
+
+  if (!email || !/^\d{6}$/.test(code)) {
+    throw new AppError(422, 'INVALID_VERIFICATION_CODE', 'Provide a valid email and 6-digit code');
+  }
+  validateEmail(email);
+
+  const codeHash = hashVerificationCode(code);
+  const [result] = await pool.execute(
+    `UPDATE users
+     SET email_verified=1,
+         verification_token=NULL,
+         verification_token_expires=NULL,
+         verification_code_hash=NULL,
+         verification_code_expires=NULL
+     WHERE email_verified=0
+       AND email=?
+       AND verification_code_hash=?
+       AND verification_code_expires>NOW()`,
+    [email, codeHash],
+  );
+
+  if (!result.affectedRows) {
+    throw new AppError(400, 'INVALID_VERIFICATION_CODE', 'Verification code is invalid, expired, or already used');
   }
 }
 
@@ -129,7 +183,7 @@ export async function issuePasswordReset(body) {
   const delivery = await sendPasswordResetEmail({ to: email, token });
   const response = {
     message: genericMessage,
-    ...devTokenPayload('resetToken', token),
+    ...devTokenPayload({ resetToken: token }),
   };
   if (process.env.NODE_ENV !== 'production') {
     response.emailDelivery = delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured';
