@@ -32,7 +32,7 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
-    throw new ApiError('Cannot reach the Usof API. Check that the backend is running.', {
+    throw new ApiError('Cannot reach the Circle API. Check that the backend is running.', {
       code: 'NETWORK_ERROR',
     });
   }
