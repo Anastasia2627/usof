@@ -49,6 +49,9 @@ async function ensureCircleSchema(connection) {
   if (!known.has('verification_code_expires')) {
     await connection.query('ALTER TABLE users ADD COLUMN verification_code_expires DATETIME NULL AFTER verification_code_hash');
   }
+  if (!known.has('google_sub')) {
+    await connection.query('ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL UNIQUE AFTER role');
+  }
 }
 
 async function initializeDatabase() {
@@ -109,6 +112,7 @@ async function initializeDatabase() {
         avatar VARCHAR(255) NULL,
         rating INT NOT NULL DEFAULT 0,
         role ENUM('user','admin') NOT NULL DEFAULT 'user',
+        google_sub VARCHAR(64) NULL UNIQUE,
         token_version INT UNSIGNED NOT NULL DEFAULT 0,
         reset_token_hash CHAR(64) NULL,
         reset_token_expires DATETIME NULL,
