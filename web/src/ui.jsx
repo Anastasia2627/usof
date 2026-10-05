@@ -52,13 +52,15 @@ function topicTone(index) {
   return `tone-${(index % 4) + 1}`;
 }
 
-export function PostCard({ post, featured = false }) {
+export function PostCard({ post, featured = false, interactive = true }) {
   const categories = post.categories || [];
+  const open = interactive ? () => go(`/post/${post.id}`) : undefined;
   return <article
-    className={`threadCard ${featured ? 'featured' : ''}`}
-    onClick={() => go(`/post/${post.id}`)}
-    tabIndex="0"
-    onKeyDown={(event) => { if (event.key === 'Enter') go(`/post/${post.id}`); }}
+    className={`threadCard ${featured ? 'featured' : ''} ${interactive ? '' : 'previewOnly'}`}
+    onClick={open}
+    tabIndex={interactive ? 0 : undefined}
+    onKeyDown={interactive ? (event) => { if (event.key === 'Enter') open(); } : undefined}
+    aria-disabled={interactive ? undefined : 'true'}
   >
     <div className="threadTopline">
       <div className="threadAuthor">
@@ -87,7 +89,7 @@ export function PostCard({ post, featured = false }) {
         <span><Icon name="favorite" /> {post.like_count ?? 0}</span>
         <span><Icon name="bookmark" /> {post.favorite_count ?? 0}</span>
       </div>
-      <span className="openThread">Open thread <Icon name="arrow_outward" /></span>
+      {interactive && <span className="openThread">Open thread <Icon name="arrow_outward" /></span>}
     </div>
   </article>;
 }
