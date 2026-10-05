@@ -870,6 +870,14 @@ footer.siteFooter{
   font-weight:600;
 }
 .googleButton:hover{border-color:#9f9690;background:#faf8f5}
+.googleIdentityButton{
+  width:100%;
+  min-height:46px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.googleIdentityButton>div{width:100%!important}
 .googleGlyph{
   width:22px;height:22px;display:grid;place-items:center;
   border:1px solid #cfc7c0;border-radius:50%;
