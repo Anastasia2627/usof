@@ -108,7 +108,7 @@ export default function HomePage({ hash }) {
   return <main className="homePage">
     <section className="circleHero">
       <div className="heroCopy">
-        <p className="eyebrow">{t('heroEyebrow')}</p>
+        
         <h1>{t('heroTitle')}</h1>
         <p className="heroBody">{t('heroBody')}</p>
         <div className="heroActions">
@@ -123,7 +123,7 @@ export default function HomePage({ hash }) {
         <div className="heroNote heroNote-one">
           <span className="noteDot violet" />
           <small>today · 18:42</small>
-          <strong>“I thought I was the only one.”</strong>
+          <strong>“I thought I was the only one”</strong>
         </div>
         <div className="heroNote heroNote-two">
           <span className="noteDot cream" />
@@ -147,8 +147,8 @@ export default function HomePage({ hash }) {
     <section className="feedShell">
       <div className="feedHeader">
         <div>
-          <p className="eyebrow">The feed</p>
-          <h2>Pull up a seat.</h2>
+          
+          <h2>Pull up a seat</h2>
         </div>
         <button className={`filterToggle ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((value) => !value)}>
           <Icon name="tune" /> {t('filters')}
@@ -194,8 +194,8 @@ export default function HomePage({ hash }) {
         <span /><span /><span />
         <p>Listening for conversations…</p>
       </div> : posts.length ? <>
-        {featured && <PostCard post={featured} featured />}
-        {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} />)}</section>}
+        {featured && <PostCard post={featured} featured interactive={Boolean(auth)} />}
+        {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} interactive={Boolean(auth)} />)}</section>}
       </> : <div className="emptyState">
         <span className="emptyGlyph"><Icon name="chair" /></span>
         <h2>{t('noThreads')}</h2>
