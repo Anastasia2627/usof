@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { api } from '../api.js';
 import { useI18n } from '../i18n.jsx';
@@ -55,6 +55,80 @@ function MascotStage({ mood = 'idle', headline, copy }) {
       <span className="liveDot" /> They notice things.
     </div>
   </section>;
+}
+
+function GoogleLoginButton({ onError }) {
+  const dispatch = useDispatch();
+  const { t } = useI18n();
+  const mountRef = useRef(null);
+  const clientId = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+
+  useEffect(() => {
+    if (!clientId || !mountRef.current) return undefined;
+    let cancelled = false;
+
+    async function handleCredential(response) {
+      try {
+        const result = await api('/auth/google', {
+          method: 'POST',
+          body: { credential: response.credential },
+        });
+        dispatch({ type: 'AUTH_SET', payload: result });
+        go('/');
+      } catch (error) {
+        onError(error);
+      }
+    }
+
+    function renderButton() {
+      if (cancelled || !mountRef.current || !window.google?.accounts?.id) return;
+      mountRef.current.innerHTML = '';
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      window.google.accounts.id.renderButton(mountRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        shape: 'rectangular',
+        text: 'continue_with',
+        logo_alignment: 'left',
+        width: Math.min(480, Math.max(260, mountRef.current.clientWidth || 400)),
+      });
+    }
+
+    if (window.google?.accounts?.id) {
+      renderButton();
+      return () => { cancelled = true; };
+    }
+
+    let script = document.querySelector('script[data-circle-google]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.dataset.circleGoogle = 'true';
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', renderButton, { once: true });
+
+    return () => {
+      cancelled = true;
+      script?.removeEventListener('load', renderButton);
+    };
+  }, [clientId, dispatch, onError]);
+
+  if (!clientId) {
+    return <button type="button" className="googleButton" onClick={() => onError(new Error('Set VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID to enable Google sign-in.'))}>
+      <span className="googleGlyph">G</span>{t('continueGoogle')}
+    </button>;
+  }
+
+  return <div className="googleIdentityButton" ref={mountRef} aria-label={t('continueGoogle')} />;
 }
 
 function PasswordField({ label, value, onChange, autoComplete, onFocus, onBlur, onReveal, minLength = 8 }) {
@@ -222,9 +296,7 @@ export function AuthPage({ mode }) {
           <p>{isRegister ? 'Start with a name. The rest can grow with you.' : 'Come back to the conversations you care about.'}</p>
         </div>
 
-        <button type="button" className="googleButton" onClick={() => setError(new Error('Google sign-in is being connected to the Circle OAuth endpoint next.'))}>
-          <span className="googleGlyph">G</span>{t('continueGoogle')}
-        </button>
+        <GoogleLoginButton onError={setError} />
 
         <div className="authDivider"><span>or continue with email</span></div>
 
