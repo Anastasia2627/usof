@@ -1,5 +1,6 @@
 import {
   authenticate,
+  authenticateWithGoogleCredential,
   consumePasswordReset,
   invalidateSession,
   issuePasswordReset,
@@ -24,6 +25,10 @@ export async function verifyEmailWithCode(req, res) {
 
 export async function login(req, res) {
   res.json(await authenticate(req.body));
+}
+
+export async function googleLogin(req, res) {
+  res.json(await authenticateWithGoogleCredential(req.body));
 }
 
 export async function logout(req, res) {
