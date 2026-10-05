@@ -64,6 +64,17 @@ export default function App() {
   return <>
     <Header />
     {page}
-    <footer>Usof · programming Q&amp;A · React + Redux + Express + MySQL</footer>
+    <footer className="siteFooter">
+      <div className="footerBrand">
+        <strong>USOF<span>.</span></strong>
+        <p>Programming questions, useful answers, less noise.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <button onClick={() => go('/')}>Questions</button>
+        <button onClick={() => go('/categories')}>Categories</button>
+        <button onClick={() => go('/register')}>Join</button>
+      </nav>
+      <small>React · Redux · Express · MySQL</small>
+    </footer>
   </>;
 }
