@@ -44,7 +44,7 @@ async function send({ to, subject, text, html }) {
   if (!transport) return { configured: false, sent: false };
   try {
     await transport.sendMail({
-      from: process.env.MAIL_FROM || 'usof@example.local',
+      from: process.env.MAIL_FROM || 'Circle@example.local',
       to,
       subject,
       text,
@@ -57,13 +57,35 @@ async function send({ to, subject, text, html }) {
   }
 }
 
-export async function sendVerificationEmail({ to, login, token }) {
+export async function sendVerificationEmail({ to, login, token, code }) {
   const url = `${frontendOrigin()}/#/verify/${encodeURIComponent(token)}`;
+  const safeLogin = escapeHtml(login);
+  const safeUrl = escapeHtml(url);
+  const safeCode = escapeHtml(code);
+
   return send({
     to,
-    subject: 'Verify your Usof email',
-    text: `Hello ${login}. Verify your Usof account: ${url}`,
-    html: `<p>Hello ${escapeHtml(login)}.</p><p>Verify your Usof account:</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
+    subject: 'Your Circle verification code',
+    text: [
+      `Hello ${login}.`,
+      `Your Circle verification code is ${code}.`,
+      `Or verify instantly with this one-time link: ${url}`,
+      'The code and link expire in 20 minutes and can only be used once.',
+    ].join('\\n\\n'),
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;color:#171519">
+        <p style="font-size:14px;color:#6f6972">Hello ${safeLogin}.</p>
+        <h1 style="font-size:32px;margin:12px 0">Welcome to Circle.</h1>
+        <p>Use this code to verify your email:</p>
+        <p style="font-size:38px;letter-spacing:8px;font-weight:700;margin:22px 0">${safeCode}</p>
+        <p style="margin:28px 0">
+          <a href="${safeUrl}" style="display:inline-block;padding:12px 18px;background:#7048e8;color:#fff;text-decoration:none;border-radius:10px">
+            Verify instantly
+          </a>
+        </p>
+        <p style="font-size:12px;color:#7d7580">The code and link expire in 20 minutes and can only be used once.</p>
+      </div>
+    `,
   });
 }
 
@@ -71,8 +93,8 @@ export async function sendPasswordResetEmail({ to, token }) {
   const url = `${frontendOrigin()}/#/reset/${encodeURIComponent(token)}`;
   return send({
     to,
-    subject: 'Reset your Usof password',
-    text: `Reset your Usof password: ${url}`,
-    html: `<p>Use this link to reset your Usof password:</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
+    subject: 'Reset your Circle password',
+    text: `Reset your Circle password: ${url}`,
+    html: `<p>Use this link to reset your Circle password:</p><p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>`,
   });
 }
