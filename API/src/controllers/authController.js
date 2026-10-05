@@ -1,10 +1,12 @@
 import {
   authenticate,
+  authenticateWithGoogleCredential,
   consumePasswordReset,
   invalidateSession,
   issuePasswordReset,
   registerAccount,
   verifyEmailToken,
+  verifyEmailCode,
 } from '../services/authService.js';
 
 export async function register(req, res) {
@@ -16,8 +18,17 @@ export async function verifyEmail(req, res) {
   res.json({ message: 'Email verified' });
 }
 
+export async function verifyEmailWithCode(req, res) {
+  await verifyEmailCode(req.body);
+  res.json({ message: 'Email verified' });
+}
+
 export async function login(req, res) {
   res.json(await authenticate(req.body));
+}
+
+export async function googleLogin(req, res) {
+  res.json(await authenticateWithGoogleCredential(req.body));
 }
 
 export async function logout(req, res) {

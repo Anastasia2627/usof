@@ -34,6 +34,26 @@ function resetIsConfirmed() {
   return process.argv.includes(`--confirm=${database}`);
 }
 
+async function ensureCircleSchema(connection) {
+  const [columns] = await connection.query(
+    `SELECT COLUMN_NAME AS column_name
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA=? AND TABLE_NAME='users'`,
+    [database],
+  );
+  const known = new Set(columns.map((row) => row.column_name));
+
+  if (!known.has('verification_code_hash')) {
+    await connection.query('ALTER TABLE users ADD COLUMN verification_code_hash CHAR(64) NULL AFTER verification_token_expires');
+  }
+  if (!known.has('verification_code_expires')) {
+    await connection.query('ALTER TABLE users ADD COLUMN verification_code_expires DATETIME NULL AFTER verification_code_hash');
+  }
+  if (!known.has('google_sub')) {
+    await connection.query('ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL UNIQUE AFTER role');
+  }
+}
+
 async function initializeDatabase() {
   const resetRequested = process.argv.includes('--reset');
   const connection = await mysql.createConnection(baseConfig);
@@ -52,7 +72,8 @@ async function initializeDatabase() {
     const existingAppTables = APP_TABLES.filter((table) => existing.has(table));
 
     if (!resetRequested && existingAppTables.length === APP_TABLES.length) {
-      console.log(`Database ${database} is already initialized. Existing data was left untouched.`);
+      await ensureCircleSchema(connection);
+      console.log(`Database ${database} is already initialized. Existing data was left untouched and compatible schema upgrades were applied.`);
       return;
     }
 
@@ -86,9 +107,12 @@ async function initializeDatabase() {
         email_verified BOOLEAN NOT NULL DEFAULT 0,
         verification_token VARCHAR(128) NULL UNIQUE,
         verification_token_expires DATETIME NULL,
+        verification_code_hash CHAR(64) NULL,
+        verification_code_expires DATETIME NULL,
         avatar VARCHAR(255) NULL,
         rating INT NOT NULL DEFAULT 0,
         role ENUM('user','admin') NOT NULL DEFAULT 'user',
+        google_sub VARCHAR(64) NULL UNIQUE,
         token_version INT UNSIGNED NOT NULL DEFAULT 0,
         reset_token_hash CHAR(64) NULL,
         reset_token_expires DATETIME NULL,

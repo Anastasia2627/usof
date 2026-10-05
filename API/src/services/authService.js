@@ -14,12 +14,20 @@ import {
 } from '../utils/validation.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from './mailService.js';
 
-function devTokenPayload(key, token) {
+function devTokenPayload(values) {
   if (process.env.NODE_ENV === 'production') return {};
   return {
-    [key]: token,
-    note: 'Development mode exposes the token so the flow can be tested without SMTP.',
+    ...values,
+    note: 'Development mode exposes verification credentials so the flow can be tested without SMTP.',
   };
+}
+
+function hashVerificationCode(code) {
+  return crypto.createHash('sha256').update(String(code)).digest('hex');
+}
+
+function createVerificationCode() {
+  return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 }
 
 export async function registerAccount(body) {
@@ -43,20 +51,33 @@ export async function registerAccount(body) {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const verificationToken = crypto.randomBytes(32).toString('hex');
+  const verificationCode = createVerificationCode();
+  const verificationCodeHash = hashVerificationCode(verificationCode);
+
   try {
     const [result] = await pool.execute(
       `INSERT INTO users(
          login,password_hash,full_name,email,email_verified,
-         verification_token,verification_token_expires,role
-       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 24 HOUR),'user')`,
-      [login, passwordHash, fullName, email, verificationToken],
+         verification_token,verification_token_expires,
+         verification_code_hash,verification_code_expires,role
+       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),'user')`,
+      [login, passwordHash, fullName, email, verificationToken, verificationCodeHash],
     );
 
-    const delivery = await sendVerificationEmail({ to: email, login, token: verificationToken });
+    const delivery = await sendVerificationEmail({
+      to: email,
+      login,
+      token: verificationToken,
+      code: verificationCode,
+    });
+
     return {
       user: await User.findById(result.insertId),
       emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
-      ...devTokenPayload('verificationToken', verificationToken),
+      ...devTokenPayload({
+        verificationToken,
+        verificationCode,
+      }),
     };
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -67,20 +88,53 @@ export async function registerAccount(body) {
 }
 
 export async function verifyEmailToken(tokenValue) {
-  const token = String(tokenValue || '');
+  const token = String(tokenValue || '').trim();
   if (!token) throw new AppError(400, 'INVALID_TOKEN', 'Verification token is invalid');
 
   const [result] = await pool.execute(
     `UPDATE users
      SET email_verified=1,
          verification_token=NULL,
-         verification_token_expires=NULL
-     WHERE verification_token=?
+         verification_token_expires=NULL,
+         verification_code_hash=NULL,
+         verification_code_expires=NULL
+     WHERE email_verified=0
+       AND verification_token=?
        AND verification_token_expires>NOW()`,
     [token],
   );
+
   if (!result.affectedRows) {
-    throw new AppError(400, 'INVALID_TOKEN', 'Verification token is invalid or expired');
+    throw new AppError(400, 'INVALID_TOKEN', 'Verification link is invalid, expired, or already used');
+  }
+}
+
+export async function verifyEmailCode(body) {
+  const email = normalizeEmail(body.email);
+  const code = String(body.code || '').replace(/\D/g, '');
+
+  if (!email || !/^\d{6}$/.test(code)) {
+    throw new AppError(422, 'INVALID_VERIFICATION_CODE', 'Provide a valid email and 6-digit code');
+  }
+  validateEmail(email);
+
+  const codeHash = hashVerificationCode(code);
+  const [result] = await pool.execute(
+    `UPDATE users
+     SET email_verified=1,
+         verification_token=NULL,
+         verification_token_expires=NULL,
+         verification_code_hash=NULL,
+         verification_code_expires=NULL
+     WHERE email_verified=0
+       AND email=?
+       AND verification_code_hash=?
+       AND verification_code_expires>NOW()`,
+    [email, codeHash],
+  );
+
+  if (!result.affectedRows) {
+    throw new AppError(400, 'INVALID_VERIFICATION_CODE', 'Verification code is invalid, expired, or already used');
   }
 }
 
@@ -129,7 +183,7 @@ export async function issuePasswordReset(body) {
   const delivery = await sendPasswordResetEmail({ to: email, token });
   const response = {
     message: genericMessage,
-    ...devTokenPayload('resetToken', token),
+    ...devTokenPayload({ resetToken: token }),
   };
   if (process.env.NODE_ENV !== 'production') {
     response.emailDelivery = delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured';
@@ -161,4 +215,103 @@ export async function consumePasswordReset(tokenValue, newPassword) {
   if (!result.affectedRows) {
     throw new AppError(400, 'INVALID_RESET_TOKEN', 'Reset token is invalid or expired');
   }
+}
+
+
+async function fetchGoogleProfile(credential) {
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
+  if (!clientId) {
+    throw new AppError(503, 'GOOGLE_AUTH_NOT_CONFIGURED', 'Google sign-in is not configured');
+  }
+  if (!credential) {
+    throw new AppError(422, 'GOOGLE_CREDENTIAL_REQUIRED', 'Google credential is required');
+  }
+
+  let response;
+  try {
+    response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+  } catch {
+    throw new AppError(502, 'GOOGLE_AUTH_UNAVAILABLE', 'Could not verify Google sign-in');
+  }
+  if (!response.ok) {
+    throw new AppError(401, 'INVALID_GOOGLE_CREDENTIAL', 'Google credential is invalid or expired');
+  }
+
+  const profile = await response.json();
+  if (profile.aud !== clientId) {
+    throw new AppError(401, 'INVALID_GOOGLE_AUDIENCE', 'Google credential was issued for another app');
+  }
+  if (!(profile.email_verified === true || profile.email_verified === 'true')) {
+    throw new AppError(403, 'GOOGLE_EMAIL_NOT_VERIFIED', 'Google email is not verified');
+  }
+  if (!profile.sub || !profile.email) {
+    throw new AppError(401, 'INVALID_GOOGLE_PROFILE', 'Google profile is incomplete');
+  }
+  return profile;
+}
+
+async function availableGoogleLogin(email) {
+  const local = email.split('@')[0]
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N}_.-]+/gu, '')
+    .slice(0, 42);
+  const base = local.length >= 3 ? local : 'circleuser';
+
+  for (let suffix = 0; suffix < 1000; suffix += 1) {
+    const login = suffix ? `${base.slice(0, 42)}${suffix}` : base;
+    const [rows] = await pool.execute('SELECT id FROM users WHERE login=? LIMIT 1', [login]);
+    if (!rows[0]) return login;
+  }
+  return `circle${crypto.randomBytes(5).toString('hex')}`;
+}
+
+export async function authenticateWithGoogleCredential(body) {
+  const profile = await fetchGoogleProfile(body?.credential);
+  const email = normalizeEmail(profile.email);
+  validateEmail(email);
+
+  const [byGoogleRows] = await pool.execute(
+    'SELECT * FROM users WHERE google_sub=? LIMIT 1',
+    [profile.sub],
+  );
+  let user = byGoogleRows[0];
+
+  if (!user) {
+    const [byEmailRows] = await pool.execute(
+      'SELECT * FROM users WHERE email=? LIMIT 1',
+      [email],
+    );
+    user = byEmailRows[0];
+
+    if (user) {
+      if (user.google_sub && user.google_sub !== profile.sub) {
+        throw new AppError(409, 'GOOGLE_ACCOUNT_CONFLICT', 'This email is linked to another Google account');
+      }
+      await pool.execute(
+        `UPDATE users
+         SET google_sub=?, email_verified=1,
+             verification_token=NULL, verification_token_expires=NULL,
+             verification_code_hash=NULL, verification_code_expires=NULL,
+             avatar=COALESCE(avatar, ?)
+         WHERE id=?`,
+        [profile.sub, profile.picture || null, user.id],
+      );
+    } else {
+      const login = await availableGoogleLogin(email);
+      const fallbackPassword = crypto.randomBytes(48).toString('base64url');
+      const passwordHash = await bcrypt.hash(fallbackPassword, 12);
+      const fullName = validateFullName(profile.name || '');
+
+      const [insert] = await pool.execute(
+        `INSERT INTO users(
+           login,password_hash,full_name,email,email_verified,avatar,role,google_sub
+         ) VALUES(?,?,?,?,1,?,'user',?)`,
+        [login, passwordHash, fullName, email, profile.picture || null, profile.sub],
+      );
+      user = await User.findById(insert.insertId);
+    }
+  }
+
+  const safeUser = await User.findById(user.id);
+  return { token: signAuthToken({ ...user, ...safeUser }), user: safeUser };
 }

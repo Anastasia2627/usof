@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
+import { useI18n } from './i18n.jsx';
 
 export const go = (path) => { window.location.hash = path; };
 export const fmt = (value) => value ? new Date(value).toLocaleString() : '—';
+
+export function Icon({ name, filled = false, className = '', title }) {
+  return <span
+    className={`material-symbols-rounded ${className}`}
+    aria-hidden={title ? undefined : 'true'}
+    title={title}
+    style={{ fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 500, 'GRAD' 0, 'opsz' 24` }}
+  >{name}</span>;
+}
 
 export function trustName(value) {
   const rating = Number(value || 0);
@@ -21,7 +31,7 @@ export function TrustBadge({ rating }) {
 
 export function ErrorBox({ error }) {
   if (!error) return null;
-  return <div className="card alert error" role="alert">{error.message || String(error)}</div>;
+  return <div className="card alert error" role="alert"><Icon name="error" filled /> <span>{error.message || String(error)}</span></div>;
 }
 
 export function Avatar({ user, size = 'md' }) {
@@ -38,31 +48,48 @@ export function StatusBadges({ item }) {
   </span>;
 }
 
-export function PostCard({ post }) {
+function topicTone(index) {
+  return `tone-${(index % 4) + 1}`;
+}
+
+export function PostCard({ post, featured = false, interactive = true }) {
+  const categories = post.categories || [];
+  const open = interactive ? () => go(`/post/${post.id}`) : undefined;
   return <article
-    className="card postCard"
-    onClick={() => go(`/post/${post.id}`)}
-    tabIndex="0"
-    onKeyDown={(event) => { if (event.key === 'Enter') go(`/post/${post.id}`); }}
+    className={`threadCard ${featured ? 'featured' : ''} ${interactive ? '' : 'previewOnly'}`}
+    onClick={open}
+    tabIndex={interactive ? 0 : undefined}
+    onKeyDown={interactive ? (event) => { if (event.key === 'Enter') open(); } : undefined}
+    aria-disabled={interactive ? undefined : 'true'}
   >
-    <div className="scoreBox">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div>
-    <div>
-      <div className="postMeta">
-        <span>{post.author_login}</span>
-        {post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}
-        <span>·</span><span>{fmt(post.created_at)}</span>
+    <div className="threadTopline">
+      <div className="threadAuthor">
+        <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
+        <span>
+          <strong>{post.author_login}</strong>
+          <small>{fmt(post.created_at)}</small>
+        </span>
+      </div>
+      <div className="threadScore" title="Thread score">
+        <Icon name="arrow_upward" />
+        <strong>{Number(post.score || 0)}</strong>
+      </div>
+    </div>
+    <div className="threadBody">
+      <div className="threadTags">
+        {categories.slice(0, 4).map((category, index) => <span className={topicTone(index)} key={category.id}>#{category.title}</span>)}
         <StatusBadges item={post} />
       </div>
       <h2>{post.title}</h2>
-      <p>{post.content?.slice(0, 190)}{post.content?.length > 190 ? '…' : ''}</p>
-      <div className="postCardBottom">
-        <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
-        <div className="postMetrics">
-          {post.like_count !== undefined && <span>{post.like_count} likes</span>}
-          {post.comment_count !== undefined && <span>{post.comment_count} answers</span>}
-          {post.favorite_count !== undefined && <span>{post.favorite_count} saved</span>}
-        </div>
+      <p>{post.content?.slice(0, featured ? 260 : 190)}{post.content?.length > (featured ? 260 : 190) ? '…' : ''}</p>
+    </div>
+    <div className="threadFooter">
+      <div className="threadMetrics">
+        <span><Icon name="chat_bubble" /> {post.comment_count ?? 0}</span>
+        <span><Icon name="favorite" /> {post.like_count ?? 0}</span>
+        <span><Icon name="bookmark" /> {post.favorite_count ?? 0}</span>
       </div>
+      {interactive && <span className="openThread">Open thread <Icon name="arrow_outward" /></span>}
     </div>
   </article>;
 }
@@ -70,6 +97,7 @@ export function PostCard({ post }) {
 export function Header() {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [unread, setUnread] = useState(0);
 
@@ -101,7 +129,7 @@ export function Header() {
     try {
       if (auth?.token) await api('/auth/logout', { method: 'POST', token: auth.token });
     } catch {
-      // The local session still needs to disappear if the token has already expired.
+      // A stale server token must never keep the local session alive.
     } finally {
       dispatch({ type: 'AUTH_CLEAR' });
       go('/');
@@ -109,36 +137,45 @@ export function Header() {
   }
 
   return <header className="siteHeader">
-    <button className="brand" onClick={() => go('/')} aria-label="Usof home">USOF<span>.</span></button>
+    <button className="brand" onClick={() => go('/')} aria-label="Circle home">
+      <span className="brandMark">c</span><span className="brandWord">circle</span>
+    </button>
+
     <form className="headerSearch" onSubmit={(event) => {
       event.preventDefault();
       const query = search.trim();
       go(query ? `/?search=${encodeURIComponent(query)}` : '/');
     }}>
-      <label className="srOnly" htmlFor="site-search">Search questions</label>
-      <input id="site-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search questions, authors, text…" />
+      <Icon name="search" />
+      <label className="srOnly" htmlFor="site-search">Search Circle</label>
+      <input id="site-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('search')} />
+      {search && <button type="button" className="searchClear" onClick={() => setSearch('')} aria-label="Clear search"><Icon name="close" /></button>}
     </form>
+
     <nav className="mainNav" aria-label="Main navigation">
-      <button onClick={() => go('/')}>Questions</button>
-      <button onClick={() => go('/categories')}>Categories</button>
-      {auth && <button onClick={() => go('/dashboard')}>Dashboard</button>}
-      {auth && <button onClick={() => go('/saved')}>Saved</button>}
-      {auth && <button onClick={() => go('/create')}>Ask</button>}
-      {auth?.user?.role === 'admin' && <button onClick={() => go('/admin/dashboard')}>Admin</button>}
+      <button onClick={() => go('/')}><Icon name="home" /> <span>{t('home')}</span></button>
+      <button onClick={() => go('/categories')}><Icon name="explore" /> <span>{t('explore')}</span></button>
+      {auth && <button onClick={() => go('/following')}><Icon name="group" /> <span>{t('following')}</span></button>}
+      {auth && <button onClick={() => go('/saved')}><Icon name="bookmark" /> <span>{t('saved')}</span></button>}
+      {auth && <button onClick={() => go('/messages')}><Icon name="forum" /> <span>{t('messages')}</span></button>}
     </nav>
+
     <div className="accountArea">
       {auth ? <>
+        <button className="composeButton" onClick={() => go('/create')}><Icon name="add" /> <span>{t('startThread')}</span></button>
         <button className="notificationButton" onClick={() => go('/notifications')} aria-label={`${unread} unread notifications`}>
-          <span aria-hidden="true">◔</span>{unread > 0 && <b>{unread > 99 ? '99+' : unread}</b>}
+          <Icon name="notifications" filled={unread > 0} />
+          {unread > 0 && <b>{unread > 99 ? '99+' : unread}</b>}
         </button>
         <button className="profileButton" onClick={() => go('/profile')}>
           <Avatar user={auth.user} size="sm" />
-          <span><small>{auth.user.role}</small>{auth.user.login}</span>
+          <span><small>@{auth.user.login}</small>{auth.user.full_name || auth.user.login}</span>
         </button>
-        <button className="quietButton" onClick={logout}>Log out</button>
+        {auth.user.role === 'admin' && <button className="iconButton desktopOnly" onClick={() => go('/admin/dashboard')} aria-label="Admin"><Icon name="shield_person" /></button>}
+        <button className="iconButton desktopOnly" onClick={logout} aria-label={t('logout')}><Icon name="logout" /></button>
       </> : <>
-        <button className="quietButton" onClick={() => go('/login')}>Log in</button>
-        <button className="primary compact" onClick={() => go('/register')}>Sign up</button>
+        <button className="quietButton" onClick={() => go('/login')}>{t('login')}</button>
+        <button className="primary compact" onClick={() => go('/register')}>{t('signup')}</button>
       </>}
     </div>
   </header>;
