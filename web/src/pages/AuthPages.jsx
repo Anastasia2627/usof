@@ -4,35 +4,51 @@ import { api } from '../api.js';
 import { useI18n } from '../i18n.jsx';
 import { ErrorBox, Icon, go } from '../ui.jsx';
 
-function MascotStage({ mood = 'idle', headline, copy }) {
-  const [pointer, setPointer] = useState({ x: 0, y: 0 });
+function MascotStage({ mood = 'idle' }) {
+  const stageRef = useRef(null);
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const frameRef = useRef(0);
 
   useEffect(() => {
     function follow(event) {
-      const x = Math.max(-1, Math.min(1, (event.clientX / window.innerWidth - 0.5) * 2));
-      const y = Math.max(-1, Math.min(1, (event.clientY / window.innerHeight - 0.5) * 2));
-      setPointer({ x, y });
+      targetRef.current = {
+        x: Math.max(-1, Math.min(1, (event.clientX / window.innerWidth - 0.5) * 2)),
+        y: Math.max(-1, Math.min(1, (event.clientY / window.innerHeight - 0.5) * 2)),
+      };
     }
+
+    function animate() {
+      const current = currentRef.current;
+      const target = targetRef.current;
+      current.x += (target.x - current.x) * 0.075;
+      current.y += (target.y - current.y) * 0.075;
+
+      const stage = stageRef.current;
+      if (stage) {
+        stage.style.setProperty('--look-x', `${current.x * 10}px`);
+        stage.style.setProperty('--look-y', `${current.y * 8}px`);
+        stage.style.setProperty('--loop-x', `${current.x * 16}px`);
+        stage.style.setProperty('--loop-y', `${current.y * 11}px`);
+        stage.style.setProperty('--mallow-x', `${current.x * 11}px`);
+        stage.style.setProperty('--mallow-y', `${current.y * 8}px`);
+        stage.style.setProperty('--pip-x', `${current.x * 22}px`);
+        stage.style.setProperty('--pip-y', `${current.y * 14}px`);
+      }
+      frameRef.current = window.requestAnimationFrame(animate);
+    }
+
     window.addEventListener('pointermove', follow, { passive: true });
-    return () => window.removeEventListener('pointermove', follow);
+    frameRef.current = window.requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener('pointermove', follow);
+      window.cancelAnimationFrame(frameRef.current);
+    };
   }, []);
 
-  const vars = {
-    '--look-x': `${pointer.x * 5}px`,
-    '--look-y': `${pointer.y * 4}px`,
-  };
-
-  return <section className={`mascotStage mood-${mood}`} style={vars} aria-label="Circle mascots">
-    <div className="authBrand">
-      <button type="button" className="authBrandWord" onClick={() => go('/')}>circle</button>
-      <span>your corner of the internet</span>
-    </div>
-
-    <div className="mascotCopy">
-      <p className="eyebrow">A place for conversations</p>
-      <h2>{headline}</h2>
-      <p>{copy}</p>
-    </div>
+  return <section ref={stageRef} className={`mascotStage mood-${mood}`} aria-label="Circle mascots">
+    <button type="button" className="authBrandWord" onClick={() => go('/')}>circle</button>
 
     <div className="mascotScene" aria-hidden="true">
       <div className="mascot mascot-loop">
@@ -49,10 +65,6 @@ function MascotStage({ mood = 'idle', headline, copy }) {
       </div>
       <div className="mailOrb"><Icon name="mail" filled /></div>
       <div className="thoughtDots"><i /><i /><i /></div>
-    </div>
-
-    <div className="mascotCaption">
-      <span className="liveDot" /> They notice things.
     </div>
   </section>;
 }
@@ -186,17 +198,15 @@ function VerificationPanel({ email, devToken, devCode }) {
   if (state.message) {
     return <div className="verificationSuccess">
       <Icon name="check_circle" filled />
-      <p className="eyebrow">{t('verified')}</p>
-      <h1>Welcome to Circle.</h1>
-      <p>Your email is verified. Your seat is officially yours.</p>
+      <h1>Welcome to Circle</h1>
+      <p>Your email is verified</p>
       <button className="primary" onClick={() => go('/login')}>{t('continueLogin')} <Icon name="arrow_forward" /></button>
     </div>;
   }
 
   return <form className="authForm verificationForm" onSubmit={verifyCode}>
-    <p className="eyebrow">Almost there</p>
     <h1>{t('checkInbox')}</h1>
-    <p className="authLead">We sent a 6-digit code and a one-time verification link to <strong>{email}</strong>.</p>
+    <p className="authLead">We sent a 6-digit code and a one-time verification link to <strong>{email}</strong></p>
     <label className="fieldLabel verificationCodeField">
       <span>{t('verifyCodeLabel')}</span>
       <input
@@ -216,7 +226,7 @@ function VerificationPanel({ email, devToken, devCode }) {
       Development shortcut: open one-time link
     </button>}
     <ErrorBox error={state.error} />
-    <p className="authFinePrint">The code and link expire and can be used only once.</p>
+    <p className="authFinePrint">Expires after 20 minutes · one use only</p>
   </form>;
 }
 
@@ -278,22 +288,12 @@ export function AuthPage({ mode }) {
   const setField = (name) => (event) => setForm({ ...form, [name]: event.target.value });
 
   return <main className="authShell">
-    <MascotStage
-      mood={mood}
-      headline={verification ? 'Incoming.' : isRegister ? 'Pull up a seat.' : 'They kept your spot.'}
-      copy={verification
-        ? 'The crew is waiting with you.'
-        : isRegister
-          ? 'Find your people, tell your story, join the thread.'
-          : 'A lot happened while you were gone.'}
-    />
+    <MascotStage mood={mood} />
 
     <section className="authPanel">
       {verification ? <VerificationPanel {...verification} /> : <form className="authForm" onSubmit={submit}>
         <div className="authHeading">
-          <p className="eyebrow">{isRegister ? t('joinCopy') : t('loginCopy')}</p>
           <h1>{isRegister ? t('createAccount') : t('welcomeBack')}</h1>
-          <p>{isRegister ? 'Start with a name. The rest can grow with you.' : 'Come back to the conversations you care about.'}</p>
         </div>
 
         <GoogleLoginButton onError={setError} />
@@ -398,9 +398,9 @@ export function VerifyPage({ token }) {
     <section className="card verificationLinkPanel">
       <div className={`verificationSeal ${state.message ? 'done' : ''}`}><Icon name={state.message ? 'check' : 'mark_email_unread'} filled /></div>
       <p className="eyebrow">Circle verification</p>
-      <h1>{state.message ? 'Email verified.' : 'Opening your seat…'}</h1>
+      <h1>{state.message ? 'Email verified' : 'Opening your seat…'}</h1>
       {state.busy ? <p>{t('verifying')}</p> : state.message ? <>
-        <p>Your one-time link worked. You can log in now.</p>
+        <p>Your one-time link worked · you can log in now</p>
         <button className="primary" onClick={() => go('/login')}>{t('continueLogin')} <Icon name="arrow_forward" /></button>
       </> : <>
         <label className="fieldLabel">Verification token<input value={manual} onChange={(e) => setManual(e.target.value)} /></label>
