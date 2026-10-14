@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node API/server.js",
     "start": "node API/server.js",
+    "start:hosted": "node API/database/init.js && node API/server.js",
     "db:init": "node API/database/init.js",
     "db:reset": "node API/database/init.js --reset",
     "web": "vite --config web/vite.config.js",
