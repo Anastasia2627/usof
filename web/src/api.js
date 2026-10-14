@@ -1,4 +1,4 @@
-const ORIGIN = (import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000').replace(/\/$/, '');
+const ORIGIN = (import.meta.env.VITE_API_ORIGIN || (import.meta.env.PROD ? window.location.origin : 'http://localhost:5000')).replace(/\/$/, '');
 const BASE = `${ORIGIN}/api`;
 
 export class ApiError extends Error {
