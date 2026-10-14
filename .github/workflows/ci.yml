@@ -98,6 +98,9 @@ jobs:
       - name: Verify admin pagination and comment reply recovery
         run: npm run test:web
 
+      - name: Verify registration, post editing and permissions
+        run: npm run test:user-flow
+
       - name: Capture real UI screenshots
         run: |
           mkdir -p screenshots
