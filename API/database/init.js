@@ -63,6 +63,10 @@ async function initializeDatabase() {
       );
     }
 
+    if (process.env.NODE_ENV === 'production' && !process.env.SEED_PASSWORD) {
+      throw new Error('SEED_PASSWORD must be set before initializing a production database');
+    }
+
     if (resetRequested) {
       if (!resetIsConfirmed()) {
         throw new Error(
@@ -218,7 +222,7 @@ async function initializeDatabase() {
       ) ENGINE=InnoDB
     `);
 
-    const passwordHash = await bcrypt.hash('Password123!', 12);
+    const passwordHash = await bcrypt.hash(process.env.SEED_PASSWORD || 'Password123!', 12);
     const users = [
       ['admin', 'Admin User', 'admin@usof.local', 'admin'],
       ['asya', 'Asya V', 'asya@usof.local', 'user'],
