@@ -80,7 +80,7 @@ jobs:
         run: npm run build
 
       - name: Install screenshot browser
-        run: npx -y playwright@1.55.0 install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Start React frontend
         run: |
@@ -94,6 +94,9 @@ jobs:
           done
           cat web.log
           exit 1
+
+      - name: Verify admin pagination and comment reply recovery
+        run: npm run test:web
 
       - name: Capture real UI screenshots
         run: |
