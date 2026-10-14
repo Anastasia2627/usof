@@ -96,21 +96,25 @@ function CommentNode({ comment, allComments, postId, auth, reload, depth = 0 }) 
       await work();
       await reload();
       window.dispatchEvent(new Event('usof:notifications'));
+      return true;
     } catch (err) {
       setError(err);
+      return false;
     }
   }
 
   async function submitReply(event) {
     event.preventDefault();
     if (!reply.trim()) return;
-    await action(() => api(`/posts/${postId}/comments`, {
+    const saved = await action(() => api(`/posts/${postId}/comments`, {
       method: 'POST',
       token: auth.token,
       body: { content: reply, parentCommentId: comment.id },
     }));
-    setReply('');
-    setReplying(false);
+    if (saved) {
+      setReply('');
+      setReplying(false);
+    }
   }
 
   return <div className="commentBranch" style={{ '--depth': Math.min(depth, 5) }}>
