@@ -42,6 +42,8 @@ export default function AdminPage() {
   const dispatch = useDispatch();
   const [tab, setTab] = useState('users');
   const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [] });
+  const [postPage, setPostPage] = useState(1);
+  const [postPagination, setPostPagination] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -54,11 +56,17 @@ export default function AdminPage() {
     try {
       const [users, posts, categories, comments] = await Promise.all([
         api('/users', { token: auth.token }),
-        api('/posts?limit=50&sort=date&order=desc', { token: auth.token }),
+        api(`/posts?limit=50&page=${postPage}&sort=date&order=desc`, { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
       ]);
+      const lastPage = Math.max(1, posts.pagination?.totalPages || 1);
+      if (postPage > lastPage) {
+        setPostPage(lastPage);
+        return;
+      }
       setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data });
+      setPostPagination(posts.pagination);
     } catch (err) {
       setError(err);
     } finally {
@@ -66,7 +74,7 @@ export default function AdminPage() {
     }
   }
 
-  useEffect(() => { load(); }, [auth?.token, auth?.user?.role]);
+  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage]);
 
   if (auth?.user?.role !== 'admin') return <main><div className="card error">Admin access required.</div></main>;
 
@@ -147,6 +155,11 @@ export default function AdminPage() {
             <button className="dangerText" onClick={() => { if (window.confirm('Delete this question?')) run(() => api(`/posts/${post.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button>
           </div>
         </article>) : <div className="card empty">No posts.</div>}
+        {postPagination && postPagination.totalPages > 1 && <div className="pager">
+          <button disabled={postPage <= 1} onClick={() => setPostPage((page) => page - 1)}>← Previous</button>
+          <span>Page {postPagination.page} / {postPagination.totalPages}</span>
+          <button disabled={postPage >= postPagination.totalPages} onClick={() => setPostPage((page) => page + 1)}>Next →</button>
+        </div>}
       </div>}
 
       {tab === 'categories' && <section className="adminStack">
