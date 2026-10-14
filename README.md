@@ -169,6 +169,10 @@ Main admin flow: login → open admin dashboard → inspect platform/moderation 
 
 For a requirement-by-requirement peer-assessment map and quick demo sequence, see [docs/ASSESSMENT.md](docs/ASSESSMENT.md).
 
+## Online preview hosting
+
+Usof can also serve the built React app from the Express API on one public domain. A Railway + MySQL deployment guide with required secrets, secure seed credentials, and persistence notes is in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). No public hosted site is provisioned by the repository alone.
+
 ## Screenshots
 
 These are real screenshots captured automatically from the running application in GitHub Actions.
