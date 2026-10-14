@@ -10,17 +10,25 @@ export default function PostEditor({ id }) {
   const [form, setForm] = useState({ title: '', content: '', categories: [] });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
+  const [mayEdit, setMayEdit] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api('/categories').then((result) => setCategories(result.data)).catch(setError);
     if (editing && auth) {
       api(`/posts/${id}`, { token: auth.token })
-        .then((result) => setForm({
-          title: result.data.title,
-          content: result.data.content,
-          categories: result.data.categories.map((category) => Number(category.id)),
-        }))
+        .then((result) => {
+          if (Number(result.data.author_id) !== Number(auth.user.id)) {
+            setMayEdit(false);
+            return;
+          }
+          setMayEdit(true);
+          setForm({
+            title: result.data.title,
+            content: result.data.content,
+            categories: result.data.categories.map((category) => Number(category.id)),
+          });
+        })
         .catch(setError)
         .finally(() => setLoading(false));
     }
@@ -31,6 +39,7 @@ export default function PostEditor({ id }) {
     return <main><div className="card alert">Admins moderate post status, lock state and categories without editing user content. Use the post page or Admin console.</div></main>;
   }
   if (loading) return <main><div className="card loading">Loading editor…</div></main>;
+  if (!mayEdit) return <main><div className="card alert">Only the author can edit this question.</div></main>;
 
   function toggle(categoryId) {
     setForm({
