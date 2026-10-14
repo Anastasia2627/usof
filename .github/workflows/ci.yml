@@ -97,6 +97,9 @@ jobs:
       - name: Install screenshot browser
         run: npx playwright install --with-deps chromium
 
+      - name: Verify hosted production UI and same-origin API
+        run: npm run test:hosted
+
       - name: Start React frontend
         run: |
           npm run web -- --host 0.0.0.0 > web.log 2>&1 &
