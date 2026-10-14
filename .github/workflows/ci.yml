@@ -77,6 +77,8 @@ jobs:
         run: npm run test:smoke
 
       - name: Build React frontend
+        env:
+          NODE_ENV: production
         run: npm run build
 
       - name: Verify one-domain production hosting
