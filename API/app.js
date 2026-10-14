@@ -44,6 +44,11 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+// Serve the built React SPA and API from one public origin on hosted deployments.
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.resolve('web/dist')));
+}
+
 app.use(notFound);
 app.use(errorHandler);
 

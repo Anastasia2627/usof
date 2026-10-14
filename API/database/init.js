@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const database = process.env.DB_NAME || 'usof';
+const database = process.env.DB_NAME || process.env.MYSQLDATABASE || 'usof';
 if (!/^[A-Za-z0-9_]+$/.test(database)) {
   throw new Error('DB_NAME may contain only letters, numbers, and underscores');
 }
@@ -23,10 +23,10 @@ const APP_TABLES = [
 ];
 
 const baseConfig = {
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  host: process.env.DB_HOST || process.env.MYSQLHOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT || process.env.MYSQLPORT || 3306),
+  user: process.env.DB_USER || process.env.MYSQLUSER || 'root',
+  password: process.env.DB_PASSWORD ?? process.env.MYSQLPASSWORD ?? '',
 };
 
 function resetIsConfirmed() {
@@ -61,6 +61,10 @@ async function initializeDatabase() {
         `Database ${database} contains a partial Usof schema. No data was changed. ` +
         `Review the database and use "npm run db:reset -- --confirm=${database}" only if a full reset is intended.`,
       );
+    }
+
+    if (process.env.NODE_ENV === 'production' && !process.env.SEED_PASSWORD) {
+      throw new Error('SEED_PASSWORD must be set before initializing a production database');
     }
 
     if (resetRequested) {
@@ -218,7 +222,7 @@ async function initializeDatabase() {
       ) ENGINE=InnoDB
     `);
 
-    const passwordHash = await bcrypt.hash('Password123!', 12);
+    const passwordHash = await bcrypt.hash(process.env.SEED_PASSWORD || 'Password123!', 12);
     const users = [
       ['admin', 'Admin User', 'admin@usof.local', 'admin'],
       ['asya', 'Asya V', 'asya@usof.local', 'user'],

@@ -77,10 +77,28 @@ jobs:
         run: npm run test:smoke
 
       - name: Build React frontend
+        env:
+          NODE_ENV: production
         run: npm run build
 
+      - name: Verify one-domain production hosting
+        run: |
+          NODE_ENV=production PORT=5001 npm run start:hosted > hosted.log 2>&1 &
+          echo $! > hosted.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5001/api/health > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:5001/api/health | grep -q '"status":"ok"'
+          curl --fail --silent http://127.0.0.1:5001/ | grep -q 'id="root"'
+
       - name: Install screenshot browser
-        run: npx -y playwright@1.55.0 install --with-deps chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify hosted production UI and same-origin API
+        run: npm run test:hosted
 
       - name: Start React frontend
         run: |
@@ -94,6 +112,12 @@ jobs:
           done
           cat web.log
           exit 1
+
+      - name: Verify admin pagination and comment reply recovery
+        run: npm run test:web
+
+      - name: Verify registration, post editing and permissions
+        run: npm run test:user-flow
 
       - name: Capture real UI screenshots
         run: |
@@ -114,6 +138,9 @@ jobs:
       - name: Stop services
         if: always()
         run: |
+          if [ -f hosted.pid ]; then
+            kill -TERM "$(cat hosted.pid)" 2>/dev/null || true
+          fi
           if [ -f web.pid ]; then
             kill -TERM "$(cat web.pid)" 2>/dev/null || true
           fi

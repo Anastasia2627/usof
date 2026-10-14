@@ -1,0 +1,10 @@
+.git
+.github
+node_modules
+web/dist
+.env
+.env.*
+!.env.example
+*.log
+screenshots
+coverage

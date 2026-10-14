@@ -4,7 +4,7 @@ import { pingDatabase, pool } from './src/config/db.js';
 
 dotenv.config();
 
-const port = Number(process.env.APP_PORT || 5000);
+const port = Number(process.env.PORT || process.env.APP_PORT || 5000);
 let server;
 
 try {
