@@ -326,7 +326,7 @@ export function AuthPage({ mode }) {
           <h1>{isRegister ? t('createAccount') : t('welcomeBack')}</h1>
         </div>
 
-        {import.meta.env.VITE_GOOGLE_CLIENT_ID && !isDemoMode() && <>
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID && <>
           <GoogleLoginButton onError={setError} />
           <div className="authDivider"><span>or continue with email</span></div>
         </>}
