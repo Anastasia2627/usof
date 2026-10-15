@@ -66,7 +66,7 @@ export function PostCard({ post, featured = false, interactive = true }) {
       <div className="threadAuthor">
         <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
         <span>
-          <strong>{post.author_login}</strong>
+          <button className="authorLink" type="button" onClick={(event) => { event.stopPropagation(); go(`/profile/${post.author_id}`); }} onKeyDown={(event) => event.stopPropagation()}>{post.author_login}</button>
           <small>{fmt(post.created_at)}</small>
         </span>
       </div>
