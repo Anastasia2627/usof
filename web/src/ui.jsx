@@ -66,7 +66,7 @@ export function PostCard({ post, featured = false, interactive = true }) {
       <div className="threadAuthor">
         <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
         <span>
-          <strong>{post.author_login}</strong>
+          <button className="authorLink" type="button" onClick={(event) => { event.stopPropagation(); go(`/profile/${post.author_id}`); }} onKeyDown={(event) => event.stopPropagation()}>{post.author_login}</button>
           <small>{fmt(post.created_at)}</small>
         </span>
       </div>
@@ -164,12 +164,16 @@ export function Header() {
           <Icon name="notifications" filled={unread > 0} />
           {unread > 0 && <b>{unread > 99 ? '99+' : unread}</b>}
         </button>
-        <button className="profileButton" onClick={() => go('/profile')}>
+        <button className="profileButton" onClick={() => go('/profile')}
+          aria-label={`Profile of ${auth.user.login} (${auth.user.role})`}>
           <Avatar user={auth.user} size="sm" />
-          <span><small>@{auth.user.login}</small>{auth.user.full_name || auth.user.login}</span>
+          <span className="accountIdentity">
+            <small>@{auth.user.login}</small>
+            <span className="accountRole">{auth.user.role}</span>
+          </span>
         </button>
-        {auth.user.role === 'admin' && <button className="iconButton desktopOnly" onClick={() => go('/admin/dashboard')} aria-label="Admin"><Icon name="shield_person" /></button>}
-        <button className="iconButton desktopOnly" onClick={logout} aria-label={t('logout')}><Icon name="logout" /></button>
+        {auth.user.role === 'admin' && <button className="iconButton" onClick={() => go('/admin/dashboard')} aria-label="Admin console"><Icon name="shield_person" /></button>}
+        <button className="iconButton headerLogout" onClick={logout} aria-label={t('logout')} title={t('logout')}><Icon name="logout" /></button>
       </> : <>
         <button className="quietButton" onClick={() => go('/login')}>{t('login')}</button>
         <button className="primary compact" onClick={() => go('/register')}>{t('signup')}</button>

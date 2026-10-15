@@ -1114,7 +1114,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   .mainNav::-webkit-scrollbar{display:none}
   .mainNav button{flex:0 0 auto}
   .accountArea{grid-column:2;grid-row:1}
-  .accountArea .composeButton span,.profileButton>span:last-child,.desktopOnly{display:none}
+  .accountArea .composeButton span,.desktopOnly{display:none}
   .composeButton{width:40px;padding:0;justify-content:center}
   .circleHero{min-height:auto;padding:46px 0}
   .circleHero h1{font-size:clamp(54px,16vw,78px)}

@@ -109,7 +109,7 @@ function ensureReactable(target, isAdmin) {
   }
 }
 
-export async function setReaction({ userId, postId = null, commentId = null, type, isAdmin = false }) {
+async function setReactionOnce({ userId, postId = null, commentId = null, type, isAdmin = false }) {
   if (!reactionTypes.includes(type)) {
     throw new AppError(422, 'INVALID_REACTION', `Reaction type must be one of: ${reactionTypes.join(', ')}`);
   }
@@ -169,7 +169,7 @@ export async function setReaction({ userId, postId = null, commentId = null, typ
   }
 }
 
-export async function deleteReaction({ userId, postId = null, commentId = null, deleteAll = false }) {
+async function deleteReactionOnce({ userId, postId = null, commentId = null, deleteAll = false }) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -203,4 +203,31 @@ export async function deleteReaction({ userId, postId = null, commentId = null, 
   } finally {
     connection.release();
   }
+}
+
+
+// MySQL can detect deadlocks under concurrent writes even when targets differ.
+// Always retry the ENTIRE transaction, never a single INSERT/UPDATE, so rating
+// deltas are applied only once after a successful commit.
+async function retryTransaction(operation) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const retryable = error.code === 'ER_LOCK_DEADLOCK' ||
+        error.code === 'ER_LOCK_WAIT_TIMEOUT' ||
+        error.errno === 1213 ||
+        error.errno === 1205;
+      if (!retryable || attempt >= 4) throw error;
+      await new Promise((resolve) => setTimeout(resolve, (attempt + 1) * 25));
+    }
+  }
+}
+
+export async function setReaction(params) {
+  return retryTransaction(() => setReactionOnce(params));
+}
+
+export async function deleteReaction(params) {
+  return retryTransaction(() => deleteReactionOnce(params));
 }

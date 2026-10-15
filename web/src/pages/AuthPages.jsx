@@ -254,6 +254,8 @@ export function AuthPage({ mode }) {
   const [form, setForm] = useState({ identifier: '', login: '', email: '', fullName: '', password: '', passwordConfirmation: '' });
   const [error, setError] = useState(null);
   const [verification, setVerification] = useState(null);
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendMessage, setResendMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [focus, setFocus] = useState('idle');
   const [revealed, setRevealed] = useState(false);
@@ -303,6 +305,38 @@ export function AuthPage({ mode }) {
       }
     } catch (err) {
       setError(err);
+      if (!isRegister && err.code === 'EMAIL_NOT_VERIFIED' && form.identifier.includes('@')) {
+        setResendEmail(form.identifier.trim());
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resendFromLogin() {
+    setError(null);
+    setResendMessage('');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resendEmail.trim())) {
+      setError(new Error('Enter your email address to request a verification code.'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await api('/auth/resend-verification', {
+        method: 'POST', body: { email: resendEmail.trim() },
+      });
+      if (result.emailDelivery) {
+        setVerification({
+          email: resendEmail.trim(),
+          emailDelivery: result.emailDelivery,
+          devToken: result.verificationToken || '',
+          devCode: result.verificationCode || '',
+        });
+      } else {
+        setResendMessage(result.message || 'If verification is needed, a code will be sent.');
+      }
+    } catch (err) {
+      setError(err);
     } finally {
       setBusy(false);
     }
@@ -317,7 +351,11 @@ export function AuthPage({ mode }) {
       {verification ? <VerificationPanel {...verification} onVerified={async () => {
         const result = await api('/auth/login', {
           method: 'POST',
-          body: { login: form.login, password: form.password },
+          body: isRegister
+            ? { login: form.login, password: form.password }
+            : (form.identifier.includes('@')
+              ? { email: form.identifier, password: form.password }
+              : { login: form.identifier, password: form.password }),
         });
         dispatch({ type: 'AUTH_SET', payload: result });
         go('/');
@@ -393,6 +431,21 @@ export function AuthPage({ mode }) {
         </button>
 
         <ErrorBox error={error} />
+        {!isRegister && <div className="authRecovery">
+          <button type="button" className="linkButton" onClick={() => {
+            setResendMessage('');
+            setResendEmail(form.identifier.includes('@') ? form.identifier : '');
+            setError(null);
+            setResendMessage('Enter the email used when you registered.');
+          }}>Need a new verification email?</button>
+          {resendMessage && <p role="status">{resendMessage}</p>}
+          {resendMessage && <label className="fieldLabel">
+            <span>Registration email</span>
+            <input type="email" autoComplete="email" value={resendEmail}
+              onChange={(event) => setResendEmail(event.target.value)} placeholder="you@example.com" />
+          </label>}
+          {resendMessage && <button type="button" className="secondary" disabled={busy} onClick={resendFromLogin}>Send new code</button>}
+        </div>}
 
         <div className="authSwitch">
           <span>{isRegister ? 'Already have a seat?' : 'New around here?'}</span>

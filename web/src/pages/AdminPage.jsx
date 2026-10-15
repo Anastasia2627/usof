@@ -41,6 +41,8 @@ export default function AdminPage() {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [tab, setTab] = useState('users');
+  const [postPage, setPostPage] = useState(1);
+  const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
   const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [] });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,11 +56,14 @@ export default function AdminPage() {
     try {
       const [users, posts, categories, comments] = await Promise.all([
         api('/users', { token: auth.token }),
-        api('/posts?limit=50&sort=date&order=desc', { token: auth.token }),
+        api(`/posts?limit=20&page=${postPage}&sort=date&order=desc`, { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
       ]);
       setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data });
+      const pageInfo = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
+      setPostPagination(pageInfo);
+      if (postPage > Math.max(1, pageInfo.totalPages)) setPostPage(Math.max(1, pageInfo.totalPages));
     } catch (err) {
       setError(err);
     } finally {
@@ -66,7 +71,7 @@ export default function AdminPage() {
     }
   }
 
-  useEffect(() => { load(); }, [auth?.token, auth?.user?.role]);
+  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage]);
 
   if (auth?.user?.role !== 'admin') return <main><div className="card error">Admin access required.</div></main>;
 
@@ -146,7 +151,14 @@ export default function AdminPage() {
             <button onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
             <button className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api(`/posts/${post.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button>
           </div>
-        </article>) : <div className="card empty">No posts.</div>}
+        </article>) : <div className="card empty">No posts on this page.</div>}
+        <nav className="pager" aria-label="Admin post pages">
+          <button type="button" disabled={postPage <= 1 || loading}
+            onClick={() => setPostPage((page) => Math.max(1, page - 1))}>Previous</button>
+          <span aria-live="polite">Page {postPage} of {Math.max(1, postPagination.totalPages)} · {postPagination.total} posts</span>
+          <button type="button" disabled={postPage >= Math.max(1, postPagination.totalPages) || loading}
+            onClick={() => setPostPage((page) => page + 1)}>Next</button>
+        </nav>
       </div>}
 
       {tab === 'categories' && <section className="adminStack">

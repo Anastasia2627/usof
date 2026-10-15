@@ -19,12 +19,14 @@ All protected routes expect `Authorization: Bearer <token>`. JSON errors use the
 | --- | --- | --- | --- |
 | POST | `/auth/register` | Public | Register a user. Requires `login`, `email`, `password`, `passwordConfirmation`; `fullName` is optional. New registrations always receive role `user`. |
 | POST | `/auth/verify-email/:token` | Public | Confirm the email address. |
+| POST | `/auth/verify-email-code` | Public | Confirm the six-digit email code. |
+| POST | `/auth/resend-verification` | Public | Request a fresh verification email, throttled to one request/minute per address in the local server. |
 | POST | `/auth/login` | Public | Log in with `login` or `email` plus `password`. Email must already be confirmed. |
 | POST | `/auth/logout` | User/Admin | Invalidates existing bearer tokens for the current account. |
 | POST | `/auth/password-reset` | Public | Creates a short-lived reset token and sends a reset link when SMTP is configured. |
 | POST | `/auth/password-reset/:confirm_token` | Public | Changes the password and invalidates old sessions. The reset token is consumed atomically. |
 
-In non-production environments the registration/reset token is also returned in the JSON response so the complete flow can be tested without SMTP. Production responses never expose these tokens.
+Verification/reset tokens are never exposed on production responses. In local development they are also hidden by default; the disposable automated test environment may return them for assertions. An explicit `ALLOW_DEV_VERIFICATION_TOKENS=true` switch is available for isolated local debugging only.
 
 Password reset confirmation uses a conditional update that still requires the same unexpired reset-token hash after password hashing has completed. If another request consumed, replaced or expired the token first, the second request fails instead of changing the password.
 

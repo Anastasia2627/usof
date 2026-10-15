@@ -60,6 +60,7 @@ export default function App() {
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
   else if (path === '/profile') page = <ProfilePage />;
+  else if (parts[0] === 'profile' && /^\d+$/.test(parts[1] || '')) page = <ProfilePage userId={parts[1]} />;
   else if (path === '/dashboard') page = <DashboardPage />;
   else if (path === '/saved') page = <LibraryPage mode="favorites" />;
   else if (path === '/following') page = <LibraryPage mode="following" />;
