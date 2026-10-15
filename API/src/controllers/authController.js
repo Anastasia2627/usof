@@ -5,12 +5,17 @@ import {
   invalidateSession,
   issuePasswordReset,
   registerAccount,
+  resendVerificationEmail,
   verifyEmailToken,
   verifyEmailCode,
 } from '../services/authService.js';
 
 export async function register(req, res) {
   res.status(201).json(await registerAccount(req.body));
+}
+
+export async function resendVerification(req, res) {
+  res.json(await resendVerificationEmail(req.body));
 }
 
 export async function verifyEmail(req, res) {
