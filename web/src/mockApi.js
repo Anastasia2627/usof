@@ -130,6 +130,7 @@ function filterPosts(url) {
   const category = Number(url.searchParams.get('category') || 0);
   const sort = url.searchParams.get('sort') || 'date';
   const status = url.searchParams.get('status');
+  const author = Number(url.searchParams.get('author') || 0);
 
   if (search) {
     data = data.filter((post) => [post.title, post.content, post.author_login]
@@ -137,6 +138,7 @@ function filterPosts(url) {
   }
   if (category) data = data.filter((post) => post.categories.some((item) => Number(item.id) === category));
   if (status) data = data.filter((post) => post.status === status);
+  if (author) data = data.filter((post) => Number(post.author_id) === author);
 
   if (sort === 'likes') data.sort((a, b) => Number(b.like_count) - Number(a.like_count));
   else if (sort === 'trending') data.sort((a, b) => (Number(b.comment_count) + Number(b.like_count)) - (Number(a.comment_count) + Number(a.like_count)));
@@ -321,6 +323,7 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   if (pathname === '/dashboard/admin') {
     // UI preview only: all figures below come from in-browser demonstration data.
     const posts = allPosts();
+    const members = allUsers();
     const categoryPosts = (categoryId) => posts.filter((post) =>
       post.categories.some((category) => Number(category.id) === Number(categoryId)));
     const inactivePosts = posts.filter((post) => post.status === 'inactive' || post.locked);
@@ -341,8 +344,8 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
     return {
       data: {
         overview: {
-          users: users.length,
-          verified_users: users.filter((user) => user.email_verified).length,
+          users: members.length,
+          verified_users: members.filter((user) => user.email_verified).length,
           new_users_7d: 0,
           posts: posts.length,
           active_posts: posts.filter((post) => post.status === 'active').length,
@@ -360,7 +363,7 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
           unread_notifications: notifications.filter((item) => !item.read_at).length,
         },
         growth,
-        topContributors: users.map((user) => ({
+        topContributors: members.map((user) => ({
           ...user,
           posts: posts.filter((post) => Number(post.author_id) === Number(user.id)).length,
           answers: comments.filter((comment) => Number(comment.author_id) === Number(user.id)).length,
@@ -387,6 +390,27 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   }
 
   if (pathname === '/dashboard/me') {
+    const current = userFromToken(token);
+    if (Number(current.id) >= 1000) {
+      const ownPosts = allPosts().filter((post) => Number(post.author_id) === Number(current.id));
+      return {
+        data: {
+          trust: { name: 'Newcomer', rating: Number(current.rating || 0), nextLevelAt: 10, progress: 0 },
+          stats: {
+            communityRank: allUsers().length, contributors: allUsers().length,
+            answers: 0, answersThisWeek: 0, posts: ownPosts.length,
+            positiveReactionsReceived: 0, contributionStreak: 0,
+            favorites: 0, following: 0, unreadNotifications: 0,
+          },
+          weeklyGoal: { current: 0, target: 5, completed: false },
+          achievements: [
+            { id: 'first-post', title: 'First conversation', description: 'Publish your first post.', progress: Math.min(1, ownPosts.length), target: 1, unlocked: ownPosts.length >= 1 },
+          ],
+          reactionsReceived: {},
+          suggestions: allPosts().filter((post) => Number(post.author_id) !== Number(current.id)).slice(0, 4),
+        },
+      };
+    }
     return {
       data: {
         trust: { name: 'Contributor', rating: 24, nextLevelAt: 30, progress: 80 },
