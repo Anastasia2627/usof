@@ -26,7 +26,7 @@ export default function PostEditor({ id }) {
     }
   }, [id, editing, auth?.token]);
 
-  if (!auth) return <main><div className="card">Log in to create or edit questions.</div></main>;
+  if (!auth) return <main><div className="card">Log in to create or edit posts.</div></main>;
   if (auth.user.role === 'admin' && editing) {
     return <main><div className="card alert">Admins moderate post status, lock state and categories without editing user content. Use the post page or Admin console.</div></main>;
   }
@@ -64,13 +64,13 @@ export default function PostEditor({ id }) {
   }
 
   return <main className="narrow editorPage">
-    <p className="eyebrow">{editing ? 'Improve your question' : 'Share a problem'}</p>
-    <h1>{editing ? 'Edit question' : 'Ask a question'}</h1>
+    <p className="eyebrow">{editing ? 'Edit your post' : 'Start a conversation'}</p>
+    <h1>{editing ? 'Edit post' : 'New post'}</h1>
     <form className="card form" onSubmit={submit}>
-      <label>Title<input maxLength="180" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="What exactly are you trying to solve?" /></label>
-      <label>Details<textarea maxLength="50000" required value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="Explain what you tried, expected and observed." /></label>
+      <label>Title<input maxLength="180" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Give your post a title" /></label>
+      <label>Details<textarea maxLength="50000" required value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="What's on your mind?" /></label>
       <fieldset><legend>Categories</legend><div className="checkGrid">{categories.map((category) => <label className="check" key={category.id}><input type="checkbox" checked={form.categories.includes(Number(category.id))} onChange={() => toggle(Number(category.id))} />{category.title}</label>)}</div></fieldset>
-      <button className="primary" disabled={busy}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Publish question'}</button>
+      <button className="primary" disabled={busy}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Publish post'}</button>
       <ErrorBox error={error} />
     </form>
   </main>;
