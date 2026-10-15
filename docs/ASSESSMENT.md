@@ -54,10 +54,10 @@ The implementation also protects several cases beyond the happy-path challenge r
 | Full interface for backend | Auth, users/profile, posts, categories, comments/replies, reactions and admin moderation are represented in the client. |
 | Header + menu on every page | `App.jsx` renders the shared `Header` around all routes. |
 | Service name + site search | USOF brand and post/author/text search in the shared header. |
-| Role + login + avatar for current user | Profile control is rendered in the header after login. |
-| Logout available on every page | Shared header logout invalidates server session and clears Redux/local storage. |
+| Role + login + avatar for current user | The shared profile control shows the current login, role and avatar on both desktop and mobile. |
+| Logout available on every page | Shared header logout remains visible on mobile and desktop; it invalidates server session and clears Redux/local storage. |
 | Main page | Recent feed, post previews, search/filter/sort and pagination. |
-| User profile | Profile/avatar editing, reputation/trust, own posts, category/status/sort controls and pagination. |
+| User profile | Own profile/avatar editing and posts; read-only `/profile/:id` for other members; filters, sorting and pagination. |
 | Own post editing | Create/edit page supports title, content and multiple categories. |
 | Post preview contains actual API data | Reputation score, author/trust, date, status, title, content preview, categories and activity metrics. |
 | Comment comments | Nested reply composer and recursive thread rendering. |
