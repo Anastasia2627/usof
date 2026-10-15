@@ -106,41 +106,18 @@ export default function HomePage({ hash }) {
   const rest = posts.slice(1);
 
   return <main className="homePage">
-    <section className="circleHero">
-      <div className="heroCopy">
-        <span className="heroKicker">{language === 'uk' ? 'ТВОЄ КОЛО · ТВОЇ ІСТОРІЇ' : 'YOUR SPACE · YOUR STORIES'}</span>
-        <h1>{language === 'uk' ? <>Розмови, які <span className="heroGradientWord">об’єднують.</span></> : <>Conversations that <span className="heroGradientWord">connect.</span></>}</h1>
-        <p className="heroBody">{t('heroBody')}</p>
-        <div className="heroActions">
-          <button className="primary" onClick={() => go(auth ? '/create' : '/register')}>
-            {auth ? t('startThread') : 'Join the circle'} <Icon name="arrow_forward" />
-          </button>
-          <button className="textAction" onClick={() => go('/categories')}>{language === 'uk' ? 'Дослідити теми' : 'Explore topics'} <Icon name="north_east" /></button>
-        </div>
-        <div className="heroMiniProof" aria-label="What Circle is for">
-          <span><Icon name="forum" /> {language === 'uk' ? 'Відкриті обговорення' : 'Open conversations'}</span>
-          <span><Icon name="favorite" /> {language === 'uk' ? 'Близькі теми' : 'Topics that matter'}</span>
-        </div>
+    <section className="circleFeedIntro">
+      <div>
+        <p className="circleFeedEyebrow">{auth ? 'CIRCLE / FEED' : 'CIRCLE / OPEN CONVERSATIONS'}</p>
+        <h1>{auth ? (language === 'uk' ? 'Стрічка' : 'Your feed') : (language === 'uk' ? 'Місце для розмов.' : 'A place to talk.')}</h1>
+        {!auth && <p>{language === 'uk'
+          ? 'Думки, питання й історії на будь-яку тему. Долучайся до обговорень.'
+          : 'Questions, stories and opinions about anything. Join the conversation.'}</p>}
       </div>
-
-      <div className="heroConversation" aria-hidden="true">
-        <div className="heroNote heroNote-one">
-          <span className="noteDot violet" />
-          <small>today · 18:42</small>
-          <strong>“I thought I was the only one”</strong>
-        </div>
-        <div className="heroNote heroNote-two">
-          <span className="noteDot cream" />
-          <small>12 people joined</small>
-          <strong>what changed your mind lately?</strong>
-        </div>
-        <div className="heroNote heroNote-three">
-          <Icon name="forum" filled />
-          <strong>conversation &gt; content</strong>
-        </div>
-        <div className="heroOrbit orbit-one" />
-        <div className="heroOrbit orbit-two" />
-      </div>
+      <button className="primary circleNewPost" onClick={() => go(auth ? '/create' : '/register')}>
+        <Icon name={auth ? 'add' : 'arrow_forward'} />
+        {auth ? (language === 'uk' ? 'Нова публікація' : 'New post') : t('signup')}
+      </button>
     </section>
 
     {params.get('search') && <section className="searchResultBanner">
@@ -152,8 +129,7 @@ export default function HomePage({ hash }) {
       <div className="feedHeader">
         <div>
           
-          <h2>{language === 'uk' ? 'Є про що поговорити' : 'Worth talking about'}</h2>
-          <p className="feedIntro">{language === 'uk' ? 'Знайди цікаву тему, поділись думкою або почни свою розмову.' : 'Find your people, share a thought, or start something new.'}</p>
+          <h2>{language === 'uk' ? 'Обговорення' : 'Conversations'}</h2>
         </div>
         <button className={`filterToggle ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((value) => !value)}>
           <Icon name="tune" /> {t('filters')}
@@ -163,7 +139,7 @@ export default function HomePage({ hash }) {
       <div className="feedTabs" role="group" aria-label="Feed sorting">
         <button className={feedMode() === 'latest' ? 'active' : ''} onClick={() => applyFeed('latest')}>{t('latest')}</button>
         <button className={feedMode() === 'popular' ? 'active' : ''} onClick={() => applyFeed('popular')}>{t('popular')}</button>
-        <button className={feedMode() === 'evening' ? 'active' : ''} onClick={() => applyFeed('evening')}><Icon name="dark_mode" /> {t('evening')}</button>
+        <button className={feedMode() === 'evening' ? 'active' : ''} onClick={() => applyFeed('evening')}>{language === 'uk' ? 'Сьогодні' : 'Today'}</button>
       </div>
 
       {filtersOpen && <form className="advancedFilters" onSubmit={applyFilters}>
@@ -198,7 +174,7 @@ export default function HomePage({ hash }) {
         <span /><span /><span />
         <p>Listening for conversations…</p>
       </div> : posts.length ? <>
-        {featured && <PostCard post={featured} featured />}
+        {featured && <PostCard post={featured} />}
         {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} />)}</section>}
       </> : <div className="emptyState">
         <span className="emptyGlyph"><Icon name="chair" /></span>

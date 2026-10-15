@@ -183,7 +183,7 @@ export default function PostPage({ id }) {
     load();
   }, [id, auth?.token]);
 
-  if (loading) return <main><div className="card loading">Loading question…</div></main>;
+  if (loading) return <main><div className="card loading">Loading post…</div></main>;
   if (!post) return <main><ErrorBox error={error} /></main>;
 
   const isAdmin = auth?.user?.role === 'admin';
@@ -229,7 +229,7 @@ export default function PostPage({ id }) {
   }
 
   async function remove() {
-    if (!window.confirm('Delete this question? This also removes its comments and reactions.')) return;
+    if (!window.confirm('Delete this post? This also removes its comments and reactions.')) return;
     try {
       await api(`/posts/${id}`, { method: 'DELETE', token: auth.token });
       go('/');
@@ -273,7 +273,7 @@ export default function PostPage({ id }) {
         await trackShare('native');
       } else {
         await navigator.clipboard.writeText(url);
-        setMessage('Question link copied.');
+        setMessage('Post link copied.');
         await trackShare('copy');
       }
     } catch (err) {
@@ -284,7 +284,7 @@ export default function PostPage({ id }) {
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setMessage('Question link copied.');
+      setMessage('Post link copied.');
       await trackShare('copy');
     } catch (err) {
       setError(err);
@@ -305,12 +305,12 @@ export default function PostPage({ id }) {
 
   return <main className="postPage">
     <article className="card questionCard">
-      <div className="questionHeading"><div><p className="eyebrow">Question #{post.id}</p><h1>{post.title}</h1></div><div className="scoreHero">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div></div>
+      <div className="questionHeading"><div><p className="eyebrow">Post #{post.id}</p><h1>{post.title}</h1></div><div className="scoreHero">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div></div>
       <div className="postMeta"><span>by <b>{post.author_login}</b></span>{post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}<span>{fmt(post.created_at)}</span><StatusBadges item={post} /></div>
       <p className="content">{post.content}</p>
       <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
       <div className="questionStats">
-        <span><b>{post.like_count || 0}</b> likes</span><span><b>{post.comment_count || 0}</b> answers</span><span><b>{post.favorite_count || 0}</b> saved</span><span><b>{post.follower_count || 0}</b> following</span><span><b>{post.share_count || 0}</b> shares</span>
+        <span><b>{post.like_count || 0}</b> likes</span><span><b>{post.comment_count || 0}</b> replies</span><span><b>{post.favorite_count || 0}</b> saved</span><span><b>{post.follower_count || 0}</b> following</span><span><b>{post.share_count || 0}</b> shares</span>
       </div>
       <div className="questionTools">
         {auth && canInteract && !isOwner && <ReactionButtons onReact={react} />}
@@ -318,7 +318,7 @@ export default function PostPage({ id }) {
         <div className="toolbar shareTools"><button onClick={shareNative}>Share</button><button onClick={copyLink}>Copy link</button><button onClick={() => shareTo('facebook')}>Facebook</button><button onClick={() => shareTo('x')}>X</button><button onClick={() => shareTo('telegram')}>Telegram</button></div>
       </div>
       <div className="toolbar">
-        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit question</button>}
+        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit post</button>}
         {isAdmin && <><button onClick={() => moderate({ status: post.status === 'active' ? 'inactive' : 'active' })}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button><button onClick={() => moderate({ locked: !Boolean(post.locked) })}>{post.locked ? 'Unlock' : 'Lock'}</button></>}
         {(isOwner || isAdmin) && <button className="dangerText" onClick={remove}>Delete</button>}
       </div>
@@ -334,9 +334,9 @@ export default function PostPage({ id }) {
         : <div className="card empty">No comments yet.</div>}
       {auth
         ? !canInteract
-          ? <div className="card alert">This question is not open for new answers right now.</div>
-          : <form className="card form commentComposer" onSubmit={comment}><label>Add an answer<textarea required maxLength="20000" value={text} onChange={(event) => setText(event.target.value)} placeholder="Write a useful answer or clarification…" /></label><button className="primary">Post answer</button></form>
-        : <div className="card signInPrompt">Log in to answer or react. <button className="linkButton" onClick={() => go('/login')}>Log in</button></div>}
+          ? <div className="card alert">Replies are disabled for this post.</div>
+          : <form className="card form commentComposer" onSubmit={comment}><label>Add a reply<textarea required maxLength="20000" value={text} onChange={(event) => setText(event.target.value)} placeholder="Share your thoughts…" /></label><button className="primary">Post reply</button></form>
+        : <div className="card signInPrompt">Log in to reply or react. <button className="linkButton" onClick={() => go('/login')}>Log in</button></div>}
     </section>
   </main>;
 }

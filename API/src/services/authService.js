@@ -15,11 +15,10 @@ import {
 import { sendPasswordResetEmail, sendVerificationEmail } from './mailService.js';
 
 function devTokenPayload(values) {
+  // Local debugging credentials are opt-in and never exposed in production.
   if (process.env.NODE_ENV === 'production') return {};
-  return {
-    ...values,
-    note: 'Development mode exposes verification credentials so the flow can be tested without SMTP.',
-  };
+  if (process.env.NODE_ENV !== 'test' && process.env.ALLOW_DEV_VERIFICATION_TOKENS !== 'true') return {};
+  return { ...values, note: 'Local development credentials. Do not enable on a public server.' };
 }
 
 function hashVerificationCode(code) {
@@ -85,6 +84,44 @@ export async function registerAccount(body) {
     }
     throw error;
   }
+}
+
+// In-process throttle for local/single-server use; enforce IP limits at the public edge.
+const resendTimes = new Map();
+
+export async function resendVerificationEmail(body) {
+  const email = normalizeEmail(body?.email);
+  validateEmail(email);
+  const key = crypto.createHash('sha256').update(email).digest('hex');
+  const now = Date.now();
+  if (now - (resendTimes.get(key) || 0) < 60000) {
+    throw new AppError(429, 'EMAIL_COOLDOWN', 'Wait one minute before requesting another email.');
+  }
+  resendTimes.set(key, now);
+  const user = await User.findByLoginOrEmail('', email);
+  const message = 'If your account needs verification, we will send another code.';
+  if (!user || user.email_verified) return { message };
+
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  const verificationCode = createVerificationCode();
+  const verificationCodeHash = hashVerificationCode(verificationCode);
+  await pool.execute(
+    'UPDATE users SET verification_token=?, ' +
+    'verification_token_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE), ' +
+    'verification_code_hash=?, ' +
+    'verification_code_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE) ' +
+    'WHERE id=? AND email_verified=0',
+    [verificationToken, verificationCodeHash, Number(user.id)],
+  );
+
+  const delivery = await sendVerificationEmail({
+    to: email, login: user.login, token: verificationToken, code: verificationCode,
+  });
+  return {
+    message,
+    emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
+    ...devTokenPayload({ verificationToken, verificationCode }),
+  };
 }
 
 export async function verifyEmailToken(tokenValue) {

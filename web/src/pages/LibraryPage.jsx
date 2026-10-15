@@ -34,13 +34,13 @@ export default function LibraryPage({ mode = 'favorites' }) {
       .finally(() => setLoading(false));
   }, [auth?.token, isFollowing, page, sort]);
 
-  if (!auth) return <main className="narrow"><div className="card empty"><h1>{isFollowing ? 'Following' : 'Saved questions'}</h1><p>Log in to keep a personal question library.</p><button className="primary" onClick={() => go('/login')}>Log in</button></div></main>;
+  if (!auth) return <main className="narrow"><div className="card empty"><h1>{isFollowing ? 'Following' : 'Saved posts'}</h1><p>Log in to keep a saved posts and followed conversations.</p><button className="primary" onClick={() => go('/login')}>Log in</button></div></main>;
 
   return <main>
     <section className="hero compactHero">
       <p className="eyebrow">Your library</p>
-      <h1>{isFollowing ? 'Following' : 'Saved questions'}</h1>
-      <p>{isFollowing ? 'Discussions you follow and receive updates about.' : 'Questions you saved for later.'}</p>
+      <h1>{isFollowing ? 'Following' : 'Saved posts'}</h1>
+      <p>{isFollowing ? 'Discussions you follow and receive updates about.' : 'Posts you saved for later.'}</p>
     </section>
     <div className="libraryToolbar card">
       <div className="tabs">
@@ -54,7 +54,7 @@ export default function LibraryPage({ mode = 'favorites' }) {
       ? <div className="card loading">Loading your library…</div>
       : posts.length
         ? <section className="postList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</section>
-        : <div className="card empty"><h2>Nothing here yet.</h2><p>{isFollowing ? 'Follow a question to keep up with its discussion.' : 'Save a useful question and it will appear here.'}</p><button className="secondary" onClick={() => go('/')}>Browse questions</button></div>}
+        : <div className="card empty"><h2>Nothing here yet.</h2><p>{isFollowing ? 'Follow a conversation to see new replies.' : 'Save a post and it will appear here.'}</p><button className="secondary" onClick={() => go('/')}>Browse posts</button></div>}
     {pagination && pagination.totalPages > 1 && <div className="pager">
       <button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>← Previous</button>
       <span>Page {pagination.page} / {pagination.totalPages}</span>

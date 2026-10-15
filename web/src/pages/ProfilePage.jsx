@@ -119,7 +119,7 @@ export default function ProfilePage() {
     <section className="profileHero card">
       <Avatar user={user} size="xl" />
       <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1><p>{user?.email}</p></div>
-      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} /></div>
+      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} /><button className="secondary" onClick={() => go('/dashboard')}>Your activity →</button></div>
     </section>
     <div className="twoColumn">
       <form className="card form" onSubmit={save}>
@@ -137,9 +137,9 @@ export default function ProfilePage() {
       </form>
       <section>
         <div className="sectionTitle">
-          <div><p className="eyebrow">Your activity</p><h2>Your questions</h2></div>
+          <div><p className="eyebrow">Your activity</p><h2>Your posts</h2></div>
           <div className="inlineFilters">
-            <label className="srOnly" htmlFor="profile-sort">Sort questions</label>
+            <label className="srOnly" htmlFor="profile-sort">Sort posts</label>
             <select id="profile-sort" value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="date">Newest</option><option value="likes">Most liked</option></select>
             <label className="srOnly" htmlFor="profile-category">Category</label>
             <select id="profile-category" value={category} onChange={(event) => changeFilter(setCategory, event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
@@ -148,10 +148,10 @@ export default function ProfilePage() {
           </div>
         </div>
         {loading
-          ? <div className="card loading">Loading your questions…</div>
+          ? <div className="card loading">Loading your posts…</div>
           : posts.length
             ? <div className="miniList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</div>
-            : <div className="card empty">No questions match these filters.</div>}
+            : <div className="card empty">No posts match these filters.</div>}
         {pagination && pagination.totalPages > 1 && <div className="pager"><button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>← Previous</button><span>Page {pagination.page} / {pagination.totalPages}</span><button disabled={page >= pagination.totalPages} onClick={() => setPage((value) => value + 1)}>Next →</button></div>}
       </section>
     </div>

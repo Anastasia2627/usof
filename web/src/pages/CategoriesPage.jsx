@@ -63,6 +63,6 @@ export function CategoryDetailPage({ id }) {
     <ErrorBox error={error} />
     {!error && (posts.length
       ? <section className="postList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</section>
-      : <div className="card empty"><h2>No questions here yet</h2><p>Choose another category or ask the first question.</p></div>)}
+      : <div className="card empty"><h2>No posts here yet</h2><p>Choose another topic or start the conversation.</p></div>)}
   </main>;
 }

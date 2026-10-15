@@ -1,54 +1,29 @@
-# Circle Studio — UX / dashboard rationale
+# Circle — product UX notes
 
-This design pass keeps the original USOF backend and the core post → comment → reaction content model. The product positioning is **Circle: an open social space for conversations**, rather than a programming-only Q&A website, as permitted by the updated course brief.
+## Positioning
+Circle is an open social discussion space, not exclusively a programmer forum.
+The original technical entity model — users, posts, topics/categories, threaded comments, reactions and an admin role — remains unchanged.
 
-## Visual direction
+## Reduced navigation
+Only the Home feed and Explore need permanent navigation links. When signed in, the header also contains New post, Notifications and Profile. The personal activity dashboard, saved posts and followed conversations are accessed from profile/dashboard, not as independent top-level destinations. The not-yet-implemented Messages placeholder was removed.
 
-- Black / near-black editorial base, layered violet radial lighting, elegant soft gradients, large but purposeful typography, thin purple borders and translucent cards.
-- 3D-inspired depth is created with CSS rather than adding large imagery or expensive animation assets. The landing hero is shorter so real conversations appear sooner.
-- Responsive layouts use 4/3/2-column reductions and intentional mobile fallbacks.
-- Visible keyboard focus and reduced-motion support; decorative shapes do not contain critical information.
+## Feed first
+The landing page is the real posts feed. We removed the marketing billboard, ornamental sample quote cards and exaggerated secondary labels. Posts are displayed immediately with clear sorting and filters. Guest posts can be opened without registering.
 
-## User dashboard — Circle Space
+## Visual direction and quality rules
+Keep near-black backgrounds, a restrained violet accent, deliberate typography, and the recognizable mascot in the auth screen. Avoid ubiquitous purple fog, glassmorphism, evenly repeated oversized cards, decorative fake analytics, needless uppercased microcopy, and hovering/translating cards as generic cues.
 
-Data source: existing `GET /api/dashboard/me` endpoint.
+## Dashboards
+- Member: real posts, replies, reactions received, saved count, replies this week, reputation and links to functional saved/followed/notification pages.
+- Admin: real totals, last-seven-days post/reply activity, moderation attention items and popular topics.
+- Never show fake community totals as if they came from MySQL.
 
-| Widget | Existing data |
-| --- | --- |
-| Contribution reputation and trust ring | `trust.rating`, `trust.name`, `trust.progress` |
-| Member rank | `stats.communityRank`, `stats.contributors` |
-| Posts and replies | `stats.posts`, `stats.answers` |
-| Received reactions | `stats.positiveReactionsReceived`, `reactionsReceived` |
-| Contribution streak | `stats.contributionStreak` |
-| Bookmarks and followed threads | `stats.favorites`, `stats.following` |
-| Weekly participation goal | `weeklyGoal`, based on replies |
-| Milestones and suggested discussions | `achievements`, `suggestions` |
-
-No invented financial metrics, unsupported profile views or fictitious follower counts. “Streak” measures days of contributions, not consecutive days merely opening the site.
-
-## Admin dashboard — Admin Studio
-
-Data source: existing `GET /api/dashboard/admin` endpoint.
-
-- Primary KPIs: users, users registered in the last seven days, posts, reactions.
-- Seven-day community activity: users, posts, replies and reactions per day.
-- Moderation context: hidden/locked posts and comments. This is **not** presented as a user-report queue; there is no reports entity in the existing API.
-- Top contributors, active topics and received-reaction mix.
-- Secondary metrics remain accessible but take less visual weight.
-
-## Interaction corrections
-
-- Public post cards now open for visitors, matching the public GET endpoint contract.
-- “For you” was an alias of “Latest” with no personalisation. The misleading duplicate tab was removed.
-- A visible link to the personal dashboard replaces the non-functional Messages placeholder in primary navigation; the placeholder route itself remains.
-- When the development frontend falls back to `mockApi` without the backend, dashboards display a visible “Preview mode” warning. The Admin Studio preview derives its example counts from in-browser sample entities and does not claim MySQL data.
-
-## Verification
-
-Run `npm run build`, test `/#/`, `/#/register`, `/#/dashboard` with a logged-in user, `/#/admin/dashboard` with an admin; repeat at mobile widths. Live database tests require MySQL and the API running.
+## Registration
+- Demo uses the same visible UI, with fake local data and direct feed navigation; no backend/email.
+- Real user registers, verifies via genuine SMTP email (code or one-time link), then logs in to see the feed.
+- Ordinary web mode must not silently fall back to mock data.
 
 ## UX references
-
-- NN/g: https://www.nngroup.com/articles/vanity-metrics/ (actionable measures, not vanity numbers).
-- W3C: https://www.w3.org/WAI/WCAG22/Techniques/css/C39.html (reduced-motion preference).
-- Original backend/frontend challenge PDF documents (provided separately) define the required data entities and interaction model.
+- NN/g: https://www.nngroup.com/articles/aesthetic-minimalist-design/
+- NN/g: https://www.nngroup.com/articles/ai-ux-debt/
+- AI-slop patterns: https://smoothui.dev/blog/ai-design-slop

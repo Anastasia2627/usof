@@ -43,14 +43,14 @@ async function send({ to, subject, text, html }) {
   const transport = getTransporter();
   if (!transport) return { configured: false, sent: false };
   try {
-    await transport.sendMail({
+    const info = await transport.sendMail({
       from: process.env.MAIL_FROM || 'Circle@example.local',
       to,
       subject,
       text,
       html,
     });
-    return { configured: true, sent: true };
+    return { configured: true, sent: Boolean(info.accepted?.length) };
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') console.error('Email delivery failed:', error.message);
     return { configured: true, sent: false };

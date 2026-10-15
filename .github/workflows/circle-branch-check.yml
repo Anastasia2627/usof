@@ -1,0 +1,49 @@
+name: Circle branch build check
+
+on:
+  push:
+    branches: [circle-product-cleanup]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: usof_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      NODE_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: usof_ci
+      DB_USER: root
+      DB_PASSWORD: root
+      AUTH_SECRET: ci-only-secret-not-for-production
+      CLIENT_ORIGIN: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Check backend syntax
+        run: npm run check:backend
+      - name: Check SMTP script syntax
+        run: node --check scripts/check-smtp.mjs
+      - name: Run existing authentication and verification tests
+        run: |
+          npm run db:reset
+          npm run test:auth
+      - name: Build frontend
+        run: npm run build

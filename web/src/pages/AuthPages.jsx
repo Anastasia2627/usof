@@ -174,59 +174,76 @@ function PasswordField({ label, value, onChange, autoComplete, onFocus, onBlur, 
   </label>;
 }
 
-function VerificationPanel({ email, devToken, devCode }) {
+function VerificationPanel({ email, emailDelivery, devToken, devCode, onVerified }) {
   const { t } = useI18n();
   const [code, setCode] = useState(devCode || '');
-  const [state, setState] = useState({ busy: false, message: '', error: null });
+  const [delivery, setDelivery] = useState(emailDelivery || 'not-configured');
+  const [state, setState] = useState({ busy: false, message: '', error: null, resendMessage: '' });
 
   async function verifyCode(event) {
     event.preventDefault();
     const clean = code.replace(/\D/g, '').slice(0, 6);
     if (clean.length !== 6) {
-      setState({ busy: false, message: '', error: new Error('Enter the 6-digit code from your email') });
+      setState((prev) => ({ ...prev, error: new Error('Enter the six-digit code from your email.') }));
       return;
     }
-    setState({ busy: true, message: '', error: null });
+    setState({ busy: true, message: '', error: null, resendMessage: '' });
     try {
       const result = await api('/auth/verify-email-code', { method: 'POST', body: { email, code: clean } });
-      setState({ busy: false, message: result.message || 'Email verified', error: null });
+      setState({ busy: false, message: result.message || 'Email verified', error: null, resendMessage: '' });
+      // Real login after verification, never before. Email links opened in other
+      // tabs can still use the normal login form.
+      try { await onVerified?.(); } catch { /* user can log in using button */ }
     } catch (error) {
-      setState({ busy: false, message: '', error });
+      setState({ busy: false, message: '', error, resendMessage: '' });
+    }
+  }
+
+  async function resend() {
+    setState({ busy: true, message: '', error: null, resendMessage: '' });
+    try {
+      const result = await api('/auth/resend-verification', { method: 'POST', body: { email } });
+      setDelivery(result.emailDelivery || 'unknown');
+      setState({ busy: false, message: '', error: null, resendMessage: result.message });
+    } catch (error) {
+      setState({ busy: false, message: '', error, resendMessage: '' });
     }
   }
 
   if (state.message) {
     return <div className="verificationSuccess">
       <Icon name="check_circle" filled />
-      <h1>Welcome to Circle</h1>
-      <p>Your email is verified</p>
-      <button className="primary" onClick={() => go('/login')}>{t('continueLogin')} <Icon name="arrow_forward" /></button>
+      <h1>Email verified</h1>
+      <p>You can now log in to Circle.</p>
+      <button className="primary" onClick={() => go('/login')}>{t('continueLogin')}</button>
     </div>;
   }
 
+  const delivered = delivery === 'sent';
   return <form className="authForm verificationForm" onSubmit={verifyCode}>
     <h1>{t('checkInbox')}</h1>
-    <p className="authLead">We sent a 6-digit code and a one-time verification link to <strong>{email}</strong></p>
+    <p className="authLead">
+      {delivered ? 'We sent a verification code and link to ' : 'Your account was created, but the confirmation email was not sent to '}
+      <strong>{email}</strong>.
+    </p>
+    {!delivered && <p className="verificationDeliveryNotice" role="alert">
+      {delivery === 'not-configured' ? 'Email sending is not configured on the server. Set up SMTP and try Resend.' :
+        'Email delivery failed. Check SMTP settings and try Resend.'}
+    </p>}
     <label className="fieldLabel verificationCodeField">
       <span>{t('verifyCodeLabel')}</span>
-      <input
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="[0-9]{6}"
-        maxLength="6"
-        placeholder="000000"
-        value={code}
-        onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-      />
+      <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}"
+        maxLength="6" placeholder="000000" value={code}
+        onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} />
     </label>
     <button className="primary authSubmit" disabled={state.busy}>
       {state.busy ? t('verifying') : t('verify')} <Icon name="arrow_forward" />
     </button>
-    {devToken && <button type="button" className="devVerifyLink" onClick={() => go(`/verify/${devToken}`)}>
-      Development shortcut: open one-time link
-    </button>}
+    <button type="button" className="linkButton" disabled={state.busy} onClick={resend}>Resend verification email</button>
+    {state.resendMessage && <p role="status" className="authFinePrint">{state.resendMessage}</p>}
+    {devToken && <button type="button" className="devVerifyLink" onClick={() => go('/verify/' + devToken)}>Local developer shortcut</button>}
     <ErrorBox error={state.error} />
-    <p className="authFinePrint">Expires after 20 minutes · one use only</p>
+    <p className="authFinePrint">Verification code and link expire after 20 minutes.</p>
   </form>;
 }
 
@@ -266,10 +283,11 @@ export function AuthPage({ mode }) {
         } });
         if (isDemoMode()) {
           dispatch({ type: 'AUTH_SET', payload: { token: result.token, user: result.user } });
-          go('/dashboard');
+          go('/');
         } else {
           setVerification({
             email: form.email,
+            emailDelivery: result.emailDelivery,
             devToken: result.verificationToken || '',
             devCode: result.verificationCode || '',
           });
@@ -292,37 +310,26 @@ export function AuthPage({ mode }) {
 
   const setField = (name) => (event) => setForm({ ...form, [name]: event.target.value });
 
-  async function demoLogin(login) {
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await api('/auth/login', { method: 'POST', body: { login, password: 'demo-only' } });
-      dispatch({ type: 'AUTH_SET', payload: result });
-      go(login === 'admin' ? '/admin/dashboard' : '/dashboard');
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return <main className="authShell">
     <MascotStage mood={mood} />
 
     <section className="authPanel">
-      {verification ? <VerificationPanel {...verification} /> : <form className="authForm" onSubmit={submit}>
+      {verification ? <VerificationPanel {...verification} onVerified={async () => {
+        const result = await api('/auth/login', {
+          method: 'POST',
+          body: { login: form.login, password: form.password },
+        });
+        dispatch({ type: 'AUTH_SET', payload: result });
+        go('/');
+      }} /> : <form className="authForm" onSubmit={submit}>
         <div className="authHeading">
           <h1>{isRegister ? t('createAccount') : t('welcomeBack')}</h1>
         </div>
 
-        {isDemoMode()
-          ? <div className="demoAuthNote"><strong>Safe testing space</strong><span>Use a made-up email and password. No confirmation email is sent; signing up opens your demo profile immediately.</span></div>
-          : <><GoogleLoginButton onError={setError} /><div className="authDivider"><span>or continue with email</span></div></>}
-
-        {isDemoMode() && !isRegister && <div className="demoAuthShortcuts">
-          <button type="button" disabled={busy} onClick={() => demoLogin('maya')}>Try member account</button>
-          <button type="button" disabled={busy} onClick={() => demoLogin('admin')}>Try admin account</button>
-        </div>}
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID && <>
+          <GoogleLoginButton onError={setError} />
+          <div className="authDivider"><span>or continue with email</span></div>
+        </>}
 
         {isRegister ? <>
           <div className="fieldRow">

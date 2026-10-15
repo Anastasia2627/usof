@@ -89,6 +89,6 @@ export default function NotificationsPage() {
           </button>
           <button className="quietButton dangerText" aria-label="Delete notification" onClick={() => remove(item)}>Delete</button>
         </article>)}</section>
-        : <div className="card empty"><h2>No notifications.</h2><p>{unreadOnly ? 'You have read everything.' : 'Updates from followed questions and your contributions will appear here.'}</p></div>}
+        : <div className="card empty"><h2>No notifications.</h2><p>{unreadOnly ? 'You have read everything.' : 'Updates from followed posts and your contributions will appear here.'}</p></div>}
   </main>;
 }
