@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Header, Icon, go } from './ui.jsx';
+import { isDemoMode } from './api.js';
 import { useI18n } from './i18n.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -77,6 +78,7 @@ export default function App() {
 
   return <>
     <Header />
+    {isDemoMode() && <div className="demoModeBanner" role="status"><strong>DEMO MODE</strong><span>Accounts, posts and actions are simulated in this browser. Nothing is sent to MySQL or email.</span></div>}
     {page}
     <footer className="siteFooter">
       <button className="footerBrand" onClick={() => go('/')}>circle</button>
