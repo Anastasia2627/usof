@@ -42,6 +42,20 @@ try {
   await page.waitForURL(/#\/$/);
   assert.equal(await page.locator('.headerLogout').count(), 0, 'Logout should clear the session');
 
+  // This is the REAL API registration form, not the isolated demo mode.
+  const newMember = 'member' + Date.now().toString(36);
+  await page.goto(frontend + '/#/register', { waitUntil: 'networkidle' });
+  await page.locator('input[autocomplete="username"]').fill(newMember);
+  await page.locator('input[autocomplete="email"]').fill(newMember + '@example.test');
+  await page.locator('input[autocomplete="new-password"]').nth(0).fill('Password123!');
+  await page.locator('input[autocomplete="new-password"]').nth(1).fill('Password123!');
+  await page.locator('button.authSubmit').click();
+  await page.locator('.verificationForm input[autocomplete="one-time-code"]').waitFor();
+  await page.locator('.verificationForm button.authSubmit').click();
+  await page.waitForURL(/#\/$/);
+  await page.getByRole('button', { name: 'Profile of ' + newMember + ' (user)' }).waitFor();
+  await page.locator('.headerLogout').click();
+
   const adminToken = await loginApi();
   const categoryResponse = await fetch(backend + '/categories');
   const category = (await categoryResponse.json()).data[0];
