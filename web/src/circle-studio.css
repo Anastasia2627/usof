@@ -447,3 +447,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .dashboardPage .shortcutCard{transition:none}
   .dashboardPage .shortcutCard:hover{transform:none}
 }
+
+/* Secondary admin metrics: compact supporting detail rather than twelve equally prominent KPIs. */
+.adminPage .studioMoreMetrics{margin:16px 0 32px}
+.studioCompactMetrics{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px
+}
+.studioCompactMetrics>div{
+  display:grid;gap:6px;padding:14px 16px;min-width:0;
+  background:rgba(126,87,188,.11);
+  border:1px solid rgba(185,152,248,.13);border-radius:13px
+}
+.studioCompactMetrics small{color:#aea4c0;line-height:1.3;font-size:11px}
+.studioCompactMetrics strong{font-size:23px;font-weight:650;color:#f5edff;letter-spacing:-.05em}
+.adminStudioBanner button{margin-top:18px}
+@media(max-width:800px){.studioCompactMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.studioCompactMetrics{grid-template-columns:1fr 1fr}.studioCompactMetrics>div{padding:10px}}
