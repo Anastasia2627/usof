@@ -155,9 +155,6 @@ export function Header() {
     <nav className="mainNav" aria-label="Main navigation">
       <button onClick={() => go('/')}><Icon name="home" /> <span>{t('home')}</span></button>
       <button onClick={() => go('/categories')}><Icon name="explore" /> <span>{t('explore')}</span></button>
-      {auth && <button onClick={() => go('/following')}><Icon name="group" /> <span>{t('following')}</span></button>}
-      {auth && <button onClick={() => go('/saved')}><Icon name="bookmark" /> <span>{t('saved')}</span></button>}
-      {auth && <button onClick={() => go('/dashboard')}><Icon name="space_dashboard" /> <span>{t('dashboard')}</span></button>}
     </nav>
 
     <div className="accountArea">
