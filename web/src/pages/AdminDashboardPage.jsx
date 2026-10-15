@@ -10,10 +10,10 @@ export default function AdminDashboardPage() {
   }
 
   return <main className="adminPage">
-    <div className="sectionTitle">
-      <div><p className="eyebrow">Platform overview</p><h1>Admin dashboard</h1></div>
-      <button className="secondary" onClick={() => go('/admin')}>Manage content</button>
-    </div>
+    <header className="studioHeading">
+      <div><p className="eyebrow">CIRCLE / CONTROL ROOM</p><h1>Admin Studio<span className="heroGradientWord">.</span></h1><p>Understand the community. Keep the conversation healthy.</p></div>
+      <div className="studioHeadingActions"><button className="secondary" onClick={() => go('/admin')}>Manage content ↗</button></div>
+    </header>
     <AdminDashboard auth={auth} />
   </main>;
 }
