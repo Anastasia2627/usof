@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { api } from '../api.js';
+import { api, isDemoMode } from '../api.js';
 import { useI18n } from '../i18n.jsx';
 import { ErrorBox, Icon, go } from '../ui.jsx';
 
@@ -264,11 +264,16 @@ export function AuthPage({ mode }) {
           password: form.password,
           passwordConfirmation: form.passwordConfirmation,
         } });
-        setVerification({
-          email: form.email,
-          devToken: result.verificationToken || '',
-          devCode: result.verificationCode || '',
-        });
+        if (isDemoMode()) {
+          dispatch({ type: 'AUTH_SET', payload: { token: result.token, user: result.user } });
+          go('/dashboard');
+        } else {
+          setVerification({
+            email: form.email,
+            devToken: result.verificationToken || '',
+            devCode: result.verificationCode || '',
+          });
+        }
       } else {
         const identifier = form.identifier.trim();
         const body = identifier.includes('@')
@@ -287,6 +292,20 @@ export function AuthPage({ mode }) {
 
   const setField = (name) => (event) => setForm({ ...form, [name]: event.target.value });
 
+  async function demoLogin(login) {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api('/auth/login', { method: 'POST', body: { login, password: 'demo-only' } });
+      dispatch({ type: 'AUTH_SET', payload: result });
+      go(login === 'admin' ? '/admin/dashboard' : '/dashboard');
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return <main className="authShell">
     <MascotStage mood={mood} />
 
@@ -296,9 +315,14 @@ export function AuthPage({ mode }) {
           <h1>{isRegister ? t('createAccount') : t('welcomeBack')}</h1>
         </div>
 
-        <GoogleLoginButton onError={setError} />
+        {isDemoMode()
+          ? <div className="demoAuthNote"><strong>Safe testing space</strong><span>Use a made-up email and password. No confirmation email is sent; signing up opens your demo profile immediately.</span></div>
+          : <><GoogleLoginButton onError={setError} /><div className="authDivider"><span>or continue with email</span></div></>}
 
-        <div className="authDivider"><span>or continue with email</span></div>
+        {isDemoMode() && !isRegister && <div className="demoAuthShortcuts">
+          <button type="button" disabled={busy} onClick={() => demoLogin('maya')}>Try member account</button>
+          <button type="button" disabled={busy} onClick={() => demoLogin('admin')}>Try admin account</button>
+        </div>}
 
         {isRegister ? <>
           <div className="fieldRow">
