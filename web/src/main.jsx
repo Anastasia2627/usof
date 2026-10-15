@@ -8,6 +8,7 @@ import './styles.css';
 import './extras.css';
 import './creative.css';
 import './circle.css';
+import './circle-studio.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
