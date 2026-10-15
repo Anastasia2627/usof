@@ -2,7 +2,13 @@ import { mockApi } from './mockApi.js';
 
 const ORIGIN = (import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000').replace(/\/$/, '');
 const BASE = `${ORIGIN}/api`;
+// Explicit preview mode never sends requests to the backend.
+const demoMode = import.meta.env.DEV && import.meta.env.MODE === 'demo';
 let previewFallbackActive = false;
+
+export function isDemoMode() {
+  return demoMode;
+}
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'REQUEST_FAILED', details = null } = {}) {
@@ -21,11 +27,11 @@ export function assetUrl(path) {
 }
 
 export function isPreviewMode() {
-  return Boolean(import.meta.env.DEV && previewFallbackActive);
+  return Boolean(demoMode || (import.meta.env.DEV && previewFallbackActive));
 }
 
 export async function api(path, { method = 'GET', body, token, formData, signal } = {}) {
-  if (import.meta.env.DEV && previewFallbackActive) {
+  if (demoMode || (import.meta.env.DEV && previewFallbackActive)) {
     return mockApi(path, { method, body, token, formData, signal });
   }
 

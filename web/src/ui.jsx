@@ -157,7 +157,7 @@ export function Header() {
       <button onClick={() => go('/categories')}><Icon name="explore" /> <span>{t('explore')}</span></button>
       {auth && <button onClick={() => go('/following')}><Icon name="group" /> <span>{t('following')}</span></button>}
       {auth && <button onClick={() => go('/saved')}><Icon name="bookmark" /> <span>{t('saved')}</span></button>}
-      {auth && <button onClick={() => go('/messages')}><Icon name="forum" /> <span>{t('messages')}</span></button>}
+      {auth && <button onClick={() => go('/dashboard')}><Icon name="space_dashboard" /> <span>{t('dashboard')}</span></button>}
     </nav>
 
     <div className="accountArea">

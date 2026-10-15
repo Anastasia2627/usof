@@ -12,7 +12,7 @@ function todayIso() {
 
 export default function HomePage({ hash }) {
   const auth = useSelector((state) => state.auth);
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [categories, setCategories] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -93,7 +93,7 @@ export default function HomePage({ hash }) {
   function feedMode() {
     if (params.get('sort') === 'likes') return 'popular';
     if (params.get('sort') === 'trending' && params.get('from') === todayIso()) return 'evening';
-    return auth ? 'for-you' : 'latest';
+    return 'latest';
   }
 
   function page(number) {
@@ -108,14 +108,18 @@ export default function HomePage({ hash }) {
   return <main className="homePage">
     <section className="circleHero">
       <div className="heroCopy">
-        
-        <h1>{t('heroTitle')}</h1>
+        <span className="heroKicker">{language === 'uk' ? 'ТВОЄ КОЛО · ТВОЇ ІСТОРІЇ' : 'YOUR SPACE · YOUR STORIES'}</span>
+        <h1>{language === 'uk' ? <>Розмови, які <span className="heroGradientWord">об’єднують.</span></> : <>Conversations that <span className="heroGradientWord">connect.</span></>}</h1>
         <p className="heroBody">{t('heroBody')}</p>
         <div className="heroActions">
           <button className="primary" onClick={() => go(auth ? '/create' : '/register')}>
             {auth ? t('startThread') : 'Join the circle'} <Icon name="arrow_forward" />
           </button>
-          <button className="textAction" onClick={() => go('/categories')}>Explore what’s happening <Icon name="north_east" /></button>
+          <button className="textAction" onClick={() => go('/categories')}>{language === 'uk' ? 'Дослідити теми' : 'Explore topics'} <Icon name="north_east" /></button>
+        </div>
+        <div className="heroMiniProof" aria-label="What Circle is for">
+          <span><Icon name="forum" /> {language === 'uk' ? 'Відкриті обговорення' : 'Open conversations'}</span>
+          <span><Icon name="favorite" /> {language === 'uk' ? 'Близькі теми' : 'Topics that matter'}</span>
         </div>
       </div>
 
@@ -148,15 +152,15 @@ export default function HomePage({ hash }) {
       <div className="feedHeader">
         <div>
           
-          <h2>Pull up a seat</h2>
+          <h2>{language === 'uk' ? 'Є про що поговорити' : 'Worth talking about'}</h2>
+          <p className="feedIntro">{language === 'uk' ? 'Знайди цікаву тему, поділись думкою або почни свою розмову.' : 'Find your people, share a thought, or start something new.'}</p>
         </div>
         <button className={`filterToggle ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((value) => !value)}>
           <Icon name="tune" /> {t('filters')}
         </button>
       </div>
 
-      <div className="feedTabs" role="tablist" aria-label="Feed sorting">
-        <button className={feedMode() === 'for-you' ? 'active' : ''} onClick={() => applyFeed('for-you')}>{t('forYou')}</button>
+      <div className="feedTabs" role="group" aria-label="Feed sorting">
         <button className={feedMode() === 'latest' ? 'active' : ''} onClick={() => applyFeed('latest')}>{t('latest')}</button>
         <button className={feedMode() === 'popular' ? 'active' : ''} onClick={() => applyFeed('popular')}>{t('popular')}</button>
         <button className={feedMode() === 'evening' ? 'active' : ''} onClick={() => applyFeed('evening')}><Icon name="dark_mode" /> {t('evening')}</button>
@@ -194,8 +198,8 @@ export default function HomePage({ hash }) {
         <span /><span /><span />
         <p>Listening for conversations…</p>
       </div> : posts.length ? <>
-        {featured && <PostCard post={featured} featured interactive={Boolean(auth)} />}
-        {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} interactive={Boolean(auth)} />)}</section>}
+        {featured && <PostCard post={featured} featured />}
+        {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} />)}</section>}
       </> : <div className="emptyState">
         <span className="emptyGlyph"><Icon name="chair" /></span>
         <h2>{t('noThreads')}</h2>
