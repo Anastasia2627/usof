@@ -257,6 +257,74 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   if (pathname === '/notifications/read-all' || /^\/notifications\/\d+\/(read)?$/.test(pathname)) return { message: 'Updated' };
   if (/^\/notifications\/\d+$/.test(pathname)) return { message: 'Updated' };
 
+  if (pathname === '/dashboard/admin') {
+    // UI preview only: all figures below come from in-browser demonstration data.
+    const posts = allPosts();
+    const categoryPosts = (categoryId) => posts.filter((post) =>
+      post.categories.some((category) => Number(category.id) === Number(categoryId)));
+    const inactivePosts = posts.filter((post) => post.status === 'inactive' || post.locked);
+    const inactiveComments = comments.filter((comment) => comment.status === 'inactive' || comment.locked);
+    const sumField = (field) => posts.reduce((sum, post) => sum + Number(post[field] || 0), 0);
+    const growth = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date();
+      day.setDate(day.getDate() - (6 - index));
+      const date = day.toISOString().slice(0, 10);
+      return {
+        date,
+        users: 0,
+        posts: posts.filter((post) => post.created_at?.slice(0, 10) === date).length,
+        comments: comments.filter((comment) => comment.created_at?.slice(0, 10) === date).length,
+        reactions: 0,
+      };
+    });
+    return {
+      data: {
+        overview: {
+          users: users.length,
+          verified_users: users.filter((user) => user.email_verified).length,
+          new_users_7d: 0,
+          posts: posts.length,
+          active_posts: posts.filter((post) => post.status === 'active').length,
+          inactive_posts: posts.filter((post) => post.status === 'inactive').length,
+          locked_posts: posts.filter((post) => post.locked).length,
+          moderation_posts: inactivePosts.length,
+          comments: comments.length,
+          inactive_comments: comments.filter((comment) => comment.status === 'inactive').length,
+          locked_comments: comments.filter((comment) => comment.locked).length,
+          moderation_comments: inactiveComments.length,
+          reactions: sumField('like_count'),
+          favorites: sumField('favorite_count'),
+          following: sumField('follower_count'),
+          shares: sumField('share_count'),
+          unread_notifications: notifications.filter((item) => !item.read_at).length,
+        },
+        growth,
+        topContributors: users.map((user) => ({
+          ...user,
+          posts: posts.filter((post) => Number(post.author_id) === Number(user.id)).length,
+          answers: comments.filter((comment) => Number(comment.author_id) === Number(user.id)).length,
+        })).sort((a, b) => b.rating - a.rating),
+        topCategories: categories.map((category) => {
+          const relatedPosts = categoryPosts(category.id);
+          return {
+            ...category,
+            posts: relatedPosts.length,
+            comments: comments.filter((comment) =>
+              relatedPosts.some((post) => Number(post.id) === Number(comment.post_id))).length,
+          };
+        }).sort((a, b) => b.posts - a.posts),
+        reactionMix: [{ type: 'like', count: sumField('like_count') }],
+        moderation: {
+          posts: inactivePosts,
+          comments: inactiveComments.map((comment) => ({
+            ...comment,
+            post_title: posts.find((post) => Number(post.id) === Number(comment.post_id))?.title || 'Conversation',
+          })),
+        },
+      },
+    };
+  }
+
   if (pathname === '/dashboard/me') {
     return {
       data: {
