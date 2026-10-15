@@ -3,10 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, PostCard, TrustBadge, go } from '../ui.jsx';
 
-export default function ProfilePage() {
+export default function ProfilePage({ userId = null }) {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const [user, setUser] = useState(auth?.user || null);
+  const viewedId = userId || auth?.user?.id;
+  const isSelf = Boolean(auth && Number(viewedId) === Number(auth.user.id));
+  const [user, setUser] = useState(userId ? null : (auth?.user || null));
   const [name, setName] = useState(auth?.user?.full_name || '');
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -25,11 +27,11 @@ export default function ProfilePage() {
   }, [auth?.token]);
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth || !viewedId) return;
     setLoading(true);
     setError(null);
     const query = new URLSearchParams({
-      author: String(auth.user.id),
+      author: String(viewedId),
       limit: '6',
       page: String(page),
       sort,
@@ -39,7 +41,7 @@ export default function ProfilePage() {
     if (category) query.set('category', category);
 
     Promise.all([
-      api(`/users/${auth.user.id}`, { token: auth.token }),
+      api(`/users/${viewedId}`, { token: auth.token }),
       api(`/posts?${query}`, { token: auth.token }),
     ])
       .then(([userResult, postResult]) => {
@@ -47,13 +49,13 @@ export default function ProfilePage() {
         setName(userResult.data.full_name || '');
         setPosts(postResult.data);
         setPagination(postResult.pagination);
-        dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
+        if (isSelf) dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
       })
       .catch(setError)
       .finally(() => setLoading(false));
-  }, [auth?.token, auth?.user?.id, sort, status, category, page]);
+  }, [auth?.token, viewedId, isSelf, sort, status, category, page]);
 
-  if (!auth) return <main><div className="card">Log in to view your profile.</div></main>;
+  if (!auth) return <main><div className="card">Log in to view profiles. <button onClick={() => go('/login')}>Log in</button></div></main>;
 
   async function save(event) {
     event.preventDefault();
@@ -118,11 +120,11 @@ export default function ProfilePage() {
   return <main>
     <section className="profileHero card">
       <Avatar user={user} size="xl" />
-      <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1><p>{user?.email}</p></div>
-      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} /><button className="secondary" onClick={() => go('/dashboard')}>Your activity →</button></div>
+      <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1>{isSelf ? <p>{user?.email}</p> : <p>{user?.full_name || 'Circle member'}</p>}</div>
+      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} />{isSelf && <button className="secondary" onClick={() => go('/dashboard')}>Your activity →</button>}</div>
     </section>
     <div className="twoColumn">
-      <form className="card form" onSubmit={save}>
+      {isSelf ? <form className="card form" onSubmit={save}>
         <h2>Profile details</h2>
         <label>Full name<input maxLength="100" value={name} onChange={(event) => setName(event.target.value)} /></label>
         <label>Avatar<input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload} /></label>
@@ -134,21 +136,21 @@ export default function ProfilePage() {
           <p className="muted">Deleting the account permanently removes its posts, comments and reactions.</p>
           <button type="button" className="dangerText" onClick={deleteAccount}>Delete account</button>
         </div>
-      </form>
+      </form> : <section className="card"><h2>About {user?.login}</h2><p>{user?.full_name || 'Member of Circle'}</p></section>}
       <section>
         <div className="sectionTitle">
-          <div><p className="eyebrow">Your activity</p><h2>Your posts</h2></div>
+          <div><p className="eyebrow">Activity</p><h2>{isSelf ? 'Your posts' : `Posts by ${user?.login || 'member'}`}</h2></div>
           <div className="inlineFilters">
             <label className="srOnly" htmlFor="profile-sort">Sort posts</label>
             <select id="profile-sort" value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="date">Newest</option><option value="likes">Most liked</option></select>
             <label className="srOnly" htmlFor="profile-category">Category</label>
             <select id="profile-category" value={category} onChange={(event) => changeFilter(setCategory, event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-            <label className="srOnly" htmlFor="profile-status">Status</label>
-            <select id="profile-status" value={status} onChange={(event) => changeFilter(setStatus, event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+            {isSelf && <><label className="srOnly" htmlFor="profile-status">Status</label>
+            <select id="profile-status" value={status} onChange={(event) => changeFilter(setStatus, event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></>}
           </div>
         </div>
         {loading
-          ? <div className="card loading">Loading your posts…</div>
+          ? <div className="card loading">Loading posts…</div>
           : posts.length
             ? <div className="miniList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</div>
             : <div className="card empty">No posts match these filters.</div>}
