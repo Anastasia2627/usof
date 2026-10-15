@@ -25,7 +25,7 @@ try {
   const firstAuthor = firstPost.locator('.authorLink');
   await firstAuthor.click();
   await page.waitForURL(/#\/profile\/\d+$/);
-  assert.ok(await page.getByText('Log in to view profiles.').count(), 'Guest cannot read private profile API');
+  await page.getByText('Log in to view profiles.', { exact: false }).waitFor();
 
   await page.goto(frontend + '/#/login', { waitUntil: 'networkidle' });
   await page.locator('input[autocomplete="username"]').fill('admin');
