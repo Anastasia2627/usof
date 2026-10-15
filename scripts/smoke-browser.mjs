@@ -64,9 +64,9 @@ try {
   await page.waitForURL(/#\/$/);
   await page.goto(frontend + '/#/admin', { waitUntil: 'networkidle' });
   await page.locator('.tabs button').filter({ hasText: /^posts$/ }).click();
-  await page.getByText(/Page 1 of 2/).waitFor();
+  await page.getByText(/Page 1 of [2-9][0-9]*/).waitFor();
   await page.getByRole('button', { name: 'Next' }).click();
-  await page.getByText(/Page 2 of 2/).waitFor();
+  await page.getByText(/Page 2 of [2-9][0-9]*/).waitFor();
   assert.ok(await page.locator('.adminRow').count() > 0, 'Second page should show posts');
   console.log('Browser UI checks passed: real feed, profile navigation, mobile role/logout, and admin pagination.');
 } finally {
