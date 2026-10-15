@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { api } from '../api.js';
+import { api, isPreviewMode } from '../api.js';
 import { ErrorBox, go } from '../ui.jsx';
 
 const OVERVIEW_LABELS = {
@@ -49,6 +49,7 @@ export default function AdminDashboard({ auth }) {
   const queueSize = Number(data.overview.moderation_posts || 0) + Number(data.overview.moderation_comments || 0);
 
   return <div className="adminDashboard">
+    {isPreviewMode() && <p className="studioPreviewPill" role="status">Preview mode · sample community metrics, not MySQL</p>}
     <section className="card adminStudioBanner" aria-label="Community overview">
       <div>
         <p className="eyebrow">THE PULSE OF CIRCLE</p>
