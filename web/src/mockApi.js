@@ -79,6 +79,20 @@ const notifications = [
   { id: 3, type: 'post_updated', post_id: 5, title: 'A conversation is moving fast', body: 'A thread you follow has new activity.', read_at: iso(40), created_at: iso(180) },
 ];
 
+function demoAccounts() {
+  try {
+    const accounts = JSON.parse(localStorage.getItem('circle-demo-accounts') || '[]');
+    return Array.isArray(accounts) ? accounts : [];
+  } catch {
+    return [];
+  }
+}
+function allUsers() {
+  return [...users, ...demoAccounts()];
+}
+function saveDemoAccounts(accounts) {
+  localStorage.setItem('circle-demo-accounts', JSON.stringify(accounts));
+}
 function savedPosts() {
   try {
     return JSON.parse(localStorage.getItem('circle-mock-posts') || '[]');
@@ -105,8 +119,9 @@ function pagination(data, page = 1, limit = 8) {
 }
 
 function userFromToken(token) {
-  if (!token) return users[0];
-  return users.find((user) => token.includes(String(user.id))) || users[0];
+  const match = String(token || '').match(/^mock-token-(\d+)$/);
+  if (!match) return users[0];
+  return allUsers().find((user) => Number(user.id) === Number(match[1])) || users[0];
 }
 
 function filterPosts(url) {
@@ -222,17 +237,63 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   if (/^\/posts\/\d+\/(favorite|follow|share)$/.test(pathname)) return { message: 'Mock action saved' };
 
   if (pathname === '/auth/register' && method === 'POST') {
+    const login = String(body?.login || '').trim();
+    const email = String(body?.email || '').trim().toLowerCase();
+    const fullName = String(body?.fullName || '').trim();
+    if (login.length < 3 || login.length > 50) throw new Error('Username must be 3–50 characters.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid-looking demo email.');
+    if (String(body?.password || '').length < 8) throw new Error('Use at least 8 characters for the demo password.');
+    if (body?.password !== body?.passwordConfirmation) throw new Error('Passwords do not match.');
+    if (allUsers().some((user) => user.login.toLowerCase() === login.toLowerCase() || user.email.toLowerCase() === email)) {
+      throw new Error('This demo username or email is already in use.');
+    }
+    const accounts = demoAccounts();
+    const user = {
+      id: Math.max(999, ...allUsers().map((item) => Number(item.id))) + 1,
+      login, full_name: fullName, email, email_verified: 1,
+      avatar: '', rating: 0, role: 'user',
+    };
+    saveDemoAccounts([...accounts, user]); // Do not save the demo password.
     return {
-      user: { ...users[0], login: body?.login || 'newuser', full_name: body?.fullName || '', email: body?.email || '' },
-      emailDelivery: 'mock',
-      verificationToken: 'circle-preview-link-token',
-      verificationCode: '482731',
+      token: 'mock-token-' + user.id, user, emailDelivery: 'preview-only',
+      verificationToken: 'circle-preview-link-token', verificationCode: '482731',
     };
   }
-
   if (pathname === '/auth/login' && method === 'POST') {
-    const user = body?.login === 'admin' ? users[3] : users[0];
-    return { token: `mock-token-${user.id}`, user };
+    const identifier = String(body?.login || body?.email || '').trim().toLowerCase();
+    const user = allUsers().find((account) =>
+      account.login.toLowerCase() === identifier || account.email.toLowerCase() === identifier);
+    if (!user || !body?.password) throw new Error('Demo account not found. Sign up or use a sample account.');
+    // Demo accepts any non-empty password, never use real credentials.
+    return { token: 'mock-token-' + user.id, user };
+  }
+
+  if (pathname === '/users' && method === 'GET') return { data: allUsers() };
+  const userMatch = pathname.match(/^\/users\/(\d+)$/);
+  if (userMatch && method === 'GET') {
+    const user = allUsers().find((entry) => Number(entry.id) === Number(userMatch[1]));
+    if (!user) throw new Error('Demo profile not found.');
+    return { data: user };
+  }
+  if (userMatch && method === 'PATCH') {
+    const id = Number(userMatch[1]);
+    const existing = allUsers().find((entry) => Number(entry.id) === id);
+    if (!existing) throw new Error('Demo profile not found.');
+    const updated = { ...existing, full_name: String(body?.fullName ?? existing.full_name).trim().slice(0, 100) };
+    const accounts = demoAccounts();
+    if (accounts.some((entry) => Number(entry.id) === id)) {
+      saveDemoAccounts(accounts.map((entry) => Number(entry.id) === id ? updated : entry));
+    }
+    return { data: updated };
+  }
+  if (userMatch && method === 'DELETE') {
+    const id = Number(userMatch[1]);
+    saveDemoAccounts(demoAccounts().filter((entry) => Number(entry.id) !== id));
+    localStorage.setItem('circle-mock-posts', JSON.stringify(savedPosts().filter((post) => Number(post.author_id) !== id)));
+    return { message: 'Demo profile deleted.' };
+  }
+  if (pathname === '/users/avatar' && method === 'PATCH') {
+    throw new Error('Avatar upload is unavailable in demo mode; use the real API to test file uploads.');
   }
 
   if (pathname === '/auth/google' && method === 'POST') {
