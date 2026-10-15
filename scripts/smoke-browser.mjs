@@ -39,8 +39,8 @@ try {
   const logout = page.locator('.headerLogout');
   assert.ok(await logout.isVisible(), 'Logout must be visible at 390px viewport');
   await logout.click();
+  await page.locator('.headerLogout').waitFor({ state: 'detached' });
   await page.waitForURL(/#\/$/);
-  assert.equal(await page.locator('.headerLogout').count(), 0, 'Logout should clear the session');
 
   // This is the REAL API registration form, not the isolated demo mode.
   const newMember = 'member' + Date.now().toString(36);
