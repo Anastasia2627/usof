@@ -266,7 +266,7 @@ export function AuthPage({ mode }) {
         } });
         if (isDemoMode()) {
           dispatch({ type: 'AUTH_SET', payload: { token: result.token, user: result.user } });
-          go('/dashboard');
+          go('/');
         } else {
           setVerification({
             email: form.email,
@@ -315,14 +315,10 @@ export function AuthPage({ mode }) {
           <h1>{isRegister ? t('createAccount') : t('welcomeBack')}</h1>
         </div>
 
-        {isDemoMode()
-          ? <div className="demoAuthNote"><strong>Safe testing space</strong><span>Use a made-up email and password. No confirmation email is sent; signing up opens your demo profile immediately.</span></div>
-          : <><GoogleLoginButton onError={setError} /><div className="authDivider"><span>or continue with email</span></div></>}
-
-        {isDemoMode() && !isRegister && <div className="demoAuthShortcuts">
-          <button type="button" disabled={busy} onClick={() => demoLogin('maya')}>Try member account</button>
-          <button type="button" disabled={busy} onClick={() => demoLogin('admin')}>Try admin account</button>
-        </div>}
+        {import.meta.env.VITE_GOOGLE_CLIENT_ID && !isDemoMode() && <>
+          <GoogleLoginButton onError={setError} />
+          <div className="authDivider"><span>or continue with email</span></div>
+        </>}
 
         {isRegister ? <>
           <div className="fieldRow">
