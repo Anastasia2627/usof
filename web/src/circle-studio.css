@@ -265,3 +265,18 @@ select:focus-visible,textarea:focus-visible,[tabindex="0"]:focus-visible {
   .siteHeader .profileButton .accountIdentity{max-width:56px}
   .siteHeader .accountArea{gap:2px}
 }
+
+/* Author identity is a real link; preserve its text appearance. */
+.authorLink{
+  appearance:none;
+  display:inline;
+  padding:0;
+  border:0;
+  background:transparent;
+  font:inherit;
+  font-weight:inherit;
+  color:inherit;
+  cursor:pointer;
+  text-align:inherit;
+}
+.authorLink:hover{text-decoration:underline;text-underline-offset:3px}
