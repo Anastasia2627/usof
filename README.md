@@ -2,7 +2,7 @@
 
 ![Usof CI](https://github.com/Anastasia2627/usof/actions/workflows/ci.yml/badge.svg)
 
-Usof is a local full-stack programming Q&A service inspired by Stack Overflow. It combines a Node.js/Express/MySQL API with a responsive React + Redux client and follows the required `API/` + `web/` repository layout.
+Circle (built from the USOF specification) is a local full-stack social discussion site where people can publish posts, respond and follow conversations on different topics. It combines a Node.js/Express/MySQL API with a responsive React + Redux client and follows the required `API/` + `web/` repository layout.
 
 ## Features
 
@@ -12,9 +12,9 @@ Usof is a local full-stack programming Q&A service inspired by Stack Overflow. I
 - posts with many-to-many categories, active/inactive moderation, locking, search, sorting, filtering and pagination
 - nested comments through `parent_comment_id`, moderation and locking
 - `like`, `dislike`, `useful`, `thanks` and `fire` reactions with one reaction per user/target and no self-voting
-- saved questions, followed discussions and notification inbox
+- saved posts, followed discussions and notification inbox
 - tracked native/copy/Facebook/X/Telegram sharing and a recent-activity Trending feed
-- trust levels, community rank, weekly answer goal, streaks, achievements and questions worth answering
+- member reputation, personal posts/replies/likes, saved content and participation summaries
 - separate user contribution dashboard and admin platform dashboard
 - admin user/category/post/comment management in a dedicated moderation console
 - responsive React UI covering guest, user and admin flows
@@ -76,6 +76,14 @@ npm run web
 
 Open `http://localhost:5173`.
 
+## Registration and real email
+
+To test actual email verification, configure SMTP in your uncommitted `.env` (`MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM`). Run `npm run mail:check` to verify the connection, then start the API and frontend normally. Registration creates an unverified account; the email contains a one-time link and a six-digit code. On successful code confirmation Circle signs the user in and opens the main feed. A user who lost the original tab can request a fresh code from the login page.
+
+Without SMTP, use `npm run web:demo` only to test the appearance and broad navigation with simulated browser-local accounts. **Demo does not validate email, store real passwords or enforce backend permissions.** The normal `npm run web` always communicates with MySQL-backed API and does not silently fall back to mock data.
+
+See [real email setup](docs/REAL_EMAIL_VERIFICATION.md) and [demo limits](docs/CIRCLE_DEMO_MODE.md).
+
 ## Seed accounts
 
 Development seed password for all accounts: `Password123!`
@@ -114,7 +122,7 @@ The header/menu is present on every page and shows the service name, search, nav
 
 Reputation is based on reactions received on questions and answers. Users cannot react to their own contribution. Reaction changes apply atomic rating deltas to the author row, so concurrent reactions on different contributions cannot overwrite one another. Trust levels provide a readable interpretation of reputation: Newcomer, Contributor, Trusted, Expert and Mentor.
 
-The user dashboard is designed to encourage useful participation rather than raw activity. It shows weekly answer progress, contribution streak, achievements, reaction feedback, community rank and questions the user has not answered yet. The admin dashboard stays separate and focuses on platform totals, seven-day activity, top contributors/categories, reaction mix and moderation context.
+The user dashboard presents posts, replies, reactions received, saved content, weekly activity and reputation. The admin dashboard shows member/post/reply counts, seven-day activity, popular topics and moderation items. Both use API data, not decorative invented analytics.
 
 ## Architecture
 
@@ -154,6 +162,12 @@ npm run build
 With the API running, `npm run test:smoke` checks the public API plus the strict requirement and Creative HTTP flows.
 
 GitHub Actions starts a disposable MySQL 8.4 service, explicitly resets `usof_ci`, runs syntax and hardening tests, starts the API, runs requirement/Creative HTTP checks, builds and starts the React client, and captures desktop/mobile screenshots from the real application.
+
+## Functional verification
+
+The feature-branch workflow `.github/workflows/circle-branch-check.yml` runs backend syntax, MySQL account tests, all required and Creative API smoke tests, single-use email verification/resend checks, React build and a Chromium browser test at 390 px. The browser check also creates over 20 posts in disposable MySQL and verifies that admin pagination reaches the second page.
+
+These checks cannot prove delivery via a real email provider; perform one SMTP registration/verification with an inbox you control.
 
 ## Documentation / CBL progress
 
