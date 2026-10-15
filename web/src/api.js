@@ -1,14 +1,11 @@
 import { mockApi } from './mockApi.js';
 
 const ORIGIN = (import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000').replace(/\/$/, '');
-const BASE = `${ORIGIN}/api`;
-// Explicit preview mode never sends requests to the backend.
-const demoMode = import.meta.env.DEV && import.meta.env.MODE === 'demo';
-let previewFallbackActive = false;
+const BASE = ORIGIN + '/api';
 
-export function isDemoMode() {
-  return demoMode;
-}
+// Deliberate separation: only web:demo uses the local mock.
+// Ordinary "web" must never silently simulate a working database.
+const demoMode = import.meta.env.DEV && import.meta.env.MODE === 'demo';
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'REQUEST_FAILED', details = null } = {}) {
@@ -23,25 +20,27 @@ export class ApiError extends Error {
 export function assetUrl(path) {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
-  return `${ORIGIN}${path.startsWith('/') ? '' : '/'}${path}`;
+  return ORIGIN + (path.startsWith('/') ? '' : '/') + path;
+}
+
+export function isDemoMode() {
+  return demoMode;
 }
 
 export function isPreviewMode() {
-  return Boolean(demoMode || (import.meta.env.DEV && previewFallbackActive));
+  return demoMode;
 }
 
 export async function api(path, { method = 'GET', body, token, formData, signal } = {}) {
-  if (demoMode || (import.meta.env.DEV && previewFallbackActive)) {
-    return mockApi(path, { method, body, token, formData, signal });
-  }
+  if (demoMode) return mockApi(path, { method, body, token, formData, signal });
 
   const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) headers.Authorization = 'Bearer ' + token;
   if (body !== undefined && !formData) headers['Content-Type'] = 'application/json';
 
   let response;
   try {
-    response = await fetch(`${BASE}${path}`, {
+    response = await fetch(BASE + path, {
       method,
       headers,
       body: formData || (body !== undefined ? JSON.stringify(body) : undefined),
@@ -49,14 +48,7 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
-
-    if (import.meta.env.DEV) {
-      previewFallbackActive = true;
-      window.dispatchEvent(new CustomEvent('circle:preview-mode'));
-      return mockApi(path, { method, body, token, formData, signal });
-    }
-
-    throw new ApiError('Cannot reach the Circle API. Check that the backend is running.', {
+    throw new ApiError('Cannot reach the Circle API. Start the backend and MySQL.', {
       code: 'NETWORK_ERROR',
     });
   }
@@ -64,7 +56,7 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
   if (response.status === 204) return null;
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new ApiError(data?.error?.message || `Request failed with status ${response.status}`, {
+    throw new ApiError(data?.error?.message || 'Request failed with status ' + response.status, {
       status: response.status,
       code: data?.error?.code || 'REQUEST_FAILED',
       details: data?.error?.details || null,
