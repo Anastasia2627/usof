@@ -306,7 +306,7 @@ export default function PostPage({ id }) {
   return <main className="postPage">
     <article className="card questionCard">
       <div className="questionHeading"><div><p className="eyebrow">Post #{post.id}</p><h1>{post.title}</h1></div><div className="scoreHero">{Number(post.score) > 0 ? '+' : ''}{post.score || 0}</div></div>
-      <div className="postMeta"><span>by <b>{post.author_login}</b></span>{post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}<span>{fmt(post.created_at)}</span><StatusBadges item={post} /></div>
+      <div className="postMeta"><span>by <button type="button" className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button></span>{post.author_rating !== undefined && <TrustBadge rating={post.author_rating} />}<span>{fmt(post.created_at)}</span><StatusBadges item={post} /></div>
       <p className="content">{post.content}</p>
       <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
       <div className="questionStats">
