@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Header, Icon, go } from './ui.jsx';
-import { isDemoMode } from './api.js';
 import { useI18n } from './i18n.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -65,7 +64,6 @@ export default function App() {
   else if (path === '/saved') page = <LibraryPage mode="favorites" />;
   else if (path === '/following') page = <LibraryPage mode="following" />;
   else if (path === '/notifications') page = <NotificationsPage />;
-  else if (path === '/messages') page = <PlaceholderPage icon="forum" eyebrow="Messages" title="Private conversations are next." copy="The route is reserved now so direct messages can be added without reshaping the rest of Circle." />;
   else if (path === '/create') page = <PostEditor />;
   else if (path === '/admin') page = <AdminPage />;
   else if (path === '/admin/dashboard') page = <AdminDashboardPage />;
@@ -78,7 +76,6 @@ export default function App() {
 
   return <>
     <Header />
-    {isDemoMode() && <div className="demoModeBanner" role="status"><strong>DEMO MODE</strong><span>Accounts, posts and actions are simulated in this browser. Nothing is sent to MySQL or email.</span></div>}
     {page}
     <footer className="siteFooter">
       <button className="footerBrand" onClick={() => go('/')}>circle</button>
