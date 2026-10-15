@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const frontend = process.env.FRONTEND_BASE_URL || 'http://127.0.0.1:5173';
+// Keep the browser Origin equal to CLIENT_ORIGIN configured on the API for CORS.
+const frontend = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
 const backend = process.env.API_BASE_URL || 'http://127.0.0.1:5000/api';
 
 async function loginApi() {
