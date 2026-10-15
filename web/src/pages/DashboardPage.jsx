@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { api } from '../api.js';
+import { api, isPreviewMode } from '../api.js';
 import { ErrorBox, PostCard, go } from '../ui.jsx';
 
 function Stat({ label, value, hint }) {
@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const goalProgress = weeklyGoal.target ? Math.round((weeklyGoal.current / weeklyGoal.target) * 100) : 0;
 
   return <main className="dashboardPage">
+    {isPreviewMode() && <p className="studioPreviewPill" role="status">Preview mode · sample data, not MySQL</p>}
     <header className="studioHeading">
       <div>
         <p className="eyebrow">YOUR PERSONAL SPACE</p>
