@@ -144,7 +144,7 @@ export default function AdminPage() {
             <button onClick={() => go(`/post/${post.id}`)}>Open</button>
             <button onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button>
             <button onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
-            <button className="dangerText" onClick={() => { if (window.confirm('Delete this question?')) run(() => api(`/posts/${post.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button>
+            <button className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api(`/posts/${post.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button>
           </div>
         </article>) : <div className="card empty">No posts.</div>}
       </div>}
