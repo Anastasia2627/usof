@@ -21,7 +21,11 @@
     "test:email:integration": "node scripts/smoke-email-verification.mjs",
     "test:ui": "node scripts/smoke-browser.mjs",
     "mail:send-test": "node scripts/send-test-email.mjs",
-    "test:mail:syntax": "node --check scripts/check-smtp.mjs && node --check scripts/send-test-email.mjs && node --check scripts/smtp-sink.mjs"
+    "test:mail:syntax": "node --check scripts/check-smtp.mjs && node --check scripts/send-test-email.mjs && node --check scripts/smtp-sink.mjs",
+    "db:local:up": "docker compose -f compose.circle-mysql.yml up -d --wait",
+    "db:local:stop": "docker compose -f compose.circle-mysql.yml stop",
+    "test:defense": "node scripts/test-defense.mjs",
+    "check:defense": "node --check scripts/test-defense.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

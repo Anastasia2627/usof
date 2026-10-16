@@ -3,13 +3,14 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { ErrorBox, PostCard, go } from '../ui.jsx';
 
-const FILTERS = ['sort', 'category', 'from', 'to', 'status'];
+const FILTERS = ['sort', 'order', 'category', 'from', 'to', 'status'];
 
 export default function HomePage({ hash }) {
   const auth = useSelector(state => state.auth);
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [filters, setFilters] = useState({
-    sort: params.get('sort') || 'date',
+    sort: params.get('sort') || 'likes',
+    order: params.get('order') || 'desc',
     category: params.get('category') || '',
     from: params.get('from') || '',
     to: params.get('to') || '',
@@ -27,7 +28,8 @@ export default function HomePage({ hash }) {
 
   useEffect(() => {
     setFilters({
-      sort: params.get('sort') || 'date',
+      sort: params.get('sort') || 'likes',
+    order: params.get('order') || 'desc',
       category: params.get('category') || '',
       from: params.get('from') || '',
       to: params.get('to') || '',
@@ -37,8 +39,9 @@ export default function HomePage({ hash }) {
     const query = new URLSearchParams({
       page: params.get('page') || '1',
       limit: '8',
-      sort: params.get('sort') || 'date',
-      order: 'desc',
+      sort: params.get('sort') || 'likes',
+    order: params.get('order') || 'desc',
+
     });
     for (const name of ['category', 'from', 'to', 'status', 'search']) {
       if (params.get(name)) query.set(name, params.get(name));
@@ -78,8 +81,14 @@ export default function HomePage({ hash }) {
     <form className="card filterBar" onSubmit={apply}>
       <label>Sort by
         <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
-          <option value="date">Newest</option>
-          <option value="likes">Most liked</option>
+          <option value="likes">Number of likes</option>
+          <option value="date">Publication date</option>
+        </select>
+      </label>
+      <label>Direction
+        <select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
         </select>
       </label>
       <label>Category

@@ -10,6 +10,7 @@ export default function ProfilePage({ userId = null }) {
   const isSelf = Boolean(auth && Number(viewedId) === Number(auth.user.id));
   const [user, setUser] = useState(userId ? null : (auth?.user || null));
   const [name, setName] = useState(auth?.user?.full_name || '');
+  const [login, setLogin] = useState(auth?.user?.login || '');
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -47,6 +48,7 @@ export default function ProfilePage({ userId = null }) {
       .then(([userResult, postResult]) => {
         setUser(userResult.data);
         setName(userResult.data.full_name || '');
+        setLogin(userResult.data.login || '');
         setPosts(postResult.data);
         setPagination(postResult.pagination);
         if (isSelf) dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
@@ -65,11 +67,17 @@ export default function ProfilePage({ userId = null }) {
       const result = await api(`/users/${auth.user.id}`, {
         method: 'PATCH',
         token: auth.token,
-        body: { fullName: name },
+        body: { fullName: name, login },
       });
-      setUser(result.data);
-      dispatch({ type: 'AUTH_USER_SET', payload: result.data });
-      setMessage('Profile saved.');
+      if (result.sessionInvalidated) {
+        // Login name changes revoke the previous JWT; require a fresh login.
+        dispatch({ type: 'AUTH_CLEAR' });
+        go('/login');
+      } else {
+        setUser(result.data);
+        dispatch({ type: 'AUTH_USER_SET', payload: result.data });
+        setMessage('Profile saved.');
+      }
     } catch (err) {
       setError(err);
     }
@@ -126,9 +134,11 @@ export default function ProfilePage({ userId = null }) {
     <div className="twoColumn">
       {isSelf ? <form className="card form" onSubmit={save}>
         <h2>Profile details</h2>
+        <label>Username<input required minLength="3" maxLength="50" value={login} onChange={event => setLogin(event.target.value)} /></label>
         <label>Full name<input maxLength="100" value={name} onChange={(event) => setName(event.target.value)} /></label>
         <label>Avatar<input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload} /></label>
         <button className="primary">Save profile</button>
+        <small>Changing your username signs you out. Log in again with the new username.</small>
         {message && <div className="alert success">{message}</div>}
         <ErrorBox error={error} />
         <div className="dangerZone">
