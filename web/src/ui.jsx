@@ -76,7 +76,7 @@ export function Header() {
         event.preventDefault();
         go(search.trim() ? `/search?q=${encodeURIComponent(search.trim())}` : '/');
       }}>
-        <input aria-label="Search posts" placeholder="Search posts" value={search} onChange={e => setSearch(e.target.value)} />
+        <input aria-label="Search posts, people and categories" placeholder="Search posts, people, categories" value={search} onChange={e => setSearch(e.target.value)} />
         <button type="submit">Search</button>
       </form>
       <nav className="mainNav" aria-label="Main navigation">
