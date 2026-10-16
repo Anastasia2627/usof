@@ -87,7 +87,7 @@ const edited = await call('/users/'+managed.data.id, {
 });
 assert.equal(edited.data.email_verified, 0);
 assert.equal(edited.emailDelivery, 'sent');
-assert.match(edited.verificationCode, /^\\d{6}$/);
+assert.ok(/^[0-9]{6}$/.test(edited.verificationCode));
 await call('/auth/verify-email-code', {
   method:'POST',body:{email:changedEmail,code:edited.verificationCode},
 });
