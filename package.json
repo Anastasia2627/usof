@@ -26,7 +26,9 @@
     "db:local:stop": "docker compose -f compose.circle-mysql.yml stop",
     "test:defense": "node scripts/test-defense.mjs",
     "check:defense": "node --check scripts/test-defense.mjs",
-    "test:ui:legacy": "node scripts/smoke-browser.mjs"
+    "test:ui:legacy": "node scripts/smoke-browser.mjs",
+    "test:full": "node scripts/test-extended.mjs",
+    "check:full": "node --check API/src/models/Category.js && node --check API/src/models/Post.js && node --check API/src/models/Reaction.js && node --check API/src/services/searchService.js && node --check API/src/controllers/searchController.js && node --check API/src/routes/searchRoutes.js && node --check API/src/controllers/reactionsAdminController.js && node --check API/src/routes/reactionsAdminRoutes.js && node --check API/src/controllers/usersController.js && node --check API/src/controllers/commentsController.js && node --check scripts/test-extended.mjs && node --check scripts/smoke-browser-public.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
