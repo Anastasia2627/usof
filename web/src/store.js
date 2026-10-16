@@ -24,7 +24,7 @@ function reducer(state = initialState, action) {
     case 'AUTH_PATCH': {
       if (!state.auth) return state;
       const auth = { ...state.auth, ...action.payload };
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
       return { ...state, auth };
     }
     case 'AUTH_USER_SET': {
