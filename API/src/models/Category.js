@@ -6,6 +6,10 @@ export class Category extends BaseModel {
     return this.query('SELECT id, title, description FROM categories ORDER BY title');
   }
 
+  static async search(term) {
+    return this.query('SELECT id, title, description FROM categories WHERE title LIKE ? OR description LIKE ? ORDER BY title LIMIT 20', [term, term]);
+  }
+
   static async findById(id) {
     const rows = await this.query(
       'SELECT id, title, description FROM categories WHERE id=? LIMIT 1',
