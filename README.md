@@ -53,6 +53,27 @@ Open `http://localhost:5173`. Verify the live database connection at `http://loc
 
 A standalone UI preview with fake, browser-local data is available using `npm run web:demo`. It is **not** a replacement for API/MySQL tests and does not provide real shared accounts or email delivery.
 
+## Real email — test it before fixing MySQL
+
+Circle sends registration codes, one-time verification links, and password-reset links
+via authenticated SMTP. Gmail instructions are in
+[Real email setup](docs/REAL_EMAIL_VERIFICATION.md).
+
+Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` and `MAIL_FROM`
+in your uncommitted server-side `.env` (Gmail typically uses `smtp.gmail.com`,
+port `465` and a Google app password, **not** your regular Google password).
+
+To verify delivery to a real mailbox **without needing MySQL**, run:
+
+```bash
+npm run mail:check
+npm run mail:send-test -- your-inbox@gmail.com
+```
+
+The first command verifies SMTP authentication; the second sends a real message.
+Check Inbox/Spam after the provider accepts it. `npm run web:demo` deliberately
+does not send any mail.
+
 ## Email confirmation
 
 For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` and `MAIL_FROM` in your uncommitted `.env`, then run `npm run mail:check`. Without working SMTP, new accounts remain unverified and cannot log in to the real app. See [email instructions](docs/REAL_EMAIL_VERIFICATION.md).

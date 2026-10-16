@@ -2,6 +2,7 @@
 // Requires NODE_ENV=test and a DB_NAME ending with _test or _ci.
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 if (process.env.NODE_ENV !== 'test' || !/(_test|_ci)$/.test(process.env.DB_NAME || '')) {
   throw new Error('Verification smoke requires a disposable *_test or *_ci database.');
@@ -12,6 +13,26 @@ const suffix = crypto.randomBytes(5).toString('hex');
 const login = 'verify_' + suffix;
 const email = login + '@example.test';
 const password = 'Password123!';
+
+// Optional end-to-end SMTP assertions: the CI server accepts authenticated
+// messages and records the exact email contents. This is not a mock API call.
+const checkSmtp = process.env.MAIL_TEST_INTEGRATION === 'true';
+function capturedEmails() {
+  if (!checkSmtp) return [];
+  return readFileSync(process.env.MAIL_TEST_SINK_FILE, 'utf8')
+    .split('\n').filter(Boolean).map(line => JSON.parse(line));
+}
+function assertDelivered(token, code, label) {
+  if (!checkSmtp) return;
+  const messages = capturedEmails();
+  const raw = messages.at(-1)?.message || '';
+  const unwrapped = raw.replace(/=\n/g, '');
+  assert.ok(messages.length > 0, label + ': no email was transferred to SMTP');
+  assert.ok(unwrapped.includes(token), label + ': confirmation/reset link missing in SMTP message');
+  if (code) assert.ok(unwrapped.includes(code), label + ': confirmation code missing in SMTP message');
+  assert.match(raw, /Content-Type:/i, label + ': malformed SMTP message');
+}
+
 
 async function request(path, { method = 'GET', body, expected = 200 } = {}) {
   const response = await fetch(base + path, {
@@ -33,6 +54,9 @@ assert.equal(register.user.role, 'user');
 assert.equal(register.user.email_verified, 0);
 assert.match(register.verificationCode, /^\d{6}$/);
 assert.ok(register.verificationToken);
+if (checkSmtp) assert.equal(register.emailDelivery, 'sent', 'SMTP must accept registration email');
+assertDelivered(register.verificationToken, register.verificationCode, 'registration');
+
 
 await request('/auth/login', { method: 'POST', body: { login, password }, expected: 403 });
 
@@ -42,6 +66,9 @@ const sentAgain = await request('/auth/resend-verification', {
 assert.match(sentAgain.verificationCode, /^\d{6}$/);
 assert.notEqual(sentAgain.verificationCode, register.verificationCode);
 assert.notEqual(sentAgain.verificationToken, register.verificationToken);
+if (checkSmtp) assert.equal(sentAgain.emailDelivery, 'sent', 'SMTP must accept resend');
+assertDelivered(sentAgain.verificationToken, sentAgain.verificationCode, 'resend');
+
 
 await request('/auth/verify-email-code', {
   method: 'POST', body: { email, code: register.verificationCode }, expected: 400,
@@ -66,4 +93,14 @@ const session = await request('/auth/login', {
 assert.equal(session.user.email_verified, 1);
 assert.ok(session.token);
 
-console.log('Real database registration, resend, cooldown, single-use code and login passed.');
+
+const reset = await request('/auth/password-reset', {
+  method: 'POST', body: { email },
+});
+assert.ok(reset.message);
+if (checkSmtp) {
+  assert.equal(reset.emailDelivery, 'sent', 'SMTP must accept reset email');
+  assert.ok(reset.resetToken, 'test-only reset token missing');
+  assertDelivered(reset.resetToken, null, 'password reset');
+}
+console.log('Real MySQL registration, resend, single-use codes, password-reset email and login passed.');
