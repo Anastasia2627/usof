@@ -1,40 +1,109 @@
-# Circle email verification — real server setup
+# Real email delivery for Circle
 
-Circle uses the **existing** Node.js / Nodemailer + MySQL flow. It is not a mock when started with `npm start` and `npm run web`.
+This branch uses **Nodemailer with authenticated SMTP** in the Node.js backend.
+Verification and password-reset emails are sent through the provider configured
+in your server-side `.env`. This is not browser-only mock mail.
 
-## Configure sending
+## 1. Connect a Gmail sender
 
-Edit your local `.env` (not `.env.example`, and do not commit it). For example, for an SMTP provider supporting STARTTLS:
+Use a Gmail account that will **send** Circle messages. Enable two-step verification
+and create an app password for Circle at:
+https://myaccount.google.com/apppasswords
+
+Google's current instructions:
+https://support.google.com/mail/answer/185833
+
+An app password is NOT your normal Gmail login password. It may be unavailable
+on some Workspace, school or advanced-protection accounts. If unavailable, use
+another email provider's SMTP credentials, or a provider supporting OAuth2.
+
+Edit the **existing, uncommitted** `.env` in your Mac project, and set:
 
 ```dotenv
-MAIL_HOST=smtp.your-provider.example
-MAIL_PORT=587
-MAIL_USER=sender@example.com
-MAIL_PASSWORD=your-smtp-app-password
-MAIL_FROM=sender@example.com
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USER=your-sender@gmail.com
+MAIL_PASSWORD=your-16-character-Google-app-password
+MAIL_FROM=your-sender@gmail.com
 CLIENT_ORIGIN=http://localhost:5173
-VITE_API_ORIGIN=http://localhost:5000
-ALLOW_DEV_VERIFICATION_TOKENS=false
 ```
 
-For Gmail personal accounts, the server host is `smtp.gmail.com` and port `587` (STARTTLS) or `465` (TLS). Use a supported OAuth2 method or an **app password**, if available for your account; don't use your normal Google password. Some Google Workspace accounts require different administrator configuration.
+Replace both email placeholders with the SAME real sender email. Replace the
+password placeholder with the app password (without presentation spaces).
+Use `465` for implicit TLS. The backend also supports `587` with required STARTTLS.
+Do not paste passwords into a chat, commit `.env`, or put credentials in `VITE_*` variables.
 
-`CLIENT_ORIGIN` MUST match the frontend's public URL when deployed (e.g. `https://circle.example.com`), otherwise users receive confirmation links pointing at localhost. Set CORS accordingly through the same origin. Keep the SMTP password and `AUTH_SECRET` in deployment secrets, never in git.
+For another SMTP provider, use its host, port and SMTP credentials.
+Your `MAIL_FROM` must be a sender address that provider permits.
 
-## Test connection and complete delivery
+## 2. Actually send a test email — no MySQL needed
 
-1. Start MySQL and initialize the existing Usof schema with `npm run db:init`. Do **not** reset an existing database just to configure mail.
-2. Run `npm run mail:check`. It tests SMTP connectivity and authentication **without sending email**.
-3. Start the API: `npm start`.
-4. Start frontend: `npm run web` (not `npm run web:demo`).
-5. Register using an email inbox you control. The backend creates a pending user, hashes their password, generates a one-time link + six-digit code and sends the message via SMTP.
-6. Follow the link or enter the code within 20 minutes. This marks the account verified in MySQL. The code path then attempts to log in automatically and open the **actual main feed**; the email link path presents the Login button because it may open on another device/browser.
-7. If the message didn't send, the form displays the failure and has **Resend verification email**. The endpoint implements a one-minute in-process cooldown. On a public multi-server deployment, add shared rate limits and anti-abuse protection.
+From the project directory:
 
-The sender may accept a message while it is later filtered as spam; confirmation with a real mailbox is needed before claiming successful end-to-end email delivery.
+```bash
+npm run mail:check
+npm run mail:send-test -- your-personal-inbox@gmail.com
+```
 
-## Demo vs real
+The first command checks that SMTP connects and authenticates; it does NOT
+send anything. The second sends a **real message** through the same
+Nodemailer transport Circle uses for registration. You should see:
+`SMTP accepted the test email`.
 
-`npm run web:demo` uses the **same page styling** but emulates account creation and posts in the browser. It does not send email, connect to MySQL, or validate passwords. The mode is a UI prototype, not a way to test server security.
+Then open the recipient mailbox and check **Inbox and Spam**. The SMTP
+server accepting a message does not guarantee it reached the inbox: the
+message can still be rejected, bounced or filtered later.
 
-`npm run web` connects to the API. If the API cannot be reached, the older client still has a development mock fallback; for reliable real integration checks, verify API `http://localhost:5000/api/health` first, and use the live backend with the environment configured.
+**Important for this Mac:** The current Homebrew MySQL data directory was
+created by 9.6.0 but the active MySQL binary is 26.7.0. That incompatibility
+and the unavailable root password are separate from email sending.
+Do NOT run `db:reset`, initialize a new database over the existing one, or
+delete the data directory to troubleshoot email. `mail:check` and
+`mail:send-test` are independent of MySQL and can be tested first.
+
+## 3. Registration and password reset
+
+Once a compatible MySQL service is running:
+
+```bash
+npm start
+```
+
+In a second terminal:
+
+```bash
+npm run web
+```
+
+Open http://localhost:5173, register a **new** user with a real email
+address, and check your Inbox. Circle sends:
+
+- A six-digit email confirmation code.
+- A one-time verification link (`/#/verify/...`).
+- Both expire after 20 minutes.
+
+Only a verified account can log in. Use the six-digit code on the registration
+screen, or follow the email link and then log in.
+
+If sending fails, the registration screen explicitly warns that the email was
+not sent. The account is still pending in MySQL. Use **Resend code** (after the
+one-minute cooldown); do **not** register the same account again.
+
+`Forgot password?` sends an email with a one-time reset link (30-minute
+expiry). Public password-reset replies stay generic, so someone cannot discover
+whether an email is registered.
+
+## 4. Demo vs actual sending
+
+`npm run web:demo` is an offline UI demonstration: it does **not** send real
+mail, connect to MySQL or verify email addresses. Use `npm run web` for live
+registration, and keep `ALLOW_DEV_VERIFICATION_TOKENS=false`.
+
+## 5. Automated delivery checks
+
+On the `circle-real-email` branch, CI starts a loopback SMTP server that
+requires credentials, sends a real SMTP test message, then checks the actual
+SMTP content for registration, resend, and password-reset messages. This
+proves the server handed mail to an SMTP server, without storing or using
+any real mailbox password. Confirming **external** delivery requires step 2
+with your own sender credentials and inbox.
