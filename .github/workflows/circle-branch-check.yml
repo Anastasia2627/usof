@@ -1,8 +1,8 @@
-name: Circle functional compliance
+name: Circle Basic minimum check
 
 on:
   push:
-    branches: [circle-functional-compliance]
+    branches: [circle-basic-minimal]
   workflow_dispatch:
 
 jobs:
