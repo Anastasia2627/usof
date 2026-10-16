@@ -52,7 +52,7 @@ export function PostCard({ post }) {
     <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
     <p>{post.content?.slice(0, 200)}{post.content?.length > 200 ? '…' : ''}</p>
     <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{category.title}</span>)}</div>
-    <small>{post.like_count || 0} likes · {post.comment_count || 0} comments</small>
+    <small>{post.like_count || 0} likes · {post.dislike_count || 0} dislikes · {post.comment_count || 0} comments</small>
   </article>;
 }
 
