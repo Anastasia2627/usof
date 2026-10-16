@@ -124,9 +124,12 @@ export async function listPostFeed(query, user) {
   if (query.search) {
     const search = String(query.search).trim().slice(0, 120);
     if (search) {
-      where.push('(p.title LIKE ? OR p.content LIKE ? OR u.login LIKE ?)');
-      const term = `%${search}%`;
-      params.push(term, term, term);
+      where.push(`(p.title LIKE ? OR p.content LIKE ? OR u.login LIKE ? OR EXISTS (
+        SELECT 1 FROM post_categories spc JOIN categories sc ON sc.id=spc.category_id
+        WHERE spc.post_id=p.id AND sc.title LIKE ?
+      ))`);
+      const term = `%${search.replace(/[\\%_]/g, '')}%`;
+      params.push(term, term, term, term);
     }
   }
 
