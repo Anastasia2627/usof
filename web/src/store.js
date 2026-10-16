@@ -19,7 +19,7 @@ const initialState = {
 function reducer(state = initialState, action) {
   switch (action.type) {
     case 'AUTH_SET':
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(action.payload));
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(action.payload));
       return { ...state, auth: action.payload };
     case 'AUTH_PATCH': {
       if (!state.auth) return state;
