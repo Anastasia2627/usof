@@ -1,25 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { useI18n } from '../i18n.jsx';
-import { ErrorBox, Icon, PostCard, go } from '../ui.jsx';
+import { ErrorBox, PostCard, go } from '../ui.jsx';
 
-function todayIso() {
-  const date = new Date();
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
+const FILTERS = ['sort', 'category', 'from', 'to', 'status'];
 
 export default function HomePage({ hash }) {
-  const auth = useSelector((state) => state.auth);
-  const { t, language } = useI18n();
+  const auth = useSelector(state => state.auth);
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
-  const [categories, setCategories] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     sort: params.get('sort') || 'date',
     category: params.get('category') || '',
@@ -27,9 +15,14 @@ export default function HomePage({ hash }) {
     to: params.get('to') || '',
     status: params.get('status') || '',
   });
+  const [posts, setPosts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api('/categories').then((result) => setCategories(result.data)).catch(setError);
+    api('/categories').then(result => setCategories(result.data)).catch(setError);
   }, []);
 
   useEffect(() => {
@@ -40,153 +33,82 @@ export default function HomePage({ hash }) {
       to: params.get('to') || '',
       status: params.get('status') || '',
     });
-
     const controller = new AbortController();
     const query = new URLSearchParams({
       page: params.get('page') || '1',
       limit: '8',
       sort: params.get('sort') || 'date',
-      order: params.get('order') || 'desc',
+      order: 'desc',
     });
-
-    for (const key of ['search', 'category', 'from', 'to', 'status']) {
-      if (params.get(key)) query.set(key, params.get(key));
+    for (const name of ['category', 'from', 'to', 'status', 'search']) {
+      if (params.get(name)) query.set(name, params.get(name));
     }
-
     setLoading(true);
     setError(null);
-    api(`/posts?${query}`, { token: auth?.token, signal: controller.signal })
-      .then((result) => {
-        setPosts(result.data);
-        setPagination(result.pagination);
-      })
-      .catch((err) => { if (err.name !== 'AbortError') setError(err); })
+    api('/posts?' + query, { token: auth?.token, signal: controller.signal })
+      .then(result => { setPosts(result.data); setPagination(result.pagination); })
+      .catch(err => { if (err.name !== 'AbortError') setError(err); })
       .finally(() => setLoading(false));
-
     return () => controller.abort();
   }, [hash, auth?.token]);
 
-  function applyFilters(event) {
+  function apply(event) {
     event.preventDefault();
     const query = new URLSearchParams();
-    const search = params.get('search');
-    if (search) query.set('search', search);
-    Object.entries(filters).forEach(([key, value]) => { if (value) query.set(key, value); });
-    go(query.size ? `/?${query}` : '/');
-  }
-
-  function applyFeed(mode) {
-    const query = new URLSearchParams(params);
-    query.delete('page');
-    query.delete('from');
-    query.delete('to');
-
-    if (mode === 'latest' || mode === 'for-you') query.set('sort', 'date');
-    if (mode === 'popular') query.set('sort', 'likes');
-    if (mode === 'evening') {
-      query.set('sort', 'trending');
-      query.set('from', todayIso());
+    if (params.get('search')) query.set('search', params.get('search'));
+    for (const name of FILTERS) {
+      if (filters[name]) query.set(name, filters[name]);
     }
-    go(`/?${query}`);
+    go(query.size ? '/?' + query : '/');
   }
 
-  function feedMode() {
-    if (params.get('sort') === 'likes') return 'popular';
-    if (params.get('sort') === 'trending' && params.get('from') === todayIso()) return 'evening';
-    return 'latest';
-  }
-
-  function page(number) {
+  function navigate(page) {
     const query = new URLSearchParams(params);
-    query.set('page', String(number));
-    go(`/?${query}`);
+    query.set('page', String(page));
+    go('/?' + query);
   }
-
-  const featured = posts[0];
-  const rest = posts.slice(1);
 
   return <main className="homePage">
-    <section className="circleFeedIntro">
-      <div>
-        <p className="circleFeedEyebrow">{auth ? 'CIRCLE / FEED' : 'CIRCLE / OPEN CONVERSATIONS'}</p>
-        <h1>{auth ? (language === 'uk' ? 'Стрічка' : 'Your feed') : (language === 'uk' ? 'Місце для розмов.' : 'A place to talk.')}</h1>
-        {!auth && <p>{language === 'uk'
-          ? 'Думки, питання й історії на будь-яку тему. Долучайся до обговорень.'
-          : 'Questions, stories and opinions about anything. Join the conversation.'}</p>}
-      </div>
-      <button className="primary circleNewPost" onClick={() => go(auth ? '/create' : '/register')}>
-        <Icon name={auth ? 'add' : 'arrow_forward'} />
-        {auth ? (language === 'uk' ? 'Нова публікація' : 'New post') : t('signup')}
-      </button>
-    </section>
+    <div className="pageHeading">
+      <div><h1>Posts</h1><p className="muted">Browse discussions and share your knowledge.</p></div>
+      {auth && <button className="primary" onClick={() => go('/create')}>New post</button>}
+    </div>
 
-    {params.get('search') && <section className="searchResultBanner">
-      <span><Icon name="search" /> Results for <strong>“{params.get('search')}”</strong></span>
-      <button className="linkButton" onClick={() => go('/')}>Clear search</button>
-    </section>}
+    {params.get('search') && <p>Search: <strong>{params.get('search')}</strong> <button className="linkButton" onClick={() => go('/')}>Clear</button></p>}
+    <form className="card filterBar" onSubmit={apply}>
+      <label>Sort by
+        <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
+          <option value="date">Newest</option>
+          <option value="likes">Most liked</option>
+        </select>
+      </label>
+      <label>Category
+        <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
+          <option value="">All categories</option>
+          {categories.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+      </label>
+      <label>From<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
+      <label>To<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
+      {auth && <label>Status
+        <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
+          <option value="">All viewable</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </label>}
+      <button className="primary">Apply</button>
+    </form>
 
-    <section className="feedShell">
-      <div className="feedHeader">
-        <div>
-          
-          <h2>{language === 'uk' ? 'Обговорення' : 'Conversations'}</h2>
-        </div>
-        <button className={`filterToggle ${filtersOpen ? 'active' : ''}`} onClick={() => setFiltersOpen((value) => !value)}>
-          <Icon name="tune" /> {t('filters')}
-        </button>
-      </div>
-
-      <div className="feedTabs" role="group" aria-label="Feed sorting">
-        <button className={feedMode() === 'latest' ? 'active' : ''} onClick={() => applyFeed('latest')}>{t('latest')}</button>
-        <button className={feedMode() === 'popular' ? 'active' : ''} onClick={() => applyFeed('popular')}>{t('popular')}</button>
-        <button className={feedMode() === 'evening' ? 'active' : ''} onClick={() => applyFeed('evening')}>{language === 'uk' ? 'Сьогодні' : 'Today'}</button>
-      </div>
-
-      {filtersOpen && <form className="advancedFilters" onSubmit={applyFilters}>
-        <label>Sort
-          <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value })}>
-            <option value="date">Newest</option>
-            <option value="likes">Most liked</option>
-            <option value="trending">Trending</option>
-          </select>
-        </label>
-        <label>Topic
-          <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-            <option value="">{t('allTopics')}</option>
-            {categories.map((category) => <option key={category.id} value={category.id}>{category.title}</option>)}
-          </select>
-        </label>
-        <label>From<input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} /></label>
-        <label>To<input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} /></label>
-        {auth && <label>Status
-          <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-            <option value="">All viewable</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </label>}
-        <button className="secondary">{t('apply')} <Icon name="arrow_forward" /></button>
-      </form>}
-
-      <ErrorBox error={error} />
-
-      {loading ? <div className="feedLoading">
-        <span /><span /><span />
-        <p>Listening for conversations…</p>
-      </div> : posts.length ? <>
-        {featured && <PostCard post={featured} />}
-        {rest.length > 0 && <section className="threadGrid">{rest.map((post) => <PostCard key={post.id} post={post} />)}</section>}
-      </> : <div className="emptyState">
-        <span className="emptyGlyph"><Icon name="chair" /></span>
-        <h2>{t('noThreads')}</h2>
-        <p>{t('noThreadsBody')}</p>
-        <button className="primary" onClick={() => go(auth ? '/create' : '/register')}>{auth ? t('startThread') : t('signup')}</button>
-      </div>}
-
-      {pagination && pagination.totalPages > 1 && <div className="pager">
-        <button disabled={pagination.page <= 1} onClick={() => page(pagination.page - 1)}><Icon name="arrow_back" /> Previous</button>
-        <span>{pagination.page} / {pagination.totalPages}</span>
-        <button disabled={pagination.page >= pagination.totalPages} onClick={() => page(pagination.page + 1)}>Next <Icon name="arrow_forward" /></button>
+    <ErrorBox error={error} />
+    <section className="feedShell" aria-label="Posts">
+      {loading ? <p>Loading posts…</p> : posts.length
+        ? <div className="threadGrid">{posts.map(post => <PostCard key={post.id} post={post} />)}</div>
+        : !error ? <div className="card">No posts match these filters.</div> : null}
+      {pagination?.totalPages > 1 && <div className="pager">
+        <button disabled={pagination.page <= 1} onClick={() => navigate(pagination.page - 1)}>Previous</button>
+        <span>Page {pagination.page} of {pagination.totalPages}</span>
+        <button disabled={pagination.page >= pagination.totalPages} onClick={() => navigate(pagination.page + 1)}>Next</button>
       </div>}
     </section>
   </main>;
