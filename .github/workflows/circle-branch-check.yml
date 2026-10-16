@@ -1,8 +1,8 @@
-name: Circle university defense check
+name: Circle full requirements check
 
 on:
   push:
-    branches: [circle-defense-ready]
+    branches: [circle-full-requirements]
   workflow_dispatch:
 
 jobs:
