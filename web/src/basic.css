@@ -131,3 +131,13 @@ footer { padding: 24px; text-align: center; color: #7b8390; font-size: 13px; bor
   .accountIdentity small { max-width: 74px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .commentBranch { margin-left: calc(min(var(--depth), 3) * 9px); }
 }
+
+/* Basic search: readable results without a UI kit or decorative effects. */
+.searchSection { margin-top: 28px; }
+.searchCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.searchPerson { display: flex; text-align: left; align-items: center; gap: 10px; }
+.searchPerson span { display: grid; }
+.searchPerson small { overflow-wrap: anywhere; }
+.threadCard { overflow-wrap: anywhere; }
+.threadCard .postMeta { display: flex; align-items: center; flex-wrap: wrap; }
+.threadCard .avatar-sm { height: 25px; width: 25px; }
