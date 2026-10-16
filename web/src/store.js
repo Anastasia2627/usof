@@ -7,7 +7,7 @@ function readStoredAuth() {
   try {
     return JSON.parse(sessionStorage.getItem(AUTH_STORAGE_KEY) || 'null');
   } catch {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
     return null;
   }
 }
