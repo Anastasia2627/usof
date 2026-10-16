@@ -61,6 +61,7 @@ function metricsSql() {
   return `
     ${SCORE_SQL} AS score,
     ${LIKE_COUNT_SQL} AS like_count,
+    ${DISLIKE_COUNT_SQL} AS dislike_count,
     ${COMMENT_COUNT_SQL} AS comment_count,
     ${FAVORITE_COUNT_SQL} AS favorite_count,
     ${FOLLOWER_COUNT_SQL} AS follower_count,
