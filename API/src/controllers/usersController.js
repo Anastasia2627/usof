@@ -11,7 +11,10 @@ export async function listUsers(req, res) {
 
 export async function getUser(req, res) {
   const id = positiveInt(req.params.user_id, 'INVALID_USER_ID', 'Invalid user id');
-  const user = await User.findById(id);
+  const isSelf = Number(req.user?.sub) === id;
+  const user = req.user?.role === 'admin' || isSelf
+    ? await User.findById(id)
+    : await User.findPublicById(id);
   if (!user) throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
   res.json({ data: user });
 }
