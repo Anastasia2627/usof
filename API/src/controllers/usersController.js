@@ -19,6 +19,13 @@ export async function getUser(req, res) {
   res.json({ data: user });
 }
 
+export async function listUserPosts(req, res) {
+  const id = positiveInt(req.params.user_id, 'INVALID_USER_ID', 'Invalid user id');
+  const person = await User.findPublicById(id);
+  if (!person) throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
+  res.json(await listPostFeed({ ...req.query, author: String(id) }, req.user));
+}
+
 export async function createUser(req, res) {
   res.status(201).json({ data: await createManagedUser(req.body) });
 }
