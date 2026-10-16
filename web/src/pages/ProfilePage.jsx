@@ -56,7 +56,7 @@ export default function ProfilePage({ userId = null }) {
       .finally(() => setLoading(false));
   }, [auth?.token, viewedId, isSelf, sort, status, category, page]);
 
-  if (!auth) return <main><div className="card">Log in to view profiles. <button onClick={() => go('/login')}>Log in</button></div></main>;
+  if (!auth && !userId) return <main><div className="card">Log in to view your profile. <button onClick={() => go('/login')}>Log in</button></div></main>;
 
   async function save(event) {
     event.preventDefault();
