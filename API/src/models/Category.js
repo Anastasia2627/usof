@@ -1,4 +1,5 @@
 import { BaseModel } from './BaseModel.js';
+import { Post } from './Post.js';
 
 export class Category extends BaseModel {
   static async list() {
