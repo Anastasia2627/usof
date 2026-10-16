@@ -1,208 +1,76 @@
-# Usof
+# Circle — USOF Basic
 
-![Usof CI](https://github.com/Anastasia2627/usof/actions/workflows/ci.yml/badge.svg)
+Circle is a small question-and-answer discussion application built for the **Usof backend** and **Usof frontend** Basic assignments. It uses Node.js, Express, MySQL, React, Redux, HTML and CSS. No third-party UI framework is used.
 
-Circle (built from the USOF specification) is a local full-stack social discussion site where people can publish posts, respond and follow conversations on different topics. It combines a Node.js/Express/MySQL API with a responsive React + Redux client and follows the required `API/` + `web/` repository layout.
+## Required features
 
-## Features
+- Registration with email verification (code or link), login, logout and password reset
+- Two roles: `user` and `admin`, with API-enforced access permissions
+- User profile, avatar upload, profile editing, account rating and personal posts
+- Posts: create, read, edit own content, delete, multiple categories, active/inactive status and locking
+- Comments and nested replies; comment status moderation, deletion and locking
+- One like/dislike per user per post or comment; list and remove reactions
+- Home feed: newest posts by default, sort by likes, filter by category/date/status, search and pagination
+- Admin console to manage users, posts, categories and comments
+- Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
+- Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
-- registration, email verification, login, real logout and password reset
-- `user` and `admin` roles with backend authorization, ownership checks and last-admin protection
-- user profiles, content-validated avatar upload, account deletion and automatically maintained reputation
-- posts with many-to-many categories, active/inactive moderation, locking, search, sorting, filtering and pagination
-- nested comments through `parent_comment_id`, moderation and locking
-- `like`, `dislike`, `useful`, `thanks` and `fire` reactions with one reaction per user/target and no self-voting
-- saved posts, followed discussions and notification inbox
-- tracked native/copy/Facebook/X/Telegram sharing and a recent-activity Trending feed
-- member reputation, personal posts/replies/likes, saved content and participation summaries
-- separate user contribution dashboard and admin platform dashboard
-- admin user/category/post/comment management in a dedicated moderation console
-- responsive React UI covering guest, user and admin flows
-- centralized JSON errors, shared input validation and parameterized SQL
-- concurrency-safe password reset and reputation updates
-- non-destructive database initialization with an explicitly confirmed reset command
-- GitHub Actions verification with MySQL 8.4, hardening tests, Basic/Creative API checks, a PDF-specific backend requirement audit, React production build and real browser screenshots
+The `web/src/basic.css` file is the only stylesheet loaded. It deliberately uses plain system fonts, one accent color and **no animations or decorative effects**. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
 
-## Stack
+## Run locally
 
-JavaScript, Node.js, Express, MySQL, HTML, CSS, React and Redux.
-
-No third-party UI framework is used. `sharp` is used on the backend to decode and normalize uploaded avatars.
-
-## Requirements
-
-- Node.js 20+
-- npm 10+
-- MySQL 8+
-
-## Setup
+Requirements: Node.js 20+, npm and a compatible running MySQL server (see your server version before upgrading existing data).
 
 ```bash
 git clone https://github.com/Anastasia2627/usof.git
 cd usof
+git switch circle-basic-minimal
 npm install
 cp .env.example .env
 ```
 
-Edit `.env` with your local MySQL credentials and a strong `AUTH_SECRET`.
+Configure the existing `.env` with MySQL host, database, username, password and `AUTH_SECRET`. Never commit passwords.
 
-Initialize a fresh development database:
+For a **new/empty** database, seed the required test data:
 
 ```bash
 npm run db:init
 ```
 
-`db:init` is safe to run again. If the complete Usof schema already exists, it leaves the existing tables and data untouched. If it finds only part of the Usof schema, it refuses to continue instead of guessing how to repair or overwrite it.
+This initialization does not delete a complete existing schema. Do **not** use `db:reset` to troubleshoot connection errors: it would delete existing project data.
 
-A full reset is intentionally separate. It deletes the Usof tables and restores the reproducible seed data, so it requires the configured database name as an explicit confirmation outside test environments:
-
-```bash
-npm run db:reset -- --confirm=usof
-```
-
-Replace `usof` with the exact value of `DB_NAME` from your `.env`. CI uses a disposable database ending in `_ci`, so its explicit reset is allowed automatically while `NODE_ENV=test`.
-
-Start the API:
+Start the API and React in separate terminals:
 
 ```bash
 npm start
 ```
 
-In a second terminal, start the React client:
-
 ```bash
 npm run web
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173`. Verify the live database connection at `http://localhost:5000/api/health`.
 
-## Registration and real email
+A standalone UI preview with fake, browser-local data is available using `npm run web:demo`. It is **not** a replacement for API/MySQL tests and does not provide real shared accounts or email delivery.
 
-To test actual email verification, configure SMTP in your uncommitted `.env` (`MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM`). Run `npm run mail:check` to verify the connection, then start the API and frontend normally. Registration creates an unverified account; the email contains a one-time link and a six-digit code. On successful code confirmation Circle signs the user in and opens the main feed. A user who lost the original tab can request a fresh code from the login page.
+## Email confirmation
 
-Without SMTP, use `npm run web:demo` only to test the appearance and broad navigation with simulated browser-local accounts. **Demo does not validate email, store real passwords or enforce backend permissions.** The normal `npm run web` always communicates with MySQL-backed API and does not silently fall back to mock data.
+For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` and `MAIL_FROM` in your uncommitted `.env`, then run `npm run mail:check`. Without working SMTP, new accounts remain unverified and cannot log in to the real app. See [email instructions](docs/REAL_EMAIL_VERIFICATION.md).
 
-See [real email setup](docs/REAL_EMAIL_VERIFICATION.md) and [demo limits](docs/CIRCLE_DEMO_MODE.md).
+## Screenshots and verification
 
-## Seed accounts
+The Basic branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
 
-Development seed password for all accounts: `Password123!`
+## Documentation
 
-- `admin` / `admin@usof.local` — admin
-- `asya` / `asya@usof.local` — user
-- `alex` / `alex@usof.local` — user
-- `maria` / `maria@usof.local` — user
-- `sam` / `sam@usof.local` — user
+- [API reference](docs/API.md)
+- [Backend requirement mapping](docs/BACKEND_COMPLIANCE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [CBL learning process](docs/CBL.md)
+- [Functional testing](docs/ASSESSMENT.md)
 
-Do not use these credentials outside local development.
+### Development test accounts
 
-## API overview
+After initialization, sample logins include `admin`, `asya`, `alex`, `maria` and `sam`, with password `Password123!`. These accounts are only for local development, not production.
 
-- `/api/auth` — registration, verification, login/logout and password reset
-- `/api/users` — profiles, avatar upload, account deletion and admin user management
-- `/api/posts` — post CRUD, pagination, sorting/filtering, reactions, comments, saves, follows and sharing
-- `/api/categories` — category CRUD and posts by category
-- `/api/comments` — admin listing, comment moderation, reactions and deletion
-- `/api/library` — saved and followed questions
-- `/api/notifications` — personal discussion/reaction notifications
-- `/api/dashboard/me` — user contribution, trust and answer-suggestion dashboard
-- `/api/dashboard/admin` — admin analytics and moderation overview
-
-The post feed supports `page`, `limit`, `sort=likes|date|trending`, `order=asc|desc`, `category`, `from`, `to`, `status`, `author` and `search`. `sort=likes` means positive like count and remains the Basic default required by the backend PDF. A date-only `to=YYYY-MM-DD` includes that whole day. Visibility and role rules are enforced by the API.
-
-For routes, permissions and payload notes, see [docs/API.md](docs/API.md). For the exhaustive backend-PDF requirement matrix, see [docs/BACKEND_COMPLIANCE.md](docs/BACKEND_COMPLIANCE.md). The additional community layer is described in [docs/CREATIVE_FEATURES.md](docs/CREATIVE_FEATURES.md).
-
-## Frontend pages and flows
-
-The React client includes the home feed with search/filters/pagination and Trending sorting, login, registration, email verification, password reset, category browsing/detail pages, profile editing, avatar upload, account deletion, create/edit post, post details, nested replies, five reaction types, saved/followed question libraries, notifications, user dashboard, admin dashboard and an admin console for users, posts, categories and comments.
-
-The header/menu is present on every page and shows the service name, search, navigation and — for authorized users — current role, login, avatar, notification indicator and logout.
-
-### Community and trust layer
-
-Reputation is based on reactions received on questions and answers. Users cannot react to their own contribution. Reaction changes apply atomic rating deltas to the author row, so concurrent reactions on different contributions cannot overwrite one another. Trust levels provide a readable interpretation of reputation: Newcomer, Contributor, Trusted, Expert and Mentor.
-
-The user dashboard presents posts, replies, reactions received, saved content, weekly activity and reputation. The admin dashboard shows member/post/reply counts, seven-day activity, popular topics and moderation items. Both use API data, not decorative invented analytics.
-
-## Architecture
-
-Backend request flow:
-
-`HTTP request → route → auth middleware → controller → service/model → MySQL → JSON response`
-
-Controllers stay focused on HTTP concerns. Account lifecycle, authentication, posts, comments, categories, avatars, reactions, notifications and dashboards have dedicated service modules; reusable request validation lives in `API/src/utils/validation.js`. Models handle reusable data access, while transaction boundaries and cross-entity business rules live in services.
-
-React uses a central API client and Redux only for global authentication/session state; page-specific forms, filters, pagination and dashboard state remain local component state.
-
-More detail is available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Security and data-integrity notes
-
-- Password reset tokens are consumed with a conditional atomic update, so one reset link cannot successfully change the password twice under concurrent requests.
-- Changing an email revokes active sessions and password-reset tokens, invalidates the old verification link and requires confirmation of the new address.
-- Uploaded avatars are decoded as images and re-encoded as WebP; the client-supplied MIME type is not trusted as proof of file contents.
-- The final administrator cannot be deleted or demoted. The invariant is checked while administrator rows are locked inside the account transaction.
-- Reputation changes use atomic numeric deltas, with dedicated concurrent-reaction tests.
-- Normal database initialization never drops existing Usof data; destructive reset is a separate, guarded command.
-
-## Testing
-
-For a complete local backend check, initialize or explicitly reset a disposable database first, then run:
-
-```bash
-npm run check:backend
-npm run test:auth
-npm run test:requirements
-npm run test:creative
-npm run build
-```
-
-`npm run test:auth` includes password-reset race tests, email/token lifecycle tests, last-admin protection, real avatar decoding/re-encoding and concurrent reputation updates. Those tests refuse to run unless `NODE_ENV=test` and `DB_NAME` ends in `_test` or `_ci`.
-
-With the API running, `npm run test:smoke` checks the public API plus the strict requirement and Creative HTTP flows.
-
-GitHub Actions starts a disposable MySQL 8.4 service, explicitly resets `usof_ci`, runs syntax and hardening tests, starts the API, runs requirement/Creative HTTP checks, builds and starts the React client, and captures desktop/mobile screenshots from the real application.
-
-## Functional verification
-
-The feature-branch workflow `.github/workflows/circle-branch-check.yml` runs backend syntax, MySQL account tests, all required and Creative API smoke tests, single-use email verification/resend checks, React build and a Chromium browser test at 390 px. The browser check also creates over 20 posts in disposable MySQL and verifies that admin pagination reaches the second page.
-
-These checks cannot prove delivery via a real email provider; perform one SMTP registration/verification with an inbox you control.
-
-## Documentation / CBL progress
-
-- **Engage:** defined Usof as a knowledge-exchange service for programmers.
-- **Investigate:** selected the required Node.js/Express/MySQL + React/Redux stack and a role-aware API architecture.
-- **Act:** implemented the database schema, backend modules, responsive client, validation, security checks, community features, dashboards, admin workflows and automated verification.
-
-The fuller stage-by-stage development journal and reflection are in [docs/CBL.md](docs/CBL.md).
-
-Main user flow: open app → register → verify email → login → browse/filter posts → answer/reply → react → save/follow discussions → check notifications/dashboard → edit own content/profile → logout.
-
-Main admin flow: login → open admin dashboard → inspect platform/moderation signals → open admin console → manage users/roles → moderate posts/comments → manage categories → inspect reactions → logout.
-
-For a requirement-by-requirement peer-assessment map and quick demo sequence, see [docs/ASSESSMENT.md](docs/ASSESSMENT.md).
-
-## Screenshots
-
-These are real screenshots captured automatically from the running application in GitHub Actions.
-
-### Desktop home
-
-![Usof desktop home](docs/screenshots/home.png)
-
-### Question and nested discussion
-
-![Usof question page](docs/screenshots/post.png)
-
-### Categories
-
-![Usof categories page](docs/screenshots/categories.png)
-
-### Mobile home
-
-![Usof mobile home](docs/screenshots/mobile-home.png)
-
-## Verification status
-
-The automated pipeline verifies guarded database setup, backend syntax, account/data hardening, API startup, Basic + Creative requirement flows, React production build, real frontend startup and browser rendering at desktop/mobile widths. The committed screenshots are produced from that same running application rather than generated mockups.
+The `Share` reflection and publication requested by the assignment is a separate student submission step.
