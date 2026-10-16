@@ -5,6 +5,7 @@ import { ErrorBox, go } from '../ui.jsx';
 
 function VerificationForm({ email, delivery, initialCode, login, password, onLogin }) {
   const [code, setCode] = useState(initialCode || '');
+  const [lastDelivery, setLastDelivery] = useState(delivery);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,16 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
     try {
       const result = await api('/auth/resend-verification', { method: 'POST', body: { email } });
       if (result.verificationCode) setCode(result.verificationCode);
-      setMessage(result.message || 'If verification is needed, a code was sent.');
+      if (result.emailDelivery) {
+        setLastDelivery(result.emailDelivery);
+        if (result.emailDelivery !== 'sent') {
+          setError(new Error('The SMTP server did not accept the email. Check mail settings and retry in one minute.'));
+        } else {
+          setMessage('A new verification email was accepted by your mail provider. Check Inbox and Spam.');
+        }
+      } else {
+        setMessage(result.message || 'If confirmation is needed, an email will be sent.');
+      }
     } catch (err) {
       setError(err);
     } finally {
@@ -45,7 +55,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
   return <form className="authForm verificationForm" onSubmit={verify}>
     <h1>Confirm your email</h1>
     <p>Enter the six-digit code sent to <b>{email}</b>.</p>
-    {delivery && delivery !== 'sent' && <p className="error card">Email was not sent. Configure SMTP or try again.</p>}
+    {lastDelivery && lastDelivery !== 'sent' && <p className="error card">Your account was created, but no email was sent. Configure SMTP and request a new code. Avoid registering again with the same address.</p>}
     <label>Verification code
       <input inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
         value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
@@ -132,6 +142,7 @@ export function AuthPage({ mode }) {
     <section className="authPanel">
       {verification ? <VerificationForm {...verification} onLogin={logIn} /> : <>
         <h1>{register ? 'Create account' : 'Log in'}</h1>
+        {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
           {register ? <>
             <label>Username<input autoComplete="username" required minLength="3" maxLength="50" value={form.login} onChange={field('login')} /></label>
