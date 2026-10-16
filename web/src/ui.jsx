@@ -40,6 +40,8 @@ export function StatusBadges({ item }) {
 }
 
 export function PostCard({ post }) {
+  const auth = useSelector(state => state.auth);
+  const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
   return <article className="card threadCard">
     <div className="postMeta">
       <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
