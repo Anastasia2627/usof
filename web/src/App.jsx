@@ -28,6 +28,7 @@ export default function App() {
   else if (path === '/login') page = <AuthPage mode="login" />;
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
+  else if (path === '/search') page = <SearchPage hash={hash} />;
   else if (path === '/profile') page = <ProfilePage />;
   else if (parts[0] === 'profile' && /^\d+$/.test(parts[1] || '')) page = <ProfilePage userId={parts[1]} />;
   else if (path === '/create') page = <PostEditor />;
