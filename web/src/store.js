@@ -5,7 +5,7 @@ const AUTH_STORAGE_KEY = import.meta.env.MODE === 'demo' ? 'circle-demo-auth' : 
 
 function readStoredAuth() {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null');
+    return JSON.parse(sessionStorage.getItem(AUTH_STORAGE_KEY) || 'null');
   } catch {
     localStorage.removeItem(AUTH_STORAGE_KEY);
     return null;
