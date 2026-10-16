@@ -44,6 +44,7 @@ export function PostCard({ post }) {
   const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
   return <article className="card threadCard">
     <div className="postMeta">
+      <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
       <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
       <span>{fmt(post.created_at)}</span>
       <StatusBadges item={post} />
