@@ -24,6 +24,16 @@ export async function createComment(req, res) {
   });
 }
 
+export async function replyToComment(req, res) {
+  const parent = await getVisibleComment(req.params.comment_id, req.user);
+  res.status(201).json({
+    data: await createCommentForUser(req.user, parent.post_id, {
+      content: req.body.content,
+      parentCommentId: parent.id,
+    }),
+  });
+}
+
 export async function getComment(req, res) {
   res.json({ data: await getVisibleComment(req.params.comment_id, req.user) });
 }
