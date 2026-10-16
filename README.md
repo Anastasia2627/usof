@@ -24,7 +24,7 @@ Requirements: Node.js 20+, npm and a compatible running MySQL server (see your s
 ```bash
 git clone https://github.com/Anastasia2627/usof.git
 cd usof
-git switch circle-basic-minimal
+git switch circle-full-requirements
 npm install
 cp .env.example .env
 ```
