@@ -41,8 +41,8 @@ export default function ProfilePage({ userId = null }) {
     if (category) query.set('category', category);
 
     Promise.all([
-      api(`/users/${viewedId}`, { token: auth.token }),
-      api(`/posts?${query}`, { token: auth.token }),
+      api(`/users/${viewedId}`, { token: auth?.token }),
+      api(`/users/${viewedId}/posts?${query}`, { token: auth?.token }),
     ])
       .then(([userResult, postResult]) => {
         setUser(userResult.data);
