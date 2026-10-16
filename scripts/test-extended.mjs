@@ -74,4 +74,25 @@ const finalPost=(await call('/posts/'+postId)).data;
 assert.equal(Number(finalPost.like_count),0,'Removing a reaction must update counts');
 const comments = (await call('/posts/'+postId+'/comments')).data;
 assert.ok(comments.some(x=>x.id===comment.data.id));
-console.log('Extended search, public profile, reply, reaction moderation and API permission checks passed.');
+const userName = 'editmail' + Date.now().toString(36);
+const originalEmail = userName + '@example.test';
+const changedEmail = userName + '+new@example.test';
+const managed = await call('/users', {
+  method:'POST',token:adminToken,status:201,
+  body:{ login:userName,email:originalEmail,fullName:'Managed User',role:'user',
+    password:'Password123!',passwordConfirmation:'Password123!' },
+});
+const edited = await call('/users/'+managed.data.id, {
+  method:'PATCH',token:adminToken,body:{ email:changedEmail },
+});
+assert.equal(edited.data.email_verified, 0);
+assert.equal(edited.emailDelivery, 'sent');
+assert.match(edited.verificationCode, /^\\d{6}$/);
+await call('/auth/verify-email-code', {
+  method:'POST',body:{email:changedEmail,code:edited.verificationCode},
+});
+const afterLogin = await call('/auth/login', {
+  method:'POST',body:{email:changedEmail,password:'Password123!'},
+});
+assert.ok(afterLogin.token);
+console.log('Extended search, profiles, replies, reaction moderation, and real changed-email confirmation passed.');
