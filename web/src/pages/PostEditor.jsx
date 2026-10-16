@@ -64,7 +64,7 @@ export default function PostEditor({ id }) {
   }
 
   return <main className="narrow editorPage">
-    <p className="eyebrow">{editing ? 'Edit your post' : 'Start a conversation'}</p>
+    <p className="eyebrow">{editing ? 'Edit your post' : 'Create a post'}</p>
     <h1>{editing ? 'Edit post' : 'New post'}</h1>
     <form className="card form" onSubmit={submit}>
       <label>Title<input maxLength="180" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Give your post a title" /></label>
