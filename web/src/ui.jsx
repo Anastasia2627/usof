@@ -47,7 +47,7 @@ export function PostCard({ post }) {
       <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
       <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
       <span>{fmt(post.created_at)}</span>
-      <StatusBadges item={post} />
+      <StatusBadges item={showStatus ? post : { locked: post.locked }} />
     </div>
     <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
     <p>{post.content?.slice(0, 200)}{post.content?.length > 200 ? '…' : ''}</p>
