@@ -3,13 +3,13 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, StatusBadges, fmt, go } from '../ui.jsx';
 
-function Reactions({ kind, id, auth, allowed, onChange }) {
+function Reactions({ kind, id, auth, allowed, authorId, onChange }) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
   const path = kind === 'post' ? `/posts/${id}/like` : `/comments/${id}/like`;
   const own = items.find(item => Number(item.author_id) === Number(auth?.user?.id));
-  const canVote = Boolean(auth && allowed && (!own || own.author_id !== undefined));
+  const canVote = Boolean(auth && allowed && Number(auth.user.id) !== Number(authorId));
 
   async function load() {
     if (!allowed) return;
@@ -91,7 +91,7 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         <StatusBadges item={item} />
       </div>
       <p className="commentContent">{item.content}</p>
-      <Reactions kind="comment" id={item.id} auth={auth} allowed={isAdmin || (active && item.post_status === 'active')}
+      <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} allowed={isAdmin || (active && item.post_status === 'active')}
         onChange={refresh} />
       <div className="commentActions">
         {canReply && <button onClick={() => setReplying(x => !x)}>Reply</button>}
@@ -176,7 +176,7 @@ export default function PostPage({ id }) {
       </div>
       <p className="content">{post.content}</p>
       <div className="tags">{(post.categories || []).map(x => <span key={x.id}>{x.title}</span>)}</div>
-      <Reactions kind="post" id={post.id} auth={auth} allowed={isAdmin || post.status === 'active'} onChange={load} />
+      <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} allowed={isAdmin || post.status === 'active'} onChange={load} />
       <div className="toolbar">
         {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit</button>}
         {isAdmin && <>
