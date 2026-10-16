@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, PostCard, TrustBadge, go } from '../ui.jsx';
+import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
 
 export default function ProfilePage({ userId = null }) {
   const auth = useSelector((state) => state.auth);
@@ -97,7 +97,7 @@ export default function ProfilePage({ userId = null }) {
   }
 
   async function deleteAccount() {
-    if (!window.confirm('Delete your Usof account? Your posts, comments and reactions will also be deleted. This cannot be undone.')) return;
+    if (!window.confirm('Delete your Circle account? Your posts, comments and reactions will also be deleted. This cannot be undone.')) return;
     setError(null);
     setMessage('');
     try {
@@ -121,7 +121,7 @@ export default function ProfilePage({ userId = null }) {
     <section className="profileHero card">
       <Avatar user={user} size="xl" />
       <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1>{isSelf ? <p>{user?.email}</p> : <p>{user?.full_name || 'Circle member'}</p>}</div>
-      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong><TrustBadge rating={user?.rating} />{isSelf && <button className="secondary" onClick={() => go('/dashboard')}>Your activity →</button>}</div>
+      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong></div>
     </section>
     <div className="twoColumn">
       {isSelf ? <form className="card form" onSubmit={save}>
