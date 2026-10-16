@@ -20,6 +20,9 @@ const SCORE_SQL = `
 const LIKE_COUNT_SQL = `
   COALESCE((SELECT COUNT(*) FROM reactions r WHERE r.post_id = p.id AND r.type = 'like'), 0)
 `;
+const DISLIKE_COUNT_SQL = `
+  COALESCE((SELECT COUNT(*) FROM reactions r WHERE r.post_id = p.id AND r.type = 'dislike'), 0)
+`;
 const COMMENT_COUNT_SQL = `
   COALESCE((SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'active'), 0)
 `;
@@ -58,6 +61,7 @@ function metricsSql() {
   return `
     ${SCORE_SQL} AS score,
     ${LIKE_COUNT_SQL} AS like_count,
+    ${DISLIKE_COUNT_SQL} AS dislike_count,
     ${COMMENT_COUNT_SQL} AS comment_count,
     ${FAVORITE_COUNT_SQL} AS favorite_count,
     ${FOLLOWER_COUNT_SQL} AS follower_count,

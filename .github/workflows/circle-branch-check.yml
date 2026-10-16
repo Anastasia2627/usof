@@ -1,8 +1,8 @@
-name: Circle university defense check
+name: Circle full requirements check
 
 on:
   push:
-    branches: [circle-defense-ready]
+    branches: [circle-full-requirements]
   workflow_dispatch:
 
 jobs:
@@ -81,6 +81,10 @@ jobs:
         run: npm run test:smoke
       - name: Check registration, resend and email confirmation
         run: npm run test:email:integration
+      - name: Extended API roles, search, replies and reaction moderation
+        run: npm run test:full
+      - name: Check all new server and test modules
+        run: npm run check:full
       - name: Build frontend
         run: npm run build
       - name: Install Chromium

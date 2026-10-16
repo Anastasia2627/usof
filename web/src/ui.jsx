@@ -40,16 +40,19 @@ export function StatusBadges({ item }) {
 }
 
 export function PostCard({ post }) {
+  const auth = useSelector(state => state.auth);
+  const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
   return <article className="card threadCard">
     <div className="postMeta">
+      <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="sm" />
       <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
       <span>{fmt(post.created_at)}</span>
-      <StatusBadges item={post} />
+      <StatusBadges item={showStatus ? post : { locked: post.locked }} />
     </div>
     <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
     <p>{post.content?.slice(0, 200)}{post.content?.length > 200 ? '…' : ''}</p>
     <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{category.title}</span>)}</div>
-    <small>{post.like_count || 0} likes · {post.comment_count || 0} comments</small>
+    <small>{post.like_count || 0} likes · {post.dislike_count || 0} dislikes · {post.comment_count || 0} comments</small>
   </article>;
 }
 
@@ -74,9 +77,9 @@ export function Header() {
       <button className="brand" onClick={() => go('/')}>Circle</button>
       <form className="headerSearch" role="search" onSubmit={event => {
         event.preventDefault();
-        go(search.trim() ? `/?search=${encodeURIComponent(search.trim())}` : '/');
+        go(search.trim() ? `/search?q=${encodeURIComponent(search.trim())}` : '/');
       }}>
-        <input aria-label="Search posts" placeholder="Search posts" value={search} onChange={e => setSearch(e.target.value)} />
+        <input aria-label="Search posts, people and categories" placeholder="Search posts, people, categories" value={search} onChange={e => setSearch(e.target.value)} />
         <button type="submit">Search</button>
       </form>
       <nav className="mainNav" aria-label="Main navigation">

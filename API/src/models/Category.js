@@ -1,8 +1,13 @@
 import { BaseModel } from './BaseModel.js';
+import { Post } from './Post.js';
 
 export class Category extends BaseModel {
   static async list() {
     return this.query('SELECT id, title, description FROM categories ORDER BY title');
+  }
+
+  static async search(term) {
+    return this.query('SELECT id, title, description FROM categories WHERE title LIKE ? OR description LIKE ? ORDER BY title LIMIT 20', [term, term]);
   }
 
   static async findById(id) {
@@ -37,7 +42,7 @@ export class Category extends BaseModel {
   }
 
   static async postsForCategory(id, user) {
-    const conditions = ['pc.category_id=?'];
+    const conditions = ['EXISTS(SELECT 1 FROM post_categories pc WHERE pc.post_id=p.id AND pc.category_id=?)'];
     const params = [id];
     if (user?.role !== 'admin') {
       if (user) {
@@ -48,42 +53,16 @@ export class Category extends BaseModel {
       }
     }
 
-    const posts = await this.query(
-      `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar,
-              COALESCE((
-                SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 ELSE 0 END)
-                FROM reactions r WHERE r.post_id=p.id
-              ), 0) AS score
-       FROM posts p
-       JOIN users u ON u.id=p.author_id
-       JOIN post_categories pc ON pc.post_id=p.id
-       WHERE ${conditions.join(' AND ')}
-       ORDER BY p.created_at DESC`,
+    // Reuse the Post model so category previews contain exactly the same
+    // author, counts, scores and categories as the main feed.
+    const { posts } = await Post.list({
+      clause: `WHERE ${conditions.join(' AND ')}`,
       params,
-    );
-
-    if (!posts.length) return [];
-    const postIds = posts.map((post) => Number(post.id));
-    const placeholders = postIds.map(() => '?').join(',');
-    const categoryRows = await this.query(
-      `SELECT pc.post_id, c.id, c.title, c.description
-       FROM post_categories pc
-       JOIN categories c ON c.id=pc.category_id
-       WHERE pc.post_id IN (${placeholders})
-       ORDER BY c.title`,
-      postIds,
-    );
-    const categoriesByPost = new Map(postIds.map((postId) => [postId, []]));
-    for (const row of categoryRows) {
-      categoriesByPost.get(Number(row.post_id))?.push({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-      });
-    }
-    return posts.map((post) => ({
-      ...post,
-      categories: categoriesByPost.get(Number(post.id)) || [],
-    }));
+      sort: 'p.created_at',
+      order: 'DESC',
+      limit: 50,
+      offset: 0,
+    });
+    return posts;
   }
 }

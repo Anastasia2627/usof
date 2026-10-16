@@ -91,6 +91,7 @@ export async function updateAccount({ targetId, actor, body }) {
   let updated;
   let invalidateSession = false;
   let verificationToken = null;
+  let verificationCode = null;
   try {
     await connection.beginTransaction();
     const adminIds = isAdmin ? await lockAdmins(connection) : [];
@@ -133,6 +134,8 @@ export async function updateAccount({ targetId, actor, body }) {
     invalidateSession = emailChanged || role !== current.role || login !== current.login;
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
+    verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
+    const verificationCodeHash = verificationCode ? crypto.createHash('sha256').update(verificationCode).digest('hex') : null;
 
     await connection.execute(
       `UPDATE users
@@ -140,7 +143,9 @@ export async function updateAccount({ targetId, actor, body }) {
            token_version=token_version+?,
            email_verified=IF(?,0,email_verified),
            verification_token=IF(?,?,verification_token),
-           verification_token_expires=IF(?,DATE_ADD(NOW(), INTERVAL 24 HOUR),verification_token_expires),
+           verification_token_expires=IF(?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),verification_token_expires),
+           verification_code_hash=IF(?,?,verification_code_hash),
+           verification_code_expires=IF(?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),verification_code_expires),
            reset_token_hash=IF(?,NULL,reset_token_hash),
            reset_token_expires=IF(?,NULL,reset_token_expires)
        WHERE id=?`,
@@ -153,6 +158,9 @@ export async function updateAccount({ targetId, actor, body }) {
         emailChanged,
         needsVerification,
         verificationToken,
+        needsVerification,
+        needsVerification,
+        verificationCodeHash,
         needsVerification,
         emailChanged,
         emailChanged,
@@ -179,9 +187,13 @@ export async function updateAccount({ targetId, actor, body }) {
       to: updated.email,
       login: updated.login,
       token: verificationToken,
+      code: verificationCode,
     });
     result.emailDelivery = delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured';
-    if (process.env.NODE_ENV !== 'production') result.verificationToken = verificationToken;
+    if (process.env.NODE_ENV === 'test' || (process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_VERIFICATION_TOKENS === 'true')) {
+      result.verificationToken = verificationToken;
+      result.verificationCode = verificationCode;
+    }
   }
   return result;
 }

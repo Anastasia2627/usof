@@ -19,7 +19,7 @@ The reviewer examples are illustrative; the app is named Circle.
 | 9 | Change own profile | Edit username or full name and save. **Username changes log you out** to invalidate old session; re-login with the new name. Refresh and confirm the update persisted. |
 | 10 | Create two categorized posts | New post `/#/create`, title, body, check category, Publish |
 | 11 | Change own post category and content | Open Edit for a post `/#/edit/:id`; save and refresh `/#/post/:id` |
-| 12 | Display post previews | Home shows author, publication date, title, excerpt, categories, like and comment counts |
+| 12 | Display post previews | Home shows avatar, author, publication date, title, excerpt, categories, likes/dislikes and comment counts |
 | 13 | Resize browser/mobile | Try 390, 768 and 1280 px; menu, profile and logout remain visible |
 | 14 | Log in as admin in another browser | Open **Incognito** or another browser; seeded admin credentials in README |
 | 15 | Show two-user discussion | User adds comment; admin replies; user replies to admin; both can like/dislike, change/remove their reaction; changing comment status is the `PATCH` update supported by the original Backend Basic specification |
@@ -70,7 +70,8 @@ DB_HOST=127.0.0.1
 DB_PORT=3307
 DB_NAME=usof
 DB_USER=circle
-DB_PASSWORD=circle_local_dev_only
+DB_PASSWORD=YOUR_OWN_LOCAL_PASSWORD
+CIRCLE_MYSQL_ROOT_PASSWORD=ANOTHER_LOCAL_ROOT_PASSWORD
 ```
 - Then, **only against this fresh container**:
 ```bash
@@ -85,5 +86,4 @@ npm run web
   its original 9.6 data directory without verifying version support and backup.
   For preservation of old records, upgrade/dump/restore separately.
 
-The compose credentials are for local loopback development only. Never
-deploy the file publicly or re-use them on production.
+Choose strong local passwords in the uncommitted `.env` (e.g., with `openssl rand -hex 24`). Docker Compose reads these values at initialization; do not commit or share them. A ready-to-run command sequence is also in the README.

@@ -10,6 +10,8 @@ import libraryRoutes from './src/routes/libraryRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 import postRoutes from './src/routes/postRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
+import searchRoutes from './src/routes/searchRoutes.js';
+import reactionsAdminRoutes from './src/routes/reactionsAdminRoutes.js';
 import { pingDatabase } from './src/config/db.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { AppError } from './src/utils/AppError.js';
@@ -37,6 +39,8 @@ app.get('/api/health', async (req, res, next) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/reactions', reactionsAdminRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/comments', commentRoutes);

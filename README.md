@@ -10,48 +10,78 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - Posts: create, read, edit own content, delete, multiple categories, active/inactive status and locking
 - Comments and nested replies; comment status moderation, deletion and locking
 - One like/dislike per user per post or comment; list and remove reactions
-- Home feed: newest posts by default, sort by likes, filter by category/date/status, search and pagination
-- Admin console to manage users, posts, categories and comments
+- Home feed: posts sorted by positive likes by default, date asc/desc, category/date/status filters, pagination and real search across posts, people and categories
+- Admin console to manage users, posts, categories, comments and reactions
 - Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
 - Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
 The `web/src/basic.css` file is the only stylesheet loaded. It deliberately uses plain system fonts, one accent color and **no animations or decorative effects**. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
 
-## Run locally
+## Run locally on macOS (Docker Desktop)
 
-Requirements: Node.js 20+, npm and a compatible running MySQL server (see your server version before upgrading existing data).
+**Docker Desktop must show "Engine running."** No need to click anything in the
+empty Containers page; run these commands from your existing `usof` folder
+in VS Code. If `git status --short` shows local edits, back them up before
+switching branches.
 
 ```bash
-git clone https://github.com/Anastasia2627/usof.git
-cd usof
-git switch circle-basic-minimal
+git fetch origin
+git switch --track origin/circle-full-requirements
 npm install
-cp .env.example .env
 ```
 
-Configure the existing `.env` with MySQL host, database, username, password and `AUTH_SECRET`. Never commit passwords.
+If that branch already exists locally, use `git switch circle-full-requirements`
+followed by `git pull --ff-only`.
 
-For a **new/empty** database, seed the required test data:
+In your **existing local** `.env`, set:
+
+```dotenv
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_NAME=usof
+DB_USER=circle
+DB_PASSWORD=YOUR_OWN_LOCAL_PASSWORD
+CIRCLE_MYSQL_ROOT_PASSWORD=ANOTHER_LOCAL_ROOT_PASSWORD
+AUTH_SECRET=YOUR_OWN_LONG_RANDOM_SECRET
+```
+
+Replace every `YOUR_OWN_...` placeholder with a secret you choose. Generate
+secrets locally using `openssl rand -hex 24` and never paste them in chat.
+The Docker Compose file uses the values of **your local .env** and does not
+contain committed DB passwords.
 
 ```bash
+npm run db:local:up
 npm run db:init
-```
-
-This initialization does not delete a complete existing schema. Do **not** use `db:reset` to troubleshoot connection errors: it would delete existing project data.
-
-Start the API and React in separate terminals:
-
-```bash
 npm start
 ```
+
+Open another VS Code terminal in the **same** project folder:
 
 ```bash
 npm run web
 ```
 
-Open `http://localhost:5173`. Verify the live database connection at `http://localhost:5000/api/health`.
+Visit `http://localhost:5173`. The API is at
+`http://localhost:5000/api/health`. Test users and seeded content are stored
+in a **real, persistent MySQL 8.4 Docker volume**, not in React state.
+This volume is completely separate from the old Homebrew
+`/opt/homebrew/var/mysql` data directory, so it neither upgrades nor
+overwrites your old server. Don't run `db:reset` on a database containing work.
 
-A standalone UI preview with fake, browser-local data is available using `npm run web:demo`. It is **not** a replacement for API/MySQL tests and does not provide real shared accounts or email delivery.
+To stop the container **without deleting its data**:
+
+```bash
+npm run db:local:stop
+```
+
+**Important:** On the very first startup, Docker initializes the user and
+password from `.env`. Changing them later does not automatically update an
+existing initialized volume. If you need to rotate credentials, do so within
+MySQL; do not delete the volume.
+
+The browser-only `npm run web:demo` preview is optional, and not suitable
+for defense because it does not store shared records or send email.
 
 ## Real email — test it before fixing MySQL
 
@@ -80,7 +110,7 @@ For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `
 
 ## Screenshots and verification
 
-The Basic branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
+The full-requirements branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
 
 ## Documentation
 
@@ -89,6 +119,7 @@ The Basic branch CI runs backend security tests, all mandatory and Creative API 
 - [Architecture](docs/ARCHITECTURE.md)
 - [CBL learning process](docs/CBL.md)
 - [Functional testing](docs/ASSESSMENT.md)
+- [Defense checklist and safe Mac setup](docs/DEFENSE_20_STEPS.md)
 
 ### Development test accounts
 

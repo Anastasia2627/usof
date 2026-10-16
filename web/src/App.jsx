@@ -7,6 +7,7 @@ import PostPage from './pages/PostPage.jsx';
 import PostEditor from './pages/PostEditor.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -27,6 +28,7 @@ export default function App() {
   else if (path === '/login') page = <AuthPage mode="login" />;
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
+  else if (path === '/search') page = <SearchPage hash={hash} />;
   else if (path === '/profile') page = <ProfilePage />;
   else if (parts[0] === 'profile' && /^\d+$/.test(parts[1] || '')) page = <ProfilePage userId={parts[1]} />;
   else if (path === '/create') page = <PostEditor />;

@@ -1,15 +1,14 @@
-# Dedicated LOCAL MySQL for Circle's defense.
-# It does not read, upgrade or change Homebrew's /opt/homebrew/var/mysql.
-# These credentials are for development on 127.0.0.1 ONLY, not deployment.
+# Real MySQL 8.4 in a named volume, separate from Homebrew's old data.
+# Credentials are read from the uncommitted .env file; no passwords in Git.
 services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: usof
-      MYSQL_USER: circle
-      MYSQL_PASSWORD: circle_local_dev_only
-      MYSQL_ROOT_PASSWORD: circle_root_dev_only
+      MYSQL_DATABASE: ${DB_NAME:?Add DB_NAME to your local .env}
+      MYSQL_USER: ${DB_USER:?Add DB_USER to your local .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Add DB_PASSWORD to your local .env}
+      MYSQL_ROOT_PASSWORD: ${CIRCLE_MYSQL_ROOT_PASSWORD:?Add CIRCLE_MYSQL_ROOT_PASSWORD to your local .env}
     ports:
       - "127.0.0.1:3307:3306"
     volumes:

@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState('users');
   const [postPage, setPostPage] = useState(1);
   const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [] });
+  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [] });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -54,13 +54,14 @@ export default function AdminPage() {
     setError(null);
     setLoading(true);
     try {
-      const [users, posts, categories, comments] = await Promise.all([
+      const [users, posts, categories, comments, reactions] = await Promise.all([
         api('/users', { token: auth.token }),
         api(`/posts?limit=20&page=${postPage}&sort=date&order=desc`, { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
+        api('/reactions?limit=100', { token: auth.token }),
       ]);
-      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data });
+      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data });
       const pageInfo = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
       setPostPagination(pageInfo);
       if (postPage > Math.max(1, pageInfo.totalPages)) setPostPage(Math.max(1, pageInfo.totalPages));
@@ -118,7 +119,7 @@ export default function AdminPage() {
 
   return <main className="adminPage">
     <div className="sectionTitle"><div><p className="eyebrow">Protected area</p><h1>Admin console</h1></div></div>
-    <div className="tabs">{['users', 'posts', 'categories', 'comments'].map((name) => <button key={name} className={tab === name ? 'active' : ''} onClick={() => setTab(name)}>{name}</button>)}</div>
+    <div className="tabs">{['users', 'posts', 'categories', 'comments', 'reactions'].map((name) => <button key={name} className={tab === name ? 'active' : ''} onClick={() => setTab(name)}>{name}</button>)}</div>
     <ErrorBox error={error} />
     {loading ? <div className="card loading">Loading admin data…</div> : <>
       {tab === 'users' && <section className="adminStack">
@@ -170,6 +171,22 @@ export default function AdminPage() {
         <div className="categoryGrid">{data.categories.map((category) => <article className="card" key={category.id}><h3>{category.title}</h3><p>{category.description}</p><div className="toolbar"><button onClick={() => { const title = window.prompt('Category title', category.title); if (title !== null) { const description = window.prompt('Description', category.description) ?? category.description; run(() => api(`/categories/${category.id}`, { method: 'PATCH', token: auth.token, body: { title, description } })); } }}>Edit</button><button className="dangerText" onClick={() => { if (window.confirm(`Delete ${category.title}?`)) run(() => api(`/categories/${category.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button></div></article>)}</div>
       </section>}
 
+      {tab === 'reactions' && <section className="card">
+        <h2>Recent reactions</h2>
+        <p className="muted">Latest 100 likes, dislikes and other reactions. Deleting one recalculates the content author's rating.</p>
+        {data.reactions.length ? <div className="tableWrap"><table>
+          <thead><tr><th>User</th><th>Reaction</th><th>Post</th><th>Action</th></tr></thead>
+          <tbody>{data.reactions.map(item => <tr key={item.id}>
+            <td>{item.author_login}</td><td>{item.type}</td>
+            <td>{item.post_title || 'Deleted post'}</td>
+            <td><button className="dangerText" onClick={() => {
+              if (window.confirm('Remove this reaction?')) {
+                run(() => api('/reactions/' + item.id, { method: 'DELETE', token: auth.token }));
+              }
+            }}>Delete</button></td>
+          </tr>)}</tbody>
+        </table></div> : <p>No reactions.</p>}
+      </section>}
       {tab === 'comments' && <div className="adminStack">
         {data.comments.length ? data.comments.map((comment) => <article className="card adminRow" key={comment.id}>
           <div><div className="postMeta"><b>{comment.author_login}</b><span>on “{comment.post_title}”</span><StatusBadges item={comment} /></div><p>{comment.content}</p></div>

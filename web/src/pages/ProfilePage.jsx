@@ -23,12 +23,11 @@ export default function ProfilePage({ userId = null }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) return;
     api('/categories').then((result) => setCategories(result.data)).catch(setError);
   }, [auth?.token]);
 
   useEffect(() => {
-    if (!auth || !viewedId) return;
+    if (!viewedId) return;
     setLoading(true);
     setError(null);
     const query = new URLSearchParams({
@@ -42,8 +41,8 @@ export default function ProfilePage({ userId = null }) {
     if (category) query.set('category', category);
 
     Promise.all([
-      api(`/users/${viewedId}`, { token: auth.token }),
-      api(`/posts?${query}`, { token: auth.token }),
+      api(`/users/${viewedId}`, { token: auth?.token }),
+      api(`/users/${viewedId}/posts?${query}`, { token: auth?.token }),
     ])
       .then(([userResult, postResult]) => {
         setUser(userResult.data);
@@ -57,7 +56,7 @@ export default function ProfilePage({ userId = null }) {
       .finally(() => setLoading(false));
   }, [auth?.token, viewedId, isSelf, sort, status, category, page]);
 
-  if (!auth) return <main><div className="card">Log in to view profiles. <button onClick={() => go('/login')}>Log in</button></div></main>;
+  if (!auth && !userId) return <main><div className="card">Log in to view your profile. <button onClick={() => go('/login')}>Log in</button></div></main>;
 
   async function save(event) {
     event.preventDefault();
