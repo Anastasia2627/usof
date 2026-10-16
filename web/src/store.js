@@ -30,7 +30,7 @@ function reducer(state = initialState, action) {
     case 'AUTH_USER_SET': {
       if (!state.auth) return state;
       const auth = { ...state.auth, user: action.payload };
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
       return { ...state, auth };
     }
     case 'AUTH_CLEAR':
