@@ -1,8 +1,8 @@
-name: Circle Basic minimum check
+name: Circle real SMTP verification
 
 on:
   push:
-    branches: [circle-basic-minimal]
+    branches: [circle-real-email]
   workflow_dispatch:
 
 jobs:
@@ -32,16 +32,38 @@ jobs:
       AUTH_SECRET: ci-only-secret-not-for-production
       CLIENT_ORIGIN: http://localhost:5173
       APP_PORT: 5000
+      MAIL_HOST: 127.0.0.1
+      MAIL_PORT: 2525
+      MAIL_USER: ci-sender@circle.test
+      MAIL_PASSWORD: ci-only-mail-password
+      MAIL_FROM: ci-sender@circle.test
+      MAIL_TEST_INTEGRATION: 'true'
+      MAIL_TEST_SINK_FILE: /tmp/circle-ci-smtp.jsonl
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
+      - name: Start authenticated SMTP test server on loopback
+        run: |
+          node scripts/smtp-sink.mjs > smtp.log 2>&1 &
+          for i in {1..20}; do
+            if npm run mail:check > smtp-check.log 2>&1; then
+              cat smtp-check.log
+              exit 0
+            fi
+            sleep 1
+          done
+          cat smtp.log
+          cat smtp-check.log
+          exit 1
+      - name: Send real SMTP test message
+        run: npm run mail:send-test -- ci-recipient@example.test
       - name: Check backend syntax
         run: npm run check:backend
-      - name: Check SMTP script syntax
-        run: node --check scripts/check-smtp.mjs
+      - name: Check email scripts
+        run: npm run test:mail:syntax
       - name: Run existing authentication and verification tests
         run: |
           npm run db:reset
@@ -88,5 +110,6 @@ jobs:
       - name: Print service logs on failure
         if: failure()
         run: |
+          cat smtp.log 2>/dev/null || true
           cat api.log 2>/dev/null || true
           cat web.log 2>/dev/null || true
