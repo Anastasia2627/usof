@@ -10,6 +10,7 @@ import libraryRoutes from './src/routes/libraryRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 import postRoutes from './src/routes/postRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
+import searchRoutes from './src/routes/searchRoutes.js';
 import { pingDatabase } from './src/config/db.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { AppError } from './src/utils/AppError.js';
