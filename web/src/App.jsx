@@ -7,6 +7,7 @@ import PostPage from './pages/PostPage.jsx';
 import PostEditor from './pages/PostEditor.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
