@@ -16,7 +16,7 @@ export default function CategoriesPage() {
   }, []);
 
   return <main>
-    <p className="eyebrow">Browse by technology</p>
+    <p className="eyebrow">Browse posts by topic</p>
     <h1>Categories</h1>
     <ErrorBox error={error} />
     {loading
