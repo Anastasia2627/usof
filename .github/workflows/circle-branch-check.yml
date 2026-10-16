@@ -1,8 +1,8 @@
-name: Circle real SMTP verification
+name: Circle university defense check
 
 on:
   push:
-    branches: [circle-real-email]
+    branches: [circle-defense-ready]
   workflow_dispatch:
 
 jobs:
@@ -96,6 +96,8 @@ jobs:
           exit 1
       - name: Test functional UI at 390px and on admin pages
         run: npm run test:ui
+      - name: Verify 20-step review scenarios
+        run: npm run test:defense
       - name: Capture desktop and mobile Basic screenshots
         run: |
           mkdir -p screenshots
