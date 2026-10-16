@@ -45,7 +45,10 @@ try {
   await user.getByLabel('Sort direction').selectOption('asc');
   await user.getByRole('button',{name:'Apply'}).click();
   await user.waitForURL(/order=asc/);
+  // Wait until the URL-synchronizing React effect has updated the filter form.
+  await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'asc');
   await user.getByLabel('Sort direction').selectOption('desc');
+  await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'desc');
   await user.getByRole('button',{name:'Apply'}).click();
   await user.waitForURL(/order=desc/);
   const cats=(await fetchApi('/categories')).data;
