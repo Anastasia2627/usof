@@ -112,12 +112,19 @@ export async function updateAccount({ targetId, actor, body }) {
         validateEmail(email);
       }
       if (body.role !== undefined) role = validateRole(body.role);
-    } else if (body.login !== undefined || body.email !== undefined || body.role !== undefined) {
-      throw new AppError(
-        403,
-        'FIELD_FORBIDDEN',
-        'Regular users can update fullName here; avatar has a separate endpoint',
-      );
+    } else {
+      // Ordinary users may change their own login. This invalidates active
+      // sessions so old identity claims cannot remain in JWTs.
+      if (body.login !== undefined) {
+        login = normalizeLogin(body.login);
+        validateLogin(login);
+      }
+      if (body.email !== undefined || body.role !== undefined) {
+        throw new AppError(
+          403, 'FIELD_FORBIDDEN',
+          'Only an admin may change email or role; use the avatar endpoint for photos',
+        );
+      }
     }
 
     protectLastAdmin(adminIds, current, role);
