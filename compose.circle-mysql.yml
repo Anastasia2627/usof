@@ -1,0 +1,24 @@
+# Dedicated LOCAL MySQL for Circle's defense.
+# It does not read, upgrade or change Homebrew's /opt/homebrew/var/mysql.
+# These credentials are for development on 127.0.0.1 ONLY, not deployment.
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: usof
+      MYSQL_USER: circle
+      MYSQL_PASSWORD: circle_local_dev_only
+      MYSQL_ROOT_PASSWORD: circle_root_dev_only
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - circle_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp --host=127.0.0.1 --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  circle_mysql_data:
