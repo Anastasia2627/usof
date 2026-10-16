@@ -3,23 +3,23 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, StatusBadges, fmt, go } from '../ui.jsx';
 
-function Reactions({ kind, id, auth, allowed, authorId, onChange }) {
+function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
   const path = kind === 'post' ? `/posts/${id}/like` : `/comments/${id}/like`;
   const own = items.find(item => Number(item.author_id) === Number(auth?.user?.id));
-  const canVote = Boolean(auth && allowed && Number(auth.user.id) !== Number(authorId));
+  const canVote = Boolean(auth && writable && Number(auth.user.id) !== Number(authorId));
 
   async function load() {
-    if (!allowed) return;
+    if (!visible) return;
     try {
       const result = await api(path, { token: auth?.token });
       setItems(result.data);
     } catch (err) { setError(err); }
   }
 
-  useEffect(() => { load(); }, [path, auth?.token, allowed]);
+  useEffect(() => { load(); }, [path, auth?.token, visible]);
 
   async function change(method, type) {
     setError(null);
@@ -30,7 +30,7 @@ function Reactions({ kind, id, auth, allowed, authorId, onChange }) {
     } catch (err) { setError(err); }
   }
 
-  if (!allowed) return null;
+  if (!visible) return null;
   return <div className="reactionPanel">
     <div className="reactionButtons">
       <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>
@@ -91,7 +91,8 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         <StatusBadges item={item} />
       </div>
       <p className="commentContent">{item.content}</p>
-      <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} allowed={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
+      <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
+        writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
       <div className="commentActions">
         {canReply && <button onClick={() => setReplying(x => !x)}>Reply</button>}
@@ -176,7 +177,8 @@ export default function PostPage({ id }) {
       </div>
       <p className="content">{post.content}</p>
       <div className="tags">{(post.categories || []).map(x => <span key={x.id}>{x.title}</span>)}</div>
-      <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} allowed={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
+      <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} visible={isAdmin || post.status === 'active'}
+        writable={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
       <div className="toolbar">
         {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit</button>}
         {isAdmin && <>
