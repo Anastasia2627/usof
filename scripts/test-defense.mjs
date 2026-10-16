@@ -51,6 +51,9 @@ try {
   await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'desc');
   await user.getByRole('button',{name:'Apply'}).click();
   await user.waitForURL(/order=desc/);
+  await user.waitForLoadState('networkidle');
+  // Wait for the route-to-form synchronization effect before editing next field.
+  await user.waitForTimeout(200);
   const cats=(await fetchApi('/categories')).data;
   await user.getByLabel('Category').selectOption(String(cats[0].id));
   await user.getByRole('button',{name:'Apply'}).click();
