@@ -27,7 +27,7 @@ export default function ProfilePage({ userId = null }) {
   }, [auth?.token]);
 
   useEffect(() => {
-    if (!auth || !viewedId) return;
+    if (!viewedId) return;
     setLoading(true);
     setError(null);
     const query = new URLSearchParams({
