@@ -42,7 +42,7 @@ export class Category extends BaseModel {
   }
 
   static async postsForCategory(id, user) {
-    const conditions = ['pc.category_id=?'];
+    const conditions = ['EXISTS(SELECT 1 FROM post_categories pc WHERE pc.post_id=p.id AND pc.category_id=?)'];
     const params = [id];
     if (user?.role !== 'admin') {
       if (user) {
