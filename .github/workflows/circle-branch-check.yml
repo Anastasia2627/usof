@@ -74,6 +74,17 @@ jobs:
           exit 1
       - name: Test functional UI at 390px and on admin pages
         run: npm run test:ui
+      - name: Capture desktop and mobile Basic screenshots
+        run: |
+          mkdir -p screenshots
+          npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-mobile.png
+      - name: Upload UI screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: circle-basic-screenshots
+          path: screenshots/*.png
+          retention-days: 7
       - name: Print service logs on failure
         if: failure()
         run: |
