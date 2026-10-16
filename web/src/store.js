@@ -34,7 +34,7 @@ function reducer(state = initialState, action) {
       return { ...state, auth };
     }
     case 'AUTH_CLEAR':
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
       return { ...state, auth: null };
     default:
       return state;
