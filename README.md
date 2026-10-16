@@ -11,7 +11,7 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - Comments and nested replies; comment status moderation, deletion and locking
 - One like/dislike per user per post or comment; list and remove reactions
 - Home feed: posts sorted by positive likes by default, date asc/desc, category/date/status filters, pagination and real search across posts, people and categories
-- Admin console to manage users, posts, categories and comments
+- Admin console to manage users, posts, categories, comments and reactions
 - Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
 - Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
