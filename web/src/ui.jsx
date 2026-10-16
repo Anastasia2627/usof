@@ -74,7 +74,7 @@ export function Header() {
       <button className="brand" onClick={() => go('/')}>Circle</button>
       <form className="headerSearch" role="search" onSubmit={event => {
         event.preventDefault();
-        go(search.trim() ? `/?search=${encodeURIComponent(search.trim())}` : '/');
+        go(search.trim() ? `/search?q=${encodeURIComponent(search.trim())}` : '/');
       }}>
         <input aria-label="Search posts" placeholder="Search posts" value={search} onChange={e => setSearch(e.target.value)} />
         <button type="submit">Search</button>
