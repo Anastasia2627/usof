@@ -23,7 +23,6 @@ export default function ProfilePage({ userId = null }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) return;
     api('/categories').then((result) => setCategories(result.data)).catch(setError);
   }, [auth?.token]);
 
