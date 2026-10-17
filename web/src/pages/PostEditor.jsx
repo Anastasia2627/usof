@@ -16,6 +16,7 @@ export default function PostEditor({ id }) {
   const [draftPostId,setDraftPostId] = useState(null);
   const [existingImages,setExistingImages] = useState([]);
   const [preview,setPreview] = useState(false);
+  const [expandedTopics,setExpandedTopics] = useState(false);
   const editorRef=React.useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
@@ -97,48 +98,76 @@ export default function PostEditor({ id }) {
     }
   }
 
-  return <main className="narrow editorPage">
+  return <main className="narrow editorPage editorRefined">
     <div className="editorTopbar">
       <button className="editorBack" type="button" onClick={() => go(editing ? `/post/${id}` : '/')}
         aria-label="Back" title="Back"><Icon name="arrowBack" size={21}/></button>
-      <h1>{t(editing ? 'Edit post' : 'New post')}</h1>
+      <div className="editorHeading">
+        <span className="editorOverline">CIRCLE / COMMUNITY</span>
+        <h1>{t(editing ? 'Edit post' : 'New post')}</h1>
+      </div>
     </div>
 
+    <p className="editorLead">Share an idea, ask a question, or start a conversation.</p>
     <form className="postComposerForm" onSubmit={submit}>
       <div className="editorIdentity">
         <Avatar user={auth.user} size="md"/>
         <span>@{auth.user.login}</span>
-        <small>{t('Posting to Circle')}</small>
+        <small>Posting to <b>circle</b></small>
       </div>
       <div className="editorInputGroup">
+        <label className="editorFieldLabel" htmlFor="post-title">Title</label>
         <label className="srOnly" htmlFor="post-title">{t("Post title")}</label>
         <input id="post-title" className="editorTitleInput" maxLength="180" required
           value={form.title} onChange={event => setForm({ ...form, title: event.target.value })}
           placeholder={t("Give your post a title…")} />
+        <label className="editorFieldLabel editorBodyLabel" htmlFor="post-content">Your post</label>
         <label className="srOnly" htmlFor="post-content">{t("Post details")}</label>
-        <div className="markdownToolbar" role="toolbar" aria-label="Formatting">
-          <button type="button" title="Bold" onClick={()=>applyFormat('**','**')}>**B**</button>
-          <button type="button" title="Heading" onClick={()=>applyFormat('## ','',true)}>H2</button>
-          <button type="button" title="Bullet list" onClick={()=>applyFormat('- ','',true)}>• List</button>
-          <button type="button" title="Numbered list" onClick={()=>applyFormat('1. ','',true)}>1. List</button>
-          <button type="button" onClick={()=>setPreview(p=>!p)} aria-pressed={preview}>{preview?'Hide preview':'Preview'}</button>
-        </div>
         <textarea ref={editorRef} id="post-content" className="editorContentInput" maxLength="50000" required
           value={form.content} onChange={event => setForm({ ...form, content: event.target.value })}
           placeholder={t("What's on your mind?")} />
+        <div className="markdownToolbar" role="toolbar" aria-label="Formatting">
+          <div className="markdownToolsGroup">
+            <button type="button" aria-label="Bold" title="Bold" onClick={()=>applyFormat('**','**')}><strong>B</strong></button>
+            <button type="button" aria-label="Heading" title="Heading" onClick={()=>applyFormat('## ','',true)}>H₂</button>
+            <button type="button" aria-label="Bullet list" title="Bullet list" onClick={()=>applyFormat('- ','',true)}>≡</button>
+            <button type="button" aria-label="Numbered list" title="Numbered list" onClick={()=>applyFormat('1. ','',true)}>1.</button>
+          </div>
+          <button className="editorPreviewToggle" type="button" onClick={()=>setPreview(p=>!p)} aria-pressed={preview}>
+            <Icon name="eye" size={16}/>{preview?'Hide preview':'Preview'}
+          </button>
+        </div>
         {preview && <section className="markdownPreview" aria-label="Post preview">
           <h2>{form.title||'Untitled post'}</h2><FormattedContent text={form.content}/>
         </section>}
         <div className="postPhotoEditor">
-          <label>Photos (up to 4; JPEG, PNG, WebP; 5 MB each)
-            <input type="file" accept="image/jpeg,image/png,image/webp" multiple
-              onChange={e=>setSelectedImages(Array.from(e.target.files||[]))}/>
-          </label>
-          {selectedImages.length>0 && <p>{selectedImages.map(file=>file.name).join(', ')}</p>}
-          {existingImages.length>0 && <div className="photoThumbs">
-            {existingImages.map(image=><div key={image.id}>
-              <img src={assetUrl(image.url)} alt="Attached post photo"/>
-              <button type="button" onClick={()=>removeExisting(image.id)}>Remove</button>
+          <div className="editorPhotoAttachRow">
+            <label className="editorPhotoAttach" htmlFor="post-photo-input">
+              <Icon name="plus" size={18}/> Add photos
+            </label>
+            <span>Up to 4 photos · JPEG, PNG, WebP · 5 MB each</span>
+            <input id="post-photo-input" className="editorFileInput" type="file"
+              accept="image/jpeg,image/png,image/webp" multiple onChange={e=>{
+                const chosen=Array.from(e.target.files||[]);
+                if(chosen.some(file=>file.size>5*1024*1024||!['image/jpeg','image/png','image/webp'].includes(file.type))){
+                  setError(new Error('Choose JPEG, PNG or WebP images under 5 MB each.'));return;
+                }
+                setSelectedImages(chosen);
+                setError(null);
+              }}/>
+          </div>
+          {(selectedImages.length>0||existingImages.length>0) && <div className="editorPhotoList">
+            {selectedImages.map((file,i)=><div className="editorPhotoPill" key={file.name+file.size+i}>
+              <Icon name="check" size={15}/>
+              <span title={file.name}>{file.name}</span>
+              <button type="button" title="Remove photo" aria-label={'Remove '+file.name}
+                onClick={()=>setSelectedImages(items=>items.filter((_,index)=>index!==i))}>×</button>
+            </div>)}
+            {existingImages.map(image=><div className="editorPhotoPill editorUploadedPill" key={image.id}>
+              <img src={assetUrl(image.url)} alt="Attached photo"/>
+              <span>Photo {image.id}</span>
+              <button type="button" title="Remove photo" aria-label={'Remove photo '+image.id}
+                onClick={()=>removeExisting(image.id)}>×</button>
             </div>)}
           </div>}
         </div>
@@ -147,7 +176,7 @@ export default function PostEditor({ id }) {
       <fieldset className="editorCategories">
         <legend>{t('Topics')} <span>{t('Choose one or more')}</span></legend>
         <div className="checkGrid editorTopicList">
-          {categories.map(category =>
+          {categories.filter((category,index)=>expandedTopics||index<12||form.categories.includes(Number(category.id))).map(category =>
             <label className="check editorTopic" key={category.id}>
               <input type="checkbox" aria-label={category.title}
                 checked={form.categories.includes(Number(category.id))}
@@ -156,6 +185,11 @@ export default function PostEditor({ id }) {
             </label>
           )}
         </div>
+        {categories.length>12 && <button className="editorShowTopics" type="button"
+          onClick={()=>setExpandedTopics(value=>!value)}>
+          {expandedTopics?'Show fewer topics':`Show all ${categories.length} topics`}
+          <Icon name="chevron" size={17}/>
+        </button>}
       </fieldset>
 
       <details className="editorOptions">
