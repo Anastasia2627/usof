@@ -103,7 +103,7 @@ try {
   await page.locator('button.authSubmit').click();
   await page.waitForURL(/#\/$/);
   await page.goto(frontend + '/#/admin', { waitUntil: 'networkidle' });
-  await page.locator('.tabs button').filter({ hasText: /^posts$/ }).click();
+  await page.locator('.tabs button').filter({ hasText: /^posts/ }).click();
   await page.getByText(/Page 1 of [2-9][0-9]*/).waitFor();
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByText(/Page 2 of [2-9][0-9]*/).waitFor();
