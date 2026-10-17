@@ -239,6 +239,21 @@ try {
     .getByRole('button',{name:'Delete'}).click();
   await admin.getByText(rootReply).waitFor({state:'detached'});
 
+  // Role updates must keep an already logged-in user on the same page.
+  const originalPage=user.url();
+  await open(admin,'/admin');
+  admin.once('dialog',dialog=>dialog.accept());
+  await admin.getByRole('button',{name:'Make moderator: '+name}).click();
+  await user.locator('.accountRole').getByText('moderator').waitFor({timeout:18000});
+  assert.equal(user.url(),originalPage,'Promotion must not redirect the member');
+  assert.equal(await user.locator('.sessionExpiredBanner').count(),0);
+
+  admin.once('dialog',dialog=>dialog.accept());
+  await admin.getByRole('button',{name:'Remove moderator from '+name}).click();
+  await user.locator('.accountRole').getByText('user').waitFor({timeout:18000});
+  assert.equal(user.url(),originalPage,'Demotion must not redirect the member');
+  assert.equal(await user.locator('.sessionExpiredBanner').count(),0);
+
   // 20: logout.
   await user.locator('.accountMenu summary').click();
   await user.getByRole('button',{name:'Log out'}).click();
