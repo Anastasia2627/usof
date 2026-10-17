@@ -205,7 +205,14 @@ export default function AdminPage() {
   }
 
   async function saveUser(user, form) {
-    const result = await run(() => api('/users/' + user.id, { method: 'PATCH', token: auth.token, body: form }));
+    const roleOnly = form.role !== undefined &&
+      Object.keys(form).every(key=>key==='role' ||
+        (key==='login' && form.login===user.login) ||
+        (key==='email' && form.email===user.email) ||
+        (key==='fullName' && form.fullName===(user.full_name||'')));
+    const path = '/users/' + user.id + (roleOnly ? '/role' : '');
+    const result = await run(() => api(path, { method: 'PATCH', token: auth.token,
+      body: roleOnly ? {role:form.role} : form }));
     if (result?.sessionInvalidated && Number(user.id) === Number(auth.user.id)) {
       dispatch({ type: 'AUTH_CLEAR' });
       go('/login');
