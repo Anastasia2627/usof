@@ -331,9 +331,10 @@ export default function AdminPage() {
               </div>
               <div className="adminRowTools adminPostTools">
                 <button type="button" onClick={() => go('/post/' + post.id)}>Open</button>
+                {(!moderator||post.author_role!=='admin')&&<>
                 <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button>
                 <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
-                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}>Delete</button>
+                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}>Delete</button></>}
               </div>
             </div>
           </article>) : <p className="adminEmpty">No posts on this page.</p>}
@@ -374,9 +375,10 @@ export default function AdminPage() {
               </div>
               <div className="adminRowTools adminPostTools">
                 <button type="button" onClick={() => go('/post/' + comment.post_id)}>Open</button>
+                {(!moderator||(comment.author_role!=='admin' && comment.post_author_role!=='admin'))&&<>
                 <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}>{comment.status === 'active' ? 'Deactivate' : 'Activate'}</button>
                 <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}>{comment.locked ? 'Unlock' : 'Lock'}</button>
-                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}>Delete</button>
+                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}>Delete</button></>}
               </div>
             </div>
           </article>) : <p className="adminEmpty">No comments.</p>}
