@@ -614,3 +614,30 @@ html[data-theme=dark] .threadActions button.activeSave{
   .threadActions .circleIcon.tablerSvgIcon{width:19px!important;height:19px!important;}
   .mainNav .circleIcon.tablerSvgIcon{width:23px!important;height:23px!important;}
 }
+
+/* A single Tabler heart/thumb per reaction, with its count alongside. */
+.naturalPostReactions .reactionPanel .reactionButtons .voteReaction{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:44px;
+  padding:0 9px;
+  gap:5px;
+  height:38px;
+  border-radius:11px;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .voteReaction[aria-pressed="true"]{
+  color:#1b1b1e;
+  background:#f0f0f1;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .reactionCount{
+  font-size:12px;
+  line-height:1;
+  font-weight:630;
+  color:inherit;
+}
+html[data-theme=dark] .naturalPostReactions .reactionPanel .reactionButtons .voteReaction[aria-pressed="true"]{
+  color:#f5f5f5;
+  background:#323339;
+}
