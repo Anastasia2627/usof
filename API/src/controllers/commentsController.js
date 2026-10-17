@@ -1,4 +1,6 @@
 import { Reaction } from '../models/Reaction.js';
+import { pool } from '../config/db.js';
+import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
 import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
 import {
@@ -90,4 +92,17 @@ export async function removeCommentReaction(req, res) {
     deleteAll: ['admin','moderator'].includes(req.user.role) && req.query.all === '1',
   });
   res.status(204).end();
+}
+
+export async function reviewComment(req,res) {
+  if (!['admin','moderator'].includes(req.user.role))
+    throw new AppError(403,'MODERATOR_REQUIRED','Moderator permission required');
+  const comment=await getVisibleComment(req.params.comment_id,req.user);
+  if (comment.status !== 'active')
+    throw new AppError(409,'COMMENT_INACTIVE','Only active replies can be reviewed');
+  if (typeof req.body.reviewed !== 'boolean')
+    throw new AppError(422,'INVALID_REVIEW','reviewed must be boolean');
+  await pool.execute('UPDATE comments SET reviewed_by=? WHERE id=?',
+    [req.body.reviewed ? req.user.sub : null,comment.id]);
+  res.json({data:await getVisibleComment(comment.id,req.user)});
 }
