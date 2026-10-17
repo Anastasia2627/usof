@@ -113,6 +113,8 @@ jobs:
           mkdir -p screenshots
           npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-desktop.png
           npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-mobile.png
+          npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/explore" screenshots/explore-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/explore" screenshots/explore-mobile.png
       - name: Upload UI screenshots
         uses: actions/upload-artifact@v4
         with:
