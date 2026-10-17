@@ -29,6 +29,7 @@ export default function PostEditor({ id }) {
   const photoPreviewItems=useMemo(()=>[...existingImages,...selectedImages.map(file=>({file}))],[existingImages,selectedImages]);
   const [preview,setPreview] = useState(false);
   const [expandedTopics,setExpandedTopics] = useState(false);
+  const [topicQuery,setTopicQuery] = useState('');
   const editorRef=React.useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
@@ -129,6 +130,11 @@ export default function PostEditor({ id }) {
     try{if(draftKey)sessionStorage.removeItem(draftKey);}catch{}
   }
 
+  const visibleTopics=categories.filter(category=>{
+    const term=topicQuery.trim().toLocaleLowerCase();
+    return !term || [category.title,t(category.title),category.description||'',t(category.description||'')]
+      .some(value=>String(value).toLocaleLowerCase().includes(term));
+  });
   return <main className="narrow editorPage editorRefined">
     <div className="editorTopbar">
       <button className="editorBack" type="button" onClick={() => go(editing ? `/post/${id}` : '/')}
@@ -215,8 +221,20 @@ export default function PostEditor({ id }) {
 
       <fieldset className="editorCategories">
         <legend>{t('Topics')} <span>{t('Choose one or more')}</span></legend>
-        <div className={'checkGrid editorTopicList'+(expandedTopics?' topicsExpanded':'')}>
-          {categories.map(category =>
+        <div className="topicSearchField">
+          <Icon name="search" size={18}/>
+          <input type="search" aria-label={t('Search topics')}
+            placeholder={t('Search topics')} value={topicQuery}
+            onChange={event=>setTopicQuery(event.target.value)}/>
+          {topicQuery&&<button type="button" aria-label={t('Clear search')} title={t('Clear search')}
+            onClick={()=>setTopicQuery('')}><Icon name="close" size={16}/></button>}
+        </div>
+        <div className="topicSearchMeta">
+          <span>{topicQuery ? `${visibleTopics.length} ${t('matching topics')}` : `${categories.length} ${t('topics')}`}</span>
+          {form.categories.length>0&&<strong>{form.categories.length} {t('selected')}</strong>}
+        </div>
+        <div className={'checkGrid editorTopicList'+(expandedTopics||topicQuery?' topicsExpanded':'')}>
+          {visibleTopics.map(category =>
             <label className="check editorTopic" key={category.id}>
               <input type="checkbox" aria-label={t(category.title)}
                 checked={form.categories.includes(Number(category.id))}
@@ -225,7 +243,8 @@ export default function PostEditor({ id }) {
             </label>
           )}
         </div>
-        {categories.length>12 && <button className="editorShowTopics" type="button"
+        {topicQuery && visibleTopics.length===0 && <p className="topicSearchEmpty">{t('No matching topics')}</p>}
+        {!topicQuery && categories.length>12 && <button className="editorShowTopics" type="button"
           onClick={()=>setExpandedTopics(value=>!value)}>
           {expandedTopics?t('Show fewer topics'):`${t('Show all topics')} (${categories.length})`}
           <Icon name="chevron" size={17}/>
