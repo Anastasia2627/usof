@@ -234,7 +234,37 @@ export function Header() {
   const {t} = usePreferences();
   const dispatch = useDispatch();
   const [search, setSearch] = useState('');
+  const [unread,setUnread] = useState(0);
+  const [roleNotice,setRoleNotice] = useState('');
   const menuRef = useRef(null);
+
+  // The backend reads the role from MySQL on each request. Sync it in the UI so
+  // promotions and revocations do not leave outdated moderation buttons visible.
+  useEffect(()=>{
+    if(!auth?.token||!auth.user?.id){setUnread(0);setRoleNotice('');return;}
+    let active=true;
+    const sync=async()=>{
+      if(document.visibilityState==='hidden')return;
+      try{
+        const [account,notifications]=await Promise.all([
+          api('/users/'+auth.user.id,{token:auth.token}),
+          api('/notifications?unread=1&limit=1',{token:auth.token}),
+        ]);
+        if(!active)return;
+        setUnread(Number(notifications.unreadCount||0));
+        if(account.data.role!==auth.user.role){
+          const role=account.data.role;
+          dispatch({type:'AUTH_USER_SET',payload:{...auth.user,...account.data}});
+          setRoleNotice(role==='moderator'?t('You are now a moderator'):role==='user'?t('Your moderator role was removed'):t('Your role was updated'));
+        }
+      }catch{/* The header remains usable while the network is unavailable. */}
+    };
+    sync();
+    const timer=window.setInterval(sync,10000);
+    window.addEventListener('focus',sync);
+    window.addEventListener('usof:notifications',sync);
+    return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',sync);window.removeEventListener('usof:notifications',sync);};
+  },[auth?.token,auth?.user?.id,auth?.user?.role,dispatch,t]);
 
   // Keep logout accessible everywhere without a permanent header button.
   useEffect(() => {
@@ -275,6 +305,7 @@ export function Header() {
     ...(auth ? [
       { key:'create', text:'New post', destination:'/create', icon:'plus' },
       { key:'saved', text:'Saved', destination:'/saved', icon:'bookmarkBorder' },
+      { key:'notifications', text:'Notifications', destination:'/notifications', icon:'group' },
       { key:'dashboard', text:'Dashboard', destination:'/dashboard', icon:'analytics' },
     ] : []),
     { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
@@ -283,7 +314,7 @@ export function Header() {
   const current = window.location.hash.split('?')[0].slice(1) || '/';
   const guestLanding = !auth && current === '/welcome';
 
-  return <header className="siteHeader">
+  return <><header className="siteHeader">
     <div className={guestLanding ? "headerInner guestOnlyHeader" : "headerInner"}>
       <button className="brand" onClick={() => go('/')} aria-label="Circle home"><span className="circleLogo">◎</span><span>circle</span></button>
       {!guestLanding && <form className="headerSearch" role="search" onSubmit={event => {
@@ -303,6 +334,10 @@ export function Header() {
       </nav>}
       <div className="accountArea">
         {auth ? <>
+          <button className="headerNotify" aria-label={t('Notifications')+(unread?' ('+unread+')':'')}
+            type="button" title={t('Notifications')} onClick={()=>go('/notifications')}>
+            <span aria-hidden="true">♧</span>{unread>0&&<span className="headerUnreadCount">{unread>99?'99+':unread}</span>}
+          </button>
           <button className="profileButton" aria-label={`Profile of ${auth.user.login} (${auth.user.role})`} onClick={() => go('/profile')}>
             <Avatar user={auth.user} size="sm" />
             <span className="accountIdentity"><small>@{auth.user.login}</small><span className="accountRole">{auth.user.role}</span></span>
@@ -325,5 +360,11 @@ export function Header() {
         </>}
       </div>
     </div>
-  </header>;
+  </header>
+    {roleNotice&&<div role="status" className="roleChangeBanner">
+      <span>✦ {roleNotice}</span>
+      <button type="button" onClick={()=>{setRoleNotice('');go('/notifications');}}>{t('View notifications')}</button>
+      <button type="button" onClick={()=>setRoleNotice('')} aria-label={t('Dismiss')}>×</button>
+    </div>}
+  </>;
 }
