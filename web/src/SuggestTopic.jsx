@@ -21,6 +21,15 @@ export default function SuggestTopic(){
       .then(result=>{if(live)setMySuggestions(result.data);}).catch(()=>{});
     return()=>{live=false;};
   },[open,auth?.token,isAdmin]);
+  useEffect(()=>{
+    if(!open||isAdmin)return;
+    let active=true;
+    api('/health').then(result=>{
+      if(active&&result?.status==='ok'&&!result?.features?.categorySuggestions)
+        setError(t('Topic service is unavailable. Restart the API server and run npm run db:init.'));
+    }).catch(()=>{});
+    return()=>{active=false;};
+  },[open,isAdmin,t]);
   if(!auth)return null;
   async function submit(event){
     event?.preventDefault();
