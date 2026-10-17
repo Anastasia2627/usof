@@ -10,6 +10,9 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import WelcomePage from './pages/WelcomePage.jsx';
+import SavedPage from './pages/SavedPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -29,6 +32,9 @@ export default function App() {
   let page;
   if (path === '/') page = auth ? <HomePage hash={hash} /> : <WelcomePage />;
   else if (path === '/explore') page = <HomePage hash={hash} basePath="/explore" />;
+  else if (path === '/saved') page = <SavedPage />;
+  else if (path === '/dashboard') page = <DashboardPage />;
+  else if (path === '/settings') page = <SettingsPage />;
   else if (path === '/login') page = <AuthPage mode="login" />;
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
