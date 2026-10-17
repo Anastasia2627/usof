@@ -25,6 +25,12 @@ export default function HomePage({ hash, basePath = '/' }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const refresh = () => setRetry(value => value + 1);
+    window.addEventListener('circle:posts-updated',refresh);
+    return () => window.removeEventListener('circle:posts-updated',refresh);
+  }, []);
+
 
   useEffect(() => {
     const controller = new AbortController();
