@@ -44,5 +44,5 @@ export default function App() {
   else if (parts[0] === 'reset') page = <ResetPage token={parts[1] || ''} />;
   else page = <main className="narrow"><h1>Page not found</h1><button onClick={() => go('/')}>Home</button></main>;
 
-  return <><Header />{page}<footer>Circle · USOF project</footer></>;
+  return <><Header />{page}<footer>Circle · Conversations start here.</footer></>;
 }
