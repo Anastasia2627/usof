@@ -53,6 +53,7 @@ try {
   await user.waitForURL(/order=asc/);
   // Wait until the URL-synchronizing React effect has updated the filter form.
   await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'asc');
+  await user.locator('.filterDetails summary').click();
   await user.getByLabel('Sort direction').selectOption('desc');
   await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'desc');
   await user.getByRole('button',{name:'Apply filters'}).click();
@@ -60,6 +61,7 @@ try {
   await user.waitForLoadState('networkidle');
   // Wait for the route-to-form synchronization effect before editing next field.
   await user.waitForTimeout(200);
+  await user.locator('.filterDetails summary').click();
   const cats=(await fetchApi('/categories')).data;
   await user.getByLabel('Category').selectOption(String(cats[0].id));
   await user.getByRole('button',{name:'Apply filters'}).click();
