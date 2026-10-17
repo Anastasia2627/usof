@@ -166,8 +166,6 @@ export default function ProfilePage({ userId = null }) {
           <Icon name={followState.following?'check':'plus'} size={18}/>
           {followState.following?'Following':'Follow'}
         </button>
-        <button type="button" className="profileEditToggle" onClick={()=>go('/messages/'+viewedId)}
-          title="Send private message"><Icon name="comment" size={18}/>Message</button>
       </div>}
       {isSelf && <button type="button" className="profileEditToggle" aria-expanded={editOpen}
         onClick={() => { setEditOpen(v => !v); setError(null); setMessage(''); }}>
