@@ -625,3 +625,165 @@ main.welcomePage {
   .welcomeHighlights h2 { margin-top: 7px; }
   .welcomeHighlights p { line-height: 1.5; }
 }
+
+/* UX polish: compact tools, calmer spacing, actions on demand. */
+.siteHeader { overflow: visible; }
+.headerInner { gap: 18px; }
+.headerSearch { max-width: 380px; border-color: #eeeeef; background: #fafafa; }
+.headerSearch:focus-within { border-color: #b9b9bb; background: white; }
+.headerSearch .searchSubmit {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  flex: none;
+}
+.accountArea { position: relative; gap: 3px; }
+.accountMenu { position: relative; }
+.accountMenu > summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  color: #686868;
+}
+.accountMenu > summary::-webkit-details-marker { display: none; }
+.accountMenu > summary:hover, .accountMenu[open] > summary {
+  color: #111;
+  background: #f3f3f4;
+}
+.accountMenu > summary:focus-visible {
+  outline: 2px solid #292929;
+  outline-offset: 2px;
+}
+.accountDropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 210px;
+  padding: 7px;
+  border: 1px solid #ececee;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 12px 40px rgba(20, 20, 20, .12);
+  z-index: 90;
+  text-align: left;
+}
+.accountDropdownTitle {
+  margin: 4px 8px 8px;
+  padding: 4px 3px 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.accountDropdownTitle small {
+  font-size: 11px;
+  text-transform: capitalize;
+  font-weight: 400;
+  color: #929292;
+}
+.accountDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 550;
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+.accountDropdown button:hover { background: #f5f5f5; }
+.accountDropdown .accountLogout { color: #7b3636; }
+.accountDropdown .accountLogout:hover { color: #a42121; background: #fff5f5; }
+.accountArea .profileButton { padding: 5px 4px; border-radius: 12px; }
+.accountArea .profileButton:hover { background: #f6f6f6; }
+.mainNav button, .threadActions button,
+.filterDetails summary, .accountMenu > summary, .accountDropdown button {
+  transition: background-color .13s ease, color .13s ease;
+}
+.mainNav button.navActive { background: #f8f8f8; }
+.feedTabs button.selectedTab { font-weight: 750; }
+.feedComposer { padding-top: 16px; padding-bottom: 16px; }
+.feedComposer strong { min-width: 67px; text-align: center; }
+.filterDetails summary {
+  justify-content: center;
+  gap: 7px;
+  font-weight: 640;
+  font-size: 13px;
+  padding: 12px 18px;
+}
+.filterDetails summary::after { content: none; }
+.filterDetails summary > .circleIcon:last-child {
+  color: #909090;
+  transition: transform .15s ease;
+}
+.filterDetails[open] summary > .circleIcon:last-child { transform: rotate(180deg); }
+.activeFilterCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 50%;
+  background: #151515;
+  color: white;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 750;
+}
+.filterDetails .filterBar {
+  padding-top: 8px;
+  padding-bottom: 19px;
+  row-gap: 13px;
+}
+.filterDetails .filterBar button.applyFilters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.filterDetails .filterBar button.resetFilters {
+  background: transparent;
+  color: #747474;
+  border-color: #ebebeb;
+}
+.filterDetails .filterBar button.resetFilters:hover {
+  color: #111;
+  background: #f7f7f7;
+}
+.threadCard:hover { background: #fefefe; }
+.threadActions { gap: 9px; }
+.threadActions button {
+  min-width: 37px;
+  height: 34px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+.threadActions button .circleIcon { line-height: 1; }
+@media (max-width: 720px) {
+  .headerInner { gap: 7px; }
+  .headerSearch { min-width: 50px; }
+  .headerSearch .searchSubmit { display: none; }
+  .accountArea .profileButton { gap: 4px; }
+  .accountMenu > summary { width: 32px; height: 35px; }
+  .accountDropdown { right: -4px; top: calc(100% + 10px); }
+  .filterDetails summary { padding: 11px 14px; }
+  .filterDetails .filterBar { row-gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mainNav button, .threadActions button, .filterDetails summary,
+  .accountMenu > summary, .accountDropdown button { transition: none; }
+}
