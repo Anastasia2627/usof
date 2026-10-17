@@ -83,6 +83,24 @@ MySQL; do not delete the volume.
 The browser-only `npm run web:demo` preview is optional, and not suitable
 for defense because it does not store shared records or send email.
 
+## Guest welcome and protected actions
+
+Opening `http://localhost:5173/#/` without signing in shows a welcoming
+registration/login screen **without post previews**. The header contains an
+`Explore` button and the welcome screen contains an `Explore public conversations`
+link. That opens `/#/explore` with **read-only** public posts, sorting and
+category filters. Guests may read but need an account to create posts, reply
+or vote. Once signed in, `/#/` shows the normal feed.
+
+Note: The original university defense checklist begins by showing public posts
+on the homepage. For this customized pre-login design, demonstrate the same
+sorting/filter functions under **Explore** first, then register. This is a UI
+deviation from the literal first step, not a missing feed feature.
+
+Icons come from Google's official **Material Symbols Rounded** collection.
+They are loaded from Google Fonts using a subset of only the necessary icons;
+navigation and core actions use the same rounded family.
+
 ## Fixing the guest feed network warning (macOS AirPlay port collision)
 
 **On macOS the `AirPlay Receiver` / `AirTunes` service can claim port
@@ -150,7 +168,7 @@ For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `
 
 ## Screenshots and verification
 
-The full-requirements branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
+The circle-threads-feed branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
 
 ## Documentation
 
