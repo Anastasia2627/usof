@@ -21,7 +21,7 @@ export function fmt(date) {
 }
 
 // Centralized Tabler icon wrapper; old embedded Google SVG markup is retired.
-export { TablerIcon as Icon };
+export const Icon = TablerIcon;
 
 export function trustName(rating) {
   if (Number(rating) >= 150) return 'Mentor';
