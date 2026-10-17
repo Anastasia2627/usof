@@ -93,6 +93,8 @@ jobs:
         run: npm run check:full
       - name: Check configured Mac API port and proxy target
         run: node scripts/check-vite-api-port.mjs
+      - name: Verify Tabler icon mapping and no legacy SVGs
+        run: npm run check:icons
       - name: Build frontend
         run: npm run build
       - name: Install Chromium
