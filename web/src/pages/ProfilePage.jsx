@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
+import { usePreferences } from '../preferences.jsx';
 
 export default function ProfilePage({ userId = null }) {
   const auth = useSelector(state => state.auth);
+  const {t} = usePreferences();
   const dispatch = useDispatch();
   const viewedId = userId || auth?.user?.id;
   const isSelf = Boolean(auth && Number(viewedId) === Number(auth.user.id));
@@ -62,7 +64,7 @@ export default function ProfilePage({ userId = null }) {
     return () => { active = false; };
   }, [auth?.token, viewedId, isSelf, sort, status, category, page, dispatch]);
 
-  if (!auth && !userId) return <main><div className="card">Log in to view your profile. <button onClick={() => go('/login')}>Log in</button></div></main>;
+  if (!auth && !userId) return <main><div className="card">{t('Log in to view your profile.')} <button onClick={() => go('/login')}>{t('Log in')}</button></div></main>;
 
   async function save(event) {
     event.preventDefault();
@@ -81,7 +83,7 @@ export default function ProfilePage({ userId = null }) {
         setUser(result.data);
         dispatch({ type: 'AUTH_USER_SET', payload: result.data });
         setEditOpen(false);
-        setMessage('Profile saved.');
+        setMessage(t('Profile saved.'));
       }
     } catch (err) { setError(err); }
   }
@@ -98,7 +100,7 @@ export default function ProfilePage({ userId = null }) {
       const result = await api('/users/avatar', { method: 'PATCH', token: auth.token, formData: data });
       setUser(result.data);
       dispatch({ type: 'AUTH_USER_SET', payload: result.data });
-      setMessage('Avatar updated.');
+      setMessage(t('Avatar updated.'));
     } catch (err) { setError(err); }
     finally { setUploading(false); event.target.value = ''; }
   }
@@ -129,37 +131,37 @@ export default function ProfilePage({ userId = null }) {
   return <main className="profilePage">
     <section className="profileHeader">
       <div className="profileNames">
-        <span className="profileMicroLabel">{user?.role === 'admin' ? 'Administrator' : 'Circle member'}</span>
-        <h1>{user?.login || 'Profile'}</h1>
+        <span className="profileMicroLabel">{t(user?.role === 'admin' ? 'Administrator' : 'Circle member')}</span>
+        <h1>{user?.login || t('Profile')}</h1>
         {user?.full_name && <p className="profileFullName">{user.full_name}</p>}
         {isSelf && user?.email && <p className="profilePrivateEmail">{user.email}</p>}
       </div>
       <div className="profilePhoto"><Avatar user={user} size="xl"/></div>
     </section>
     <div className="profileInfoRow">
-      <span className="profileRating"><Icon name="favorite" size={18}/><strong>{user?.rating || 0}</strong> reputation</span>
+      <span className="profileRating"><Icon name="favorite" size={18}/><strong>{user?.rating || 0}</strong> {t('Reputation').toLowerCase()}</span>
       {isSelf && <button type="button" className="profileEditToggle" aria-expanded={editOpen}
         onClick={() => { setEditOpen(v => !v); setError(null); setMessage(''); }}>
-        <Icon name="edit" size={18}/>{editOpen ? 'Close editor' : 'Edit profile'}
+        <Icon name="edit" size={18}/>{t(editOpen ? 'Close editor' : 'Edit profile')}
       </button>}
     </div>
 
     {isSelf && editOpen && <form className="profileEditPanel" onSubmit={save}>
-      <h2>Edit profile</h2>
+      <h2>{t('Edit profile')}</h2>
       <div className="profileEditFields">
-        <label>Username<input required minLength="3" maxLength="50" value={login} onChange={event => setLogin(event.target.value)} /></label>
-        <label>Full name<input maxLength="100" value={name} onChange={event => setName(event.target.value)} /></label>
+        <label>{t('Username')}<input required minLength="3" maxLength="50" value={login} onChange={event => setLogin(event.target.value)} /></label>
+        <label>{t('Full name')}<input maxLength="100" value={name} onChange={event => setName(event.target.value)} /></label>
       </div>
       <label className="profilePhotoPicker">
         <Icon name="user" size={19}/>
-        {uploading ? 'Uploading photo…' : 'Change profile photo'}
+        {t(uploading ? 'Uploading photo…' : 'Change profile photo')}
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload}
           aria-label="Avatar" disabled={uploading} />
       </label>
-      <p className="profileEditNote">Changing your username will sign you out. You can log in again with the new username.</p>
+      <p className="profileEditNote">{t('Changing your username will sign you out. You can log in again with the new username.')}</p>
       <div className="profileEditActions">
-        <button className="profileCancelEdit" type="button" onClick={cancelEdit}>Cancel</button>
-        <button className="primary" type="submit">Save profile</button>
+        <button className="profileCancelEdit" type="button" onClick={cancelEdit}>{t('Cancel')}</button>
+        <button className="primary" type="submit">{t('Save profile')}</button>
       </div>
       <ErrorBox error={error}/>
     </form>}
@@ -168,21 +170,21 @@ export default function ProfilePage({ userId = null }) {
 
     <section className="profileActivity">
       <div className="profileActivityHeader">
-        <h2>{isSelf ? 'Your posts' : 'Posts'}</h2>
+        <h2>{t(isSelf ? 'Your posts' : 'Posts')}</h2>
         {isSelf && <button type="button" className="profileNewPost" onClick={() => go('/create')}>
-          <Icon name="plus" size={20}/> New post
+          <Icon name="plus" size={20}/> {t('New post')}
         </button>}
       </div>
       <div className="profileActivitySort" role="group" aria-label="Sort profile posts">
         <button type="button" className={sort === 'date' ? 'profileSelected' : ''}
-          aria-pressed={sort === 'date'} onClick={() => changeFilter(setSort, 'date')}>Recent</button>
+          aria-pressed={sort === 'date'} onClick={() => changeFilter(setSort, 'date')}>{t('Recent')}</button>
         <button type="button" className={sort === 'likes' ? 'profileSelected' : ''}
-          aria-pressed={sort === 'likes'} onClick={() => changeFilter(setSort, 'likes')}>Popular</button>
+          aria-pressed={sort === 'likes'} onClick={() => changeFilter(setSort, 'likes')}>{t('Popular')}</button>
       </div>
       <div className="profileTopicBar">
         <div className="profileTopicPills" role="group" aria-label="Filter profile posts by category">
           <button type="button" className={!category ? 'profileTopicActive' : ''}
-            aria-pressed={!category} onClick={() => changeFilter(setCategory, '')}>All</button>
+            aria-pressed={!category} onClick={() => changeFilter(setCategory, '')}>{t('All')}</button>
           {categories.map(item => <button key={item.id} type="button" className={String(category) === String(item.id) ? 'profileTopicActive' : ''}
             aria-pressed={String(category) === String(item.id)}
             onClick={() => changeFilter(setCategory, String(item.id))}>{item.title}</button>)}
@@ -190,33 +192,33 @@ export default function ProfilePage({ userId = null }) {
         {isSelf && <div className="profileStatusSelect">
           <label className="srOnly" htmlFor="profile-status">Status</label>
           <select id="profile-status" value={status} onChange={event => changeFilter(setStatus, event.target.value)}>
-            <option value="">All posts</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="">{t('All posts')}</option>
+            <option value="active">{t('Active')}</option>
+            <option value="inactive">{t('Inactive')}</option>
           </select>
         </div>}
       </div>
       {loading
-        ? <p className="profilePostMessage">Loading posts…</p>
+        ? <p className="profilePostMessage">{t('Loading posts…')}</p>
         : posts.length
           ? <div className="profilePostList">{posts.map(post => <PostCard key={post.id} post={post}/>)}</div>
           : <div className="profileEmpty">
             <Icon name="forum" size={26}/>
-            <strong>Nothing here yet</strong>
-            <p>{category || status ? 'Try another topic or status.' : isSelf ? 'Your conversations will appear here.' : 'This member has not posted yet.'}</p>
-            {isSelf && !category && !status && <button type="button" onClick={() => go('/create')}>Write your first post <Icon name="arrow" size={18}/></button>}
+            <strong>{t('Nothing here yet')}</strong>
+            <p>{t(category || status ? 'Try another topic or status.' : isSelf ? 'Your conversations will appear here.' : 'This member has not posted yet.')}</p>
+            {isSelf && !category && !status && <button type="button" onClick={() => go('/create')}>{t('Write your first post')} <Icon name="arrow" size={18}/></button>}
           </div>}
       {pagination?.totalPages > 1 && <nav className="pager" aria-label="Profile post pages">
-        <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>Previous</button>
-        <span>Page {pagination.page} of {pagination.totalPages}</span>
-        <button disabled={page >= pagination.totalPages} onClick={() => setPage(value => value + 1)}>Next</button>
+        <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>{t('Previous')}</button>
+        <span>{t('Page')} {pagination.page} {t('of')} {pagination.totalPages}</span>
+        <button disabled={page >= pagination.totalPages} onClick={() => setPage(value => value + 1)}>{t('Next')}</button>
       </nav>}
     </section>
     {isSelf && <details className="profileSettings">
-      <summary>Account settings <Icon name="chevron" size={18}/></summary>
+      <summary>{t('Account settings')} <Icon name="chevron" size={18}/></summary>
       <div className="profileDangerZone">
-        <p>Deleting your account permanently removes your posts, comments and reactions.</p>
-        <button type="button" className="dangerText" onClick={deleteAccount}>Delete account</button>
+        <p>{t('Deleting your account permanently removes your posts, comments and reactions.')}</p>
+        <button type="button" className="dangerText" onClick={deleteAccount}>{t('Delete account')}</button>
       </div>
     </details>}
   </main>;
