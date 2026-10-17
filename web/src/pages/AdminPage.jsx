@@ -130,10 +130,13 @@ function CategoryRow({ category, auth, run }) {
 export default function AdminPage() {
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
-  const [tab, setTab] = useState('users');
+  const [tab, setTab] = useState('reports');
+  const [reportStatus,setReportStatus] = useState('open');
+  const [reportPage,setReportPage] = useState(1);
+  const [reportPagination,setReportPagination] = useState(null);
   const [postPage, setPostPage] = useState(1);
   const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [] });
+  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [] });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -144,14 +147,16 @@ export default function AdminPage() {
     setError(null);
     setLoading(true);
     try {
-      const [users, posts, categories, comments, reactions] = await Promise.all([
+      const [users, posts, categories, comments, reactions, reports] = await Promise.all([
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
         api('/reactions?limit=100', { token: auth.token }),
+        api('/reports?status='+reportStatus+'&page='+reportPage,{token:auth.token}),
       ]);
-      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data });
+      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data });
+      setReportPagination(reports.pagination);
       const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
       setPostPagination(pagination);
       if (postPage > Math.max(1, pagination.totalPages)) setPostPage(Math.max(1, pagination.totalPages));
@@ -159,7 +164,7 @@ export default function AdminPage() {
     finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage]);
+  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage,reportStatus,reportPage]);
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
 
@@ -206,8 +211,9 @@ export default function AdminPage() {
     posts: postPagination.total,
     categories: data.categories.length,
     comments: data.comments.length,
+    reports: reportPagination?.total||0,
   };
-  const sections = moderator ? ['posts','comments','reactions'] : ['users', 'posts', 'categories', 'comments', 'reactions'];
+  const sections = moderator ? ['reports','posts','comments','reactions'] : ['users','reports','posts','categories','comments','reactions'];
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -229,6 +235,37 @@ export default function AdminPage() {
     </nav>
     <ErrorBox error={error}/>
     {loading ? <p className="adminLoading">Loading community data…</p> : <>
+      {tab === 'reports' && <section className="adminStack" aria-label="Content reports">
+        <div className="adminSectionHeader"><h2>Reported content</h2>
+          <span>{reportPagination?.total||0} reports</span></div>
+        <label className="reportsFilter">Show
+          <select value={reportStatus} onChange={e=>{setReportStatus(e.target.value);setReportPage(1);}}>
+            <option value="open">Open</option><option value="reviewed">Reviewed</option>
+            <option value="dismissed">Dismissed</option><option value="all">All</option>
+          </select>
+        </label>
+        <div className="adminSimpleList">
+          {data.reports.length?data.reports.map(report=><article key={report.id} className="adminListItem">
+            <div className="adminItemText">
+              <strong>{report.reason.replace('_',' ')} · {report.status}</strong>
+              <p>Reported by @{report.reporter_login} · {report.post_title||report.comment_content||'Deleted item'}</p>
+              {report.details&&<p>{report.details}</p>}
+            </div>
+            <div className="adminRowTools">
+              <button type="button" onClick={()=>go('/post/'+(report.post_id||report.comment_post_id))}>Open discussion</button>
+              {report.status!=='reviewed'&&<button type="button" onClick={()=>run(()=>api('/reports/'+report.id,{
+                method:'PATCH',token:auth.token,body:{status:'reviewed'}}))}>Mark reviewed</button>}
+              {report.status!=='dismissed'&&<button type="button" onClick={()=>run(()=>api('/reports/'+report.id,{
+                method:'PATCH',token:auth.token,body:{status:'dismissed'}}))}>Dismiss</button>}
+            </div>
+          </article>):<p className="adminEmpty">No reports in this category.</p>}
+        </div>
+        {reportPagination?.totalPages>1&&<nav className="pager" aria-label="Report pages">
+          <button type="button" disabled={reportPage<=1} onClick={()=>setReportPage(p=>p-1)}>Previous</button>
+          <span>Page {reportPage} of {reportPagination.totalPages}</span>
+          <button type="button" disabled={reportPage>=reportPagination.totalPages} onClick={()=>setReportPage(p=>p+1)}>Next</button>
+        </nav>}
+      </section>}
       {tab === 'users' && <section className="adminStack">
         <div className="adminSectionHeader"><h2>Members</h2>
           <span>{data.users.length} total</span>
@@ -262,7 +299,7 @@ export default function AdminPage() {
                 <div className="adminPostMeta"><button className="adminName" onClick={() => go('/profile/' + post.author_id)}>@{post.author_login}</button> · #{post.id} <StatusBadges item={post}/></div>
                 <h3>{post.title}</h3>
                 <div className="adminPostTopics">{post.categories?.map(item => <span key={item.id}>{item.title}</span>)}</div>
-                <PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run}/>
+                {!moderator&&<PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run}/>}
               </div>
               <div className="adminRowTools adminPostTools">
                 <button type="button" onClick={() => go('/post/' + post.id)}>Open</button>
