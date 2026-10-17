@@ -31,6 +31,7 @@ export function Icon({ name, size = 22 }) {
     chevron: 'expand_more',
     close: 'close',
     edit: 'edit',
+    refresh: 'refresh',
   };
   return <span className="material-symbols-rounded circleIcon" aria-hidden="true"
     style={{ fontSize: size }}>{glyphs[name] || 'grid_view'}</span>;
