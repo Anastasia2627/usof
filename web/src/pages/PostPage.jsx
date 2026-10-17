@@ -5,7 +5,8 @@ import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
 import FormattedContent from '../FormattedContent.jsx';
 import ReportButton from '../ReportButton.jsx';
-import {assetUrl} from '../api.js';
+import PostPhotoGallery from '../PostPhotoGallery.jsx';
+import ModeratorControl from '../ModeratorControl.jsx';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
   const [items, setItems] = useState([]);
@@ -65,7 +66,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
   const isOwner = Number(auth?.user?.id) === Number(item.author_id);
   const active = item.status === 'active';
   const canReply = Boolean(auth && !item.post_closed && (isAdmin || (active && !item.locked && !item.post_locked)));
-  const canChangeStatus = Boolean(auth && (isAdmin || !item.locked));
+  const canChangeStatus = Boolean(auth && (isAdmin || (isOwner && !item.locked)));
 
   async function run(path, method, body) {
     setError(null);
@@ -90,6 +91,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
         <div className="authorLine">
           <Avatar user={{ login: item.author_login, avatar: item.author_avatar }} size="sm" />
           <button className="authorLink" onClick={() => go(`/profile/${item.author_id}`)}>{item.author_login}</button>
+          <ModeratorControl userId={item.author_id} login={item.author_login}/>
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
@@ -140,7 +142,6 @@ export default function PostPage({ id }) {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [lightbox,setLightbox] = useState(null);
   const {t} = usePreferences();
 
   async function load() {
@@ -163,6 +164,15 @@ export default function PostPage({ id }) {
       .then(result=>{if(live)setSaved(Boolean(result.data.favorite));})
       .catch(()=>{if(live)setSaved(false);});
     return ()=>{live=false;};
+  },[id,auth?.token]);
+
+  // Refresh replies while the post is open, including comments from other browsers.
+  // No page refresh is required to see new activity.
+  useEffect(()=>{
+    const poll=()=>{if(document.visibilityState==='visible')refreshReplies();};
+    const timer=window.setInterval(poll,6000);
+    window.addEventListener('focus',poll);
+    return ()=>{window.clearInterval(timer);window.removeEventListener('focus',poll);};
   },[id,auth?.token]);
 
   async function toggleSave() {
@@ -193,12 +203,22 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
+  async function refreshReplies(){
+    try{
+      const result=await api(`/posts/${id}/comments`,{token:auth?.token});
+      setComments(result.data);
+      setPost(current=>current?{...current,comment_count:result.data.length}:current);
+    }catch(err){setError(err);}
+  }
   async function sendComment(event) {
     event.preventDefault();
     try {
-      await api(`/posts/${id}/comments`, { method: 'POST', token: auth.token, body: { content: text } });
+      const result=await api(`/posts/${id}/comments`,{method:'POST',token:auth.token,body:{content:text}});
+      // The new reply is visible immediately, even if the subsequent network refresh is slow.
+      setComments(current=>current.some(item=>Number(item.id)===Number(result.data.id))
+        ?current:[...current,result.data]);
       setText('');
-      await load();
+      await refreshReplies();
     } catch (err) { setError(err); }
   }
 
@@ -221,6 +241,7 @@ export default function PostPage({ id }) {
           <Avatar user={{login:post.author_login,avatar:post.author_avatar}} size="md"/>
         </button>
         <div><button className="authorLink" onClick={()=>go('/profile/'+post.author_id)}>@{post.author_login}</button>
+          <ModeratorControl userId={post.author_id} login={post.author_login}/>
           <time dateTime={post.published_at||post.created_at}
             title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
         </div>
@@ -229,17 +250,7 @@ export default function PostPage({ id }) {
       <h1>{post.title}</h1>
       {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
-      {post.images?.length>0 && <div className="postPhotoGallery">
-        {post.images.map(image=><button type="button" key={image.id}
-          onClick={()=>setLightbox(assetUrl(image.url))} aria-label="View photo full size">
-          <img src={assetUrl(image.url)} alt="Post attachment" loading="lazy"/>
-        </button>)}
-      </div>}
-      {lightbox&&<div className="photoLightbox" role="dialog" aria-modal="true" aria-label="Full-size photo"
-        onClick={()=>setLightbox(null)}>
-        <button type="button" onClick={()=>setLightbox(null)} aria-label="Close photo">×</button>
-        <img src={lightbox} alt="Post attachment full size"/>
-      </div>}
+      <PostPhotoGallery images={post.images||[]}/>}
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{x.title}</span>)}</div>
       <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
       <div className="naturalPostReactions">
