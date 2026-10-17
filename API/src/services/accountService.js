@@ -239,20 +239,30 @@ export async function changeAccountRole({ targetId, actor, body }) {
     if(current.role==='admin')
       throw new AppError(403,'ADMIN_ROLE_PROTECTED','Administrator role cannot be changed here');
 
-    if(current.role!==role) {
-      await connection.execute('UPDATE users SET role=? WHERE id=?',[role,id]);
-      await connection.execute(
-        `INSERT INTO notifications(user_id,actor_id,type,title,body)
-         VALUES(?,?,'role_changed',?,?)`,
-        [id,Number(actor.sub),
-          role==='moderator' ? 'You are now a moderator' : 'Your moderator role was removed',
-          role==='moderator'
-            ? 'You can now review reports and moderate discussions. You cannot manage users.'
-            : 'Your account now has standard member permissions.'],
-      );
-    }
+    const changed=current.role!==role;
+    if(changed) await connection.execute('UPDATE users SET role=? WHERE id=?',[role,id]);
     const [[row]]=await connection.execute('SELECT * FROM users WHERE id=?',[id]);
     await connection.commit();
+
+    // Older local databases may lack the new 'role_changed' notification
+    // enum value. A noncritical notification must never roll back the role.
+    // This occurs after commit so the user can always be promoted/demoted.
+    if(changed) {
+      try {
+        await pool.execute(
+          `INSERT INTO notifications(user_id,actor_id,type,title,body)
+           VALUES(?,?,'role_changed',?,?)`,
+          [id,Number(actor.sub),
+            role==='moderator' ? 'You are now a moderator' : 'Your moderator role was removed',
+            role==='moderator'
+              ? 'You can now review reports and moderate discussions. You cannot manage users.'
+              : 'Your account now has standard member permissions.'],
+        );
+      } catch(notificationError) {
+        console.warn('Role updated, but notification could not be saved. Run npm run db:init to migrate notifications:',
+          notificationError.message);
+      }
+    }
     return {data:publicUser(row),sessionInvalidated:false};
   } catch(error){
     await connection.rollback();
