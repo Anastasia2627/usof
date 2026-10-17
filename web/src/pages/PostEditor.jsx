@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
+import FormattedContent from '../FormattedContent.jsx';
+import {assetUrl} from '../api.js';
 
 export default function PostEditor({ id }) {
   const auth = useSelector((state) => state.auth);
@@ -10,6 +12,10 @@ export default function PostEditor({ id }) {
   const editing = Boolean(id);
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ title: '', content: '', categories: [], publishAt: '', hideLikes: false });
+  const [selectedImages,setSelectedImages] = useState([]);
+  const [existingImages,setExistingImages] = useState([]);
+  const [preview,setPreview] = useState(false);
+  const editorRef=React.useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
@@ -18,13 +24,13 @@ export default function PostEditor({ id }) {
     api('/categories').then((result) => setCategories(result.data)).catch(setError);
     if (editing && auth) {
       api(`/posts/${id}`, { token: auth.token })
-        .then((result) => setForm({
+        .then((result) => { setExistingImages(result.data.images||[]); setForm({
           title: result.data.title,
           content: result.data.content,
           categories: result.data.categories.map((category) => Number(category.id)),
           publishAt: result.data.publish_at ? new Date(result.data.publish_at).toISOString().slice(0,16) : '',
           hideLikes: Boolean(result.data.hide_likes),
-        }))
+        }); })
         .catch(setError)
         .finally(() => setLoading(false));
     }
@@ -36,6 +42,20 @@ export default function PostEditor({ id }) {
   }
   if (loading) return <main><div className="card loading">{t('Loading editor…')}</div></main>;
 
+  function applyFormat(prefix,suffix='',newLine=false){
+    const el=editorRef.current;if(!el)return;
+    const a=el.selectionStart,b=el.selectionEnd;
+    const before=newLine&&a>0&&form.content[a-1]!=='\n'?'\n':'';
+    const selected=form.content.slice(a,b);
+    setForm({...form,content:form.content.slice(0,a)+before+prefix+selected+suffix+form.content.slice(b)});
+    requestAnimationFrame(()=>{el.focus();el.setSelectionRange(a+before.length+prefix.length,a+before.length+prefix.length+selected.length);});
+  }
+  async function removeExisting(imageId){
+    try{
+      await api('/posts/'+id+'/images/'+imageId,{method:'DELETE',token:auth.token});
+      setExistingImages(items=>items.filter(item=>item.id!==imageId));
+    }catch(err){setError(err);}
+  }
   function toggle(categoryId) {
     setForm({
       ...form,
@@ -52,6 +72,7 @@ export default function PostEditor({ id }) {
       setError(new Error(t('Select at least one category.')));
       return;
     }
+    if(selectedImages.length+existingImages.length>4){setError(new Error('Maximum four images per post'));return;}
     setBusy(true);
     try {
       const result = await api(editing ? `/posts/${id}` : '/posts', {
@@ -59,6 +80,10 @@ export default function PostEditor({ id }) {
         token: auth.token,
         body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null},
       });
+      for(const image of selectedImages){
+        const data=new FormData();data.append('image',image);
+        await api('/posts/'+result.data.id+'/images',{method:'POST',token:auth.token,formData:data});
+      }
       go(`/post/${result.data.id}`);
     } catch (err) {
       setError(err);
@@ -86,9 +111,32 @@ export default function PostEditor({ id }) {
           value={form.title} onChange={event => setForm({ ...form, title: event.target.value })}
           placeholder={t("Give your post a title…")} />
         <label className="srOnly" htmlFor="post-content">{t("Post details")}</label>
-        <textarea id="post-content" className="editorContentInput" maxLength="50000" required
+        <div className="markdownToolbar" role="toolbar" aria-label="Formatting">
+          <button type="button" title="Bold" onClick={()=>applyFormat('**','**')}>**B**</button>
+          <button type="button" title="Heading" onClick={()=>applyFormat('## ','',true)}>H2</button>
+          <button type="button" title="Bullet list" onClick={()=>applyFormat('- ','',true)}>• List</button>
+          <button type="button" title="Numbered list" onClick={()=>applyFormat('1. ','',true)}>1. List</button>
+          <button type="button" onClick={()=>setPreview(p=>!p)} aria-pressed={preview}>{preview?'Hide preview':'Preview'}</button>
+        </div>
+        <textarea ref={editorRef} id="post-content" className="editorContentInput" maxLength="50000" required
           value={form.content} onChange={event => setForm({ ...form, content: event.target.value })}
           placeholder={t("What's on your mind?")} />
+        {preview && <section className="markdownPreview" aria-label="Post preview">
+          <h2>{form.title||'Untitled post'}</h2><FormattedContent text={form.content}/>
+        </section>}
+        <div className="postPhotoEditor">
+          <label>Photos (up to 4; JPEG, PNG, WebP; 5 MB each)
+            <input type="file" accept="image/jpeg,image/png,image/webp" multiple
+              onChange={e=>setSelectedImages(Array.from(e.target.files||[]))}/>
+          </label>
+          {selectedImages.length>0 && <p>{selectedImages.map(file=>file.name).join(', ')}</p>}
+          {existingImages.length>0 && <div className="photoThumbs">
+            {existingImages.map(image=><div key={image.id}>
+              <img src={assetUrl(image.url)} alt="Attached post photo"/>
+              <button type="button" onClick={()=>removeExisting(image.id)}>Remove</button>
+            </div>)}
+          </div>}
+        </div>
       </div>
 
       <fieldset className="editorCategories">
