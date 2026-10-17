@@ -19,6 +19,7 @@ export function Icon({ name, size = 22 }) {
     comment: 'chat_bubble',
     dislike: 'thumb_down',
     arrow: 'arrow_forward',
+    arrowBack: 'arrow_back',
     logout: 'logout',
     sliders: 'tune',
     forum: 'forum',
