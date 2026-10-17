@@ -148,6 +148,7 @@ export default function PostPage({ id }) {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [copied,setCopied] = useState(false);
   const {t} = usePreferences();
 
   async function load() {
@@ -162,7 +163,7 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
     finally { setLoading(false); }
   }
-  useEffect(() => { setLoading(true); setPost(null); load(); }, [id, auth?.token]);
+  useEffect(() => { setLoading(true); setPost(null); setCopied(false); load(); }, [id, auth?.token]);
   useEffect(() => {
     if (!auth?.token) { setSaved(false); return; }
     let live = true;
@@ -230,6 +231,16 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
+  async function copyLink() {
+    try {
+      const url=window.location.origin+window.location.pathname+'#/post/'+id;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      setError(new Error(t('Unable to copy the link. Please copy the address from your browser.')));
+    }
+  }
+
   async function deletePost() {
     if (!window.confirm('Delete post and all its comments?')) return;
     try {
@@ -258,7 +269,7 @@ export default function PostPage({ id }) {
       <h1>{post.title}</h1>
       {post.accepted_comment_id && <span className="solutionTag">✓ {t('Solved')}</span>}
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
-      <PostPhotoGallery images={post.images||[]}/>}
+      <PostPhotoGallery images={post.images||[]}/>
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
       <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
       <div className="naturalPostReactions">
@@ -266,6 +277,10 @@ export default function PostPage({ id }) {
           visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
           writable={isAdmin||(post.status==='active'&&!post.locked)} onChange={load}/>
         <span className="naturalPostCommentCount"><Icon name="comment" size={19}/>{comments.length}</span>
+        <button className="naturalPostIconButton postCopyAction" type="button"
+          aria-label={t(copied?'Link copied':'Copy link')}
+          title={t(copied?'Link copied':'Copy link')} onClick={copyLink}>
+          <Icon name={copied?'check':'share'} size={19}/></button>
         {auth && <button className="naturalPostIconButton" type="button" disabled={saving}
           aria-pressed={saved} aria-label={saved?t('Unsave post'):t('Save post')}
           title={saved?t('Unsave post'):t('Save post')} onClick={toggleSave}>
@@ -289,9 +304,9 @@ export default function PostPage({ id }) {
         <button type="button" className="dangerText" aria-label="Delete post" title="Delete post" onClick={deletePost}>
           <Icon name="trash" size={18}/><span>{t('Delete post')}</span></button>
       </div>}
-      {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>The author has closed this discussion, replies are now read-only</p>}
+      {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
       {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
-        <Icon name="settings" size={18}/>Scheduled for {new Date(post.publish_at).toLocaleString()}</p>}
+        <Icon name="settings" size={18}/>{t('Scheduled for')} {new Date(post.publish_at).toLocaleString()}</p>}
       <ErrorBox error={error}/>
     </article>
     <section className="naturalComments">
