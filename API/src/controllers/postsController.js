@@ -38,7 +38,7 @@ export async function getPostCategories(req, res) {
 
 export async function getPostReactions(req, res) {
   const post = await getVisiblePost(req.params.post_id, req.user);
-  if (post.status !== 'active' && req.user?.role !== 'admin') {
+  if (post.status !== 'active' && !['admin','moderator'].includes(req.user?.role)) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
   }
   res.json({ data: await Reaction.listForPost(post.id) });
@@ -50,7 +50,7 @@ export async function reactToPost(req, res) {
     userId: Number(req.user.sub),
     postId: Number(post.id),
     type: req.body.type,
-    isAdmin: req.user.role === 'admin',
+    isAdmin: ['admin','moderator'].includes(req.user.role),
   });
   if (reaction.changed) {
     await deliverNotifications([
@@ -70,7 +70,7 @@ export async function removePostReaction(req, res) {
   await deleteReaction({
     userId: Number(req.user.sub),
     postId: Number(post.id),
-    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+    deleteAll: ['admin','moderator'].includes(req.user.role) && req.query.all === '1',
   });
   res.status(204).end();
 }
