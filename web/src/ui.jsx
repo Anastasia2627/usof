@@ -196,7 +196,7 @@ export function PostCard({ post }) {
       <p className="threadExcerpt">{post.content?.slice(0, 260)}{post.content?.length > 260 ? '…' : ''}</p>
       {post.images?.length>0&&<button type="button" className="threadPhoto" onClick={()=>go('/post/'+post.id)}
         aria-label="View post photos"><img loading="lazy" src={assetUrl(post.images[0].url)} alt="Post photo"/></button>}
-      <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{category.title}</span>)}</div>
+      <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{t(category.title)}</span>)}</div>
       <div className="threadActions">
         <button type="button" aria-label="Like" title={voteTitle || 'Like'} disabled={voteDisabled}
           aria-pressed={myVote === 'like'} className={myVote === 'like' ? 'activeVote' : ''} onClick={() => vote('like')}>
