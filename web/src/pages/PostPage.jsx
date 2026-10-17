@@ -39,19 +39,26 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   if (!visible) return null;
   return <div className="reactionPanel">
     <div className="reactionButtons">
-      {!hideCounts && <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>}
+      {!hideCounts && <span className="reactionTotals">
+        <span title={t('Likes')} aria-label={t('Likes')+': '+items.filter(x=>x.type==='like').length}>
+          <Icon name="heart" size={15}/>{items.filter(x=>x.type==='like').length}</span>
+        <span title={t('Dislikes')} aria-label={t('Dislikes')+': '+items.filter(x=>x.type==='dislike').length}>
+          <Icon name="dislike" size={15}/>{items.filter(x=>x.type==='dislike').length}</span>
+      </span>}
       {canVote && <>
         <button type="button" className="reactionIconButton" aria-label="Like" title="Like" onClick={() => change('POST', 'like')}><Icon name="heart" size={19}/></button>
         <button type="button" className="reactionIconButton" aria-label="Dislike" title="Dislike" onClick={() => change('POST', 'dislike')}><Icon name="dislike" size={19}/></button>
         {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
       {!hideCounts && <button type="button" aria-label="View votes" title="View votes" onClick={() => setOpen(x => !x)}><Icon name="group" size={18}/></button>}
-      {auth?.user?.role === 'admin' && items.length > 0 && <button type="button" onClick={() => {
-        if (window.confirm('Remove all reactions?')) {
-          api(path + '?all=1', { method: 'DELETE', token: auth.token })
-            .then(async () => { await load(); await onChange(); }).catch(setError);
-        }
-      }}>Clear votes</button>}
+      {auth?.user?.role === 'admin' && items.length > 0 &&
+        <button type="button" className="reactionIconButton" aria-label={t('Clear votes')}
+          title={t('Clear votes')} onClick={() => {
+          if (window.confirm(t('Remove all reactions?'))) {
+            api(path + '?all=1', { method: 'DELETE', token: auth.token })
+              .then(async () => { await load(); await onChange(); }).catch(setError);
+          }
+        }}><Icon name="trash" size={18}/></button>}
     </div>
     {open && <ul>{items.map(x => <li key={x.id}>{x.author_login}: {x.type}</li>)}</ul>}
     <ErrorBox error={error} />
@@ -264,10 +271,12 @@ export default function PostPage({ id }) {
           <time dateTime={post.published_at||post.created_at}
             title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
         </div>
-        <StatusBadges item={post}/>
+        <div className="naturalPostTopStatus">
+          <StatusBadges item={post}/>
+          {post.accepted_comment_id && <span className="solutionTag"><Icon name="check" size={15}/>{t('Solved')}</span>}
+        </div>
       </div>
       <h1>{post.title}</h1>
-      {post.accepted_comment_id && <span className="solutionTag">✓ {t('Solved')}</span>}
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
       <PostPhotoGallery images={post.images||[]}/>
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
@@ -287,22 +296,29 @@ export default function PostPage({ id }) {
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
       </div>
       {(isOwner||canModeratePost) && <div className="naturalPostManagement">
-        {isOwner && auth?.user?.role!=='admin' && <button type="button" title="Edit post" aria-label="Edit post"
+        {isOwner && auth?.user?.role!=='admin' && <button type="button" title={t('Edit post')} aria-label={t('Edit post')}
           onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
-        {isOwner && <button type="button" title={post.closed?'Reopen discussion':'Close discussion'}
-          aria-label={post.closed?'Reopen discussion':'Close discussion'}
+        {isOwner && <button type="button" title={t(post.closed?'Reopen discussion':'Close discussion')}
+          aria-label={t(post.closed?'Reopen discussion':'Close discussion')} aria-pressed={Boolean(post.closed)}
           onClick={()=>run('PATCH',{closed:!Boolean(post.closed)})}>
-          <Icon name={post.closed?'unlock':'lock'} size={18}/><span>{t(post.closed?'Reopen discussion':'Close discussion')}</span></button>}
-        {isOwner && <button type="button" title={post.hide_likes?'Show likes':'Hide likes'}
-          aria-label={post.hide_likes?'Show likes':'Hide likes'}
+          <Icon name={post.closed?'unlock':'lock'} size={19}/></button>}
+        {isOwner && <button type="button" title={t(post.hide_likes?'Show likes':'Hide likes')}
+          aria-label={t(post.hide_likes?'Show likes':'Hide likes')} aria-pressed={Boolean(post.hide_likes)}
           onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
-          <Icon name="heart" size={18}/><span>{t(post.hide_likes?'Show likes':'Hide likes')}</span></button>}
-        {canModeratePost && <><button type="button" onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
-          <Icon name="check" size={18}/><span>{post.status==='active'?'Deactivate':'Activate'}</span></button>
-          <button type="button" onClick={()=>run('PATCH',{locked:!post.locked})}>
-          <Icon name={post.locked?'unlock':'lock'} size={18}/><span>{post.locked?'Unlock':'Lock'}</span></button></>}
-        <button type="button" className="dangerText" aria-label="Delete post" title="Delete post" onClick={deletePost}>
-          <Icon name="trash" size={18}/><span>{t('Delete post')}</span></button>
+          <Icon name="heart" size={19}/></button>}
+        {canModeratePost && <>
+          <button type="button" aria-label={t(post.status==='active'?'Deactivate':'Activate')}
+            title={t(post.status==='active'?'Deactivate':'Activate')}
+            onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
+            <Icon name={post.status==='active'?'close':'check'} size={19}/></button>
+          <button type="button" aria-label={t(post.locked?'Unlock':'Lock')}
+            title={t(post.locked?'Unlock':'Lock')} aria-pressed={Boolean(post.locked)}
+            onClick={()=>run('PATCH',{locked:!post.locked})}>
+            <Icon name={post.locked?'unlock':'shield'} size={19}/></button>
+        </>}
+        <button type="button" className="dangerText" aria-label={t('Delete post')}
+          title={t('Delete post')} onClick={deletePost}>
+          <Icon name="trash" size={19}/></button>
       </div>}
       {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
       {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
