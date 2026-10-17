@@ -251,7 +251,7 @@ export default function PostPage({ id }) {
       {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
       <PostPhotoGallery images={post.images||[]}/>}
-      <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{x.title}</span>)}</div>
+      <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
       <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
       <div className="naturalPostReactions">
         <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
