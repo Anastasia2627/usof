@@ -179,6 +179,13 @@ try {
   await user.getByRole('button',{name:'Comment',exact:true}).click();
   await user.getByText(rootReply).waitFor();
   await open(admin,'/post/'+posts[0]);
+  const postActions=admin.locator('.naturalPostManagement button');
+  assert.ok(await postActions.count()>=3);
+  for(const button of await postActions.all()) {
+    assert.ok(await button.getAttribute('title'),'Post action needs hover tooltip');
+    assert.ok(await button.getAttribute('aria-label'),'Icon-only action needs accessible name');
+    assert.equal((await button.innerText()).trim(),'','Post actions should not show verbose labels');
+  }
   const card=admin.locator('.commentCard').filter({hasText:rootReply}).first();
   try { await card.waitFor({ state:'visible', timeout:5000 }); }
   catch (error) {
