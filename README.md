@@ -26,7 +26,7 @@ switching branches.
 
 ```bash
 git fetch origin
-git switch --track origin/circle-full-requirements
+git switch circle-threads-feed
 npm install
 ```
 
@@ -63,7 +63,7 @@ npm run web
 ```
 
 Visit `http://localhost:5173`. The API is at
-`http://localhost:5000/api/health`. Test users and seeded content are stored
+`http://127.0.0.1:5050/api/health`. Test users and seeded content are stored
 in a **real, persistent MySQL 8.4 Docker volume**, not in React state.
 This volume is completely separate from the old Homebrew
 `/opt/homebrew/var/mysql` data directory, so it neither upgrades nor
@@ -83,19 +83,36 @@ MySQL; do not delete the volume.
 The browser-only `npm run web:demo` preview is optional, and not suitable
 for defense because it does not store shared records or send email.
 
-## Fixing the guest feed network warning
+## Fixing the guest feed network warning (macOS AirPlay port collision)
+
+**On macOS the `AirPlay Receiver` / `AirTunes` service can claim port
+5000 and reply with `HTTP 403` (header `Server: AirTunes`). This is not
+a login error, and restarting MySQL will not fix it.** In your existing
+uncommitted root `.env`, change these two lines while preserving the DB/SMTP
+credentials:
+
+```dotenv
+APP_PORT=5050
+VITE_API_ORIGIN=http://127.0.0.1:5050
+```
+
+Vite dynamically reads `APP_PORT` from the SAME `.env` and proxies API
+requests there. Both Node and Vite must be restarted once after changing a
+server port, but future React/CSS updates are automatic. **Do not** create a
+new Docker volume, reinitialize the database, switch branches, or turn off
+AirPlay globally.
 
 Public posts do **not** require login. If the guest home shows a network error
 even when Docker is healthy and `npm start` says the API is listening, use
 the **Threads UI branch** and restart the Vite process to pick up its new
 same-origin proxy config. The browser now fetches `/api/...` from port 5173,
-and Vite forwards the requests to `127.0.0.1:5000`.
+and Vite forwards the requests to `127.0.0.1:5050`.
 
 In **one** terminal run `npm start`. In the **other** terminate the previous
 Vite process with Ctrl+C, then run `npm run web`. Check both:
 
 ```bash
-curl http://localhost:5000/api/health
+curl http://127.0.0.1:5050/api/health
 curl http://localhost:5173/api/health
 ```
 
