@@ -23,7 +23,10 @@ try {
   assert.equal(proxyResponse.status, 200, 'Frontend proxy should reach the API');
   assert.equal((await proxyResponse.json()).status, 'ok');
   await page.goto(frontend + '/#/', { waitUntil: 'networkidle' });
-  assert.ok(await page.locator('.threadCard').count() > 0, 'Feed should load actual database posts');
+  await page.getByRole('heading', { name: 'Talk about what matters.' }).waitFor();
+  assert.equal(await page.locator('.threadCard').count(), 0, 'Guest homepage must not show posts');
+  await page.getByRole('button', { name: /Explore public conversations/ }).click();
+  await page.locator('.threadCard').first().waitFor();
   const firstPost = page.locator('.threadCard').first();
   const firstAuthor = firstPost.locator('.authorLink');
   await firstAuthor.click();
