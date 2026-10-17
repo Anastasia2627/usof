@@ -18,7 +18,7 @@ function Growth({ data = [] }) {
     <div className="dashLegend">{data.map(d=><span key={d.date}>{new Date(d.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'})}</span>)}</div>
   </div>;
 }
-export default function DashboardPage() {
+export default function DashboardPage({embedded=false}) {
   const auth=useSelector(state=>state.auth);
   const {t}=usePreferences();
   const admin=auth?.user?.role==='admin';
@@ -35,7 +35,8 @@ export default function DashboardPage() {
   },[auth?.token,admin,retry]);
 
   if(!auth)return <main className="simpleFeaturePage"><h1>{t('Statistics')}</h1><button className="primary" onClick={()=>go('/login')}>{t('Log in')}</button></main>;
-  return <main className="simpleFeaturePage dashboardPage">
+  const Root=embedded?'section':'main';
+  return <Root className={'simpleFeaturePage dashboardPage'+(embedded?' embeddedDashboard':'')}>
     <div className="featureHeading"><Icon name="analytics" size={27}/><h1>{t(admin?'Admin overview':'Your activity')}</h1></div>
     <p className="featureSubheading">{admin?t('Community'):'@'+auth.user.login}</p>
     <ErrorBox error={error} onRetry={()=>setRetry(v=>v+1)}/>
@@ -83,5 +84,5 @@ export default function DashboardPage() {
         <div className="dashInline"><span>{t('Following')}</span><strong>{data.stats?.following||0}</strong></div>
       </section>
     </>)}
-  </main>;
+  </Root>;
 }
