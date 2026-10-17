@@ -62,12 +62,14 @@ function UserRow({ user, auth, onSave, onDelete }) {
           <Icon name={user.role==='moderator'?'close':'shield'} size={17}/>
           <span>{t(roleBusy?'Saving…':user.role==='moderator'?'Remove moderator':'Make moderator')}</span>
         </button>}
-        <button type="button" aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
-          <Icon name="edit" size={18}/> <span>{t('Edit')}</span>
+        <button type="button" className="adminIconAction" title={t('Edit')}
+          aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
+          <Icon name="edit" size={18}/>
         </button>
-        <button type="button" className="dangerText" disabled={Number(user.id) === Number(auth.user.id)}
-          onClick={() => onDelete(user)} title={Number(user.id) === Number(auth.user.id) ? 'You cannot delete your own admin account' : 'Delete user'}>
-          <Icon name="close" size={18}/> <span>{t('Delete')}</span>
+        <button type="button" className="adminIconAction dangerText" disabled={Number(user.id) === Number(auth.user.id)}
+          aria-label={t('Delete')+' @'+user.login} onClick={() => onDelete(user)}
+          title={Number(user.id) === Number(auth.user.id) ? 'You cannot delete your own admin account' : t('Delete')}>
+          <Icon name="trash" size={17}/>
         </button>
       </div>
     </div>
@@ -133,8 +135,8 @@ function CategoryRow({ category, auth, run }) {
         <p>{t(category.description || 'No description')}</p>
       </div>
       <div className="adminRowTools">
-        <button type="button" aria-label={'Edit category ' + category.title} onClick={() => setEditing(value => !value)}><Icon name="edit" size={18}/><span>Edit</span></button>
-        <button type="button" className="dangerText" onClick={remove}><Icon name="close" size={18}/><span>Delete</span></button>
+        <button type="button" className="adminIconAction" title={t('Edit')} aria-label={'Edit category ' + category.title} onClick={() => setEditing(value => !value)}><Icon name="edit" size={18}/></button>
+        <button type="button" className="adminIconAction dangerText" title={t('Delete')} aria-label={t('Delete')+' '+category.title} onClick={remove}><Icon name="trash" size={18}/></button>
       </div>
     </div>
     {editing && <form className="adminInlineForm" onSubmit={save}>
@@ -287,11 +289,11 @@ export default function AdminPage({initialTab='users'}) {
               {report.details&&<p>{report.details}</p>}
             </div>
             <div className="adminRowTools">
-              <button type="button" onClick={()=>go('/post/'+(report.post_id||report.comment_post_id))}>Open discussion</button>
-              {report.status!=='reviewed'&&<button type="button" onClick={()=>run(()=>api('/reports/'+report.id,{
-                method:'PATCH',token:auth.token,body:{status:'reviewed'}}))}>Mark reviewed</button>}
-              {report.status!=='dismissed'&&<button type="button" onClick={()=>run(()=>api('/reports/'+report.id,{
-                method:'PATCH',token:auth.token,body:{status:'dismissed'}}))}>Dismiss</button>}
+              <button type="button" className="adminIconAction" aria-label={t('Open discussion')} title={t('Open discussion')} onClick={()=>go('/post/'+(report.post_id||report.comment_post_id))}><Icon name="arrow" size={17}/></button>
+              {report.status!=='reviewed'&&<button type="button" className="adminIconAction" aria-label={t('Mark reviewed')} title={t('Mark reviewed')} onClick={()=>run(()=>api('/reports/'+report.id,{
+                method:'PATCH',token:auth.token,body:{status:'reviewed'}}))}><Icon name="check" size={17}/></button>}
+              {report.status!=='dismissed'&&<button type="button" className="adminIconAction" aria-label={t('Dismiss')} title={t('Dismiss')} onClick={()=>run(()=>api('/reports/'+report.id,{
+                method:'PATCH',token:auth.token,body:{status:'dismissed'}}))}><Icon name="close" size={17}/></button>}
             </div>
           </article>):<p className="adminEmpty">No reports in this category.</p>}
         </div>
@@ -341,11 +343,11 @@ export default function AdminPage({initialTab='users'}) {
                 {!moderator&&<PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run}/>}
               </div>
               <div className="adminRowTools adminPostTools">
-                <button type="button" onClick={() => go('/post/' + post.id)}>Open</button>
+                <button type="button" className="adminIconAction" aria-label={t('Open')} title={t('Open')} onClick={() => go('/post/' + post.id)}><Icon name="arrow" size={17}/></button>
                 {(!moderator||post.author_role!=='admin')&&<>
-                <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-                <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
-                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}>Delete</button></>}
+                <button type="button" className="adminIconAction" aria-label={t(post.status === 'active' ? 'Deactivate' : 'Activate')} title={t(post.status === 'active' ? 'Deactivate' : 'Activate')} onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}><Icon name={post.status === 'active' ? 'lock' : 'unlock'} size={17}/></button>
+                <button type="button" className="adminIconAction" aria-label={t(post.locked ? 'Unlock' : 'Lock')} title={t(post.locked ? 'Unlock' : 'Lock')} onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}><Icon name={post.locked ? 'unlock' : 'shield'} size={17}/></button>
+                <button type="button" className="adminIconAction dangerText" aria-label={t('Delete post')} title={t('Delete post')} onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}><Icon name="trash" size={17}/></button></>}
               </div>
             </div>
           </article>) : <p className="adminEmpty">No posts on this page.</p>}
@@ -395,11 +397,11 @@ export default function AdminPage({initialTab='users'}) {
                 <p className="adminCommentText">{comment.content}</p>
               </div>
               <div className="adminRowTools adminPostTools">
-                <button type="button" onClick={() => go('/post/' + comment.post_id)}>Open</button>
+                <button type="button" className="adminIconAction" aria-label={t('Open')} title={t('Open')} onClick={() => go('/post/' + comment.post_id)}><Icon name="arrow" size={17}/></button>
                 {(!moderator||(comment.author_role!=='admin' && comment.post_author_role!=='admin'))&&<>
-                <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}>{comment.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-                <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}>{comment.locked ? 'Unlock' : 'Lock'}</button>
-                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}>Delete</button></>}
+                <button type="button" className="adminIconAction" aria-label={t(comment.status === 'active' ? 'Deactivate' : 'Activate')} title={t(comment.status === 'active' ? 'Deactivate' : 'Activate')} onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}><Icon name={comment.status === 'active' ? 'lock' : 'unlock'} size={17}/></button>
+                <button type="button" className="adminIconAction" aria-label={t(comment.locked ? 'Unlock' : 'Lock')} title={t(comment.locked ? 'Unlock' : 'Lock')} onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}><Icon name={comment.locked ? 'unlock' : 'shield'} size={17}/></button>
+                <button type="button" className="adminIconAction dangerText" aria-label={t('Delete comment')} title={t('Delete comment')} onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}><Icon name="trash" size={17}/></button></>}
               </div>
             </div>
           </article>) : <p className="adminEmpty">No comments.</p>}
