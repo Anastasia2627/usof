@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
 import { usePreferences } from './preferences.jsx';
 import ModeratorControl from './ModeratorControl.jsx';
+import TablerIcon from './TablerIcon.jsx';
 
 export const go = (path) => { window.location.hash = path; };
 export function fmt(date) {
@@ -19,17 +20,8 @@ export function fmt(date) {
   return when.toLocaleDateString(language,{day:'numeric',month:'short',year:when.getFullYear()!==new Date().getFullYear()?'numeric':undefined});
 }
 
-// Fixed Google Material Round SVGs bundled locally from Google's official icon source.
-import { iconsA } from './googleIconsA.js';
-import { iconsB } from './googleIconsB.js';
-const googleIcons = { ...iconsA, ...iconsB, favorite: iconsA.heart, chat: iconsA.comment };
-export function Icon({ name, size = 22 }) {
-  // Static, trusted SVG strings only. No user input is ever interpolated.
-  const svg = googleIcons[name] || googleIcons.categories;
-  return <span className="circleIcon googleSvgIcon notranslate" translate="no"
-    aria-hidden="true" style={{ width: size, height: size }}
-    dangerouslySetInnerHTML={{ __html: svg }}/>;
-}
+// Centralized Tabler icon wrapper; old embedded Google SVG markup is retired.
+export { TablerIcon as Icon };
 
 export function trustName(rating) {
   if (Number(rating) >= 150) return 'Mentor';
@@ -213,14 +205,14 @@ export function PostCard({ post }) {
       <div className="threadActions">
         <button type="button" aria-label="Like" title={voteTitle || 'Like'} disabled={voteDisabled}
           aria-pressed={myVote === 'like'} className={myVote === 'like' ? 'activeVote' : ''} onClick={() => vote('like')}>
-          <Icon name="heart" size={20}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.like}</span> : null}
+          <Icon name={myVote==='like'?'heartFilled':'heart'} size={20}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.like}</span> : null}
         </button>
         <button type="button" aria-label="Comment" title="View replies" onClick={() => go(`/post/${post.id}`)}>
           <Icon name="comment" size={20}/><span>{counts.comment}</span>
         </button>
         <button type="button" aria-label="Dislike" title={voteTitle || 'Dislike'} disabled={voteDisabled}
           aria-pressed={myVote === 'dislike'} className={myVote === 'dislike' ? 'activeVote' : ''} onClick={() => vote('dislike')}>
-          <Icon name="dislike" size={19}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.dislike}</span> : null}
+          <Icon name={myVote==='dislike'?'dislikeFilled':'dislike'} size={19}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.dislike}</span> : null}
         </button>
         {auth && <button type="button" aria-label={saved?t('Unsave post'):t('Save post')}
           title={saved?t('Unsave post'):t('Save post')} aria-pressed={saved}
@@ -344,17 +336,14 @@ export function Header() {
         {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
           className={current === item.destination ? 'navActive' : ''}
           aria-label={t(item.text)} onClick={() => go(item.destination)}>
-          <Icon name={item.icon} size={24}/><span className="navLabel">{t(item.text)}</span>
+          <Icon name={item.icon} size={24} filled={current === item.destination}/><span className="navLabel">{t(item.text)}</span>
         </button>)}
       </nav>}
       <div className="accountArea">
         {auth ? <>
           <button className="headerNotify" aria-label={t('Notifications')+(unread?' ('+unread+')':'')}
             type="button" title={t('Notifications')} onClick={()=>go('/notifications')}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/>
-              <path d="M10 21h4"/>
-            </svg>{unread>0&&<span className="headerUnreadCount">{unread>99?'99+':unread}</span>}
+            <Icon name="bell" size={21}/>{unread>0&&<span className="headerUnreadCount">{unread>99?'99+':unread}</span>}
           </button>
           <button className="profileButton" aria-label={`Profile of ${auth.user.login} (${auth.user.role})`} onClick={() => go('/profile')}>
             <Avatar user={auth.user} size="sm" />
@@ -380,9 +369,9 @@ export function Header() {
     </div>
   </header>
     {roleNotice&&<div role="status" className="roleChangeBanner">
-      <span>✦ {roleNotice}</span>
+      <span className="roleChangeMessage"><Icon name="check" size={17}/>{roleNotice}</span>
       <button type="button" onClick={()=>{setRoleNotice('');go('/notifications');}}>{t('View notifications')}</button>
-      <button type="button" onClick={()=>setRoleNotice('')} aria-label={t('Dismiss')}>×</button>
+      <button type="button" onClick={()=>setRoleNotice('')} aria-label={t('Dismiss')} title={t('Dismiss')}><Icon name="close" size={18}/></button>
     </div>}
   </>;
 }
