@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
+import ModeratorControl from '../ModeratorControl.jsx';
 
 export default function ProfilePage({ userId = null }) {
   const auth = useSelector(state => state.auth);
@@ -150,8 +151,11 @@ export default function ProfilePage({ userId = null }) {
   return <main className="profilePage">
     <section className="profileHeader">
       <div className="profileNames">
-        <span className="profileMicroLabel">{t(user?.role === 'admin' ? 'Administrator' : 'Circle member')}</span>
-        <h1>{user?.login || t('Profile')}</h1>
+        <span className="profileMicroLabel">{t(user?.role==='admin'?'Administrator':user?.role==='moderator'?'Moderator':'Circle member')}</span>
+        <div className="profileRoleHeading"><h1>{user?.login || t('Profile')}</h1>
+          {user&&<ModeratorControl userId={user.id} login={user.login} role={user.role}
+            onChanged={role=>setUser(old=>old?{...old,role}:old)}/>}
+        </div>
         {user?.full_name && <p className="profileFullName">{user.full_name}</p>}
         {isSelf && user?.email && <p className="profilePrivateEmail">{user.email}</p>}
       </div>
