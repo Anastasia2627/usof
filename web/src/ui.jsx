@@ -262,7 +262,7 @@ export function Header() {
       }catch{/* The header remains usable while the network is unavailable. */}
     };
     sync();
-    const timer=window.setInterval(sync,10000);
+    const timer=window.setInterval(sync,4000);
     window.addEventListener('focus',sync);
     window.addEventListener('usof:notifications',sync);
     return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',sync);window.removeEventListener('usof:notifications',sync);};
