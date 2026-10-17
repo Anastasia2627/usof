@@ -52,6 +52,67 @@ async function ensureCircleSchema(connection) {
   if (!known.has('google_sub')) {
     await connection.query('ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL UNIQUE AFTER role');
   }
+  // Additive, idempotent migration: never drop existing user data.
+  await connection.query("ALTER TABLE users MODIFY COLUMN role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user'");
+  const [postColumns] = await connection.query("SHOW COLUMNS FROM posts");
+  const postKnown = new Set(postColumns.map(row=>row.Field));
+  if (!postKnown.has('closed')) await connection.query("ALTER TABLE posts ADD COLUMN closed BOOLEAN NOT NULL DEFAULT 0");
+  if (!postKnown.has('hide_likes')) await connection.query("ALTER TABLE posts ADD COLUMN hide_likes BOOLEAN NOT NULL DEFAULT 0");
+  if (!postKnown.has('publish_at')) await connection.query("ALTER TABLE posts ADD COLUMN publish_at DATETIME NULL, ADD INDEX idx_post_publish_at(publish_at)");
+  const [commentColumns] = await connection.query("SHOW COLUMNS FROM comments");
+  if (!commentColumns.some(row=>row.Field==='reviewed_by')) {
+    await connection.query('ALTER TABLE comments ADD COLUMN reviewed_by INT UNSIGNED NULL, ADD CONSTRAINT fk_comment_reviewed_by FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE SET NULL');
+  }
+  await connection.query(`CREATE TABLE IF NOT EXISTS user_follows (
+    follower_id INT UNSIGNED NOT NULL,
+    followed_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(follower_id,followed_id),
+    FOREIGN KEY(follower_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(followed_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
+  await connection.query(`CREATE TABLE IF NOT EXISTS user_interests (
+    user_id INT UNSIGNED NOT NULL,
+    category_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY(user_id,category_id),
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
+  await connection.query(`CREATE TABLE IF NOT EXISTS direct_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT UNSIGNED NOT NULL,
+    receiver_id INT UNSIGNED NOT NULL,
+    content TEXT NOT NULL,
+    read_at DATETIME NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_dm_sender(sender_id,created_at),
+    INDEX idx_dm_receiver(receiver_id,created_at),
+    FOREIGN KEY(sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(receiver_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
+
+  // A broad public conversation feed, without resetting the six existing
+  // course/demo categories or touching existing posts.
+  const topics = [
+    ['Music','Music, artists and playlists'],['Movies','Films, series and recommendations'],
+    ['Games','Video games, tabletop games and playing together'],
+    ['Books','Books, stories and reading'],['Art','Drawing, illustration and creativity'],
+    ['Photography','Photos and visual storytelling'],['Travel','Trips, places and discoveries'],
+    ['Food','Cooking, recipes and discoveries'],['Pets','Cats, dogs and animal friends'],
+    ['Fitness','Sport, yoga and movement'],['Fashion','Personal style and outfits'],
+    ['Beauty','Skincare and self care'],['Relationships','Friendship, love and conversations'],
+    ['Lifestyle','Daily life and little discoveries'],['Nature','Outdoors and the environment'],
+    ['Science','Curiosity, experiments and discoveries'],['Technology','Tech beyond programming'],
+    ['Education','Learning and student life'],['Languages','Learning and speaking languages'],
+    ['Cars','Vehicles and motorsport'],['Humor','Memes and funny stories'],
+    ['Crafts','DIY, embroidery and handmade projects'],['Career','Work and career journeys'],
+    ['Wellbeing','Rest, mental health and balance'],['Questions','Ask the community anything'],
+    ['Discussion','Opinions and everyday conversations'],['Events','Plans, festivals and meetups'],
+    ['Design','Graphic, digital and product design'],['Anime','Anime and animation'],
+    ['History','History and cultures']
+  ];
+  for (const [title,description] of topics)
+    await connection.query('INSERT IGNORE INTO categories(title,description) VALUES(?,?)',[title,description]);
 }
 
 async function initializeDatabase() {
@@ -111,7 +172,7 @@ async function initializeDatabase() {
         verification_code_expires DATETIME NULL,
         avatar VARCHAR(255) NULL,
         rating INT NOT NULL DEFAULT 0,
-        role ENUM('user','admin') NOT NULL DEFAULT 'user',
+        role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user',
         google_sub VARCHAR(64) NULL UNIQUE,
         token_version INT UNSIGNED NOT NULL DEFAULT 0,
         reset_token_hash CHAR(64) NULL,
