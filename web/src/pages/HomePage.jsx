@@ -83,17 +83,18 @@ export default function HomePage({ hash, basePath = '/' }) {
 
   const popular = (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
   const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
+  const activeFilters = ['category', 'from', 'to', 'status'].filter(key => Boolean(params.get(key))).length;
 
   return <main className="homePage">
     <h1 className="feedPageTitle">{basePath === '/explore' ? 'Explore' : 'Home'}</h1>
     <div className="feedTabs" role="group" aria-label="Feed views">
-      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>For you</button>
+      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>Popular</button>
       <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>Latest</button>
     </div>
 
     {auth ? <button className="feedComposer" onClick={() => go('/create')}>
       <Avatar user={auth.user} size="md"/>
-      <span>What's new?</span>
+      <span>What's on your mind?</span>
       <strong>Post</strong>
     </button> : <div className="feedComposer guestComposer">
       <span className="guestAvatar"><Icon name="user" size={21}/></span>
@@ -102,7 +103,10 @@ export default function HomePage({ hash, basePath = '/' }) {
     </div>}
 
     <details className="filterDetails">
-      <summary><Icon name="sliders" size={18}/> Filters and sorting</summary>
+      <summary><Icon name="sliders" size={19}/><span>Filters</span>
+        {activeFilters > 0 && <span className="activeFilterCount" aria-label={activeFilters + ' active filters'}>{activeFilters}</span>}
+        <Icon name="chevron" size={19}/>
+      </summary>
       <form className="filterBar" onSubmit={apply}>
         <label>Sort by
           <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
@@ -131,8 +135,8 @@ export default function HomePage({ hash, basePath = '/' }) {
             <option value="inactive">Inactive</option>
           </select>
         </label>}
-        <button className="primary applyFilters" type="submit">Apply filters</button>
-        <button type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Reset</button>
+        <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={19}/><span>Apply</span></button>
+        <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Clear</button>
       </form>
     </details>
 
