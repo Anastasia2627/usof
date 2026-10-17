@@ -20,8 +20,14 @@ const managed=(await request('/users',{method:'POST',token:admin,status:201,body
   login:'social'+suffix,email:'social'+suffix+'@example.test',fullName:'Social Test User',
   role:'user',password:'Password123!',passwordConfirmation:'Password123!'
 }})).data;
+const originalSession=(await request('/auth/login',{method:'POST',
+  body:{login:managed.login,password:'Password123!'}})).token;
 await request('/users/'+managed.id,{method:'PATCH',token:member,body:{role:'moderator'},status:403});
 await request('/users/'+managed.id,{method:'PATCH',token:admin,body:{role:'moderator'}});
+// A live session immediately gains only the server-authorized moderator privileges.
+await request('/reports',{token:originalSession});
+const promoted=(await request('/notifications?unread=1',{token:originalSession}));
+assert.ok(promoted.data.some(item=>item.type==='role_changed'&&item.title.includes('moderator')));
 const moderatorLogin=await request('/auth/login',{method:'POST',body:{login:managed.login,password:'Password123!'}});
 assert.equal(moderatorLogin.user.role,'moderator');
 const mod=moderatorLogin.token;
@@ -70,4 +76,9 @@ await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{title:'Must no
 await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{locked:true}});
 await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{locked:false}});
 await request('/posts/'+posted.id,{method:'DELETE',token:mod,status:204});
+// Demotion also takes effect immediately, without retaining stale elevated privileges.
+await request('/users/'+managed.id,{method:'PATCH',token:admin,body:{role:'user'}});
+await request('/reports',{token:originalSession,status:403});
+const demoted=await request('/notifications',{token:originalSession});
+assert.ok(demoted.data.some(item=>item.type==='role_changed'&&item.title.includes('removed')));
 console.log('Social integrations passed: moderator permissions, verified comments, closing, hidden likes, scheduling, follows, interest topics');
