@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { ErrorBox, Icon, fmt, go } from '../ui.jsx';
@@ -25,6 +25,50 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [contextMenu,setContextMenu] = useState(null);
+  const menuRef=useRef(null);
+  const longPressRef=useRef(null);
+  useEffect(()=>{
+    if(!contextMenu)return;
+    function close(event){
+      if(event.type==='keydown' && event.key!=='Escape')return;
+      if(event.type==='pointerdown' && menuRef.current?.contains(event.target))return;
+      setContextMenu(null);
+    }
+    document.addEventListener('pointerdown',close);
+    document.addEventListener('keydown',close);
+    return()=>{
+      document.removeEventListener('pointerdown',close);
+      document.removeEventListener('keydown',close);
+    };
+  },[contextMenu]);
+  useEffect(()=>()=>{if(longPressRef.current)window.clearTimeout(longPressRef.current);},[]);
+
+  function openContextMenu(event,item) {
+    event.preventDefault();
+    const rect=event.currentTarget.getBoundingClientRect();
+    const x=typeof event.clientX==='number'&&event.clientX>0?event.clientX:rect.right-25;
+    const y=typeof event.clientY==='number'&&event.clientY>0?event.clientY:rect.top+22;
+    setContextMenu({id:item.id,
+      x:Math.max(10,Math.min(x,window.innerWidth-195)),
+      y:Math.max(10,Math.min(y,window.innerHeight-85))});
+  }
+  function stopLongPress() {
+    if(longPressRef.current)window.clearTimeout(longPressRef.current);
+    longPressRef.current=null;
+  }
+  function startLongPress(event,item) {
+    stopLongPress();
+    const touch=event.touches?.[0];
+    if(!touch)return;
+    const x=touch.clientX,y=touch.clientY;
+    longPressRef.current=window.setTimeout(()=>{
+      setContextMenu({id:item.id,
+        x:Math.max(10,Math.min(x,window.innerWidth-195)),
+        y:Math.max(10,Math.min(y,window.innerHeight-85))});
+      longPressRef.current=null;
+    },650);
+  }
 
   async function load() {
     if (!auth) return;
@@ -79,7 +123,8 @@ export default function NotificationsPage() {
   }
 
   async function remove(item) {
-    if (busy) return;
+    if (busy || !window.confirm(t('Delete this notification?'))) return;
+    setContextMenu(null);
     setBusy(true);
     try {
       await api(`/notifications/${item.id}`, { method: 'DELETE', token: auth.token });
@@ -114,7 +159,13 @@ export default function NotificationsPage() {
       : items.length
         ? <section className="notificationList" aria-label={t('Notifications')}>
           {items.map(item => <article
-            className={'notificationItem'+(item.read_at?'':' unread')} key={item.id}>
+            className={'notificationItem'+(item.read_at?'':' unread')} key={item.id}
+            tabIndex={0} aria-label={t(item.title)+'. '+t('Right-click for options')}
+            onContextMenu={event=>openContextMenu(event,item)}
+            onKeyDown={event=>{if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10'))
+              openContextMenu(event,item);}}
+            onTouchStart={event=>startLongPress(event,item)}
+            onTouchMove={stopLongPress} onTouchEnd={stopLongPress} onTouchCancel={stopLongPress}>
             <span className="notificationDot" aria-hidden="true" />
             <button type="button" className="notificationMain"
               onClick={() => openItem(item)} aria-label={t(item.title)}>
@@ -122,11 +173,7 @@ export default function NotificationsPage() {
               <span className="notificationDescription">{notificationBodyText(item.body,t)}</span>
               <time className="notificationTime" dateTime={item.created_at}>{fmt(item.created_at)}</time>
             </button>
-            <button type="button" className="notificationDeleteIcon"
-              disabled={busy} aria-label={t('Delete notification')}
-              title={t('Delete notification')} onClick={() => remove(item)}>
-              <Icon name="trash" size={18}/>
-            </button>
+            <span className="notificationRightHint" aria-hidden="true">···</span>
           </article>)}
         </section>
         : <div className="notificationsEmpty" role="status">
@@ -135,5 +182,12 @@ export default function NotificationsPage() {
             <p>{t(unreadOnly ? 'You have read everything.' : 'Updates from followed posts and your contributions will appear here.')}</p>
             {unreadOnly && <button type="button" onClick={() => setUnreadOnly(false)}>{t('Show all')}</button>}
           </div>}
+    {contextMenu && <div className="notificationContextMenu" role="menu" ref={menuRef}
+      style={{left:contextMenu.x,top:contextMenu.y}}>
+      <button type="button" role="menuitem" disabled={busy} onClick={()=>{
+        const selected=items.find(item=>item.id===contextMenu.id);
+        if(selected)remove(selected);
+      }}><Icon name="trash" size={16}/>{t('Delete notification')}</button>
+    </div>}
   </main>;
 }
