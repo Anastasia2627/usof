@@ -35,8 +35,8 @@ async function logIn(page,name){
 try {
   // 1: default order is the number of positive reactions (descending).
   await open(user,'/');
-  await user.getByRole('heading', {name:'Talk about what matters.'}).waitFor();
-  assert.equal(await user.locator('.threadCard').count(), 0);
+  await user.locator('.threadCard').first().waitFor();
+  assert.ok(await user.locator('.headerSearch').isVisible(), 'Guest homepage has search');
   await open(user,'/explore');
   await user.locator('.threadCard').first().waitFor();
   const expected = (await fetchApi('/posts?sort=likes&order=desc&limit=8')).data;
