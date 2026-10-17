@@ -259,10 +259,10 @@ export default function PostPage({ id }) {
         <p>No replies yet</p><small>Be the first to join the conversation</small></div>}
       {canComment ? <form className="naturalReplyComposer" onSubmit={sendComment}>
         <Avatar user={auth.user} size="md"/>
-        <label className="srOnly" htmlFor="main-reply-input">Write a reply</label>
+        <label className="srOnly" htmlFor="main-reply-input">New comment</label>
         <textarea id="main-reply-input" required maxLength="20000" rows="2"
           placeholder="Add to the conversation…" value={text} onChange={e=>setText(e.target.value)}/>
-        <button className="primary" type="submit" aria-label="Send reply" title="Send reply"><Icon name="arrow" size={20}/></button>
+        <button className="primary" type="submit" aria-label="Comment" title="Send reply"><Icon name="arrow" size={20}/></button>
       </form> : <p className="naturalReplyLocked">{!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled'}</p>}
     </section>
   </main>;
