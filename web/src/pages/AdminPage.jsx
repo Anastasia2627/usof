@@ -205,7 +205,8 @@ export default function AdminPage() {
   }
 
   async function saveUser(user, form) {
-    const roleOnly = form.role !== undefined &&
+    const roleOnly = form.role !== undefined && user.role!=='admin' &&
+      ['user','moderator'].includes(form.role) &&
       Object.keys(form).every(key=>key==='role' ||
         (key==='login' && form.login===user.login) ||
         (key==='email' && form.email===user.email) ||
