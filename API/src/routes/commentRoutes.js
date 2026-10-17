@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as controller from '../controllers/commentsController.js';
+import { reportComment } from '../controllers/commentExtrasController.js';
 import {
   optionalAuth,
   requireModerator,
@@ -11,6 +12,7 @@ const router = Router();
 router.get('/', requireAuth, requireModerator, controller.listComments);
 router.get('/:comment_id', optionalAuth, controller.getComment);
 router.post('/:comment_id/replies', requireAuth, controller.replyToComment);
+router.post('/:comment_id/report', requireAuth, reportComment);
 router.get('/:comment_id/like', optionalAuth, controller.getCommentReactions);
 router.post('/:comment_id/like', requireAuth, controller.reactToComment);
 router.patch('/:comment_id/review', requireAuth, controller.reviewComment);
