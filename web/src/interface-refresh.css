@@ -284,3 +284,7 @@ main.homePage:has(.filterDetails[open]) .filterBar{z-index:1520;}
    width:100%;min-width:0;max-width:100%;justify-self:stretch;
  }
 }
+
+.filterSelectWrap{display:block;position:relative;min-width:0;width:100%;}
+.filterSelectWrap>select{width:100%;padding-right:35px!important;}
+.filterSelectWrap>.circleIcon{position:absolute;top:50%;right:11px;transform:translateY(-50%);pointer-events:none;color:var(--ui-muted);}
