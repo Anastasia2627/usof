@@ -85,6 +85,8 @@ jobs:
         run: npm run test:full
       - name: Check all new server and test modules
         run: npm run check:full
+      - name: Check configured Mac API port and proxy target
+        run: node scripts/check-vite-api-port.mjs
       - name: Build frontend
         run: npm run build
       - name: Install Chromium
