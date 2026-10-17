@@ -197,7 +197,14 @@ main.editorRefined {
   font-size: 13px;
   font-weight: 730;
 }
-.editorRefined .editorTopicList { gap: 8px; }
+.editorRefined .editorTopicList {
+  gap: 8px;
+  max-height: 137px;
+  overflow-y: auto;
+  padding: 1px 4px 4px 1px;
+  scrollbar-width: thin;
+}
+.editorRefined .editorTopicList.topicsExpanded { max-height: none; overflow: visible; }
 .editorRefined .postComposerForm .editorTopic {
   background: white;
   border: 1px solid #eaeaea;
