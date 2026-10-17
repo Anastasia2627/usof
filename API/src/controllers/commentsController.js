@@ -63,7 +63,7 @@ export async function reactToComment(req, res) {
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
     type: req.body.type,
-    isAdmin: req.user.role === 'admin',
+    isAdmin: ['admin','moderator'].includes(req.user.role),
   });
   if (reaction.changed) {
     await deliverNotifications([
@@ -87,7 +87,7 @@ export async function removeCommentReaction(req, res) {
   await deleteReaction({
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
-    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+    deleteAll: ['admin','moderator'].includes(req.user.role) && req.query.all === '1',
   });
   res.status(204).end();
 }
