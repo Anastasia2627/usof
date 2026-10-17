@@ -66,7 +66,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
   const isOwner = Number(auth?.user?.id) === Number(item.author_id);
   const active = item.status === 'active';
   const canReply = Boolean(auth && !item.post_closed && (isAdmin || (active && !item.locked && !item.post_locked)));
-  const canChangeStatus = Boolean(auth && (isAdmin || (isOwner && !item.locked)));
+  const canChangeStatus = Boolean(auth && (isAdmin || !item.locked));
 
   async function run(path, method, body) {
     setError(null);
