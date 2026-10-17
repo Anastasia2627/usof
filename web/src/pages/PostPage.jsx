@@ -4,7 +4,7 @@ import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
 
-function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
+function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -34,13 +34,13 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
   if (!visible) return null;
   return <div className="reactionPanel">
     <div className="reactionButtons">
-      <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>
+      {!hideCounts && <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>}
       {canVote && <>
         <button type="button" className="reactionIconButton" aria-label="Like" title="Like" onClick={() => change('POST', 'like')}><Icon name="heart" size={19}/></button>
         <button type="button" className="reactionIconButton" aria-label="Dislike" title="Dislike" onClick={() => change('POST', 'dislike')}><Icon name="dislike" size={19}/></button>
         {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
-      <button type="button" onClick={() => setOpen(x => !x)}>{open ? 'Hide votes' : 'View votes'}</button>
+      {!hideCounts && <button type="button" aria-label="View votes" title="View votes" onClick={() => setOpen(x => !x)}><Icon name="group" size={18}/></button>}
       {auth?.user?.role === 'admin' && items.length > 0 && <button type="button" onClick={() => {
         if (window.confirm('Remove all reactions?')) {
           api(path + '?all=1', { method: 'DELETE', token: auth.token })
@@ -58,10 +58,10 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState(null);
   const children = comments.filter(x => Number(x.parent_comment_id) === Number(item.id));
-  const isAdmin = auth?.user?.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
   const isOwner = Number(auth?.user?.id) === Number(item.author_id);
   const active = item.status === 'active';
-  const canReply = Boolean(auth && (isAdmin || (active && !item.locked && !item.post_locked)));
+  const canReply = Boolean(auth && !item.post_closed && (isAdmin || (active && !item.locked && !item.post_locked)));
   const canChangeStatus = Boolean(auth && (isAdmin || !item.locked));
 
   async function run(path, method, body) {
@@ -90,6 +90,7 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
+        {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> Reviewed by moderator</span>}
       </div>
       <p className="commentContent">{item.content}</p>
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
@@ -99,7 +100,13 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> Reply</button>}
         {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
           {active ? 'Deactivate' : 'Activate'}</button>}
-        {isAdmin && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { locked: !item.locked })}>{item.locked ? 'Unlock' : 'Lock'}</button>}
+        {isAdmin && <button title={item.locked?'Unlock':'Lock'} aria-label={item.locked?'Unlock':'Lock'}
+          onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
+          <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
+        {isAdmin && active && <button title={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
+          aria-label={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
+          onClick={()=>run('/comments/' + item.id + '/review','PATCH',{reviewed:!item.reviewed_by})}>
+          <Icon name="check" size={17}/></button>}
         {(isOwner || isAdmin) && <button className="dangerText" onClick={() => {
           if (window.confirm('Delete this comment and replies?')) run(`/comments/${item.id}`, 'DELETE');
         }}>Delete</button>}
@@ -161,9 +168,10 @@ export default function PostPage({ id }) {
   if (loading) return <main><p>Loading post…</p></main>;
   if (!post) return <main><ErrorBox error={error} /></main>;
 
-  const isAdmin = auth?.user?.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
   const isOwner = Number(auth?.user?.id) === Number(post.author_id);
-  const canComment = Boolean(auth && (isAdmin || (post.status === 'active' && !post.locked)));
+  const canComment = Boolean(auth && !post.closed && !Boolean(post.publish_at && new Date(post.publish_at)>new Date()) && (isAdmin || (post.status === 'active' && !post.locked)));
+  const hideCounts = Boolean(post.hide_likes) && !isAdmin && !isOwner;
   const commentIds = new Set(comments.map(x => Number(x.id)));
   const roots = comments.filter(x => !x.parent_comment_id || !commentIds.has(Number(x.parent_comment_id)));
 
