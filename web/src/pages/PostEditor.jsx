@@ -13,6 +13,7 @@ export default function PostEditor({ id }) {
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ title: '', content: '', categories: [], publishAt: '', hideLikes: false });
   const [selectedImages,setSelectedImages] = useState([]);
+  const [draftPostId,setDraftPostId] = useState(null);
   const [existingImages,setExistingImages] = useState([]);
   const [preview,setPreview] = useState(false);
   const editorRef=React.useRef(null);
@@ -75,14 +76,18 @@ export default function PostEditor({ id }) {
     if(selectedImages.length+existingImages.length>4){setError(new Error('Maximum four images per post'));return;}
     setBusy(true);
     try {
-      const result = await api(editing ? `/posts/${id}` : '/posts', {
-        method: editing ? 'PATCH' : 'POST',
+      // Keep the created draft if a later image upload fails: retrying must not create duplicate posts.
+      const targetId=editing?id:draftPostId;
+      const result = await api(targetId ? `/posts/${targetId}` : '/posts', {
+        method: targetId ? 'PATCH' : 'POST',
         token: auth.token,
         body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null},
       });
+      if(!editing)setDraftPostId(result.data.id);
       for(const image of selectedImages){
         const data=new FormData();data.append('image',image);
         await api('/posts/'+result.data.id+'/images',{method:'POST',token:auth.token,formData:data});
+        setSelectedImages(current=>current.filter(item=>item!==image));
       }
       go(`/post/${result.data.id}`);
     } catch (err) {
