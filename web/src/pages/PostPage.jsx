@@ -65,10 +65,14 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
   const [error, setError] = useState(null);
   const children = comments.filter(x => Number(x.parent_comment_id) === Number(item.id));
   const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const canModerate = auth?.user?.role==='admin' ||
+    (auth?.user?.role==='moderator' && item.author_role!=='admin' && item.post_author_role!=='admin');
   const isOwner = Number(auth?.user?.id) === Number(item.author_id);
   const active = item.status === 'active';
   const canReply = Boolean(auth && !item.post_closed && (isAdmin || (active && !item.locked && !item.post_locked)));
-  const canChangeStatus = Boolean(auth && (isAdmin || !item.locked));
+  const canChangeStatus = Boolean(auth && (canModerate || (isOwner && !item.locked) ||
+    (auth.user.role==='user' && !item.locked &&
+      item.author_role!=='admin' && item.post_author_role!=='admin')));
 
   async function run(path, method, body) {
     setError(null);
@@ -114,14 +118,14 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
         {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> {t('Reply')}</button>}
         {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
           {t(active ? 'Deactivate' : 'Activate')}</button>}
-        {isAdmin && <button title={item.locked?'Unlock':'Lock'} aria-label={item.locked?'Unlock':'Lock'}
+        {canModerate && <button title={item.locked?'Unlock':'Lock'} aria-label={item.locked?'Unlock':'Lock'}
           onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
           <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
-        {isAdmin && active && <button title={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
+        {canModerate && active && <button title={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
           aria-label={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
           onClick={()=>run('/comments/' + item.id + '/review','PATCH',{reviewed:!item.reviewed_by})}>
           <Icon name="check" size={17}/></button>}
-        {(isOwner || isAdmin) && <button className="dangerText" onClick={() => {
+        {(isOwner || canModerate) && <button className="dangerText" onClick={() => {
           if (window.confirm('Delete this comment and replies?')) run(`/comments/${item.id}`, 'DELETE');
         }}>{t('Delete')}</button>}
       </div>
@@ -192,6 +196,8 @@ export default function PostPage({ id }) {
   if (!post) return <main><ErrorBox error={error} /></main>;
 
   const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const canModeratePost = auth?.user?.role==='admin' ||
+    (auth?.user?.role==='moderator' && post.author_role!=='admin');
   const isOwner = Number(auth?.user?.id) === Number(post.author_id);
   const canComment = Boolean(auth && !post.closed && !Boolean(post.publish_at && new Date(post.publish_at)>new Date()) && (isAdmin || (post.status === 'active' && !post.locked)));
   const hideCounts = Boolean(post.hide_likes) && !isAdmin && !isOwner;
@@ -265,7 +271,7 @@ export default function PostPage({ id }) {
           title={saved?t('Unsave post'):t('Save post')} onClick={toggleSave}>
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
       </div>
-      {(isOwner||isAdmin) && <div className="naturalPostManagement">
+      {(isOwner||canModeratePost) && <div className="naturalPostManagement">
         {isOwner && auth?.user?.role!=='admin' && <button type="button" title="Edit post" aria-label="Edit post"
           onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
         {isOwner && <button type="button" title={post.closed?'Reopen discussion':'Close discussion'}
@@ -276,7 +282,7 @@ export default function PostPage({ id }) {
           aria-label={post.hide_likes?'Show likes':'Hide likes'}
           onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
           <Icon name="heart" size={18}/><span>{t(post.hide_likes?'Show likes':'Hide likes')}</span></button>}
-        {isAdmin && <><button type="button" onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
+        {canModeratePost && <><button type="button" onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
           <Icon name="check" size={18}/><span>{post.status==='active'?'Deactivate':'Activate'}</span></button>
           <button type="button" onClick={()=>run('PATCH',{locked:!post.locked})}>
           <Icon name={post.locked?'unlock':'lock'} size={18}/><span>{post.locked?'Unlock':'Lock'}</span></button></>}
