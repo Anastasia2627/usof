@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, go } from '../ui.jsx';
+import { Avatar, ErrorBox, Icon, go } from '../ui.jsx';
 
 export default function PostEditor({ id }) {
   const auth = useSelector((state) => state.auth);
@@ -64,13 +64,52 @@ export default function PostEditor({ id }) {
   }
 
   return <main className="narrow editorPage">
-    <p className="eyebrow">{editing ? 'Edit your post' : 'Create a post'}</p>
-    <h1>{editing ? 'Edit post' : 'New post'}</h1>
-    <form className="card form" onSubmit={submit}>
-      <label>Title<input maxLength="180" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Give your post a title" /></label>
-      <label>Details<textarea maxLength="50000" required value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} placeholder="What's on your mind?" /></label>
-      <fieldset><legend>Categories</legend><div className="checkGrid">{categories.map((category) => <label className="check" key={category.id}><input type="checkbox" checked={form.categories.includes(Number(category.id))} onChange={() => toggle(Number(category.id))} />{category.title}</label>)}</div></fieldset>
-      <button className="primary" disabled={busy}>{busy ? 'Saving…' : editing ? 'Save changes' : 'Publish post'}</button>
+    <div className="editorTopbar">
+      <button className="editorBack" type="button" onClick={() => go(editing ? `/post/${id}` : '/')}
+        aria-label="Back" title="Back"><Icon name="arrowBack" size={21}/></button>
+      <h1>{editing ? 'Edit post' : 'New post'}</h1>
+    </div>
+
+    <form className="postComposerForm" onSubmit={submit}>
+      <div className="editorIdentity">
+        <Avatar user={auth.user} size="md"/>
+        <span>@{auth.user.login}</span>
+        <small>Posting to Circle</small>
+      </div>
+      <div className="editorInputGroup">
+        <label className="srOnly" htmlFor="post-title">Post title</label>
+        <input id="post-title" className="editorTitleInput" maxLength="180" required
+          value={form.title} onChange={event => setForm({ ...form, title: event.target.value })}
+          placeholder="Give your post a title…" />
+        <label className="srOnly" htmlFor="post-content">Post details</label>
+        <textarea id="post-content" className="editorContentInput" maxLength="50000" required
+          value={form.content} onChange={event => setForm({ ...form, content: event.target.value })}
+          placeholder="What's on your mind?" />
+      </div>
+
+      <fieldset className="editorCategories">
+        <legend>Topics <span>Choose one or more</span></legend>
+        <div className="checkGrid editorTopicList">
+          {categories.map(category =>
+            <label className="check editorTopic" key={category.id}>
+              <input type="checkbox" aria-label={category.title}
+                checked={form.categories.includes(Number(category.id))}
+                onChange={() => toggle(Number(category.id))} />
+              <span>{category.title}</span>
+            </label>
+          )}
+        </div>
+      </fieldset>
+
+      <div className="editorActions">
+        <span className="editorSelectionHint">{form.categories.length
+          ? `${form.categories.length} ${form.categories.length === 1 ? 'topic' : 'topics'} selected`
+          : 'Select a topic to continue'}</span>
+        <button className="primary editorPublish" disabled={busy}>
+          {busy ? 'Saving…' : editing ? 'Save changes' : 'Publish post'}
+          {!busy && <Icon name="arrow" size={18}/>}
+        </button>
+      </div>
       <ErrorBox error={error} />
     </form>
   </main>;
