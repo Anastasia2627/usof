@@ -87,7 +87,7 @@ export default function AvatarCropper({file,onSave,onCancel,busy=false}) {
     <div className="avatarCropDialog" role="dialog" aria-modal="true" aria-label={t('Adjust profile photo')}>
       <div className="avatarCropHeading">
         <h2>{t('Adjust profile photo')}</h2>
-        <button type="button" disabled={busy} title={t('Cancel')} aria-label={t('Cancel')} onClick={onCancel}>
+        <button type="button" disabled={busy} title={t('Close')} aria-label={t('Close')} onClick={onCancel}>
           <TablerIcon name="close" size={20}/></button>
       </div>
       <div className="avatarCropViewport" ref={viewportRef} onPointerDown={start} onPointerMove={move}
