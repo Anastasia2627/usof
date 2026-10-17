@@ -77,3 +77,9 @@ export function requireAdmin(req, res, next) {
   }
   next();
 }
+
+export function requireModerator(req,res,next) {
+  if (!['admin','moderator'].includes(req.user?.role))
+    return next(new AppError(403,'MODERATOR_REQUIRED','Moderator permission required'));
+  next();
+}
