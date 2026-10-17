@@ -447,3 +447,99 @@ html[data-theme="dark"] .adminPage .adminRowTools .roleQuickButton.roleRevoke{ba
  .categoriesPage .categorySearchField{max-width:100%;}
  .adminPage .adminIconAction{width:36px;min-width:36px;height:36px;}
 }
+
+/* Post detail: status belongs in the author row, not under the heading.
+   All compact actions have native title tooltips + aria-labels in JSX. */
+.naturalPostAuthor > .naturalPostTopStatus {
+  display:flex;
+  flex:0 1 auto;
+  align-self:flex-start;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+  max-width:55%;
+}
+.naturalPostTopStatus .badges{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.naturalPostTopStatus .solutionTag{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+  background:#eaf6ec;
+  border:0;
+  border-radius:999px;
+  padding:6px 10px;
+  margin:0;
+  color:#287344;
+  font-weight:680;
+  font-size:11px;
+  line-height:1.2;
+}
+.naturalPost .reactionTotals{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  color:#85858a;
+}
+.naturalPostReactions .reactionTotals>span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  color:#85858a;
+  white-space:nowrap;
+}
+.naturalPostReactions .reactionTotals>span .circleIcon{color:#939397;}
+.naturalPostReactions{gap:8px;}
+.naturalPostReactions .reactionButtons{gap:4px;}
+.naturalPostReactions button,.naturalPostReactions .naturalPostIconButton,
+.naturalPostManagement button,.naturalCommentTree .commentActions button,
+.naturalPost .reportIconAction{
+  box-sizing:border-box;
+  width:38px;
+  min-width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  color:#7d7d81;
+  cursor:pointer;
+}
+.naturalPostManagement{gap:5px;border-top:1px solid var(--circle-border);padding:12px 0 0;}
+.naturalPostManagement button:hover,
+.naturalCommentTree .commentActions button:hover,
+.naturalPost .reportIconAction:hover{
+  background:#f1f1f2;color:#242427;
+}
+.naturalPostManagement button[aria-pressed="true"],
+.naturalCommentTree .commentActions button[aria-pressed="true"]{background:#f1f1f2;color:#212126;}
+.naturalPostManagement .dangerText{margin-left:auto;color:#999;}
+.naturalPostManagement .dangerText:hover,
+.naturalCommentTree .commentActions button.dangerText:hover{background:#fff0f0;color:#bf3e46;}
+.naturalCommentTree .commentActions{gap:3px;align-items:center;}
+.naturalCommentTree .commentActions button{padding:0;border:0;border-radius:11px;}
+.naturalPost .reportControl{display:inline-flex;align-items:center;max-width:100%;}
+.naturalPost .reportIconAction{width:36px;min-width:36px;height:36px;}
+.naturalPost .reportForm{max-width:100%;}
+html[data-theme="dark"] .naturalPostTopStatus .solutionTag{color:#a1e2b0;background:#214330;}
+html[data-theme="dark"] .naturalPostManagement button:hover,
+html[data-theme="dark"] .naturalPostReactions button:hover,
+html[data-theme="dark"] .naturalCommentTree .commentActions button:hover,
+html[data-theme="dark"] .naturalPost .reportIconAction:hover{background:#303136;color:#f2f2f3;}
+html[data-theme="dark"] .naturalPostManagement button[aria-pressed="true"]{background:#36383b;color:#f2f2f3;}
+@media(max-width:560px){
+  .naturalPostAuthor > .naturalPostTopStatus{max-width:47%;gap:4px;}
+  .naturalPostTopStatus .solutionTag{padding:5px 8px;font-size:10px;}
+  .naturalPostManagement{gap:2px;justify-content:flex-start;}
+  .naturalPostManagement button,
+  .naturalCommentTree .commentActions button{min-width:36px;width:36px;height:36px;min-height:36px;}
+  .naturalPostManagement .dangerText{margin-left:auto;}
+  .naturalPostReactions{flex-wrap:wrap;gap:6px;}
+}
