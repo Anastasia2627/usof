@@ -81,19 +81,8 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
   ) ENGINE=InnoDB`);
-  await connection.query(`CREATE TABLE IF NOT EXISTS direct_messages (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    sender_id INT UNSIGNED NOT NULL,
-    receiver_id INT UNSIGNED NOT NULL,
-    content TEXT NOT NULL,
-    read_at DATETIME NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_dm_sender(sender_id,created_at),
-    INDEX idx_dm_receiver(receiver_id,created_at),
-    FOREIGN KEY(sender_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY(receiver_id) REFERENCES users(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB`);
-
+  // Legacy direct_messages tables are intentionally preserved in existing databases.
+  // New deployments do not create or expose unfinished private messaging.
 
   // Non-destructive migrations for answers, photos and moderation.
   const [answerColumn] = await connection.query("SHOW COLUMNS FROM posts LIKE 'accepted_comment_id'");
@@ -515,10 +504,6 @@ async function initializeDatabase() {
       (2,3),(2,4),(3,2),(4,5),(5,2)`);
     await connection.query(`INSERT INTO user_interests(user_id,category_id) VALUES
       (2,1),(3,2),(4,3),(5,4),(2,5)`);
-    await connection.query(`INSERT INTO direct_messages(sender_id,receiver_id,content) VALUES
-      (2,3,'Welcome to Circle!'),(3,2,'Glad to be here!'),
-      (4,5,'Did you see the new topic?'),(5,4,'Yes, thanks!'),
-      (2,4,'What are you reading?')`);
     await connection.query(`INSERT INTO content_reports(reporter_id,post_id,comment_id,reason,details,status) VALUES
       (3,1,NULL,'other','Seed example','dismissed'),
       (4,2,NULL,'off_topic','Seed example','dismissed'),
