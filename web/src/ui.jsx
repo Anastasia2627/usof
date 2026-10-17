@@ -42,7 +42,7 @@ export function TrustBadge({ rating }) {
   return <small className="trustBadge" title={`${rating || 0} points`}>{trustName(rating)}</small>;
 }
 export function ErrorBox({ error, onRetry }) {
-  if (!error) return null;
+  if (!error || error.code==='INVALID_TOKEN') return null;
   return <div className="error inlineError" role="alert">
     <div>{error.message || String(error)}</div>
     {onRetry && <button type="button" onClick={onRetry}>Try again</button>}
