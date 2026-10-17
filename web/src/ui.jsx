@@ -322,7 +322,6 @@ export function Header() {
     ...(auth ? [
       { key:'create', text:'New post', destination:'/create', icon:'plus' },
       { key:'saved', text:'Saved', destination:'/saved', icon:'bookmarkBorder' },
-      { key:'dashboard', text:'Dashboard', destination:'/dashboard', icon:'analytics' },
     ] : []),
     { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
     ...(['admin','moderator'].includes(auth?.user?.role) ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
