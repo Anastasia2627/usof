@@ -22,10 +22,10 @@ export default function CategoriesPage() {
     <h1>{t('Categories')}</h1>
     <ErrorBox error={error} />
     {loading
-      ? <div className="card loading">Loading categories…</div>
+      ? <div className="card loading">{t('Loading categories…')}</div>
       : categories.length
         ? <section className="categoryGrid">{categories.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{t(category.title)}</h2><p>{t(category.description)}</p></button>)}</section>
-        : <div className="card empty">No categories yet.</div>}
+        : <div className="card empty">{t('No categories yet.')}</div>}
   </main>;
 }
 
@@ -74,23 +74,23 @@ export function CategoryDetailPage({ id }) {
     return () => controller.abort();
   }, [id, page, auth?.token]);
 
-  if (loading) return <main><div className="card loading">Loading category…</div></main>;
+  if (loading) return <main><div className="card loading">{t('Loading category…')}</div></main>;
 
   return <main>
-    <button className="linkButton" onClick={() => go('/categories')}>← All categories</button>
+    <button className="linkButton" onClick={() => go('/categories')}>← {t('All categories')}</button>
     <section className="hero categoryHero">
-      <p className="eyebrow">Category {String(id).padStart(2, '0')}</p>
+      <p className="eyebrow">{t('Category')} {String(id).padStart(2, '0')}</p>
       <h1>{t(category?.title || 'Category')}</h1>
       {category?.description && <p>{t(category.description)}</p>}
     </section>
     <ErrorBox error={error} />
     {!error && (posts.length
       ? <section className="postList">{posts.map(post => <PostCard key={post.id} post={post} />)}</section>
-      : <div className="card empty"><h2>No posts here yet</h2><p>Choose another topic or start the conversation.</p></div>)}
+      : <div className="card empty"><h2>{t('No posts here yet')}</h2><p>{t('Choose another topic or start the conversation.')}</p></div>)}
     {!error && pagination?.totalPages > 1 && <nav className="pager" aria-label="Category post pages">
-      <button type="button" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+      <button type="button" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>{t('Previous')}</button>
       <span>Page {pagination.page} of {pagination.totalPages} · {pagination.total} posts</span>
-      <button type="button" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+      <button type="button" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>{t('Next')}</button>
     </nav>}
   </main>;
 }
