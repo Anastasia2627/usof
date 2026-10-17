@@ -96,6 +96,30 @@ try{
   await page.locator('.categorySearchField').getByRole('button',{name:'Clear search'}).click();
   assert.ok(await page.locator('.categoryCard').count()>0);
 
+  // The whole language picker supports English and Ukrainian only.
+  await page.goto(origin+'/#/settings',{waitUntil:'networkidle'});
+  assert.equal(await page.locator('.settingsLanguages button').count(),2);
+  assert.equal(await page.getByText('Русский').count(),0);
+  await page.getByRole('radio',{name:'Dark'}).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.getByRole('radio',{name:'Light'}).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+
+  // Date selection should use the app calendar, never Chromium's native popup.
+  await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
+  await page.locator('details.editorOptions summary').click();
+  await page.locator('#editor-publish-date').click();
+  await page.locator('.circleCalendar[role=dialog]').waitFor();
+  await page.locator('.calendarDay.today').first().click();
+  assert.equal(await page.locator('.calendarTime select').count(),2);
+  await page.locator('details.editorOptions summary').click();
+  await page.goto(origin+'/#/',{waitUntil:'networkidle'});
+  await page.locator('.filterDetails summary').click();
+  await page.getByRole('button',{name:'Last 7 days'}).click();
+  assert.ok(await page.locator('.filterPanelDates .circleDatePicker').count()===2);
+  await page.getByRole('button',{name:'Apply filters'}).click();
+  await page.waitForURL(/from=.*to=/);
+
   // The dashboard is reachable from Admin and is no longer a sidebar item.
   await page.goto(origin+'/#/admin',{waitUntil:'networkidle'});
   await page.getByRole('navigation',{name:'Main navigation'})
