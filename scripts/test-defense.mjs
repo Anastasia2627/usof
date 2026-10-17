@@ -80,6 +80,7 @@ try {
   assert.ok(await user.locator('.accountMenu summary').isVisible());
   await avatar.click();
   await user.waitForURL(/#\/profile$/);
+  assert.equal(await user.getByLabel('Full name').count(), 0, 'Edit form should stay hidden until requested');
   await user.getByRole('button',{name:'Edit profile'}).click();
   await user.getByLabel('Full name').fill('Review participant');
   await user.getByRole('button',{name:'Save profile'}).click();
@@ -93,6 +94,9 @@ try {
     );
     return input?.value === 'Review participant';
   });
+
+  await user.getByRole('button',{name:'Close editor'}).click();
+  assert.ok(await user.getByRole('button',{name:'Recent'}).isVisible());
 
   // Keep screenshots of the actual redesigned profile in the same disposable test.
   await user.waitForTimeout(150);
