@@ -490,3 +490,138 @@ footer { margin-top: 0; border-top: 1px solid #f2f2f2; font-size: 12px; color: #
   .postPage .commentBranch { padding-left: 5px; margin-left: calc(min(var(--depth), 3) * 7px); }
   .postPage .questionCard { padding-left: 0; padding-right: 0; }
 }
+
+
+/* Google Material Symbols Rounded: consistent soft, slightly heavier strokes. */
+.circleIcon {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+  font-variation-settings: 'FILL' 0, 'wght' 370, 'GRAD' 0, 'opsz' 24;
+  flex: none;
+  user-select: none;
+}
+.mainNav button.navActive .circleIcon,
+.threadActions button.activeVote .circleIcon {
+  font-variation-settings: 'FILL' 1, 'wght' 520, 'GRAD' 0, 'opsz' 24;
+}
+.headerSearch .circleIcon { flex: none; }
+.threadActions .circleIcon { font-variation-settings: 'FILL' 0, 'wght' 390, 'GRAD' 0, 'opsz' 24; }
+.threadActions .activeVote .circleIcon { font-variation-settings: 'FILL' 1, 'wght' 510, 'GRAD' 0, 'opsz' 24; }
+
+/* Unauthenticated home is intentionally a welcome screen, not a timeline.
+   Public read-only conversations are available only after choosing Explore. */
+main.welcomePage {
+  max-width: 990px;
+  width: min(990px, calc(100% - 56px));
+  margin: 0 auto 70px;
+  min-height: calc(100vh - 147px);
+  padding: 65px 30px 44px;
+}
+.welcomeHero {
+  max-width: 635px;
+  margin: 0 auto;
+  text-align: center;
+}
+.welcomeSymbol {
+  width: 65px;
+  height: 65px;
+  border: 1px solid #ece9ee;
+  border-radius: 23px;
+  background: #f7f5f9;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 28px;
+  color: #343038;
+}
+.welcomeEyebrow {
+  margin-bottom: 13px;
+  color: #8c7a91;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+}
+.welcomeHero h1 {
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1.06;
+  font-weight: 790;
+  letter-spacing: -.065em;
+  margin: 0 auto 21px;
+  max-width: 570px;
+}
+.welcomeLead {
+  font-size: 17px;
+  line-height: 1.65;
+  color: #777;
+  max-width: 480px;
+  margin: 0 auto 27px;
+}
+.welcomeButtons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.welcomeButtons button {
+  min-height: 49px;
+  font-size: 14px;
+  font-weight: 680;
+  border-radius: 999px;
+  padding: 11px 20px;
+}
+.welcomePrimary { display: inline-flex; align-items: center; gap: 10px; }
+.welcomeSecondary { background: #fff; border: 1px solid #ddd; color: #222; }
+.welcomeBrowse { margin-top: 21px; font-size: 13px; color: #888; }
+.welcomeBrowse button {
+  border: none;
+  background: transparent;
+  padding: 3px 4px;
+  color: #343034;
+  font-weight: 680;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.welcomeBrowse button:hover { background: transparent; text-decoration: underline; }
+.welcomeHighlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 84px;
+}
+.welcomeHighlights > div {
+  border: 1px solid #ededed;
+  border-radius: 18px;
+  padding: 22px 19px;
+  background: #fff;
+}
+.welcomeHighlights .circleIcon { color: #777; }
+.welcomeHighlights h2 { margin: 13px 0 5px; font-size: 15px; }
+.welcomeHighlights p { font-size: 13px; line-height: 1.6; color: #888; margin: 0; }
+@media (max-width: 720px) {
+  .mainNav button.navActive .circleIcon { font-size: 26px !important; }
+  main.welcomePage {
+    width: 100%;
+    padding: 64px 19px 54px;
+    min-height: calc(100vh - 180px);
+  }
+  .welcomeHero h1 { font-size: clamp(35px, 9vw, 48px); }
+  .welcomeLead { font-size: 15px; }
+  .welcomeHighlights { grid-template-columns: 1fr; margin-top: 48px; gap: 9px; }
+  .welcomeHighlights > div { padding: 15px 18px; }
+  .welcomeHighlights h2 { margin-top: 7px; }
+  .welcomeHighlights p { line-height: 1.5; }
+}
