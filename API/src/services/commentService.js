@@ -61,6 +61,10 @@ export async function listAdminComments(query,actor) {
     where.push('c.post_id=?');
     params.push(positiveInt(query.post_id, 'INVALID_POST_ID', 'Invalid post id'));
   }
+  if(actor?.role==='moderator') {
+    where.push('(p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP() OR p.author_id=?)');
+    params.push(Number(actor.sub));
+  }
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
   return Comment.listAdmin({ clause, params });
 }
