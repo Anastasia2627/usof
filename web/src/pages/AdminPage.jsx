@@ -5,6 +5,7 @@ import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 function UserRow({ user, auth, onSave, onDelete }) {
+  const {t}=usePreferences();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [roleBusy, setRoleBusy] = useState(false);
@@ -58,14 +59,14 @@ function UserRow({ user, auth, onSave, onDelete }) {
           disabled={roleBusy || saving} aria-label={(user.role==='moderator'?'Remove moderator from ':'Make moderator: ')+user.login}
           onClick={quickRole}>
           <Icon name={user.role==='moderator'?'close':'shield'} size={17}/>
-          <span>{roleBusy?'Saving…':user.role==='moderator'?'Remove moderator':'Make moderator'}</span>
+          <span>{t(roleBusy?'Saving…':user.role==='moderator'?'Remove moderator':'Make moderator')}</span>
         </button>}
         <button type="button" aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
-          <Icon name="edit" size={18}/> <span>Edit</span>
+          <Icon name="edit" size={18}/> <span>{t('Edit')}</span>
         </button>
         <button type="button" className="dangerText" disabled={Number(user.id) === Number(auth.user.id)}
           onClick={() => onDelete(user)} title={Number(user.id) === Number(auth.user.id) ? 'You cannot delete your own admin account' : 'Delete user'}>
-          <Icon name="close" size={18}/> <span>Delete</span>
+          <Icon name="close" size={18}/> <span>{t('Delete')}</span>
         </button>
       </div>
     </div>
@@ -242,24 +243,24 @@ export default function AdminPage() {
     <header className="adminTop">
       <div>
         <p className="adminEyebrow">Circle / Management</p>
-        <h1>Admin</h1>
-        <p className="adminSubtitle">Keep your community running smoothly.</p>
+        <h1>{t('Admin')}</h1>
+        <p className="adminSubtitle">{t('Keep your community running smoothly.')}</p>
       </div>
       <button className="adminRefresh" type="button" onClick={load} disabled={loading} title="Refresh data">
-        <Icon name="refresh" size={19}/><span>Refresh</span>
+        <Icon name="refresh" size={19}/><span>{t('Refresh')}</span>
       </button>
     </header>
     <nav className="tabs adminTabs" aria-label="Admin sections">
       {sections.map(name => <button type="button" key={name}
         className={tab === name ? 'active' : ''} aria-pressed={tab === name}
         onClick={() => setTab(name)}>
-        {name}{name in counts && <span className="adminTabCount">{counts[name]}</span>}
+        {t(name.charAt(0).toUpperCase()+name.slice(1))}{name in counts && <span className="adminTabCount">{counts[name]}</span>}
       </button>)}
     </nav>
     <ErrorBox error={error}/>
-    {loading ? <p className="adminLoading">Loading community data…</p> : <>
+    {loading ? <p className="adminLoading">{t('Loading community data…')}</p> : <>
       {tab === 'reports' && <section className="adminStack" aria-label="Content reports">
-        <div className="adminSectionHeader"><h2>Reported content</h2>
+        <div className="adminSectionHeader"><h2>{t('Reported content')}</h2>
           <span>{reportPagination?.total||0} reports</span></div>
         <label className="reportsFilter">Show
           <select value={reportStatus} onChange={e=>{setReportStatus(e.target.value);setReportPage(1);}}>
@@ -290,7 +291,7 @@ export default function AdminPage() {
         </nav>}
       </section>}
       {tab === 'users' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>Members</h2>
+        <div className="adminSectionHeader"><h2>{t('Members')}</h2>
           <span>{data.users.length} total</span>
         </div>
         <p className="roleHowTo"><Icon name="shield" size={18}/>
@@ -298,7 +299,7 @@ export default function AdminPage() {
           Moderators can manage reports and content, not users or roles. They will need to log in again.
         </p>
         <details className="adminCreate">
-          <summary><Icon name="plus" size={20}/> Add member <Icon name="chevron" size={17}/></summary>
+          <summary><Icon name="plus" size={20}/> {t('Add member')} <Icon name="chevron" size={17}/></summary>
           <form className="adminCreateForm" onSubmit={createUser}>
             <h3>Create user</h3>
             <div className="adminFields">
@@ -318,7 +319,7 @@ export default function AdminPage() {
       </section>}
 
       {tab === 'posts' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>Posts</h2><span>{postPagination.total} total</span></div>
+        <div className="adminSectionHeader"><h2>{t('Posts')}</h2><span>{postPagination.total} total</span></div>
         <div className="adminSimpleList">
           {data.posts.length ? data.posts.map(post => <article className="adminListItem adminRow" key={post.id}>
             <div className="adminItemLine">
@@ -345,9 +346,9 @@ export default function AdminPage() {
       </section>}
 
       {tab === 'categories' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>Topics</h2><span>{data.categories.length} total</span></div>
+        <div className="adminSectionHeader"><h2>{t('Topics')}</h2><span>{data.categories.length} total</span></div>
         <details className="adminCreate">
-          <summary><Icon name="plus" size={20}/> Add topic <Icon name="chevron" size={17}/></summary>
+          <summary><Icon name="plus" size={20}/> {t('Add topic')} <Icon name="chevron" size={17}/></summary>
           <form className="adminCreateForm" onSubmit={createCategory}>
             <h3>Create category</h3>
             <div className="adminFields">
@@ -363,7 +364,7 @@ export default function AdminPage() {
       </section>}
 
       {tab === 'comments' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>Comments</h2><span>{data.comments.length} listed</span></div>
+        <div className="adminSectionHeader"><h2>{t('Comments')}</h2><span>{data.comments.length} listed</span></div>
         <div className="adminSimpleList">
           {data.comments.length ? data.comments.map(comment => <article className="adminListItem adminRow" key={comment.id}>
             <div className="adminItemLine">
@@ -383,7 +384,7 @@ export default function AdminPage() {
       </section>}
 
       {tab === 'reactions' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>Reactions</h2><span>100 latest maximum</span></div>
+        <div className="adminSectionHeader"><h2>{t('Reactions')}</h2><span>100 latest maximum</span></div>
         <p className="adminSectionNote">Removing a reaction recalculates the author's rating.</p>
         <div className="adminSimpleList">
           {data.reactions.length ? data.reactions.map(item => <div className="adminListItem" key={item.id}>
