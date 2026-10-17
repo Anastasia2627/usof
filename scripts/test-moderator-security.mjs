@@ -168,4 +168,5 @@ await request('/users/'+admin.user.id+'/role',{token:admin.token,method:'PATCH',
   body:{role:'user'},expected:403});
 await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',
   body:{role:'admin'},expected:422});
+await pool.end();
 console.log('Moderator security passed: own content, role changes, scoped moderation, admin protection, private scheduled posts, and notifications.');
