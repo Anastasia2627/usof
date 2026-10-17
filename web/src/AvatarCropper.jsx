@@ -2,7 +2,6 @@ import React,{useEffect,useRef,useState} from 'react';
 import {usePreferences} from './preferences.jsx';
 import TablerIcon from './TablerIcon.jsx';
 
-const PREVIEW_SIZE=280;
 const OUTPUT_SIZE=512;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
@@ -12,6 +11,8 @@ export default function AvatarCropper({file,onSave,onCancel,busy=false}) {
   const {t}=usePreferences();
   const [image,setImage]=useState(null);
   const [zoom,setZoom]=useState(1);
+  const [frameSize,setFrameSize]=useState(280);
+  const viewportRef=useRef(null);
   const [position,setPosition]=useState({x:0,y:0});
   const [error,setError]=useState('');
   const imageRef=useRef(null);
@@ -30,16 +31,26 @@ export default function AvatarCropper({file,onSave,onCancel,busy=false}) {
     return()=>{alive=false;URL.revokeObjectURL(src);};
   },[file]);
   useEffect(()=>{
+    const target=viewportRef.current;
+    if(!target)return;
+    const measure=()=>setFrameSize(target.getBoundingClientRect().width||280);
+    measure();
+    if(typeof ResizeObserver==='undefined')return;
+    const observer=new ResizeObserver(measure);
+    observer.observe(target);
+    return()=>observer.disconnect();
+  },[]);
+  useEffect(()=>{
     function esc(event){if(event.key==='Escape'&&!busy)onCancel();}
     document.addEventListener('keydown',esc);
     return()=>document.removeEventListener('keydown',esc);
   },[busy,onCancel]);
   if(!file)return null;
-  const fit=image?PREVIEW_SIZE/Math.min(image.width,image.height):1;
-  const w=image?image.width*fit*zoom:PREVIEW_SIZE;
-  const h=image?image.height*fit*zoom:PREVIEW_SIZE;
-  const maxX=Math.max(0,(w-PREVIEW_SIZE)/2);
-  const maxY=Math.max(0,(h-PREVIEW_SIZE)/2);
+  const fit=image?frameSize/Math.min(image.width,image.height):1;
+  const w=image?image.width*fit*zoom:frameSize;
+  const h=image?image.height*fit*zoom:frameSize;
+  const maxX=Math.max(0,(w-frameSize)/2);
+  const maxY=Math.max(0,(h-frameSize)/2);
   const shiftX=position.x*maxX/100,shiftY=position.y*maxY/100;
   function start(event){
     if(!image||busy)return;
@@ -63,7 +74,7 @@ export default function AvatarCropper({file,onSave,onCancel,busy=false}) {
       const ctx=canvas.getContext('2d');
       if(!ctx)throw Error('Canvas unavailable');
       const scale=fit*zoom;
-      const sourceSide=PREVIEW_SIZE/scale;
+      const sourceSide=frameSize/scale;
       const sourceX=clamp((image.width-sourceSide)/2-shiftX/scale,0,image.width-sourceSide);
       const sourceY=clamp((image.height-sourceSide)/2-shiftY/scale,0,image.height-sourceSide);
       ctx.drawImage(imageRef.current,sourceX,sourceY,sourceSide,sourceSide,0,0,OUTPUT_SIZE,OUTPUT_SIZE);
@@ -79,7 +90,7 @@ export default function AvatarCropper({file,onSave,onCancel,busy=false}) {
         <button type="button" disabled={busy} title={t('Cancel')} aria-label={t('Cancel')} onClick={onCancel}>
           <TablerIcon name="close" size={20}/></button>
       </div>
-      <div className="avatarCropViewport" onPointerDown={start} onPointerMove={move}
+      <div className="avatarCropViewport" ref={viewportRef} onPointerDown={start} onPointerMove={move}
         onPointerUp={()=>{dragRef.current=null;}} onPointerCancel={()=>{dragRef.current=null;}}
         aria-label={t('Drag to reposition photo')} title={t('Drag to reposition photo')}>
         {image&&<img ref={imageRef} src={image.src} alt="" draggable="false" style={{
