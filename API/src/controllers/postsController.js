@@ -41,7 +41,11 @@ export async function getPostReactions(req, res) {
   if (post.status !== 'active' && !['admin','moderator'].includes(req.user?.role)) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
   }
-  res.json({ data: await Reaction.listForPost(post.id) });
+  const items = await Reaction.listForPost(post.id);
+  const canInspect = ['admin','moderator'].includes(req.user?.role) || Number(req.user?.sub) === Number(post.author_id);
+  res.json({ data: post.hide_likes && !canInspect
+    ? items.filter(item => Number(item.author_id) === Number(req.user?.sub))
+    : items });
 }
 
 export async function reactToPost(req, res) {
