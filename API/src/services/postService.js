@@ -173,9 +173,11 @@ export async function createPostForUser(user, body) {
     await connection.beginTransaction();
     await assertCategoriesExist(connection, categories);
     const scheduled = publishDate(body.publishAt);
+    if (body.hideLikes !== undefined && typeof body.hideLikes !== 'boolean')
+      throw new AppError(422, 'INVALID_HIDDEN_LIKES', 'hideLikes must be boolean');
     const [result] = await connection.query(
-      "INSERT INTO posts(author_id,title,content,status,locked,publish_at) VALUES(?,?,?,'active',0,?)",
-      [Number(user.sub), title, content, scheduled],
+      "INSERT INTO posts(author_id,title,content,status,locked,hide_likes,publish_at) VALUES(?,?,?,'active',0,?,?)",
+      [Number(user.sub), title, content, body.hideLikes ? 1 : 0, scheduled],
     );
     postId = Number(result.insertId);
     for (const categoryId of categories) {
