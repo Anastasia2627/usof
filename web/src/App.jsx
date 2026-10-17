@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Header, go } from './ui.jsx';
+import { Header, Icon, go } from './ui.jsx';
 import {usePreferences} from './preferences.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -69,7 +69,7 @@ export default function App() {
     {sessionExpired && <div className="sessionExpiredBanner" role="status">
       <span>{t('Your session has expired. Please log in again.')}</span>
       <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
-      <button type="button" aria-label={t('Dismiss')} onClick={()=>setSessionExpired(false)}>×</button>
+      <button type="button" aria-label={t('Dismiss')} title={t('Dismiss')} onClick={()=>setSessionExpired(false)}><Icon name="close" size={18}/></button>
     </div>}
     {page}<footer>Circle · Conversations start here.</footer></>;
 }
