@@ -164,6 +164,11 @@ try {
   await user.getByText(rootReply).waitFor();
   await open(admin,'/post/'+posts[0]);
   const card=admin.locator('.commentCard').filter({hasText:rootReply}).first();
+  try { await card.waitFor({ state:'visible', timeout:5000 }); }
+  catch (error) {
+    console.error('Admin comment view debug:',(await admin.locator('body').innerText()).slice(0,1800));
+    throw error;
+  }
   await card.getByRole('button',{name:'Like',exact:true}).click();
   await card.getByRole('button',{name:'Reply',exact:true}).click();
   await card.getByLabel('Reply').fill('Admin replied '+suffix);
