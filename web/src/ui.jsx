@@ -341,7 +341,7 @@ export function Header() {
         <button className="searchSubmit" type="submit" aria-label="Search" title="Search"><Icon name="arrow" size={19}/></button>
       </form>}
       {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
-        {nav.map(item => <button key={item.key} type="button" title={item.text}
+        {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
           className={current === item.destination ? 'navActive' : ''}
           aria-label={t(item.text)} onClick={() => go(item.destination)}>
           <Icon name={item.icon} size={24}/><span className="navLabel">{t(item.text)}</span>
