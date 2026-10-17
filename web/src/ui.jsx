@@ -168,25 +168,26 @@ export function Header() {
     ...(auth?.user?.role === 'admin' ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
   ];
   const current = window.location.hash.split('?')[0].slice(1) || '/';
+  const guestLanding = !auth && current === '/';
 
   return <header className="siteHeader">
-    <div className="headerInner">
+    <div className={guestLanding ? "headerInner guestOnlyHeader" : "headerInner"}>
       <button className="brand" onClick={() => go('/')} aria-label="Circle home"><span className="circleLogo">◎</span><span>circle</span></button>
-      <form className="headerSearch" role="search" onSubmit={event => {
+      {!guestLanding && <form className="headerSearch" role="search" onSubmit={event => {
         event.preventDefault();
         go(search.trim() ? `/search?q=${encodeURIComponent(search.trim())}` : '/search');
       }}>
         <Icon name="search" size={18}/>
         <input aria-label="Search posts, people and categories" placeholder="Search" value={search} onChange={event => setSearch(event.target.value)} />
         <button className="searchSubmit" type="submit">Search</button>
-      </form>
-      <nav className="mainNav" aria-label="Main navigation">
+      </form>}
+      {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
         {nav.map(item => <button key={item.key} type="button" title={item.text}
           className={current === item.destination ? 'navActive' : ''}
           aria-label={item.text} onClick={() => go(item.destination)}>
           <Icon name={item.icon} size={24}/><span className="navLabel">{item.text}</span>
         </button>)}
-      </nav>
+      </nav>}
       <div className="accountArea">
         {auth ? <>
           <button className="profileButton" aria-label={`Profile of ${auth.user.login} (${auth.user.role})`} onClick={() => go('/profile')}>
