@@ -152,7 +152,7 @@ async function initializeDatabase() {
         );
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=0');
-      for (const table of APP_TABLES) {
+      for (const table of ['direct_messages','user_interests','user_follows',...APP_TABLES]) {
         await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=1');
@@ -436,6 +436,8 @@ async function initializeDatabase() {
         WHERE all_scores.user_id = u.id
       )
     `);
+
+    await ensureCircleSchema(connection);
 
     console.log(
       resetRequested
