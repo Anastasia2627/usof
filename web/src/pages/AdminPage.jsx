@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
+import DashboardPage from './DashboardPage.jsx';
 
 function UserRow({ user, auth, onSave, onDelete }) {
   const {t}=usePreferences();
@@ -149,11 +150,12 @@ function CategoryRow({ category, auth, run }) {
   </div>;
 }
 
-export default function AdminPage() {
+export default function AdminPage({initialTab='users'}) {
   const {t}=usePreferences();
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
-  const [tab, setTab] = useState('users');
+  const [tab, setTab] = useState(initialTab);
+  const [categoryQuery,setCategoryQuery] = useState('');
   const [reportStatus,setReportStatus] = useState('open');
   const [reportPage,setReportPage] = useState(1);
   const [reportPagination,setReportPagination] = useState(null);
@@ -245,7 +247,7 @@ export default function AdminPage() {
     comments: data.comments.length,
     reports: reportPagination?.total||0,
   };
-  const sections = moderator ? ['reports','posts','comments','reactions'] : ['users','reports','posts','categories','comments','reactions'];
+  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','reports','posts','categories','comments','reactions'];
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -266,7 +268,8 @@ export default function AdminPage() {
       </button>)}
     </nav>
     <ErrorBox error={error}/>
-    {loading ? <p className="adminLoading">{t('Loading community data…')}</p> : <>
+    {tab === 'dashboard' && !moderator && <DashboardPage embedded/>}
+    {loading && tab !== 'dashboard' ? <p className="adminLoading">{t('Loading community data…')}</p> : <>
       {tab === 'reports' && <section className="adminStack" aria-label="Content reports">
         <div className="adminSectionHeader"><h2>{t('Reported content')}</h2>
           <span>{reportPagination?.total||0} reports</span></div>
@@ -367,8 +370,18 @@ export default function AdminPage() {
             <div className="adminFormActions"><button className="primary" type="submit">Create category</button></div>
           </form>
         </details>
+        <div className="topicSearchField adminTopicSearch">
+          <Icon name="search" size={17}/>
+          <input type="search" aria-label={t('Search topics')}
+            placeholder={t('Search topics')} value={categoryQuery}
+            onChange={event=>setCategoryQuery(event.target.value)}/>
+          {categoryQuery&&<button type="button" onClick={()=>setCategoryQuery('')}
+            aria-label={t('Clear search')} title={t('Clear search')}><Icon name="close" size={16}/></button>}
+        </div>
         <div className="adminSimpleList">
-          {data.categories.map(category => <CategoryRow key={category.id} category={category} auth={auth} run={run}/>)}
+          {data.categories.filter(category=>[category.title,t(category.title),category.description||'']
+            .some(value=>String(value).toLocaleLowerCase().includes(categoryQuery.trim().toLocaleLowerCase())))
+            .map(category => <CategoryRow key={category.id} category={category} auth={auth} run={run}/>)}
         </div>
       </section>}
 
