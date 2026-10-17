@@ -336,7 +336,10 @@ export function Header() {
         {auth ? <>
           <button className="headerNotify" aria-label={t('Notifications')+(unread?' ('+unread+')':'')}
             type="button" title={t('Notifications')} onClick={()=>go('/notifications')}>
-            <span aria-hidden="true">♧</span>{unread>0&&<span className="headerUnreadCount">{unread>99?'99+':unread}</span>}
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/>
+              <path d="M10 21h4"/>
+            </svg>{unread>0&&<span className="headerUnreadCount">{unread>99?'99+':unread}</span>}
           </button>
           <button className="profileButton" aria-label={`Profile of ${auth.user.login} (${auth.user.role})`} onClick={() => go('/profile')}>
             <Avatar user={auth.user} size="sm" />
