@@ -1586,3 +1586,203 @@ main.adminPage {
   .adminFields { grid-template-columns: 1fr; gap: 11px; }
   .adminCreateForm, .adminInlineForm { padding: 16px 13px; }
 }
+
+
+/* Official Google Material round icons are bundled SVG, not font ligatures. */
+.googleSvgIcon {
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;flex:none;user-select:none;vertical-align:middle;
+  font-family:inherit;font-size:inherit;letter-spacing:normal;
+}
+.googleSvgIcon svg {width:100%;height:100%;display:block;fill:currentColor;}
+.threadActions .activeSave {color:#151515;font-weight:750;}
+.threadActions .activeSave svg {fill:currentColor;}
+.threadCard {position:relative;}
+.postContextMenu {
+  position:fixed;z-index:150;
+  background:#fff;border:1px solid #e8e8e8;
+  box-shadow:0 15px 45px rgba(0,0,0,.14);
+  padding:6px;border-radius:14px;
+  width:207px;display:grid;gap:1px;
+}
+.postContextMenu button {
+  border:0;background:transparent;color:#242424;
+  border-radius:8px;padding:11px 10px;
+  display:flex;align-items:center;gap:10px;text-align:left;
+  font-size:13px;font-weight:560;width:100%;
+}
+.postContextMenu button:hover {background:#f5f5f5;}
+.postContextMenu button.dangerText {color:#bb3737;}
+.postContextMenu button.dangerText:hover {background:#fff0f0;}
+.postModerationTrigger {opacity:.65;}
+.postModerationTrigger:hover {opacity:1;}
+.mainNav .googleSvgIcon,.threadActions .googleSvgIcon,.postContextMenu .googleSvgIcon {pointer-events:none;}
+@media(max-width:720px) {
+  .mainNav {padding-left:6px;padding-right:6px;gap:0;}
+  .mainNav button {min-width:36px;padding-left:3px;padding-right:3px;}
+  .postContextMenu {width:190px;}
+}
+/* Sections accessed from left rail. */
+main.simpleFeaturePage {width:min(670px,calc(100% - 48px));max-width:670px;padding:38px 0 72px;}
+.featureHeading {display:flex;gap:13px;align-items:center;margin-bottom:5px;}
+.featureHeading h1 {margin:0;font-size:26px;letter-spacing:-.04em;}
+.featureSubheading {margin:7px 0 26px 40px;color:#888;font-size:13px;}
+.featureTabs {display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #eaeaea;}
+.featureTabs button {border:0;border-radius:0;background:transparent;color:#8e8e8e;
+  font-size:13px;font-weight:650;padding:14px;position:relative;}
+.featureTabs button.selectedTab {color:#171717;font-weight:760;}
+.featureTabs button.selectedTab::after {content:"";position:absolute;bottom:0;height:2px;
+ left:17%;right:17%;background:#202020;}
+.savedPostsList .threadCard {padding-left:2px;padding-right:2px;}
+.featureEmpty {display:flex;flex-direction:column;align-items:center;gap:12px;
+  color:#9b9b9b;text-align:center;padding:60px 14px;}
+.featureEmpty h2 {margin:0;color:#313131;font-size:18px;}
+.featureEmpty p {max-width:310px;font-size:13px;line-height:1.6;margin:0;}
+.featureTextLink {display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;
+ padding:7px 0;font-size:13px;color:#333;font-weight:670;}
+.featureTextLink:hover {text-decoration:underline;background:transparent;}
+.dashStats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ border-block:1px solid #ececec;margin:18px 0 26px;}
+.dashStat {display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:20px 9px;}
+.dashStat+ .dashStat {border-left:1px solid #eee;}
+.dashStat span {color:#929292;font-size:12px;}
+.dashStat strong {font-size:27px;letter-spacing:-.035em;font-weight:750;}
+.dashSection {padding:24px 9px;border-bottom:1px solid #ececec;}
+.dashSection h2 {font-size:17px;margin:0 0 16px;font-weight:740;}
+.dashSection h2 small {font-size:11px;font-weight:460;color:#888;margin-left:9px;}
+.dashInline {display:flex;align-items:center;justify-content:space-between;gap:14px;
+ padding:11px 0;font-size:13px;color:#696969;}
+.dashInline strong {color:#222;font-weight:740;font-size:14px;}
+.dashSpark {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;
+ align-items:end;height:120px;}
+.dashSparkItem {height:100%;display:flex;align-items:flex-end;}
+.dashSparkItem span {width:100%;background:#222;border-radius:4px 4px 0 0;min-height:4px;}
+.dashLegend {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;
+ text-align:center;color:#a2a2a2;font-size:10px;padding-top:9px;}
+.dashProgress {height:7px;background:#ededed;border-radius:10px;overflow:hidden;}
+.dashProgress span {display:block;height:100%;background:#242424;border-radius:10px;}
+.dashHint {font-size:12px;color:#999;margin:12px 0 0;}
+.dashAchievement {display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f3f3;}
+.dashAchievement:last-child {border:0;}
+.dashAchievement .googleSvgIcon {color:#888;}
+.dashAchievement>div {flex:1;}
+.dashAchievement strong {font-size:13px;}
+.dashAchievement p {font-size:12px;color:#999;margin:4px 0 0;}
+.dashAchievement small {font-size:11px;color:#999;}
+.settingsSection {padding:22px 0;border-top:1px solid #eee;}
+.settingsSection h2 {font-size:17px;margin:0 0 10px;}
+.settingsSection>p {margin:5px 0 14px;color:#888;font-size:13px;}
+.settingsChoices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.settingsChoices.settingsLanguages {grid-template-columns:1fr;}
+.settingsChoices button {border:1px solid #eee;border-radius:14px;background:transparent;
+ display:flex;gap:10px;align-items:center;padding:15px;color:#4d4d4d;
+ font-size:14px;font-weight:620;text-align:left;}
+.settingsChoices button span:nth-child(2) {flex:1;}
+.settingsChoices button.settingsSelected {border-color:#353535;color:#111;background:#fafafa;}
+.settingsChoices button:hover {background:#f7f7f7;}
+.settingsHint {color:#999;font-size:12px;margin-top:24px;}
+@media(max-width:720px) {
+  main.simpleFeaturePage {width:calc(100% - 34px);padding-top:25px;margin-bottom:64px;}
+  .dashStats {grid-template-columns:repeat(2,1fr);}
+  .dashStat:nth-child(3) {border-left:0;border-top:1px solid #eee;}
+  .dashStat:nth-child(4) {border-top:1px solid #eee;}
+  .featureHeading h1 {font-size:23px;}
+}
+
+/* Dark: override legacy fixed light surface literals consistently. */
+html[data-theme="dark"] {background:#101113;color-scheme:dark;}
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root {background:#101113;color:#eeeff0;}
+html[data-theme="dark"] .siteHeader,
+html[data-theme="dark"] .mainNav,
+html[data-theme="dark"] .homePage,
+html[data-theme="dark"] .feedShell,
+html[data-theme="dark"] .threadCard,
+html[data-theme="dark"] .feedComposer,
+html[data-theme="dark"] .filterDetails,
+html[data-theme="dark"] .adminListItem,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .postComposerForm,
+html[data-theme="dark"] .accountDropdown,
+html[data-theme="dark"] .postContextMenu,
+html[data-theme="dark"] .welcomeHighlights>div,
+html[data-theme="dark"] .commentCard,
+html[data-theme="dark"] .commentComposer,
+html[data-theme="dark"] .adminPage .adminTabs button,
+html[data-theme="dark"] .adminPage .adminTabs button.active,
+html[data-theme="dark"] .settingsChoices button,
+html[data-theme="dark"] .feedFilterStrip,
+html[data-theme="dark"] .feedFilterStrip .filterBar
+ {background:#161719!important;color:#eee!important;}
+html[data-theme="dark"] .mainNav {box-shadow:none;}
+html[data-theme="dark"] main,html[data-theme="dark"] section,
+html[data-theme="dark"] footer {color:#e9e9e9;}
+html[data-theme="dark"] .headerSearch,
+html[data-theme="dark"] .guestAvatar,
+html[data-theme="dark"] .profilePhoto .avatar-xl,
+html[data-theme="dark"] .avatar,
+html[data-theme="dark"] .welcomeSymbol
+ {background:#282a2e!important;color:#e5e5e5!important;border-color:#37383b!important;}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {background:#161719;color:#e9e9e9;border-color:#383a3c;}
+html[data-theme="dark"] button {color:#ececec;}
+html[data-theme="dark"] button:hover:not(:disabled) {background:#292b2d;}
+html[data-theme="dark"] .primary,
+html[data-theme="dark"] button.primary,
+html[data-theme="dark"] .feedComposer strong,
+html[data-theme="dark"] .feedTopicScroller .topicActive,
+html[data-theme="dark"] .profileTopicPills .profileTopicActive,
+html[data-theme="dark"] .settingsChoices .settingsSelected
+ {background:#e9e9ea!important;color:#141516!important;border-color:#e9e9ea!important;}
+html[data-theme="dark"] .primary:hover:not(:disabled) {background:#d5d5d5!important;}
+html[data-theme="dark"] .navActive {background:#2b2d30!important;color:#fff!important;}
+html[data-theme="dark"] .postTitleLink,
+html[data-theme="dark"] .threadBody .postTitleLink,
+html[data-theme="dark"] .authorLink,
+html[data-theme="dark"] .threadBody .postMeta .authorLink,
+html[data-theme="dark"] .profileNames h1,
+html[data-theme="dark"] .adminItemText .adminName,
+html[data-theme="dark"] .adminItemText h3,
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .dashInline strong,
+html[data-theme="dark"] .featureEmpty h2,
+html[data-theme="dark"] .welcomeHero h1
+ {color:#f1f1f1!important;}
+html[data-theme="dark"] .threadExcerpt,html[data-theme="dark"] .content,
+html[data-theme="dark"] .commentContent {color:#d2d2d2;}
+html[data-theme="dark"] .threadBody .tags span,
+html[data-theme="dark"] .adminPostTopics span,
+html[data-theme="dark"] .profileTopicPills button,
+html[data-theme="dark"] .feedTopicScroller button,
+html[data-theme="dark"] .adminRoleChip
+ {background:#2a2c2f;color:#bfc0c3;border-color:#2a2c2f;}
+html[data-theme="dark"] .postContextMenu button {background:transparent;color:#e9e9e9;}
+html[data-theme="dark"] .postContextMenu button.dangerText {color:#ff9999;}
+html[data-theme="dark"] .postContextMenu button:hover {background:#303236;}
+html[data-theme="dark"] .adminCreateForm,
+html[data-theme="dark"] .adminInlineForm,
+html[data-theme="dark"] .profileEditPanel
+ {background:#1c1e20;}
+html[data-theme="dark"] .settingsChoices button.settingsSelected {background:#272b2f!important;color:#fff!important;border-color:#808084!important;}
+html[data-theme="dark"] .dashSparkItem span,
+html[data-theme="dark"] .dashProgress span {background:#dadada;}
+html[data-theme="dark"] .dashProgress {background:#333;}
+html[data-theme="dark"] .threadVerticalLine {background:#333;}
+html[data-theme="dark"] .feedTabs button.selectedTab::after,
+html[data-theme="dark"] .profileActivitySort button.profileSelected::after,
+html[data-theme="dark"] .featureTabs button.selectedTab::after,
+html[data-theme="dark"] .adminPage .adminTabs button.active::after {background:#eee;}
+html[data-theme="dark"] .feedPageTitle,
+html[data-theme="dark"] .threadCard,
+html[data-theme="dark"] .filterDetails,
+html[data-theme="dark"] .feedFilterStrip,
+html[data-theme="dark"] .feedTabs,
+html[data-theme="dark"] .profileHeader,
+html[data-theme="dark"] .profileInfoRow,
+html[data-theme="dark"] .profileActivitySort,
+html[data-theme="dark"] .adminSimpleList,
+html[data-theme="dark"] .adminListItem,
+html[data-theme="dark"] .dashSection,
+html[data-theme="dark"] .dashStats,
+html[data-theme="dark"] .settingsSection {border-color:#303236!important;}
