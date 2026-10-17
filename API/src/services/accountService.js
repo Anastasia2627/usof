@@ -131,7 +131,9 @@ export async function updateAccount({ targetId, actor, body }) {
     protectLastAdmin(adminIds, current, role);
 
     const emailChanged = email !== current.email;
-    invalidateSession = emailChanged || role !== current.role || login !== current.login;
+    // Every authenticated request reads the current role from MySQL, so promotion
+    // and demotion take effect immediately, without leaving a stale JWT privilege.
+    invalidateSession = emailChanged || login !== current.login;
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
     verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
@@ -168,6 +170,19 @@ export async function updateAccount({ targetId, actor, body }) {
       ],
     );
 
+    if (role !== current.role && isAdmin) {
+      await connection.execute(
+        `INSERT INTO notifications(user_id,actor_id,type,title,body)
+         VALUES(?,?,'role_changed',?,?)`,
+        [id, Number(actor.sub),
+          role === 'moderator' ? 'You are now a moderator' : role === 'user' ? 'Your moderator role was removed' : 'Your role was updated',
+          role === 'moderator'
+            ? 'You can now review reports and moderate discussions. You cannot manage users.'
+            : role === 'user'
+              ? 'Your account now has standard member permissions.'
+              : 'Your Circle account permissions have been updated.'],
+      );
+    }
     const [[row]] = await connection.execute('SELECT * FROM users WHERE id=?', [id]);
     updated = publicUser(row);
     await connection.commit();
