@@ -76,7 +76,7 @@ try {
   // 7, 8, 9: mobile header, profile, edit and reload.
   const avatar=user.getByRole('button',{name:'Profile of '+name+' (user)'});
   assert.ok(await avatar.isVisible());
-  assert.ok(await user.locator('.headerLogout').isVisible());
+  assert.ok(await user.locator('.accountMenu summary').isVisible());
   await avatar.click();
   await user.waitForURL(/#\/profile$/);
   await user.getByLabel('Full name').fill('Review participant');
@@ -119,7 +119,7 @@ try {
   assert.ok(await user.getByRole('navigation',{name:'Main navigation'}).isVisible());
   for(const width of [390,768,1280]){
     await user.setViewportSize({width,height:800});
-    assert.ok(await user.locator('.headerLogout').isVisible());
+    assert.ok(await user.locator('.accountMenu summary').isVisible());
   }
 
   // 14: admin in another browser session.
@@ -177,8 +177,9 @@ try {
   await admin.getByText(rootReply).waitFor({state:'detached'});
 
   // 20: logout.
-  await user.locator('.headerLogout').click();
-  await user.locator('.headerLogout').waitFor({state:'detached'});
+  await user.locator('.accountMenu summary').click();
+  await user.getByRole('button',{name:'Log out'}).click();
+  await user.locator('.accountMenu').waitFor({state:'detached'});
   console.log('Defense rehearsal passed: all 20 review steps and two isolated browser sessions.');
 } finally {
   await browser.close();
