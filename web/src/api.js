@@ -1,4 +1,5 @@
 import { mockApi } from './mockApi.js';
+import { store } from './store.js';
 
 // In local Vite development, the browser calls its own origin. Vite proxies
 // /api and /uploads to Node on the APP_PORT configured in the root .env. Production still uses the
@@ -66,6 +67,15 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   }
   if (!response.ok) {
+    // Invalid tokens (including sessions revoked on an older build) must not
+    // leave the feed showing the same 401 error below every single post.
+    // Only clear the exact session used by this request: old in-flight requests
+    // must never sign out a user who has already logged in again.
+    if (token && response.status === 401 && data?.error?.code === 'INVALID_TOKEN' &&
+        store.getState().auth?.token === token) {
+      store.dispatch({type:'AUTH_CLEAR'});
+      window.dispatchEvent(new Event('circle:session-expired'));
+    }
     throw new ApiError(data?.error?.message || 'Request failed with status ' + response.status, {
       status: response.status,
       code: data?.error?.code || 'REQUEST_FAILED',
