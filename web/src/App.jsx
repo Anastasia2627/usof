@@ -32,7 +32,8 @@ export default function App() {
   const path = hash.split('?')[0];
   const parts = path.split('/').filter(Boolean);
   let page;
-  if (path === '/') page = auth ? <HomePage hash={hash} /> : <WelcomePage />;
+  if (path === '/') page = <HomePage hash={hash} />;
+  else if (path === '/welcome') page = <WelcomePage />;
   else if (path === '/explore') page = <HomePage hash={hash} basePath="/explore" />;
   else if (path === '/saved') page = <SavedPage />;
   else if (path === '/dashboard') page = <DashboardPage />;
