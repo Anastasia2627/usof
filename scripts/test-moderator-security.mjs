@@ -97,7 +97,7 @@ const adminReaction=(await request('/reactions',{token:moderator})).data
     Number(row.author_id)===Number(admin.user.id));
 assert.ok(adminReaction,'Admin vote must be present for privilege test');
 await request('/reactions/'+adminReaction.id,{token:moderator,method:'DELETE',expected:403});
-await request('/posts/'+publicPost.id+'/like?all=1',{token:moderator,method:'DELETE'});
+await request('/posts/'+publicPost.id+'/like?all=1',{token:moderator,method:'DELETE',expected:403});
 await request('/posts/'+adminPost.id+'/like',{token:member.token,method:'POST',
   body:{type:'like'}});
 await request('/posts/'+adminPost.id+'/like?all=1',{token:moderator,
