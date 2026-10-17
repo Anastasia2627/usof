@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
+import { usePreferences } from '../preferences.jsx';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
   const [items, setItems] = useState([]);
@@ -120,6 +121,9 @@ export default function PostPage({ id }) {
   const [text, setText] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const {t} = usePreferences();
 
   async function load() {
     try {
@@ -134,6 +138,25 @@ export default function PostPage({ id }) {
     finally { setLoading(false); }
   }
   useEffect(() => { setLoading(true); setPost(null); load(); }, [id, auth?.token]);
+  useEffect(() => {
+    if (!auth?.token) { setSaved(false); return; }
+    let live = true;
+    api('/posts/' + id + '/engagement',{token:auth.token})
+      .then(result=>{if(live)setSaved(Boolean(result.data.favorite));})
+      .catch(()=>{if(live)setSaved(false);});
+    return ()=>{live=false;};
+  },[id,auth?.token]);
+
+  async function toggleSave() {
+    if (!auth || !post) return;
+    setSaving(true);setError(null);
+    try {
+      await api('/posts/' + id + '/favorite',{method:saved?'DELETE':'POST',token:auth.token});
+      setSaved(value=>!value);
+      window.dispatchEvent(new Event('circle:saved-updated'));
+    } catch(e){setError(e);} finally{setSaving(false);}
+  }
+
 
   if (loading) return <main><p>Loading post…</p></main>;
   if (!post) return <main><ErrorBox error={error} /></main>;
@@ -180,6 +203,11 @@ export default function PostPage({ id }) {
       <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} visible={isAdmin || post.status === 'active'}
         writable={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
       <div className="toolbar">
+        {auth && <button type="button" disabled={saving} aria-pressed={saved}
+          aria-label={saved ? t('Unsave post') : t('Save post')} onClick={toggleSave}>
+          <Icon name={saved?'bookmark':'bookmarkBorder'} size={19}/>
+          {saved?t('Saved'):t('Save')}
+        </button>}
         {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}><Icon name="edit" size={18}/> Edit</button>}
         {isAdmin && <>
           <button onClick={() => run('PATCH', { status: post.status === 'active' ? 'inactive' : 'active' })}>
