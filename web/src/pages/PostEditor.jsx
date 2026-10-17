@@ -11,8 +11,18 @@ export default function PostEditor({ id }) {
   const auth = useSelector((state) => state.auth);
   const {t} = usePreferences();
   const editing = Boolean(id);
+  const draftKey=!editing && auth?.user?.id ? 'circle:post-draft:'+auth.user.id : null;
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ title: '', content: '', categories: [], publishAt: '', hideLikes: false });
+  const [form, setForm] = useState(()=>{
+    const blank={ title: '', content: '', categories: [], publishAt: '', hideLikes: false };
+    if(!draftKey) return blank;
+    try{
+      const saved=JSON.parse(sessionStorage.getItem(draftKey)||'null');
+      if(saved && typeof saved.title==='string' && typeof saved.content==='string' &&
+          Array.isArray(saved.categories))return {...blank,...saved};
+    }catch{/* Corrupt or unavailable storage should never prevent writing a post. */}
+    return blank;
+  });
   const [selectedImages,setSelectedImages] = useState([]);
   const [draftPostId,setDraftPostId] = useState(null);
   const [existingImages,setExistingImages] = useState([]);
@@ -23,6 +33,15 @@ export default function PostEditor({ id }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
+
+  useEffect(()=>{
+    if(!draftKey) return;
+    try{
+      if(form.title||form.content||form.categories.length||form.publishAt||form.hideLikes){
+        sessionStorage.setItem(draftKey,JSON.stringify(form));
+      }else sessionStorage.removeItem(draftKey);
+    }catch{/* Browsers may deny tab storage; posting remains available. */}
+  },[draftKey,form]);
 
   useEffect(() => {
     api('/categories').then((result) => setCategories(result.data)).catch(setError);
@@ -92,12 +111,22 @@ export default function PostEditor({ id }) {
         await api('/posts/'+result.data.id+'/images',{method:'POST',token:auth.token,formData:data});
         setSelectedImages(current=>current.filter(item=>item!==image));
       }
+      if(draftKey)sessionStorage.removeItem(draftKey);
       go(`/post/${result.data.id}`);
     } catch (err) {
       setError(err);
     } finally {
       setBusy(false);
     }
+  }
+
+  const hasDraft=Boolean(!editing&&!draftPostId&&(form.title||form.content||form.categories.length||form.publishAt));
+  function clearDraft(){
+    if(!window.confirm(t('Discard this draft?')))return;
+    setForm({title:'',content:'',categories:[],publishAt:'',hideLikes:false});
+    setSelectedImages([]);
+    setPreview(false);
+    try{if(draftKey)sessionStorage.removeItem(draftKey);}catch{}
   }
 
   return <main className="narrow editorPage editorRefined">
@@ -224,6 +253,11 @@ export default function PostEditor({ id }) {
           </div>
         </div>
       </details>
+      <div className="editorDraftNotice" role="status">
+        {!editing && hasDraft && <><Icon name="check" size={16}/>
+          <span>{t('Text draft saved in this tab. Photos must be selected again after reloading.')}</span>
+          <button type="button" onClick={clearDraft}>{t('Discard draft')}</button></>}
+      </div>
       <div className="editorActions">
         <span className="editorSelectionHint">{form.categories.length
           ? `${form.categories.length} ${t(form.categories.length === 1 ? 'topic' : 'topics')} ${t('selected')}`
