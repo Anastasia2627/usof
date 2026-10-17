@@ -358,3 +358,92 @@ html[data-theme=dark] .notificationsPage .notificationDeleteIcon:hover:not(:disa
 @media(prefers-reduced-motion:reduce){
  .notificationsPage .notificationItem{transition:none;}
 }
+
+/* Accessible, compact type-ahead topic finders throughout the product. */
+.topicSearchField{
+  display:flex;align-items:center;gap:9px;min-height:43px;padding:0 12px;
+  width:100%;min-width:0;border-radius:12px;background:#f5f5f6;border:0;
+  color:#8a8a8e;box-sizing:border-box;
+}
+.topicSearchField:focus-within{background:#efeff1;box-shadow:0 0 0 2px #dedee2;}
+.topicSearchField input[type="search"]{
+  box-sizing:border-box;flex:1;width:100%;min-width:0;min-height:41px;padding:7px 0;
+  border:0;outline:0;box-shadow:none;background:transparent;color:#222;
+  font-size:13px;
+}
+.topicSearchField input:focus-visible{outline:none;box-shadow:none;}
+.topicSearchField input::placeholder{color:#96979b;}
+.topicSearchField button{display:grid;place-items:center;flex:none;
+  min-width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#777;}
+.topicSearchField button:hover{background:#e3e3e6;}
+.editorRefined .editorCategories .topicSearchField{margin:12px 0 6px;}
+.topicSearchMeta{display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:7px;margin:2px 0 12px;font-size:11px;color:#a0a0a3;}
+.topicSearchMeta strong{font-size:11px;color:#68686c;font-weight:690;}
+.topicSearchEmpty{color:#999;font-size:12px;padding:14px 2px 8px;text-align:center;}
+.categoriesPage .categorySearchField{max-width:520px;margin:20px 0 24px;}
+.categoriesPage .categoryGrid{gap:12px;}
+.categoriesPage .categoryCard{border:0;border-radius:16px;background:#f7f7f8;
+  text-align:left;transition:background .16s;}
+.categoriesPage .categoryCard:hover{background:#efeff1;}
+.topicsEmpty{max-width:520px;margin:20px 0;display:flex;gap:9px;align-items:center;
+  flex-wrap:wrap;color:#888;font-size:13px;}
+.topicsEmpty button{border:0;border-radius:999px;padding:9px 14px;background:#f1f1f3;font-size:12px;font-weight:680;}
+.adminTopicSearch{margin:7px 0 16px;max-width:460px;}
+.adminPostTopicSearch{margin:12px 0;min-height:39px;}
+/* Filled controls do not need a visible outline as well. */
+.feedTopicScroller button,.profileTopicPills button,
+.feedComposer,.categoriesPage .categoryCard,
+.editorRefined .postComposerForm .editorTopic,
+.notificationsToolbar .notificationsUnreadToggle.isSelected,
+.adminPage .adminRowTools .roleQuickButton:not(.roleRevoke),
+.feedEmptyReset,.interestSelection button,.settingsChoices button.settingsSelected,
+.authRefined .authForm button.authSubmit{
+  border:0;
+}
+.feedTopicScroller button.topicActive{background:#222;color:#fff;border:0;}
+.editorRefined .postComposerForm .editorTopic:has(input:checked){border:0;}
+.adminPage .adminIconAction{
+  width:37px;min-width:37px;height:37px;min-height:37px;
+  padding:0!important;display:inline-grid;place-items:center;
+  border:0;border-radius:11px;background:transparent;color:#777;
+}
+.adminPage .adminIconAction:hover{background:#ededee;color:#222;}
+.adminPage .adminIconAction.dangerText{color:#a1a1a5;}
+.adminPage .adminIconAction.dangerText:hover{background:#fff0f0;color:#c43b4b;}
+.adminPage .adminRowTools .roleQuickButton:not(.roleRevoke){background:#252528;border:0;color:#fff;}
+.adminPage .adminRowTools .roleQuickButton.roleRevoke{background:#f3f3f4;border:0;color:#666;}
+.adminPage .adminRowTools .roleQuickButton.roleRevoke:hover{background:#e9e9eb;color:#222;}
+.adminPage .adminTabs button.active{border-color:transparent;}
+/* Right-click / keyboard / touch contextual notification menu. */
+.notificationsPage .notificationItem{grid-template-columns:8px minmax(0,1fr);cursor:context-menu;}
+.notificationsPage .notificationItem:focus-visible{outline:2px solid #777;outline-offset:2px;}
+.notificationsPage .notificationItem .notificationRightHint{display:none;}
+.notificationsPage .notificationItem.unread{background:#f6f6f7;border-color:transparent;}
+.notificationContextMenu{position:fixed;z-index:210;width:184px;max-width:calc(100vw - 20px);
+  padding:6px;background:#fff;border:1px solid #e6e6e7;
+  border-radius:13px;box-shadow:0 12px 38px rgba(0,0,0,.13);}
+.notificationContextMenu button{
+  display:flex;width:100%;align-items:center;gap:9px;text-align:left;
+  min-height:40px;padding:9px 10px;border:0;border-radius:8px;
+  background:transparent;color:#9d3541;font-size:12px;font-weight:650;
+}
+.notificationContextMenu button:hover{background:#fff1f2;}
+html[data-theme="dark"] .topicSearchField{background:#28292d;color:#b5b5b8;}
+html[data-theme="dark"] .topicSearchField:focus-within{background:#303136;box-shadow:0 0 0 2px #505157;}
+html[data-theme="dark"] .topicSearchField input[type=search]{color:#f2f2f3;}
+html[data-theme="dark"] .topicSearchField button{color:#ddd;}
+html[data-theme="dark"] .categoriesPage .categoryCard{background:#26272b;border:0;}
+html[data-theme="dark"] .categoriesPage .categoryCard:hover{background:#303137;}
+html[data-theme="dark"] .feedTopicScroller button.topicActive{background:#efeff0;color:#1c1c1e;}
+html[data-theme="dark"] .notificationsPage .notificationItem.unread{background:#242529;border-color:transparent;}
+html[data-theme="dark"] .notificationContextMenu{background:#252629;border-color:#424348;}
+html[data-theme="dark"] .notificationContextMenu button{color:#f0aeb6;}
+html[data-theme="dark"] .notificationContextMenu button:hover{background:#493039;}
+html[data-theme="dark"] .adminPage .adminIconAction:hover{background:#313237;color:#f3f3f4;}
+html[data-theme="dark"] .adminPage .adminRowTools .roleQuickButton.roleRevoke{background:#313238;color:#efeff0;border:0;}
+@media(max-width:650px){
+ .notificationsPage .notificationItem{grid-template-columns:7px minmax(0,1fr);}
+ .categoriesPage .categorySearchField{max-width:100%;}
+ .adminPage .adminIconAction{width:36px;min-width:36px;height:36px;}
+}
