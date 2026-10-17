@@ -1,44 +1,134 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, StatusBadges, go } from '../ui.jsx';
+import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 
 function UserRow({ user, auth, onSave, onDelete }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     login: user.login,
     email: user.email,
     fullName: user.full_name || '',
     role: user.role,
   });
-  const changed = form.login !== user.login || form.email !== user.email || form.fullName !== (user.full_name || '') || form.role !== user.role;
 
-  return <tr>
-    <td><input aria-label={`Login for ${user.login}`} value={form.login} onChange={(event) => setForm({ ...form, login: event.target.value })} /></td>
-    <td><input aria-label={`Email for ${user.login}`} type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></td>
-    <td><input aria-label={`Full name for ${user.login}`} value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></td>
-    <td><select aria-label={`Role for ${user.login}`} value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></td>
-    <td>{user.rating}</td>
-    <td className="rowActions"><button disabled={!changed} onClick={() => onSave(user, form)}>Save</button><button className="dangerText" disabled={Number(user.id) === Number(auth.user.id)} onClick={() => onDelete(user)}>Delete</button></td>
-  </tr>;
+  useEffect(() => {
+    setForm({
+      login: user.login,
+      email: user.email,
+      fullName: user.full_name || '',
+      role: user.role,
+    });
+  }, [user.login, user.email, user.full_name, user.role]);
+
+  async function save(event) {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const result = await onSave(user, form);
+      if (result) setEditing(false);
+    } finally { setSaving(false); }
+  }
+
+  return <div className="adminListItem adminUserRow">
+    <div className="adminItemLine">
+      <Avatar user={user} size="md"/>
+      <div className="adminItemText">
+        <button type="button" className="adminName" onClick={() => go('/profile/' + user.id)}>{user.login}</button>
+        <p>{user.full_name || user.email}</p>
+      </div>
+      <span className="adminRoleChip">{user.role}</span>
+      <span className="adminScore" title="User rating">{Number(user.rating || 0)} pts</span>
+      <div className="adminRowTools">
+        <button type="button" aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
+          <Icon name="edit" size={18}/> <span>Edit</span>
+        </button>
+        <button type="button" className="dangerText" disabled={Number(user.id) === Number(auth.user.id)}
+          onClick={() => onDelete(user)} title={Number(user.id) === Number(auth.user.id) ? 'You cannot delete your own admin account' : 'Delete user'}>
+          <Icon name="close" size={18}/> <span>Delete</span>
+        </button>
+      </div>
+    </div>
+    {editing && <form className="adminInlineForm" onSubmit={save}>
+      <div className="adminFields">
+        <label>Username<input aria-label={'Login for ' + user.login} required minLength="3" maxLength="50" value={form.login} onChange={event => setForm({ ...form, login: event.target.value })}/></label>
+        <label>Email<input aria-label={'Email for ' + user.login} type="email" required value={form.email} onChange={event => setForm({ ...form, email: event.target.value })}/></label>
+        <label>Full name<input aria-label={'Full name for ' + user.login} maxLength="100" value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })}/></label>
+        <label>Role<select aria-label={'Role for ' + user.login} value={form.role} onChange={event => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></label>
+      </div>
+      <div className="adminFormActions">
+        <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+        <button className="primary" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save user'}</button>
+      </div>
+    </form>}
+  </div>;
 }
 
 function PostCategoryEditor({ post, categories, auth, run }) {
-  const [selected, setSelected] = useState(post.categories?.map((item) => Number(item.id)) || []);
-  useEffect(() => setSelected(post.categories?.map((item) => Number(item.id)) || []), [post.id, post.categories]);
+  const [selected, setSelected] = useState(post.categories?.map(item => Number(item.id)) || []);
+  useEffect(() => setSelected(post.categories?.map(item => Number(item.id)) || []), [post.id, post.categories]);
+  const toggle = id => setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
 
-  function toggle(id) {
-    setSelected((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id]);
-  }
-
-  return <details className="categoryEditor">
-    <summary>Categories</summary>
-    <div className="checkGrid">{categories.map((category) => <label className="check" key={category.id}><input type="checkbox" checked={selected.includes(Number(category.id))} onChange={() => toggle(Number(category.id))} />{category.title}</label>)}</div>
-    <button disabled={!selected.length} onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { categories: selected } }))}>Save categories</button>
+  return <details className="adminInnerDetails">
+    <summary>Topics <Icon name="chevron" size={17}/></summary>
+    <div className="adminTopicChoices">
+      {categories.map(category => <label className="adminTopicChoice" key={category.id}>
+        <input type="checkbox" checked={selected.includes(Number(category.id))} onChange={() => toggle(Number(category.id))}/>
+        <span>{category.title}</span>
+      </label>)}
+    </div>
+    <button className="primary adminSaveTopics" type="button" disabled={!selected.length}
+      onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { categories: selected } }))}>Save topics</button>
   </details>;
 }
 
+function CategoryRow({ category, auth, run }) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(category.title);
+  const [description, setDescription] = useState(category.description || '');
+
+  useEffect(() => { setTitle(category.title); setDescription(category.description || ''); }, [category.title, category.description]);
+
+  async function save(event) {
+    event.preventDefault();
+    const result = await run(() => api('/categories/' + category.id, {
+      method: 'PATCH', token: auth.token, body: { title, description },
+    }));
+    if (result) setEditing(false);
+  }
+  function remove() {
+    if (window.confirm('Delete category ' + category.title + '?')) {
+      run(() => api('/categories/' + category.id, { method: 'DELETE', token: auth.token }));
+    }
+  }
+
+  return <div className="adminListItem">
+    <div className="adminItemLine">
+      <div className="adminItemText">
+        <h3>{category.title}</h3>
+        <p>{category.description || 'No description'}</p>
+      </div>
+      <div className="adminRowTools">
+        <button type="button" aria-label={'Edit category ' + category.title} onClick={() => setEditing(value => !value)}><Icon name="edit" size={18}/><span>Edit</span></button>
+        <button type="button" className="dangerText" onClick={remove}><Icon name="close" size={18}/><span>Delete</span></button>
+      </div>
+    </div>
+    {editing && <form className="adminInlineForm" onSubmit={save}>
+      <div className="adminFields">
+        <label>Title<input value={title} maxLength="100" required onChange={event => setTitle(event.target.value)} /></label>
+        <label>Description<input value={description} onChange={event => setDescription(event.target.value)} /></label>
+      </div>
+      <div className="adminFormActions">
+        <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+        <button type="submit" className="primary">Save category</button>
+      </div>
+    </form>}
+  </div>;
+}
+
 export default function AdminPage() {
-  const auth = useSelector((state) => state.auth);
+  const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const [tab, setTab] = useState('users');
   const [postPage, setPostPage] = useState(1);
@@ -56,25 +146,22 @@ export default function AdminPage() {
     try {
       const [users, posts, categories, comments, reactions] = await Promise.all([
         api('/users', { token: auth.token }),
-        api(`/posts?limit=20&page=${postPage}&sort=date&order=desc`, { token: auth.token }),
+        api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
         api('/reactions?limit=100', { token: auth.token }),
       ]);
       setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data });
-      const pageInfo = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
-      setPostPagination(pageInfo);
-      if (postPage > Math.max(1, pageInfo.totalPages)) setPostPage(Math.max(1, pageInfo.totalPages));
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
+      const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
+      setPostPagination(pagination);
+      if (postPage > Math.max(1, pagination.totalPages)) setPostPage(Math.max(1, pagination.totalPages));
+    } catch (err) { setError(err); }
+    finally { setLoading(false); }
   }
 
   useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage]);
 
-  if (auth?.user?.role !== 'admin') return <main><div className="card error">Admin access required.</div></main>;
+  if (auth?.user?.role !== 'admin') return <main><div className="error">Admin access required.</div></main>;
 
   async function run(work) {
     setError(null);
@@ -89,20 +176,17 @@ export default function AdminPage() {
   }
 
   async function saveUser(user, form) {
-    const result = await run(() => api(`/users/${user.id}`, {
-      method: 'PATCH',
-      token: auth.token,
-      body: form,
-    }));
+    const result = await run(() => api('/users/' + user.id, { method: 'PATCH', token: auth.token, body: form }));
     if (result?.sessionInvalidated && Number(user.id) === Number(auth.user.id)) {
       dispatch({ type: 'AUTH_CLEAR' });
       go('/login');
     }
+    return result;
   }
 
   function deleteUser(user) {
-    if (!window.confirm(`Delete ${user.login}? Their posts/comments will also be removed.`)) return;
-    run(() => api(`/users/${user.id}`, { method: 'DELETE', token: auth.token }));
+    if (!window.confirm('Delete ' + user.login + '? Their posts and comments will also be removed.')) return;
+    run(() => api('/users/' + user.id, { method: 'DELETE', token: auth.token }));
   }
 
   async function createUser(event) {
@@ -110,89 +194,142 @@ export default function AdminPage() {
     const result = await run(() => api('/users', { method: 'POST', token: auth.token, body: newUser }));
     if (result) setNewUser({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
   }
-
   async function createCategory(event) {
     event.preventDefault();
     const result = await run(() => api('/categories', { method: 'POST', token: auth.token, body: newCategory }));
     if (result) setNewCategory({ title: '', description: '' });
   }
 
+  const counts = {
+    users: data.users.length,
+    posts: postPagination.total,
+    categories: data.categories.length,
+    comments: data.comments.length,
+  };
+  const sections = ['users', 'posts', 'categories', 'comments', 'reactions'];
+
   return <main className="adminPage">
-    <div className="sectionTitle"><div><p className="eyebrow">Protected area</p><h1>Admin console</h1></div></div>
-    <div className="tabs">{['users', 'posts', 'categories', 'comments', 'reactions'].map((name) => <button key={name} className={tab === name ? 'active' : ''} onClick={() => setTab(name)}>{name}</button>)}</div>
-    <ErrorBox error={error} />
-    {loading ? <div className="card loading">Loading admin data…</div> : <>
+    <header className="adminTop">
+      <div>
+        <p className="adminEyebrow">Circle / Management</p>
+        <h1>Admin</h1>
+        <p className="adminSubtitle">Keep your community running smoothly.</p>
+      </div>
+      <button className="adminRefresh" type="button" onClick={load} disabled={loading} title="Refresh data">
+        <Icon name="refresh" size={19}/><span>Refresh</span>
+      </button>
+    </header>
+    <nav className="tabs adminTabs" aria-label="Admin sections">
+      {sections.map(name => <button type="button" key={name}
+        className={tab === name ? 'active' : ''} aria-pressed={tab === name}
+        onClick={() => setTab(name)}>
+        {name}{name in counts && <span className="adminTabCount">{counts[name]}</span>}
+      </button>)}
+    </nav>
+    <ErrorBox error={error}/>
+    {loading ? <p className="adminLoading">Loading community data…</p> : <>
       {tab === 'users' && <section className="adminStack">
-        <form className="card form compactForm" onSubmit={createUser}>
-          <h2>Create user</h2>
-          <div className="formGrid">
-            <label>Login<input required minLength="3" maxLength="50" value={newUser.login} onChange={(event) => setNewUser({ ...newUser, login: event.target.value })} /></label>
-            <label>Email<input type="email" required value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} /></label>
-            <label>Full name<input maxLength="100" value={newUser.fullName} onChange={(event) => setNewUser({ ...newUser, fullName: event.target.value })} /></label>
-            <label>Role<select value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></label>
-            <label>Password<input type="password" minLength="8" maxLength="128" required value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} /></label>
-            <label>Confirm<input type="password" minLength="8" maxLength="128" required value={newUser.passwordConfirmation} onChange={(event) => setNewUser({ ...newUser, passwordConfirmation: event.target.value })} /></label>
-          </div>
-          <button className="primary compact">Create user</button>
-        </form>
-        <div className="card tableWrap"><table><thead><tr><th>Login</th><th>Email</th><th>Full name</th><th>Role</th><th>Rating</th><th>Actions</th></tr></thead><tbody>{data.users.map((user) => <UserRow key={`${user.id}-${user.updated_at || ''}-${user.role}-${user.login}`} user={user} auth={auth} onSave={saveUser} onDelete={deleteUser} />)}</tbody></table></div>
+        <div className="adminSectionHeader"><h2>Members</h2>
+          <span>{data.users.length} total</span>
+        </div>
+        <details className="adminCreate">
+          <summary><Icon name="plus" size={20}/> Add member <Icon name="chevron" size={17}/></summary>
+          <form className="adminCreateForm" onSubmit={createUser}>
+            <h3>Create user</h3>
+            <div className="adminFields">
+              <label>Login<input required minLength="3" maxLength="50" value={newUser.login} onChange={event => setNewUser({ ...newUser, login: event.target.value })}/></label>
+              <label>Email<input type="email" required value={newUser.email} onChange={event => setNewUser({ ...newUser, email: event.target.value })}/></label>
+              <label>Full name<input maxLength="100" value={newUser.fullName} onChange={event => setNewUser({ ...newUser, fullName: event.target.value })}/></label>
+              <label>Role<select value={newUser.role} onChange={event => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></label>
+              <label>Password<input type="password" minLength="8" maxLength="128" required value={newUser.password} onChange={event => setNewUser({ ...newUser, password: event.target.value })}/></label>
+              <label>Confirm<input type="password" minLength="8" maxLength="128" required value={newUser.passwordConfirmation} onChange={event => setNewUser({ ...newUser, passwordConfirmation: event.target.value })}/></label>
+            </div>
+            <div className="adminFormActions"><button type="submit" className="primary">Create user</button></div>
+          </form>
+        </details>
+        <div className="adminSimpleList">
+          {data.users.map(user => <UserRow key={user.id + '-' + user.login + '-' + user.role} user={user} auth={auth} onSave={saveUser} onDelete={deleteUser}/>)}
+        </div>
       </section>}
 
-      {tab === 'posts' && <div className="adminStack">
-        {data.posts.length ? data.posts.map((post) => <article className="card adminRow" key={post.id}>
-          <div>
-            <div className="postMeta"><b>#{post.id} {post.author_login}</b><StatusBadges item={post} /></div>
-            <h3>{post.title}</h3>
-            <div className="tags">{post.categories?.map((category) => <span key={category.id}>{category.title}</span>)}</div>
-            <PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run} />
-          </div>
-          <div className="adminActions">
-            <button onClick={() => go(`/post/${post.id}`)}>Open</button>
-            <button onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-            <button onClick={() => run(() => api(`/posts/${post.id}`, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
-            <button className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api(`/posts/${post.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button>
-          </div>
-        </article>) : <div className="card empty">No posts on this page.</div>}
+      {tab === 'posts' && <section className="adminStack">
+        <div className="adminSectionHeader"><h2>Posts</h2><span>{postPagination.total} total</span></div>
+        <div className="adminSimpleList">
+          {data.posts.length ? data.posts.map(post => <article className="adminListItem adminRow" key={post.id}>
+            <div className="adminItemLine">
+              <div className="adminItemText">
+                <div className="adminPostMeta"><button className="adminName" onClick={() => go('/profile/' + post.author_id)}>@{post.author_login}</button> · #{post.id} <StatusBadges item={post}/></div>
+                <h3>{post.title}</h3>
+                <div className="adminPostTopics">{post.categories?.map(item => <span key={item.id}>{item.title}</span>)}</div>
+                <PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run}/>
+              </div>
+              <div className="adminRowTools adminPostTools">
+                <button type="button" onClick={() => go('/post/' + post.id)}>Open</button>
+                <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { status: post.status === 'active' ? 'inactive' : 'active' } }))}>{post.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+                <button type="button" onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(post.locked) } }))}>{post.locked ? 'Unlock' : 'Lock'}</button>
+                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}>Delete</button>
+              </div>
+            </div>
+          </article>) : <p className="adminEmpty">No posts on this page.</p>}
+        </div>
         <nav className="pager" aria-label="Admin post pages">
-          <button type="button" disabled={postPage <= 1 || loading}
-            onClick={() => setPostPage((page) => Math.max(1, page - 1))}>Previous</button>
+          <button type="button" disabled={postPage <= 1 || loading} onClick={() => setPostPage(value => Math.max(1, value - 1))}>Previous</button>
           <span aria-live="polite">Page {postPage} of {Math.max(1, postPagination.totalPages)} · {postPagination.total} posts</span>
-          <button type="button" disabled={postPage >= Math.max(1, postPagination.totalPages) || loading}
-            onClick={() => setPostPage((page) => page + 1)}>Next</button>
+          <button type="button" disabled={postPage >= Math.max(1, postPagination.totalPages) || loading} onClick={() => setPostPage(value => value + 1)}>Next</button>
         </nav>
-      </div>}
+      </section>}
 
       {tab === 'categories' && <section className="adminStack">
-        <form className="card form compactForm" onSubmit={createCategory}>
-          <h2>Create category</h2>
-          <div className="formGrid"><label>Title<input required maxLength="100" value={newCategory.title} onChange={(event) => setNewCategory({ ...newCategory, title: event.target.value })} /></label><label>Description<input value={newCategory.description} onChange={(event) => setNewCategory({ ...newCategory, description: event.target.value })} /></label></div>
-          <button className="primary compact">Create category</button>
-        </form>
-        <div className="categoryGrid">{data.categories.map((category) => <article className="card" key={category.id}><h3>{category.title}</h3><p>{category.description}</p><div className="toolbar"><button onClick={() => { const title = window.prompt('Category title', category.title); if (title !== null) { const description = window.prompt('Description', category.description) ?? category.description; run(() => api(`/categories/${category.id}`, { method: 'PATCH', token: auth.token, body: { title, description } })); } }}>Edit</button><button className="dangerText" onClick={() => { if (window.confirm(`Delete ${category.title}?`)) run(() => api(`/categories/${category.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button></div></article>)}</div>
+        <div className="adminSectionHeader"><h2>Topics</h2><span>{data.categories.length} total</span></div>
+        <details className="adminCreate">
+          <summary><Icon name="plus" size={20}/> Add topic <Icon name="chevron" size={17}/></summary>
+          <form className="adminCreateForm" onSubmit={createCategory}>
+            <h3>Create category</h3>
+            <div className="adminFields">
+              <label>Title<input required maxLength="100" value={newCategory.title} onChange={event => setNewCategory({ ...newCategory, title: event.target.value })}/></label>
+              <label>Description<input value={newCategory.description} onChange={event => setNewCategory({ ...newCategory, description: event.target.value })}/></label>
+            </div>
+            <div className="adminFormActions"><button className="primary" type="submit">Create category</button></div>
+          </form>
+        </details>
+        <div className="adminSimpleList">
+          {data.categories.map(category => <CategoryRow key={category.id} category={category} auth={auth} run={run}/>)}
+        </div>
       </section>}
 
-      {tab === 'reactions' && <section className="card">
-        <h2>Recent reactions</h2>
-        <p className="muted">Latest 100 likes, dislikes and other reactions. Deleting one recalculates the content author's rating.</p>
-        {data.reactions.length ? <div className="tableWrap"><table>
-          <thead><tr><th>User</th><th>Reaction</th><th>Post</th><th>Action</th></tr></thead>
-          <tbody>{data.reactions.map(item => <tr key={item.id}>
-            <td>{item.author_login}</td><td>{item.type}</td>
-            <td>{item.post_title || 'Deleted post'}</td>
-            <td><button className="dangerText" onClick={() => {
-              if (window.confirm('Remove this reaction?')) {
-                run(() => api('/reactions/' + item.id, { method: 'DELETE', token: auth.token }));
-              }
-            }}>Delete</button></td>
-          </tr>)}</tbody>
-        </table></div> : <p>No reactions.</p>}
+      {tab === 'comments' && <section className="adminStack">
+        <div className="adminSectionHeader"><h2>Comments</h2><span>{data.comments.length} listed</span></div>
+        <div className="adminSimpleList">
+          {data.comments.length ? data.comments.map(comment => <article className="adminListItem adminRow" key={comment.id}>
+            <div className="adminItemLine">
+              <div className="adminItemText">
+                <div className="adminPostMeta"><strong>@{comment.author_login}</strong> on {comment.post_title} <StatusBadges item={comment}/></div>
+                <p className="adminCommentText">{comment.content}</p>
+              </div>
+              <div className="adminRowTools adminPostTools">
+                <button type="button" onClick={() => go('/post/' + comment.post_id)}>Open</button>
+                <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}>{comment.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+                <button type="button" onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}>{comment.locked ? 'Unlock' : 'Lock'}</button>
+                <button type="button" className="dangerText" onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}>Delete</button>
+              </div>
+            </div>
+          </article>) : <p className="adminEmpty">No comments.</p>}
+        </div>
       </section>}
-      {tab === 'comments' && <div className="adminStack">
-        {data.comments.length ? data.comments.map((comment) => <article className="card adminRow" key={comment.id}>
-          <div><div className="postMeta"><b>{comment.author_login}</b><span>on “{comment.post_title}”</span><StatusBadges item={comment} /></div><p>{comment.content}</p></div>
-          <div className="adminActions"><button onClick={() => go(`/post/${comment.post_id}`)}>Open post</button><button onClick={() => run(() => api(`/comments/${comment.id}`, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}>{comment.status === 'active' ? 'Deactivate' : 'Activate'}</button><button onClick={() => run(() => api(`/comments/${comment.id}`, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}>{comment.locked ? 'Unlock' : 'Lock'}</button><button className="dangerText" onClick={() => { if (window.confirm('Delete this comment?')) run(() => api(`/comments/${comment.id}`, { method: 'DELETE', token: auth.token })); }}>Delete</button></div>
-        </article>) : <div className="card empty">No comments.</div>}
-      </div>}
+
+      {tab === 'reactions' && <section className="adminStack">
+        <div className="adminSectionHeader"><h2>Reactions</h2><span>100 latest maximum</span></div>
+        <p className="adminSectionNote">Removing a reaction recalculates the author's rating.</p>
+        <div className="adminSimpleList">
+          {data.reactions.length ? data.reactions.map(item => <div className="adminListItem" key={item.id}>
+            <div className="adminItemLine">
+              <div className="adminItemText"><h3>@{item.author_login} <span className="adminRoleChip">{item.type}</span></h3><p>{item.post_title || 'Deleted post'}</p></div>
+              <div className="adminRowTools"><button type="button" className="dangerText"
+                onClick={() => { if (window.confirm('Remove this reaction?')) run(() => api('/reactions/' + item.id, { method: 'DELETE', token: auth.token })); }}>Delete</button></div>
+            </div>
+          </div>) : <p className="adminEmpty">No reactions.</p>}
+        </div>
+      </section>}
     </>}
   </main>;
 }
