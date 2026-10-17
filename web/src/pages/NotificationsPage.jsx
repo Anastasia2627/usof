@@ -12,6 +12,8 @@ function announceChange() {
 // server-generated patterns, leaving custom notification text untouched.
 function notificationBodyText(body,t) {
   const value=String(body||'');
+  const suggested=value.match(/^(.+?) suggested: (.+)$/);
+  if(suggested)return suggested[1]+' '+t('suggested a topic')+': '+suggested[2];
   const match=value.match(/^(.+?) (added an answer to your question\.|added a reply to your question\.|replied to your comment\.|reacted to your question\.|reacted to your answer\.|updated a question you follow\.|added a reply to a question you follow\.|added an answer to a question you follow\.)$/);
   return match ? match[1]+' '+t(match[2]) : t(value);
 }
