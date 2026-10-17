@@ -1,7 +1,7 @@
 import { mockApi } from './mockApi.js';
 
 // In local Vite development, the browser calls its own origin. Vite proxies
-// /api and /uploads to Node on 127.0.0.1:5000. Production still uses the
+// /api and /uploads to Node on the APP_PORT configured in the root .env. Production still uses the
 // configured API origin, so the app can be deployed separately.
 const ORIGIN = import.meta.env.DEV
   ? ''
@@ -57,7 +57,7 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     data = await response.json();
   } catch {
     if (!response.ok) {
-      throw new ApiError('Circle API did not return JSON. Make sure npm start is running on port 5000.', {
+      throw new ApiError('Circle API did not return JSON. Check APP_PORT in .env and restart both npm start and npm run web.', {
         status: response.status, code: 'API_UNAVAILABLE',
       });
     }
