@@ -13,6 +13,8 @@ import WelcomePage from './pages/WelcomePage.jsx';
 import SavedPage from './pages/SavedPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import MessagesPage from './pages/MessagesPage.jsx';
+import InterestsPage from './pages/InterestsPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -35,6 +37,9 @@ export default function App() {
   else if (path === '/saved') page = <SavedPage />;
   else if (path === '/dashboard') page = <DashboardPage />;
   else if (path === '/settings') page = <SettingsPage />;
+  else if (path === '/interests') page = <InterestsPage />;
+  else if (path === '/messages') page = <MessagesPage />;
+  else if (parts[0] === 'messages' && /^\d+$/.test(parts[1] || '')) page = <MessagesPage userId={parts[1]} />;
   else if (path === '/login') page = <AuthPage mode="login" />;
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
