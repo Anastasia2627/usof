@@ -81,7 +81,7 @@ try{
   const categoryFilter=page.getByRole('searchbox',{name:'Search topics'});
   await categoryFilter.fill('zz_topic_that_does_not_exist');
   await page.getByText('No matching topics').waitFor();
-  await page.getByRole('button',{name:'Clear search'}).click();
+  await page.locator('.categorySearchField').getByRole('button',{name:'Clear search'}).click();
   assert.ok(await page.locator('.categoryCard').count()>0);
 
   // The dashboard is reachable from Admin and is no longer a sidebar item.
