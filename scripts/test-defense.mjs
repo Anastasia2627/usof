@@ -83,7 +83,13 @@ try {
   await user.getByRole('button',{name:'Save profile'}).click();
   await user.getByText('Profile saved.').waitFor();
   await user.reload();
-  assert.equal(await user.getByLabel('Full name').inputValue(),'Review participant');
+  // The profile is loaded asynchronously after refresh; wait for MySQL data.
+  await user.waitForFunction(() => {
+    const input = Array.from(document.querySelectorAll('input')).find(
+      item => item.closest('label')?.textContent?.includes('Full name'),
+    );
+    return input?.value === 'Review participant';
+  });
 
   // 10 and 11: create 2 posts, edit content and categories.
   const posts=[];
