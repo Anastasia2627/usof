@@ -103,6 +103,8 @@ export default function HomePage({ hash, basePath = '/' }) {
   const popular = (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
   const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
   const activeFilters = ['category', 'from', 'to', 'status'].filter(key => Boolean(params.get(key))).length;
+  const canReset = activeFilters > 0 || Boolean(params.get('search')) ||
+    Boolean(params.get('sort')) || Boolean(params.get('order'));
 
   return <main className="homePage">
     <h1 className="feedPageTitle">{t(basePath === '/explore' ? 'Explore' : 'Home')}</h1>
@@ -117,7 +119,7 @@ export default function HomePage({ hash, basePath = '/' }) {
       <strong>{t('Post')}</strong>
     </button> : <div className="feedComposer guestComposer">
       <span className="guestAvatar"><Icon name="user" size={21}/></span>
-      <span>Join the conversation</span>
+      <span>{t('Join the conversation')}</span>
       <button onClick={() => go('/login')}>{t('Log in')}</button>
     </div>}
 
@@ -183,7 +185,13 @@ export default function HomePage({ hash, basePath = '/' }) {
       {loading ? <p className="feedMessage">{t('Loading conversations…')}</p>
         : posts.length
           ? <div className="threadGrid">{posts.map(post => <PostCard key={post.id} post={post} />)}</div>
-          : !error ? <div className="feedMessage">{t("No conversations found. Try changing your filters.")}</div> : null}
+          : !error ? <div className="feedEmptyState" role="status">
+              <span className="feedEmptyIcon"><Icon name="search" size={25}/></span>
+              <h2>{t('No conversations found')}</h2>
+              <p>{t('Try changing your filters or browse all discussions.')}</p>
+              {canReset && <button className="feedEmptyReset" type="button"
+                onClick={()=>go(basePath)}><Icon name="refresh" size={18}/>{t('Clear filters')}</button>}
+            </div> : null}
       {pagination?.totalPages > 1 && <div className="pager">
         <button disabled={pagination.page <= 1} onClick={() => navigate(pagination.page - 1)}>{t('Previous')}</button>
         <span>{t('Page')} {pagination.page} {t('of')} {pagination.totalPages}</span>
