@@ -58,10 +58,12 @@ try {
   await identity.waitFor();
   assert.ok(await identity.isVisible(), 'Role and identity should be visible on mobile');
   assert.ok(await page.locator('.accountIdentity .accountRole').isVisible(), 'Role text should not be hidden');
-  const logout = page.locator('.headerLogout');
-  assert.ok(await logout.isVisible(), 'Logout must be visible at 390px viewport');
-  await logout.click();
-  await page.locator('.headerLogout').waitFor({ state: 'detached' });
+  const accountMenu = page.locator('.accountMenu summary');
+  assert.ok(await accountMenu.isVisible(), 'Account menu must be visible at 390px viewport');
+  assert.equal(await page.getByRole('button', { name: 'Log out' }).count(), 0, 'Logout should not appear until opening account menu');
+  await accountMenu.click();
+  await page.getByRole('button', { name: 'Log out' }).click();
+  await page.locator('.accountMenu').waitFor({ state: 'detached' });
   await page.waitForURL(/#\/$/);
 
   // This is the REAL API registration form, not the isolated demo mode.
@@ -76,7 +78,8 @@ try {
   await page.locator('.verificationForm button.authSubmit').click();
   await page.waitForURL(/#\/$/);
   await page.getByRole('button', { name: 'Profile of ' + newMember + ' (user)' }).waitFor();
-  await page.locator('.headerLogout').click();
+  await page.locator('.accountMenu summary').click();
+  await page.getByRole('button', { name: 'Log out' }).click();
 
   const adminToken = await loginApi();
   const categoryResponse = await fetch(backend + '/categories');
