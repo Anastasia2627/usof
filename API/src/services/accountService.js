@@ -213,6 +213,55 @@ export async function updateAccount({ targetId, actor, body }) {
   return result;
 }
 
+// A moderator appointment/revocation is deliberately separate from profile
+// edits. It must never change token_version, credentials or email verification.
+// JWTs contain only user id + token_version, while requireAuth reloads the
+// *current* role from MySQL on every request.
+export async function changeAccountRole({ targetId, actor, body }) {
+  if (actor?.role !== 'admin') {
+    throw new AppError(403, 'ADMIN_REQUIRED', 'Only administrators may change roles');
+  }
+  const id=positiveInt(targetId,'INVALID_USER_ID','Invalid user id');
+  const role=validateRole(body?.role);
+  if (!['user','moderator'].includes(role)) {
+    throw new AppError(422,'INVALID_ROLE','This action only appoints or removes moderators');
+  }
+
+  const connection=await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [[current]]=await connection.execute(
+      'SELECT id, role FROM users WHERE id=? FOR UPDATE',[id],
+    );
+    if(!current) throw new AppError(404,'USER_NOT_FOUND','User not found');
+    // Administrator roles are managed through the existing protected account
+    // flow, so this quick action can never demote an administrator.
+    if(current.role==='admin')
+      throw new AppError(403,'ADMIN_ROLE_PROTECTED','Administrator role cannot be changed here');
+
+    if(current.role!==role) {
+      await connection.execute('UPDATE users SET role=? WHERE id=?',[role,id]);
+      await connection.execute(
+        `INSERT INTO notifications(user_id,actor_id,type,title,body)
+         VALUES(?,?,'role_changed',?,?)`,
+        [id,Number(actor.sub),
+          role==='moderator' ? 'You are now a moderator' : 'Your moderator role was removed',
+          role==='moderator'
+            ? 'You can now review reports and moderate discussions. You cannot manage users.'
+            : 'Your account now has standard member permissions.'],
+      );
+    }
+    const [[row]]=await connection.execute('SELECT * FROM users WHERE id=?',[id]);
+    await connection.commit();
+    return {data:publicUser(row),sessionInvalidated:false};
+  } catch(error){
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 export async function deleteAccount({ targetId, actor }) {
   const id = positiveInt(targetId, 'INVALID_USER_ID', 'Invalid user id');
   if (actor.role !== 'admin' && Number(actor.sub) !== id) {
