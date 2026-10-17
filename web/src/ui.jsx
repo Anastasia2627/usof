@@ -4,7 +4,19 @@ import { api, assetUrl } from './api.js';
 import { usePreferences } from './preferences.jsx';
 
 export const go = (path) => { window.location.hash = path; };
-export const fmt = (date) => date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—';
+export function fmt(date) {
+  if (!date) return '—';
+  const when = new Date(date);
+  if (Number.isNaN(when.getTime())) return '—';
+  const seconds = Math.max(0,Math.floor((Date.now()-when.getTime())/1000));
+  const language = document.documentElement.lang || 'en';
+  const relative = new Intl.RelativeTimeFormat(language,{numeric:'auto',style:'short'});
+  if (seconds < 60) return relative.format(-Math.max(1,seconds),'second');
+  if (seconds < 3600) return relative.format(-Math.floor(seconds/60),'minute');
+  if (seconds < 86400) return relative.format(-Math.floor(seconds/3600),'hour');
+  if (seconds < 604800) return relative.format(-Math.floor(seconds/86400),'day');
+  return when.toLocaleDateString(language,{day:'numeric',month:'short',year:when.getFullYear()!==new Date().getFullYear()?'numeric':undefined});
+}
 
 // Fixed Google Material Round SVGs bundled locally from Google's official icon source.
 import { iconsA } from './googleIconsA.js';
@@ -63,10 +75,10 @@ export function PostCard({ post }) {
   const [contextMenu, setContextMenu] = useState(null);
   const contextRef = useRef(null);
   const [error, setError] = useState(null);
-  const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
+  const showStatus = ['admin','moderator'].includes(auth?.user?.role) || Number(auth?.user?.id) === Number(post.author_id);
   const selfPost = Boolean(auth && Number(auth.user.id) === Number(post.author_id));
-  const isAdmin = auth?.user?.role === 'admin';
-  const isModerated = (post.status !== 'active' || Boolean(post.locked)) && !isAdmin;
+  const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const isModerated = (post.status !== 'active' || Boolean(post.locked) || Boolean(post.publish_at && new Date(post.publish_at)>new Date())) && !isAdmin;
   const voteDisabled = busy || selfPost || isModerated;
   const voteTitle = selfPost
     ? 'You cannot react to your own post'
@@ -174,7 +186,7 @@ export function PostCard({ post }) {
     <div className="threadBody">
       <div className="postMeta">
         <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
-        <time dateTime={post.created_at}>{fmt(post.created_at)}</time>
+        <time dateTime={post.published_at||post.created_at} title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
         <StatusBadges item={showStatus ? post : { locked: post.locked }} />
       </div>
       <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
@@ -183,14 +195,14 @@ export function PostCard({ post }) {
       <div className="threadActions">
         <button type="button" aria-label="Like" title={voteTitle || 'Like'} disabled={voteDisabled}
           aria-pressed={myVote === 'like'} className={myVote === 'like' ? 'activeVote' : ''} onClick={() => vote('like')}>
-          <Icon name="heart" size={20}/><span>{counts.like}</span>
+          <Icon name="heart" size={20}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.like}</span> : null}
         </button>
         <button type="button" aria-label="Comment" title="View replies" onClick={() => go(`/post/${post.id}`)}>
           <Icon name="comment" size={20}/><span>{counts.comment}</span>
         </button>
         <button type="button" aria-label="Dislike" title={voteTitle || 'Dislike'} disabled={voteDisabled}
           aria-pressed={myVote === 'dislike'} className={myVote === 'dislike' ? 'activeVote' : ''} onClick={() => vote('dislike')}>
-          <Icon name="dislike" size={19}/><span>{counts.dislike}</span>
+          <Icon name="dislike" size={19}/>{!post.hide_likes || isAdmin || selfPost ? <span>{counts.dislike}</span> : null}
         </button>
         {auth && <button type="button" aria-label={saved?t('Unsave post'):t('Save post')}
           title={saved?t('Unsave post'):t('Save post')} aria-pressed={saved}
@@ -254,7 +266,6 @@ export function Header() {
   const nav = [
     { key: 'home', text: 'Home', destination: '/', icon: 'home' },
     ...(!auth ? [{ key: 'explore', text: 'Explore', destination: '/explore', icon: 'forum' }] : []),
-    { key: 'search', text: 'Search', destination: '/search', icon: 'search' },
     { key: 'categories', text: 'Categories', destination: '/categories', icon: 'categories' },
     ...(auth ? [
       { key:'create', text:'New post', destination:'/create', icon:'plus' },
@@ -262,7 +273,7 @@ export function Header() {
       { key:'dashboard', text:'Dashboard', destination:'/dashboard', icon:'analytics' },
     ] : []),
     { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
-    ...(auth?.user?.role === 'admin' ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
+    ...(['admin','moderator'].includes(auth?.user?.role) ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
   ];
   const current = window.location.hash.split('?')[0].slice(1) || '/';
   const guestLanding = !auth && current === '/';
