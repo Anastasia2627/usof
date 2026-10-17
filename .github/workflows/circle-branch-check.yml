@@ -89,6 +89,8 @@ jobs:
         run: npm run test:moderator
       - name: Verify image uploads, accepted answers, reports and moderator permissions
         run: npm run test:features
+      - name: Verify member topic proposals and administrator review
+        run: npm run test:topics
       - name: Check all new server and test modules
         run: npm run check:full
       - name: Check configured Mac API port and proxy target
