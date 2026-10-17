@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
 
@@ -25,6 +25,9 @@ export function Icon({ name, size = 22 }) {
     favorite: 'favorite',
     chat: 'chat_bubble',
     group: 'groups',
+    more: 'more_horiz',
+    check: 'check',
+    chevron: 'expand_more',
   };
   return <span className="material-symbols-rounded circleIcon" aria-hidden="true"
     style={{ fontSize: size }}>{glyphs[name] || 'grid_view'}</span>;
@@ -154,6 +157,29 @@ export function Header() {
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const [search, setSearch] = useState('');
+  const menuRef = useRef(null);
+
+  // Keep logout accessible everywhere without a permanent header button.
+  useEffect(() => {
+    const closeOutside = event => {
+      if (menuRef.current?.open && !menuRef.current.contains(event.target)) menuRef.current.open = false;
+    };
+    const closeEscape = event => {
+      if (event.key === 'Escape' && menuRef.current?.open) {
+        menuRef.current.open = false;
+        menuRef.current.querySelector('summary')?.focus();
+      }
+    };
+    const closeOnRoute = () => { if (menuRef.current) menuRef.current.open = false; };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeEscape);
+    window.addEventListener('hashchange', closeOnRoute);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeEscape);
+      window.removeEventListener('hashchange', closeOnRoute);
+    };
+  }, []);
   async function logout() {
     try {
       if (auth?.token) await api('/auth/logout', { method: 'POST', token: auth.token });
@@ -185,7 +211,7 @@ export function Header() {
       }}>
         <Icon name="search" size={18}/>
         <input aria-label="Search posts, people and categories" placeholder="Search" value={search} onChange={event => setSearch(event.target.value)} />
-        <button className="searchSubmit" type="submit">Search</button>
+        <button className="searchSubmit" type="submit" aria-label="Search" title="Search"><Icon name="arrow" size={19}/></button>
       </form>}
       {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
         {nav.map(item => <button key={item.key} type="button" title={item.text}
@@ -200,7 +226,18 @@ export function Header() {
             <Avatar user={auth.user} size="sm" />
             <span className="accountIdentity"><small>@{auth.user.login}</small><span className="accountRole">{auth.user.role}</span></span>
           </button>
-          <button className="headerLogout" title="Log out" onClick={logout}><Icon name="logout" size={17}/><span>Log out</span></button>
+          <details className="accountMenu" ref={menuRef}>
+            <summary aria-label="Account menu" title="Account menu"><Icon name="more" size={23}/></summary>
+            <div className="accountDropdown">
+              <p className="accountDropdownTitle">@{auth.user.login} <small>{auth.user.role}</small></p>
+              <button type="button" onClick={() => { menuRef.current.open = false; go('/profile'); }}>
+                <Icon name="user" size={19}/> My profile
+              </button>
+              <button type="button" className="accountLogout" onClick={logout}>
+                <Icon name="logout" size={19}/> Log out
+              </button>
+            </div>
+          </details>
         </> : <>
           <button className="loginButton" onClick={() => go('/login')}>Log in</button>
           <button className="primary signupButton" onClick={() => go('/register')}>Sign up</button>
