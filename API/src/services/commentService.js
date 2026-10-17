@@ -4,6 +4,7 @@ import { Post } from '../models/Post.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
+import { assertMayModerateComment } from './moderationPolicy.js';
 import {
   deliverNotifications,
   notifyPostAuthor,
@@ -16,7 +17,9 @@ export async function getVisiblePostCore(idValue, user) {
   const post = await Post.findCoreById(postId);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   const ownsPost = user && Number(user.sub) === Number(post.author_id);
-  if ((post.status === 'inactive' || (post.publish_at && new Date(post.publish_at)>new Date())) && !['admin','moderator'].includes(user?.role) && !ownsPost) {
+  const scheduled = Boolean(post.publish_at && new Date(post.publish_at)>new Date());
+  if (((post.status==='inactive' && !['admin','moderator'].includes(user?.role)) ||
+      (scheduled && user?.role!=='admin')) && !ownsPost) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
   return post;
@@ -33,7 +36,9 @@ export async function getVisibleComment(
 
   const isAdmin = ['admin','moderator'].includes(user?.role);
   const ownsPost = user && Number(user.sub) === Number(comment.post_author_id);
-  if ((comment.post_status === 'inactive' || (comment.post_publish_at && new Date(comment.post_publish_at)>new Date())) && !isAdmin && (requireActivePost || !ownsPost)) {
+  const scheduled=Boolean(comment.post_publish_at && new Date(comment.post_publish_at)>new Date());
+  if ((comment.post_status==='inactive' && !isAdmin && (requireActivePost || !ownsPost)) ||
+      (scheduled && user?.role!=='admin' && !ownsPost)) {
     throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
   }
   if (requireActivePost && comment.post_status !== 'active' && !isAdmin) {
@@ -132,6 +137,7 @@ export async function createCommentForUser(user, postIdValue, body) {
 export async function updateCommentForUser(user, idValue, body) {
   const comment = await getVisibleComment(idValue, user);
   const isAdmin = ['admin','moderator'].includes(user.role);
+  if (user.role === 'moderator') await assertMayModerateComment(user, comment);
   if (body.content !== undefined) {
     throw new AppError(
       403,
@@ -154,7 +160,9 @@ export async function updateCommentForUser(user, idValue, body) {
     changed = true;
   }
   if (body.locked !== undefined) {
-    locked = Boolean(body.locked);
+    if (typeof body.locked !== 'boolean')
+      throw new AppError(422,'INVALID_LOCKED','locked must be boolean');
+    locked = body.locked;
     changed = true;
   }
   if (!changed) {
@@ -184,6 +192,7 @@ export async function deleteCommentForUser(user, idValue) {
   if (!['admin','moderator'].includes(user.role) && Number(user.sub) !== Number(comment.author_id)) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this comment');
   }
+  if (user.role === 'moderator') await assertMayModerateComment(user,comment);
 
   const connection = await pool.getConnection();
   try {
