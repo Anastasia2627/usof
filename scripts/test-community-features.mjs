@@ -68,8 +68,8 @@ await request('/posts/'+post.id,{token:member.token,method:'PATCH',
 await request('/posts/'+post.id,{token:member.token,method:'PATCH',
   body:{categories:[category]},expected:403});
 const [seed]=await pool.query(
-  "SELECT (SELECT COUNT(*) FROM user_follows) AS follows,(SELECT COUNT(*) FROM user_interests) AS interests, (SELECT COUNT(*) FROM direct_messages) AS messages"
+  "SELECT (SELECT COUNT(*) FROM user_follows) AS follows,(SELECT COUNT(*) FROM user_interests) AS interests, (SELECT COUNT(*) FROM direct_messages) AS messages, (SELECT COUNT(*) FROM post_images) AS images, (SELECT COUNT(*) FROM content_reports) AS reports"
 );
-assert.ok(seed[0].follows>=5 && seed[0].interests>=5 && seed[0].messages>=5);
+assert.ok(seed[0].follows>=5 && seed[0].interests>=5 && seed[0].messages>=5 && seed[0].images>=5 && seed[0].reports>=5);
 await pool.end();
 console.log('Community integration passed: solutions, images, reporting, roles and seed data.');
