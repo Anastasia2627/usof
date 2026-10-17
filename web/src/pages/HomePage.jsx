@@ -13,7 +13,7 @@ const readFilters = params => ({
   status: params.get('status') || '',
 });
 
-export default function HomePage({ hash }) {
+export default function HomePage({ hash, basePath = '/' }) {
   const auth = useSelector(state => state.auth);
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [filters, setFilters] = useState(() => readFilters(params));
@@ -64,7 +64,7 @@ export default function HomePage({ hash }) {
     for (const name of FILTERS) {
       if (filters[name]) query.set(name, filters[name]);
     }
-    go(query.size ? '/?' + query : '/');
+    go(query.size ? basePath + '?' + query : basePath);
   }
 
   function changeSort(sort, order) {
@@ -72,19 +72,19 @@ export default function HomePage({ hash }) {
     query.set('sort', sort);
     query.set('order', order);
     query.delete('page');
-    go('/?' + query);
+    go(basePath + '?' + query);
   }
 
   function navigate(page) {
     const query = new URLSearchParams(params);
     query.set('page', String(page));
-    go('/?' + query);
+    go(basePath + '?' + query);
   }
 
   const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
 
   return <main className="homePage">
-    <h1 className="feedPageTitle">Home</h1>
+    <h1 className="feedPageTitle">{basePath === '/explore' ? 'Explore' : 'Home'}</h1>
     <div className="feedTabs" role="group" aria-label="Feed views">
       <button aria-pressed={!latest} className={!latest ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>For you</button>
       <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>Latest</button>
@@ -131,7 +131,7 @@ export default function HomePage({ hash }) {
           </select>
         </label>}
         <button className="primary applyFilters" type="submit">Apply filters</button>
-        <button type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go('/'); }}>Reset</button>
+        <button type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Reset</button>
       </form>
     </details>
 
