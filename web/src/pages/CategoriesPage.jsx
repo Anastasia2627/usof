@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, PostCard, go } from '../ui.jsx';
+import { ErrorBox, PostCard, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 export default function CategoriesPage() {
   const {t}=usePreferences();
   const [categories, setCategories] = useState([]);
+  const [query,setQuery]=useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,15 +18,28 @@ export default function CategoriesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  return <main>
+  const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
+    .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
+  return <main className="categoriesPage">
     <p className="eyebrow">{t('Browse posts by topic')}</p>
     <h1>{t('Categories')}</h1>
+    <div className="topicSearchField categorySearchField">
+      <Icon name="search" size={19}/>
+      <input type="search" aria-label={t('Search topics')} placeholder={t('Search topics')}
+        value={query} onChange={event=>setQuery(event.target.value)}/>
+      {query&&<button type="button" aria-label={t('Clear search')} title={t('Clear search')}
+        onClick={()=>setQuery('')}><Icon name="close" size={17}/></button>}
+    </div>
     <ErrorBox error={error} />
     {loading
       ? <div className="card loading">{t('Loading categories…')}</div>
-      : categories.length
-        ? <section className="categoryGrid">{categories.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{t(category.title)}</h2><p>{t(category.description)}</p></button>)}</section>
-        : <div className="card empty">{t('No categories yet.')}</div>}
+      : found.length
+        ? <section className="categoryGrid">{found.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{t(category.title)}</h2><p>{t(category.description)}</p></button>)}</section>
+        :
+          <div className="topicsEmpty">
+            <p>{t(query?'No matching topics':'No categories yet.')}</p>
+            {query&&<button type="button" onClick={()=>setQuery('')}>{t('Clear search')}</button>}
+          </div>}
   </main>;
 }
 
