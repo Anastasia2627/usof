@@ -1786,3 +1786,110 @@ html[data-theme="dark"] .adminListItem,
 html[data-theme="dark"] .dashSection,
 html[data-theme="dark"] .dashStats,
 html[data-theme="dark"] .settingsSection {border-color:#303236!important;}
+
+/* Social experience: open typography and unobtrusive tools */
+main.naturalPostPage{width:min(690px,calc(100% - 45px));max-width:690px;margin:0 auto 70px;padding:24px 0 50px}
+.postBackRow{display:flex;gap:12px;align-items:center;border-bottom:1px solid #eee;padding:0 0 14px}
+.postBackRow strong{font-size:15px}
+.naturalPost{padding:25px 3px 28px;border-bottom:1px solid #eaeaea}
+.naturalPostAuthor{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+.naturalPostAuthor>div{display:grid;gap:4px;flex:1;min-width:0}
+.naturalPostAuthor .authorLink{padding:0;text-align:left;font-size:14px;font-weight:760;border:0;background:transparent;color:inherit}
+.naturalPostAuthor time{font-size:12px;color:#999}
+.naturalPost h1{font-size:clamp(22px,3vw,29px);line-height:1.28;letter-spacing:-.035em;margin:0 0 14px;color:inherit}
+.naturalPostContent{font-size:15px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 16px}
+.naturalPost .tags{margin-bottom:18px}
+.naturalPostReactions{display:flex;gap:12px;align-items:center;border-top:1px solid #f1f1f1;padding:13px 0 9px}
+.naturalPostReactions .reactionPanel{border:0;box-shadow:none;background:transparent;padding:0;margin:0}
+.naturalPostReactions .reactionButtons{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.naturalPostReactions .reactionButtons span{font-size:12px;color:#999}
+.naturalPostReactions button,.naturalPostIconButton{border:0;background:transparent;padding:7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center}
+.naturalPostReactions button:hover{background:#f2f2f2}
+.naturalPostCommentCount{display:flex;align-items:center;gap:5px;font-size:12px;color:#8a8a8a}
+.naturalPostManagement{display:flex;align-items:center;flex-wrap:wrap;gap:5px;border-top:1px solid #f1f1f1;padding:12px 0 0}
+.naturalPostManagement button{display:inline-flex;gap:6px;align-items:center;border:0;border-radius:999px;padding:8px 10px;font-size:12px;background:transparent;color:#676767}
+.naturalPostManagement button:hover{background:#f6f6f6;color:#151515}
+.naturalPostManagement .dangerText{color:#a34747;margin-left:auto}
+.naturalClosedNotice,.naturalReplyLocked{display:flex;gap:10px;align-items:center;padding:13px 15px;border-radius:12px;background:#f8f8f8;color:#777;font-size:12px;margin:16px 0 0}
+.naturalComments{padding:24px 3px 50px}
+.naturalComments h2{font-size:18px;font-weight:760;margin:0 0 16px;display:flex;gap:8px;align-items:center}
+.naturalComments h2 span{font-size:13px;color:#999;font-weight:540}
+.naturalCommentTree .commentBranch{margin:0 0 6px}
+.naturalCommentTree .commentCard{border:0;border-bottom:1px solid #efefef;border-radius:0;padding:15px 0 16px;margin:0;background:transparent;box-shadow:none}
+.naturalCommentTree .commentCard:hover{background:transparent}
+.naturalCommentTree .commentTop{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.naturalCommentTree .commentContent{margin:11px 0;white-space:pre-wrap;line-height:1.65;font-size:14px}
+.naturalCommentTree .commentActions{display:flex;gap:5px;flex-wrap:wrap}
+.naturalCommentTree .commentActions button{border:0;border-radius:999px;padding:7px 8px;background:transparent;color:#777;font-size:12px}
+.naturalCommentTree .commentActions button:hover{background:#f5f5f5;color:#222}
+.modReviewed{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:#e9f5eb;color:#356a40;font-size:10px;padding:5px 8px;font-weight:650}
+.naturalEmptyReplies{display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 10px;color:#aaa;gap:8px}
+.naturalEmptyReplies p{margin:0;color:#555;font-weight:680;font-size:14px}
+.naturalEmptyReplies small{font-size:12px}
+.naturalReplyComposer{display:flex;align-items:center;gap:12px;border-top:1px solid #efefef;padding:23px 0}
+.naturalReplyComposer textarea{flex:1;min-width:0;border:0;resize:vertical;min-height:46px;max-height:200px;box-shadow:none;outline:0;background:transparent;font-size:14px;padding:12px 3px}
+.naturalReplyComposer button{width:39px;height:39px;border-radius:50%;padding:0;display:grid;place-items:center;flex:none}
+.socialPage{width:min(760px,calc(100% - 48px));margin:0 auto 65px;padding:38px 0}
+.socialHeading{display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;margin-bottom:21px}
+.socialHeading h1{margin:0 0 14px;font-size:24px;letter-spacing:-.035em}
+.socialIntro{text-align:center;margin:15px 0 35px}
+.socialIntro h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.06em;margin:12px 0}
+.socialIntro p{color:#999;font-size:14px}
+.socialCircle{width:62px;height:62px;margin:0 auto 18px;display:grid;place-items:center;border-radius:18px;background:#f4f1f6}
+.interestSelection{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:15px 0 32px}
+.interestSelection button{border:0;background:#f5f5f5;color:#666;padding:12px 16px;display:flex;gap:8px;align-items:center;border-radius:999px;font-size:13px;font-weight:650}
+.interestSelection button:hover{background:#eee;color:#111}
+.interestSelection button.interestChosen{background:#1c1c1c;color:white}
+.interestFooter{display:flex;align-items:center;gap:12px;border-top:1px solid #eee;padding:21px 0}
+.interestFooter small{margin-right:auto;color:#999}
+.interestFooter button{border:0;border-radius:999px;background:transparent;padding:9px 17px;font-size:13px}
+.interestFooter button.primary{display:flex;align-items:center;gap:8px;background:#111;color:#fff}
+.messageLayout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:480px;border:1px solid #eaeaea;border-radius:16px;overflow:hidden}
+.messageContacts{border-right:1px solid #eaeaea;padding:17px 10px}
+.messageContacts h2{margin:0 9px 15px;font-size:13px;color:#999;font-weight:600}
+.messageContacts button{display:flex;gap:9px;align-items:center;border:0;border-radius:11px;background:transparent;text-align:left;padding:10px;width:100%}
+.messageContacts button.selectedContact,.messageContacts button:hover{background:#f4f4f4}
+.messageContacts button span:not(.avatar){min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.messageContacts button strong{font-size:13px}
+.messageContacts button small{font-size:11px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.messageContacts p{padding:10px;font-size:12px;color:#999}
+.unreadCount{border-radius:50%;background:#161616;color:#fff;font-size:10px;padding:2px 6px}
+.messageThread{display:flex;flex-direction:column;min-width:0}
+.messageThreadHeading{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid #eee;cursor:pointer}
+.messageThreadHeading strong{font-size:14px}
+.messageStream{padding:23px 16px;display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto;max-height:560px}
+.messageBubble{max-width:85%;min-width:60px;border-radius:16px;padding:10px 13px;background:#f4f4f4;align-self:flex-start;overflow-wrap:anywhere}
+.messageBubble.mine{align-self:flex-end;background:#161616;color:#fff}
+.messageBubble p{font-size:13px;margin:0 0 5px;line-height:1.6;white-space:pre-wrap}
+.messageBubble time{font-size:10px;opacity:.5}
+.messageCompose{display:flex;gap:8px;padding:10px;border-top:1px solid #eee;align-items:center}
+.messageCompose input{flex:1;min-width:0;background:transparent;border:0;box-shadow:none;font-size:13px}
+.messageCompose button{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;padding:0}
+.messageIntro{margin:auto;text-align:center;color:#999;font-size:13px;max-width:230px}
+.profileSocialActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.profileFollowers{font-size:11px;color:#999;margin-right:7px}
+.editorOptions{margin:6px 0 15px;border-top:1px solid #eee}
+.editorOptions>summary{list-style:none;cursor:pointer;color:#767676;display:flex;gap:9px;align-items:center;padding:15px 0;font-size:13px}
+.editorOptions>summary::-webkit-details-marker{display:none}
+.editorOptions>summary .circleIcon:last-child{margin-left:auto}
+.editorOptions[open]>summary .circleIcon:last-child{transform:rotate(180deg)}
+.editorOptionRow,.editorSchedule{display:flex;align-items:center;gap:12px;padding:13px 0;font-size:13px}
+.editorOptionRow span,.editorSchedule span{flex:1}
+.editorOptionRow small,.editorSchedule small{display:block;font-size:11px;color:#999;margin-top:4px}
+.editorSchedule input{max-width:180px;font-size:12px;border:0;border-bottom:1px solid #ddd;border-radius:0}
+html[data-theme="dark"] .naturalPost,html[data-theme="dark"] .naturalComments,
+html[data-theme="dark"] .naturalCommentTree .commentCard,
+html[data-theme="dark"] .messageThread,html[data-theme="dark"] .messageContacts,
+html[data-theme="dark"] .messageLayout{background:#161719!important;color:#eaeaea;border-color:#353538}
+html[data-theme="dark"] .messageBubble.mine,html[data-theme="dark"] .interestSelection .interestChosen{background:#e5e5e5;color:#121212}
+html[data-theme="dark"] .messageBubble.theirs,html[data-theme="dark"] .interestSelection button{background:#282a2e;color:#eee}
+html[data-theme="dark"] .naturalClosedNotice,html[data-theme="dark"] .naturalReplyLocked{background:#25272a;color:#ddd}
+html[data-theme="dark"] .modReviewed{background:#183e25;color:#b7e3bf}
+@media(max-width:720px){
+ main.naturalPostPage,.socialPage{width:calc(100% - 32px);padding-top:17px}
+ .naturalPostManagement button span{display:none}
+ .messageLayout{grid-template-columns:1fr;min-height:400px}
+ .messageContacts{border-right:0;border-bottom:1px solid #eee;max-height:200px;overflow-y:auto}
+ .messageStream{max-height:450px}
+ .editorSchedule{flex-wrap:wrap}.editorSchedule input{max-width:unset;width:100%}
+}
