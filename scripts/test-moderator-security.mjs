@@ -20,6 +20,7 @@ async function request(path,{token,method='GET',body,expected=200}={}) {
   return data;
 }
 
+try {
 const admin=await request('/auth/login',{method:'POST',body:{login:'admin',password}});
 const member=await request('/auth/login',{method:'POST',body:{login:'asya',password}});
 const name='modguard'+Date.now().toString(36);
@@ -168,5 +169,7 @@ await request('/users/'+admin.user.id+'/role',{token:admin.token,method:'PATCH',
   body:{role:'user'},expected:403});
 await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',
   body:{role:'admin'},expected:422});
-await pool.end();
 console.log('Moderator security passed: own content, role changes, scoped moderation, admin protection, private scheduled posts, and notifications.');
+} finally {
+  await pool.end();
+}
