@@ -19,6 +19,9 @@ const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] }
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 
 try {
+  const proxyResponse = await fetch(frontend + '/api/health');
+  assert.equal(proxyResponse.status, 200, 'Frontend proxy should reach the API');
+  assert.equal((await proxyResponse.json()).status, 'ok');
   await page.goto(frontend + '/#/', { waitUntil: 'networkidle' });
   assert.ok(await page.locator('.threadCard').count() > 0, 'Feed should load actual database posts');
   const firstPost = page.locator('.threadCard').first();
