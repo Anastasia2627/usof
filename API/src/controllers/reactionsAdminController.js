@@ -6,7 +6,7 @@ import { assertMayModerateReaction } from '../services/moderationPolicy.js';
 
 export async function listReactions(req, res) {
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
-  res.json({ data: await Reaction.listAdmin({ limit }) });
+  res.json({ data: await Reaction.listAdmin({ limit, actor:req.user }) });
 }
 
 export async function removeReaction(req, res) {
