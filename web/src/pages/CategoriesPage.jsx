@@ -13,10 +13,13 @@ export default function CategoriesPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    api('/categories')
-      .then((result) => setCategories(result.data))
-      .catch(setError)
-      .finally(() => setLoading(false));
+    let active=true;
+    const refresh=()=>api('/categories').then(result=>{if(active)setCategories(result.data);})
+      .catch(err=>{if(active)setError(err);})
+      .finally(()=>{if(active)setLoading(false);});
+    refresh();
+    window.addEventListener('circle:categories-updated',refresh);
+    return()=>{active=false;window.removeEventListener('circle:categories-updated',refresh);};
   }, []);
 
   const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
