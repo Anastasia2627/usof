@@ -204,18 +204,25 @@ export default function PostEditor({ id }) {
       </fieldset>
 
       <details className="editorOptions">
-        <summary><Icon name="settings" size={19}/> More options <Icon name="chevron" size={17}/></summary>
-        <label className="editorOptionRow"><Icon name="lock" size={18}/>
-          <span>Hide likes from other people<small>You can still see your own statistics</small></span>
-          <input type="checkbox" aria-label="Hide likes" checked={form.hideLikes}
-            onChange={e=>setForm({...form,hideLikes:e.target.checked})}/>
-        </label>
-        <label className="editorSchedule"><Icon name="settings" size={18}/>
-          <span>Publish later<small>Leave empty to publish now</small></span>
-          <input aria-label="Schedule publication" type="datetime-local" value={form.publishAt}
-            min={new Date(Date.now()+60000).toISOString().slice(0,16)}
-            onChange={e=>setForm({...form,publishAt:e.target.value})}/>
-        </label>
+        <summary><Icon name="settings" size={18}/> <span>{t('More options')}</span> <Icon name="chevron" size={17}/></summary>
+        <div className="editorOptionRows">
+          <div className="editorOptionRow">
+            <label className="editorOptionCopy" htmlFor="editor-hide-likes">
+              <strong>{t('Hide likes from other people')}</strong>
+              <small>{t('You can still see your own statistics')}</small>
+            </label>
+            <input id="editor-hide-likes" type="checkbox" checked={form.hideLikes}
+              onChange={e=>setForm({...form,hideLikes:e.target.checked})}/>
+          </div>
+          <div className="editorSchedule">
+            <label className="editorOptionCopy" htmlFor="editor-publish-date">
+              <strong>{t('Publish later')}</strong>
+              <small>{t('Leave empty to publish now')}</small>
+            </label>
+            <input id="editor-publish-date" type="datetime-local" value={form.publishAt}
+              onChange={e=>setForm({...form,publishAt:e.target.value})}/>
+          </div>
+        </div>
       </details>
       <div className="editorActions">
         <span className="editorSelectionHint">{form.categories.length
