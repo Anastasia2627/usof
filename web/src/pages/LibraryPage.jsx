@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, PostCard, go } from '../ui.jsx';
+import { ErrorBox, PostCard, Icon, go } from '../ui.jsx';
 
 export default function LibraryPage({ mode = 'favorites' }) {
   const auth = useSelector((state) => state.auth);
@@ -56,9 +56,9 @@ export default function LibraryPage({ mode = 'favorites' }) {
         ? <section className="postList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</section>
         : <div className="card empty"><h2>Nothing here yet.</h2><p>{isFollowing ? 'Follow a conversation to see new replies.' : 'Save a post and it will appear here.'}</p><button className="secondary" onClick={() => go('/')}>Browse posts</button></div>}
     {pagination && pagination.totalPages > 1 && <div className="pager">
-      <button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>← Previous</button>
+      <button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}><Icon name="arrowBack" size={16}/> Previous</button>
       <span>Page {pagination.page} / {pagination.totalPages}</span>
-      <button disabled={page >= pagination.totalPages} onClick={() => setPage((value) => value + 1)}>Next →</button>
+      <button disabled={page >= pagination.totalPages} onClick={() => setPage((value) => value + 1)}>Next <Icon name="arrow" size={16}/></button>
     </div>}
   </main>;
 }
