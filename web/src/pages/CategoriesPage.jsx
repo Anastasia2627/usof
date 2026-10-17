@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { ErrorBox, PostCard, go } from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 export default function CategoriesPage() {
+  const {t}=usePreferences();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,18 +18,19 @@ export default function CategoriesPage() {
   }, []);
 
   return <main>
-    <p className="eyebrow">Browse posts by topic</p>
-    <h1>Categories</h1>
+    <p className="eyebrow">{t('Browse posts by topic')}</p>
+    <h1>{t('Categories')}</h1>
     <ErrorBox error={error} />
     {loading
       ? <div className="card loading">Loading categories…</div>
       : categories.length
-        ? <section className="categoryGrid">{categories.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{category.title}</h2><p>{category.description}</p></button>)}</section>
+        ? <section className="categoryGrid">{categories.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{t(category.title)}</h2><p>{t(category.description)}</p></button>)}</section>
         : <div className="card empty">No categories yet.</div>}
   </main>;
 }
 
 export function CategoryDetailPage({ id }) {
+  const {t}=usePreferences();
   const auth = useSelector(state => state.auth);
   const [category, setCategory] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -77,8 +80,8 @@ export function CategoryDetailPage({ id }) {
     <button className="linkButton" onClick={() => go('/categories')}>← All categories</button>
     <section className="hero categoryHero">
       <p className="eyebrow">Category {String(id).padStart(2, '0')}</p>
-      <h1>{category?.title || 'Category'}</h1>
-      {category?.description && <p>{category.description}</p>}
+      <h1>{t(category?.title || 'Category')}</h1>
+      {category?.description && <p>{t(category.description)}</p>}
     </section>
     <ErrorBox error={error} />
     {!error && (posts.length
