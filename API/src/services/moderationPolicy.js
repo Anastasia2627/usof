@@ -43,3 +43,19 @@ export async function assertMayModerateReaction(actor, reaction, db = pool) {
   await assertMayModerateAuthors(actor,
     [target.voter_id,target.target_author_id,target.post_author_id],db);
 }
+
+export async function assertMayClearReactions(actor, { postId=null, commentId=null }, db=pool) {
+  if(actor?.role==='admin') return;
+  if(actor?.role!=='moderator')
+    throw new AppError(403,'MODERATOR_REQUIRED','Moderator permission required');
+  const column=postId?'post_id':'comment_id';
+  const id=postId||commentId;
+  if(!id) throw new AppError(422,'INVALID_TARGET','Provide a reaction target');
+  // Clearing an entire discussion's votes must not erase an administrator's vote.
+  const [adminVotes]=await db.execute(
+    `SELECT r.id FROM reactions r JOIN users u ON u.id=r.author_id
+     WHERE r.${column}=? AND u.role='admin' LIMIT 1`,[id]);
+  if(adminVotes.length)
+    throw new AppError(403,'ADMIN_REACTIONS_PROTECTED',
+      'Moderators cannot remove administrator reactions');
+}
