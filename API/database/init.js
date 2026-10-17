@@ -113,6 +113,40 @@ async function ensureCircleSchema(connection) {
   ];
   for (const [title,description] of topics)
     await connection.query('INSERT IGNORE INTO categories(title,description) VALUES(?,?)',[title,description]);
+
+  // Idempotent public demo conversations by seeded fixture users only
+  // This makes the community feel social without modifying real members' posts
+  const demos = [
+    ['asya','Music','The playlist that got me through this week','I made a playlist for rainy evenings and somehow ended up listening to it every day, what is your comfort song?'],
+    ['alex','Games','Co-op games for a weekend','Looking for something fun to play together, no competitive pressure, just a good time'],
+    ['maria','Pets','Today my cat claimed the entire sofa','Little story from home: I got up for tea and lost my seat permanently'],
+    ['sam','Travel','My favorite little streets in old cities','Sometimes the best part of traveling is getting lost somewhere quiet and unexpectedly beautiful'],
+    ['asya','Art','A small creative habit changed my evenings','I started drawing for ten minutes a day without trying to make anything perfect, it feels surprisingly freeing'],
+    ['maria','Movies','Movies that feel like autumn','I love cozy movies with warm lighting, cafés, old houses and a little mystery'],
+    ['alex','Food','Homemade cinnamon rolls are underrated','The smell of fresh cinnamon in the kitchen beats any fancy candle'],
+    ['sam','Science','Something fascinating I learned about the ocean','Did you know that we still know so little about deep sea habitats? Every new discovery feels like science fiction'],
+    ['asya','Lifestyle','Learning to enjoy a quiet Sunday','Slow mornings, a book and a walk with no big plans, sometimes that is enough'],
+    ['maria','Crafts','Anyone else obsessed with handmade gifts?','I love when presents carry a story, even if the edges are a bit imperfect'],
+    ['alex','Anime','Animation is such an underrated art form','The amount of emotion that can fit into a few hand-drawn frames is amazing'],
+    ['sam','Relationships','A small thing that makes friendship better','Remembering tiny details and showing up when it matters has been more important than grand gestures'],
+    ['asya','Fitness','Tried yoga and finally relaxed my shoulders','I expected stretching but ended up leaving with so much more energy'],
+    ['maria','Books','Books I wish I could read for the first time again','There is something special about finding a fictional place that feels like home'],
+    ['alex','Photography','Golden hour on an ordinary street','I stopped on the way home and noticed how the evening sun made everything look cinematic'],
+    ['sam','Humor','What tiny inconvenience became your villain origin story','Mine was opening a bag of chips upside down and launching half of them across the room']
+  ];
+  const [demoUsers] = await connection.query("SELECT id,login,email FROM users WHERE login IN ('asya','alex','maria','sam') AND email LIKE '%@usof.local'");
+  const demoByLogin=new Map(demoUsers.map(u=>[u.login,Number(u.id)]));
+  for (const [login,topic,title,content] of demos) {
+    const authorId=demoByLogin.get(login);
+    if(!authorId)continue;
+    const [[category]]=await connection.query('SELECT id FROM categories WHERE title=? LIMIT 1',[topic]);
+    if(!category)continue;
+    const [exist]=await connection.query('SELECT id FROM posts WHERE author_id=? AND title=? LIMIT 1',[authorId,title]);
+    if(exist.length)continue;
+    const [created]=await connection.query("INSERT INTO posts(author_id,title,content,status) VALUES(?,?,?,'active')",[authorId,title,content]);
+    await connection.query('INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',[created.insertId,category.id]);
+  }
+
 }
 
 async function initializeDatabase() {
