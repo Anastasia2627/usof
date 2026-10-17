@@ -33,6 +33,8 @@ export default function PostEditor({ id }) {
   const [expandedTopics,setExpandedTopics] = useState(false);
   const [topicQuery,setTopicQuery] = useState('');
   const editorRef=React.useRef(null);
+  const topicListRef=React.useRef(null);
+  useEffect(()=>{if(topicListRef.current)topicListRef.current.scrollTop=0;},[topicQuery,expandedTopics]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
@@ -235,7 +237,7 @@ export default function PostEditor({ id }) {
           <span>{topicQuery ? `${visibleTopics.length} ${t('matching topics')}` : `${categories.length} ${t('topics')}`}</span>
           {form.categories.length>0&&<strong>{form.categories.length} {t('selected')}</strong>}
         </div>
-        <div className={'checkGrid editorTopicList'+(expandedTopics||topicQuery?' topicsExpanded':'')}>
+        <div ref={topicListRef} className={'checkGrid editorTopicList'+(expandedTopics||topicQuery?' topicsExpanded':'')}>
           {visibleTopics.map(category =>
             <label className="check editorTopic" key={category.id}>
               <input type="checkbox" aria-label={t(category.title)}
