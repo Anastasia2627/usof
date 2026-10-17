@@ -8,6 +8,7 @@ import './basic.css';
 import './threads.css';
 import './feature-additions.css';
 import './refined-pages.css';
+import './ux-polish.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
