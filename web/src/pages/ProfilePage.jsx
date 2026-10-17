@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
+import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 
 export default function ProfilePage({ userId = null }) {
-  const auth = useSelector((state) => state.auth);
+  const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const viewedId = userId || auth?.user?.id;
   const isSelf = Boolean(auth && Number(viewedId) === Number(auth.user.id));
@@ -18,16 +18,22 @@ export default function ProfilePage({ userId = null }) {
   const [status, setStatus] = useState('');
   const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
+  const [editOpen, setEditOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api('/categories').then((result) => setCategories(result.data)).catch(setError);
+    let active = true;
+    api('/categories').then(result => { if (active) setCategories(result.data); })
+      .catch(err => { if (active) setError(err); });
+    return () => { active = false; };
   }, [auth?.token]);
 
   useEffect(() => {
     if (!viewedId) return;
+    let active = true;
     setLoading(true);
     setError(null);
     const query = new URLSearchParams({
@@ -43,18 +49,18 @@ export default function ProfilePage({ userId = null }) {
     Promise.all([
       api(`/users/${viewedId}`, { token: auth?.token }),
       api(`/users/${viewedId}/posts?${query}`, { token: auth?.token }),
-    ])
-      .then(([userResult, postResult]) => {
-        setUser(userResult.data);
-        setName(userResult.data.full_name || '');
-        setLogin(userResult.data.login || '');
-        setPosts(postResult.data);
-        setPagination(postResult.pagination);
-        if (isSelf) dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
-      })
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, [auth?.token, viewedId, isSelf, sort, status, category, page]);
+    ]).then(([userResult, postResult]) => {
+      if (!active) return;
+      setUser(userResult.data);
+      setName(userResult.data.full_name || '');
+      setLogin(userResult.data.login || '');
+      setPosts(postResult.data);
+      setPagination(postResult.pagination);
+      if (isSelf) dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
+    }).catch(err => { if (active) setError(err); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [auth?.token, viewedId, isSelf, sort, status, category, page, dispatch]);
 
   if (!auth && !userId) return <main><div className="card">Log in to view your profile. <button onClick={() => go('/login')}>Log in</button></div></main>;
 
@@ -69,17 +75,15 @@ export default function ProfilePage({ userId = null }) {
         body: { fullName: name, login },
       });
       if (result.sessionInvalidated) {
-        // Login name changes revoke the previous JWT; require a fresh login.
         dispatch({ type: 'AUTH_CLEAR' });
         go('/login');
       } else {
         setUser(result.data);
         dispatch({ type: 'AUTH_USER_SET', payload: result.data });
+        setEditOpen(false);
         setMessage('Profile saved.');
       }
-    } catch (err) {
-      setError(err);
-    }
+    } catch (err) { setError(err); }
   }
 
   async function upload(event) {
@@ -87,20 +91,16 @@ export default function ProfilePage({ userId = null }) {
     if (!file) return;
     setError(null);
     setMessage('');
+    setUploading(true);
     const data = new FormData();
     data.append('avatar', file);
     try {
-      const result = await api('/users/avatar', {
-        method: 'PATCH',
-        token: auth.token,
-        formData: data,
-      });
+      const result = await api('/users/avatar', { method: 'PATCH', token: auth.token, formData: data });
       setUser(result.data);
       dispatch({ type: 'AUTH_USER_SET', payload: result.data });
       setMessage('Avatar updated.');
-    } catch (err) {
-      setError(err);
-    }
+    } catch (err) { setError(err); }
+    finally { setUploading(false); event.target.value = ''; }
   }
 
   async function deleteAccount() {
@@ -108,15 +108,10 @@ export default function ProfilePage({ userId = null }) {
     setError(null);
     setMessage('');
     try {
-      await api(`/users/${auth.user.id}`, {
-        method: 'DELETE',
-        token: auth.token,
-      });
+      await api(`/users/${auth.user.id}`, { method: 'DELETE', token: auth.token });
       dispatch({ type: 'AUTH_CLEAR' });
       go('/');
-    } catch (err) {
-      setError(err);
-    }
+    } catch (err) { setError(err); }
   }
 
   function changeFilter(setter, value) {
@@ -124,47 +119,105 @@ export default function ProfilePage({ userId = null }) {
     setPage(1);
   }
 
-  return <main>
-    <section className="profileHero card">
-      <Avatar user={user} size="xl" />
-      <div><p className="eyebrow">{user?.role}</p><h1>{user?.login}</h1>{isSelf ? <p>{user?.email}</p> : <p>{user?.full_name || 'Circle member'}</p>}</div>
-      <div className="profileScore"><small>Rating</small><strong>{user?.rating || 0}</strong></div>
+  function cancelEdit() {
+    setName(user?.full_name || '');
+    setLogin(user?.login || '');
+    setError(null);
+    setEditOpen(false);
+  }
+
+  return <main className="profilePage">
+    <section className="profileHeader">
+      <div className="profileNames">
+        <span className="profileMicroLabel">{user?.role === 'admin' ? 'Administrator' : 'Circle member'}</span>
+        <h1>{user?.login || 'Profile'}</h1>
+        {user?.full_name && <p className="profileFullName">{user.full_name}</p>}
+        {isSelf && user?.email && <p className="profilePrivateEmail">{user.email}</p>}
+      </div>
+      <div className="profilePhoto"><Avatar user={user} size="xl"/></div>
     </section>
-    <div className="twoColumn">
-      {isSelf ? <form className="card form" onSubmit={save}>
-        <h2>Profile details</h2>
-        <label>Username<input required minLength="3" maxLength="50" value={login} onChange={event => setLogin(event.target.value)} /></label>
-        <label>Full name<input maxLength="100" value={name} onChange={(event) => setName(event.target.value)} /></label>
-        <label>Avatar<input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload} /></label>
-        <button className="primary">Save profile</button>
-        <small>Changing your username signs you out. Log in again with the new username.</small>
-        {message && <div className="alert success">{message}</div>}
-        <ErrorBox error={error} />
-        <div className="dangerZone">
-          <h3>Danger zone</h3>
-          <p className="muted">Deleting the account permanently removes its posts, comments and reactions.</p>
-          <button type="button" className="dangerText" onClick={deleteAccount}>Delete account</button>
-        </div>
-      </form> : <section className="card"><h2>About {user?.login}</h2><p>{user?.full_name || 'Member of Circle'}</p></section>}
-      <section>
-        <div className="sectionTitle">
-          <div><p className="eyebrow">Activity</p><h2>{isSelf ? 'Your posts' : `Posts by ${user?.login || 'member'}`}</h2></div>
-          <div className="inlineFilters">
-            <label className="srOnly" htmlFor="profile-sort">Sort posts</label>
-            <select id="profile-sort" value={sort} onChange={(event) => changeFilter(setSort, event.target.value)}><option value="date">Newest</option><option value="likes">Most liked</option></select>
-            <label className="srOnly" htmlFor="profile-category">Category</label>
-            <select id="profile-category" value={category} onChange={(event) => changeFilter(setCategory, event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-            {isSelf && <><label className="srOnly" htmlFor="profile-status">Status</label>
-            <select id="profile-status" value={status} onChange={(event) => changeFilter(setStatus, event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></>}
-          </div>
-        </div>
-        {loading
-          ? <div className="card loading">Loading posts…</div>
-          : posts.length
-            ? <div className="miniList">{posts.map((post) => <PostCard key={post.id} post={post} />)}</div>
-            : <div className="card empty">No posts match these filters.</div>}
-        {pagination && pagination.totalPages > 1 && <div className="pager"><button disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>← Previous</button><span>Page {pagination.page} / {pagination.totalPages}</span><button disabled={page >= pagination.totalPages} onClick={() => setPage((value) => value + 1)}>Next →</button></div>}
-      </section>
+    <div className="profileInfoRow">
+      <span className="profileRating"><Icon name="favorite" size={18}/><strong>{user?.rating || 0}</strong> reputation</span>
+      {isSelf && <button type="button" className="profileEditToggle" aria-expanded={editOpen}
+        onClick={() => { setEditOpen(v => !v); setError(null); setMessage(''); }}>
+        <Icon name="edit" size={18}/>{editOpen ? 'Close editor' : 'Edit profile'}
+      </button>}
     </div>
+
+    {isSelf && editOpen && <form className="profileEditPanel" onSubmit={save}>
+      <h2>Edit profile</h2>
+      <div className="profileEditFields">
+        <label>Username<input required minLength="3" maxLength="50" value={login} onChange={event => setLogin(event.target.value)} /></label>
+        <label>Full name<input maxLength="100" value={name} onChange={event => setName(event.target.value)} /></label>
+      </div>
+      <label className="profilePhotoPicker">
+        <Icon name="user" size={19}/>
+        {uploading ? 'Uploading photo…' : 'Change profile photo'}
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload}
+          aria-label="Avatar" disabled={uploading} />
+      </label>
+      <p className="profileEditNote">Changing your username will sign you out. You can log in again with the new username.</p>
+      <div className="profileEditActions">
+        <button className="profileCancelEdit" type="button" onClick={cancelEdit}>Cancel</button>
+        <button className="primary" type="submit">Save profile</button>
+      </div>
+      <ErrorBox error={error}/>
+    </form>}
+    {message && <p className="profileSaved" role="status"><Icon name="check" size={19}/>{message}</p>}
+    {!editOpen && <ErrorBox error={error}/>}
+
+    <section className="profileActivity">
+      <div className="profileActivityHeader">
+        <h2>{isSelf ? 'Your posts' : 'Posts'}</h2>
+        {isSelf && <button type="button" className="profileNewPost" onClick={() => go('/create')}>
+          <Icon name="plus" size={20}/> New post
+        </button>}
+      </div>
+      <div className="profileActivitySort" role="group" aria-label="Sort profile posts">
+        <button type="button" className={sort === 'date' ? 'profileSelected' : ''}
+          aria-pressed={sort === 'date'} onClick={() => changeFilter(setSort, 'date')}>Recent</button>
+        <button type="button" className={sort === 'likes' ? 'profileSelected' : ''}
+          aria-pressed={sort === 'likes'} onClick={() => changeFilter(setSort, 'likes')}>Popular</button>
+      </div>
+      <div className="profileTopicBar">
+        <div className="profileTopicPills" role="group" aria-label="Filter profile posts by category">
+          <button type="button" className={!category ? 'profileTopicActive' : ''}
+            aria-pressed={!category} onClick={() => changeFilter(setCategory, '')}>All</button>
+          {categories.map(item => <button key={item.id} type="button" className={String(category) === String(item.id) ? 'profileTopicActive' : ''}
+            aria-pressed={String(category) === String(item.id)}
+            onClick={() => changeFilter(setCategory, String(item.id))}>{item.title}</button>)}
+        </div>
+        {isSelf && <div className="profileStatusSelect">
+          <label className="srOnly" htmlFor="profile-status">Status</label>
+          <select id="profile-status" value={status} onChange={event => changeFilter(setStatus, event.target.value)}>
+            <option value="">All posts</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>}
+      </div>
+      {loading
+        ? <p className="profilePostMessage">Loading posts…</p>
+        : posts.length
+          ? <div className="profilePostList">{posts.map(post => <PostCard key={post.id} post={post}/>)}</div>
+          : <div className="profileEmpty">
+            <Icon name="forum" size={26}/>
+            <strong>Nothing here yet</strong>
+            <p>{category || status ? 'Try another topic or status.' : isSelf ? 'Your conversations will appear here.' : 'This member has not posted yet.'}</p>
+            {isSelf && !category && !status && <button type="button" onClick={() => go('/create')}>Write your first post <Icon name="arrow" size={18}/></button>}
+          </div>}
+      {pagination?.totalPages > 1 && <nav className="pager" aria-label="Profile post pages">
+        <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>Previous</button>
+        <span>Page {pagination.page} of {pagination.totalPages}</span>
+        <button disabled={page >= pagination.totalPages} onClick={() => setPage(value => value + 1)}>Next</button>
+      </nav>}
+    </section>
+    {isSelf && <details className="profileSettings">
+      <summary>Account settings <Icon name="chevron" size={18}/></summary>
+      <div className="profileDangerZone">
+        <p>Deleting your account permanently removes your posts, comments and reactions.</p>
+        <button type="button" className="dangerText" onClick={deleteAccount}>Delete account</button>
+      </div>
+    </details>}
   </main>;
 }
