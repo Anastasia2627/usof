@@ -141,7 +141,19 @@ export async function createCommentForUser(user, postIdValue, body) {
 export async function updateCommentForUser(user, idValue, body) {
   const comment = await getVisibleComment(idValue, user);
   const isAdmin = ['admin','moderator'].includes(user.role);
-  if (user.role === 'moderator') await assertMayModerateComment(user, comment);
+  if (user.role === 'moderator' &&
+      (Number(user.sub) !== Number(comment.author_id) || body.locked !== undefined))
+    await assertMayModerateComment(user, comment);
+  if (user.role === 'user' && Number(user.sub) !== Number(comment.author_id)) {
+    // The assignment permits member status updates on other members' comments,
+    // but no member should be able to hide an administrator's reply or discussion.
+    const [[protectedAuthor]] = await pool.query(
+      `SELECT 1 FROM users WHERE role='admin' AND id IN (?,?) LIMIT 1`,
+      [comment.author_id, comment.post_author_id],
+    );
+    if (protectedAuthor)
+      throw new AppError(403,'ADMIN_CONTENT_PROTECTED','Administrator discussions are protected');
+  }
   if (body.content !== undefined) {
     throw new AppError(
       403,
@@ -196,7 +208,8 @@ export async function deleteCommentForUser(user, idValue) {
   if (!['admin','moderator'].includes(user.role) && Number(user.sub) !== Number(comment.author_id)) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this comment');
   }
-  if (user.role === 'moderator') await assertMayModerateComment(user,comment);
+  if (user.role === 'moderator' && Number(user.sub)!==Number(comment.author_id))
+    await assertMayModerateComment(user,comment);
 
   const connection = await pool.getConnection();
   try {
