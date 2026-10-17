@@ -641,3 +641,41 @@ html[data-theme="dark"] .editorRefined .editorOptionRows .editorSchedule input {
   border-color: #4c4c4c;
   color: #eee;
 }
+
+/* A revoked login gets one unobtrusive prompt rather than repeated post errors. */
+.sessionExpiredBanner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 24px;
+  background: #f8f5f2;
+  border-bottom: 1px solid #eee2da;
+  color: #513b2d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sessionExpiredBanner > span { min-width: 0; }
+.sessionExpiredBanner button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sessionExpiredBanner button:nth-of-type(1) {
+  border: 1px solid #ccbbaa;
+  border-radius: 999px;
+  padding: 7px 13px;
+}
+.sessionExpiredBanner button:last-child { font-size: 21px; padding: 3px 6px; }
+html[data-theme="dark"] .sessionExpiredBanner {
+  color: #edd6c5;
+  background: #2e2622;
+  border-bottom-color: #51443d;
+}
+@media(max-width: 480px) {
+  .sessionExpiredBanner { justify-content: flex-start; padding: 11px 16px; }
+}
