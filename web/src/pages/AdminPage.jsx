@@ -6,6 +6,7 @@ import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 function UserRow({ user, auth, onSave, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [roleBusy, setRoleBusy] = useState(false);
   const [form, setForm] = useState({
     login: user.login,
     email: user.email,
@@ -31,6 +32,17 @@ function UserRow({ user, auth, onSave, onDelete }) {
     } finally { setSaving(false); }
   }
 
+  async function quickRole() {
+    const nextRole=user.role==='moderator'?'user':'moderator';
+    const question=nextRole==='moderator'
+      ? 'Make @'+user.login+' a moderator? They will be able to review reports and moderate posts and replies, but not manage users or roles.'
+      : 'Remove moderator permissions from @'+user.login+'?';
+    if(!window.confirm(question))return;
+    setRoleBusy(true);
+    try { await onSave(user,{role:nextRole}); }
+    finally { setRoleBusy(false); }
+  }
+
   return <div className="adminListItem adminUserRow">
     <div className="adminItemLine">
       <Avatar user={user} size="md"/>
@@ -41,6 +53,12 @@ function UserRow({ user, auth, onSave, onDelete }) {
       <span className="adminRoleChip">{user.role}</span>
       <span className="adminScore" title="User rating">{Number(user.rating || 0)} pts</span>
       <div className="adminRowTools">
+        {user.role!=='admin' && <button type="button" className={user.role==='moderator'?'roleQuickButton roleRevoke':'roleQuickButton'}
+          disabled={roleBusy || saving} aria-label={(user.role==='moderator'?'Remove moderator from ':'Make moderator: ')+user.login}
+          onClick={quickRole}>
+          <Icon name={user.role==='moderator'?'close':'shield'} size={17}/>
+          <span>{roleBusy?'Saving…':user.role==='moderator'?'Remove moderator':'Make moderator'}</span>
+        </button>}
         <button type="button" aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
           <Icon name="edit" size={18}/> <span>Edit</span>
         </button>
@@ -271,6 +289,10 @@ export default function AdminPage() {
         <div className="adminSectionHeader"><h2>Members</h2>
           <span>{data.users.length} total</span>
         </div>
+        <p className="roleHowTo"><Icon name="shield" size={18}/>
+          To give someone moderator access, click <strong>Make moderator</strong> next to their account.
+          Moderators can manage reports and content, not users or roles. They will need to log in again.
+        </p>
         <details className="adminCreate">
           <summary><Icon name="plus" size={20}/> Add member <Icon name="chevron" size={17}/></summary>
           <form className="adminCreateForm" onSubmit={createUser}>
