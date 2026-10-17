@@ -70,6 +70,26 @@ try{
   await page.setViewportSize({width:390,height:844});
   const mobileRadius=await card.evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius));
   assert.ok(mobileRadius>=14,'Feed cards must stay rounded on mobile');
+  // Search stays usable when the topic collection grows.
+  await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
+  const topicFilter=page.getByRole('searchbox',{name:'Search topics'});
+  await topicFilter.fill('zz_topic_that_does_not_exist');
+  assert.equal(await page.locator('.editorTopicList .editorTopic').count(),0);
+  await page.getByRole('button',{name:'Clear search'}).click();
+  assert.ok(await page.locator('.editorTopicList .editorTopic').count()>=12);
+  await page.goto(origin+'/#/categories',{waitUntil:'networkidle'});
+  const categoryFilter=page.getByRole('searchbox',{name:'Search topics'});
+  await categoryFilter.fill('zz_topic_that_does_not_exist');
+  await page.getByText('No matching topics').waitFor();
+  await page.getByRole('button',{name:'Clear search'}).click();
+  assert.ok(await page.locator('.categoryCard').count()>0);
+
+  // The dashboard is reachable from Admin and is no longer a sidebar item.
+  await page.goto(origin+'/#/admin',{waitUntil:'networkidle'});
+  await page.getByRole('navigation',{name:'Main navigation'})
+    .getByRole('button',{name:'Dashboard'}).waitFor({state:'detached'});
+  await page.getByRole('button',{name:'Dashboard'}).click();
+  await page.locator('.embeddedDashboard .dashStats').first().waitFor();
   await admin.close();
 
   // Recreate an auth payload from a revoked/old session. The backend must
