@@ -149,6 +149,50 @@ Object.assign(translations.ru, {
   'Log in to create or edit posts.':'Войдите, чтобы писать и редактировать посты.'
 });
 
+// New interface copy used by the refined login and composer.
+Object.assign(translations.uk, {
+  'Good conversations start here.':'Гарні розмови починаються тут.',
+  'Share what you love. Find people who get it. Discover a little something new every day.':'Діліться тим, що любите, знаходьте однодумців та відкривайте щось нове.',
+  'Art & ideas':'Мистецтво та ідеї', 'Little discoveries':'Маленькі відкриття',
+  'Real people':'Справжні люди', 'One community. Countless perspectives.':'Одна спільнота. Безліч поглядів.',
+  'JOIN THE COMMUNITY':'ДОЛУЧАЙТЕСЬ ДО СПІЛЬНОТИ', 'NICE TO SEE YOU AGAIN':'РАДІ ЗНОВУ БАЧИТИ',
+  'Welcome back':'З поверненням', 'Create account':'Створити акаунт',
+  'A few details and you are ready to join the conversation.':'Ще кілька деталей — і можна приєднуватися до обговорень.',
+  'Log in to pick up where you left off.':'Увійдіть, щоб продовжити спілкування.',
+  'Email':'Електронна пошта', 'Username or email':'Логін або пошта',
+  'Password':'Пароль', 'Confirm password':'Підтвердьте пароль',
+  'Please wait…':'Зачекайте…', 'New to Circle?':'Ще немає акаунта?',
+  'Already part of Circle?':'Уже з нами?', 'Create an account':'Створити акаунт',
+  'Forgot password?':'Забули пароль?',
+  'Need a new email verification code?':'Потрібен новий код підтвердження?',
+  'Share an idea, ask a question, or start a conversation.':'Поділіться ідеєю, поставте запитання або почніть розмову.',
+  'Add photos':'Додати фото', 'Hide preview':'Сховати перегляд',
+  'Preview':'Попередній перегляд', 'Show all topics':'Показати всі теми',
+  'Show fewer topics':'Згорнути теми',
+  'Up to 4 photos · JPEG, PNG, WebP · 5 MB each':'До 4 фото · JPEG, PNG, WebP · 5 МБ кожне'
+});
+Object.assign(translations.ru, {
+  'Good conversations start here.':'Хорошие разговоры начинаются здесь.',
+  'Share what you love. Find people who get it. Discover a little something new every day.':'Делитесь тем, что любите, находите единомышленников и узнавайте что-то новое.',
+  'Art & ideas':'Искусство и идеи', 'Little discoveries':'Маленькие открытия',
+  'Real people':'Настоящие люди', 'One community. Countless perspectives.':'Одно сообщество. Множество взглядов.',
+  'JOIN THE COMMUNITY':'ПРИСОЕДИНЯЙТЕСЬ', 'NICE TO SEE YOU AGAIN':'СНОВА РАДЫ ВАС ВИДЕТЬ',
+  'Welcome back':'С возвращением', 'Create account':'Создать аккаунт',
+  'A few details and you are ready to join the conversation.':'Ещё пара деталей — и можно присоединяться к обсуждениям.',
+  'Log in to pick up where you left off.':'Войдите, чтобы продолжить общение.',
+  'Email':'Электронная почта', 'Username or email':'Логин или почта',
+  'Password':'Пароль', 'Confirm password':'Подтвердите пароль',
+  'Please wait…':'Подождите…', 'New to Circle?':'Ещё нет аккаунта?',
+  'Already part of Circle?':'Уже с нами?', 'Create an account':'Создать аккаунт',
+  'Forgot password?':'Забыли пароль?',
+  'Need a new email verification code?':'Нужен новый код подтверждения?',
+  'Share an idea, ask a question, or start a conversation.':'Поделитесь идеей, задайте вопрос или начните разговор.',
+  'Add photos':'Добавить фото', 'Hide preview':'Скрыть просмотр',
+  'Preview':'Предпросмотр', 'Show all topics':'Показать все темы',
+  'Show fewer topics':'Свернуть темы',
+  'Up to 4 photos · JPEG, PNG, WebP · 5 MB each':'До 4 фото · JPEG, PNG, WebP · 5 МБ каждое'
+});
+
 const PreferencesContext = createContext(null);
 function read() {
   try {
