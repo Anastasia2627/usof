@@ -91,13 +91,23 @@ function UserRow({ user, auth, onSave, onDelete }) {
 function PostCategoryEditor({ post, categories, auth, run }) {
   const {t}=usePreferences();
   const [selected, setSelected] = useState(post.categories?.map(item => Number(item.id)) || []);
+  const [query,setQuery] = useState('');
   useEffect(() => setSelected(post.categories?.map(item => Number(item.id)) || []), [post.id, post.categories]);
   const toggle = id => setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
 
   return <details className="adminInnerDetails">
-    <summary>Topics <Icon name="chevron" size={17}/></summary>
+    <summary>{t('Topics')} <Icon name="chevron" size={17}/></summary>
+    <div className="topicSearchField adminPostTopicSearch">
+      <Icon name="search" size={16}/>
+      <input type="search" aria-label={t('Search topics')} placeholder={t('Search topics')}
+        value={query} onChange={event=>setQuery(event.target.value)}/>
+      {query&&<button type="button" title={t('Clear search')} aria-label={t('Clear search')}
+        onClick={()=>setQuery('')}><Icon name="close" size={15}/></button>}
+    </div>
     <div className="adminTopicChoices">
-      {categories.map(category => <label className="adminTopicChoice" key={category.id}>
+      {categories.filter(category=>[category.title,t(category.title),category.description||'']
+        .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())))
+        .map(category => <label className="adminTopicChoice" key={category.id}>
         <input type="checkbox" checked={selected.includes(Number(category.id))} onChange={() => toggle(Number(category.id))}/>
         <span>{t(category.title)}</span>
       </label>)}
