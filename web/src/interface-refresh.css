@@ -265,3 +265,8 @@ html[data-theme=dark] .feedFilterStrip .filterDetails .filterPanelGrid select{ba
   .circleCalendar{position:relative;left:0;top:5px;box-shadow:none;border:1px solid var(--ui-stroke);width:min(280px,calc(100vw - 66px));}
   .filterDateControl:last-child .circleCalendar{right:0;left:auto;}
 }
+
+/* Popover must stay above sticky header while scrolling to its bottom controls. */
+main.homePage:has(.filterDetails[open]){position:relative;z-index:1500;}
+main.homePage:has(.filterDetails[open]) .feedFilterStrip{z-index:1510;}
+main.homePage:has(.filterDetails[open]) .filterBar{z-index:1520;}
