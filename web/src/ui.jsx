@@ -73,6 +73,7 @@ export function PostCard({ post }) {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const contextRef = useRef(null);
   const [error, setError] = useState(null);
@@ -84,9 +85,10 @@ export function PostCard({ post }) {
   const isModerated = (post.status !== 'active' || Boolean(post.locked) || Boolean(post.publish_at && new Date(post.publish_at)>new Date())) && !isAdmin;
   const voteDisabled = busy || selfPost || isModerated;
   const voteTitle = selfPost
-    ? 'You cannot react to your own post'
-    : isModerated ? 'Reactions are disabled on this post' : '';
+    ? t('You cannot react to your own post')
+    : isModerated ? t('Reactions are disabled on this post') : '';
 
+  useEffect(() => { setCopied(false); }, [post.id]);
   useEffect(() => {
     setCounts({ like: Number(post.like_count || 0), dislike: Number(post.dislike_count || 0), comment: Number(post.comment_count || 0) });
   }, [post.id, post.like_count, post.dislike_count, post.comment_count]);
@@ -137,6 +139,15 @@ export function PostCard({ post }) {
       setSaved(value);
       window.dispatchEvent(new Event('circle:saved-updated'));
     } catch(e){setError(e);} finally{setSaving(false);}
+  }
+  async function copyLink() {
+    try {
+      const url=window.location.origin+window.location.pathname+'#/post/'+post.id;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      setError(new Error(t('Unable to copy the link. Please copy the address from your browser.')));
+    }
   }
   async function moderate(method,body) {
     setContextMenu(null);
@@ -194,7 +205,7 @@ export function PostCard({ post }) {
         <StatusBadges item={showStatus ? post : { locked: post.locked }} />
       </div>
       <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
-      {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
+      {post.accepted_comment_id && <span className="solutionTag">✓ {t('Solved')}</span>}
       <p className="threadExcerpt">{post.content?.slice(0, 260)}{post.content?.length > 260 ? '…' : ''}</p>
       {post.images?.length>0&&<button type="button" className="threadPhoto" onClick={()=>go('/post/'+post.id)}
         aria-label="View post photos"><img loading="lazy" src={assetUrl(post.images[0].url)} alt="Post photo"/></button>}
@@ -216,6 +227,10 @@ export function PostCard({ post }) {
           className={saved?'activeSave':''} disabled={saving} onClick={toggleSave}>
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/>
         </button>}
+        <button type="button" className="threadShareAction" aria-label={t(copied?'Link copied':'Copy link')}
+          title={t(copied?'Link copied':'Copy link')} onClick={copyLink}>
+          <Icon name={copied?'check':'share'} size={19}/>
+        </button>
         {canModeratePost && <button type="button" aria-label={t('Post actions')}
           title={t('Post actions')} className="postModerationTrigger"
           onClick={openModeration}><Icon name="more" size={20}/></button>}
