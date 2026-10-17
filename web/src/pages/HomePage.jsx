@@ -81,12 +81,13 @@ export default function HomePage({ hash, basePath = '/' }) {
     go(basePath + '?' + query);
   }
 
+  const popular = (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
   const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
 
   return <main className="homePage">
     <h1 className="feedPageTitle">{basePath === '/explore' ? 'Explore' : 'Home'}</h1>
     <div className="feedTabs" role="group" aria-label="Feed views">
-      <button aria-pressed={!latest} className={!latest ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>For you</button>
+      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>For you</button>
       <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>Latest</button>
     </div>
 
