@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {api} from './api.js';
-import {ErrorBox,go} from './ui.jsx';
+import {ErrorBox} from './ui.jsx';
 
 export default function ReportButton({kind,id,auth,authorId}) {
   const [open,setOpen]=useState(false),[reason,setReason]=useState('spam');
@@ -15,7 +15,7 @@ export default function ReportButton({kind,id,auth,authorId}) {
       setMessage('Report sent to moderators.');setOpen(false);setDetails('');
     }catch(err){setError(err);}finally{setBusy(false);}
   }
-  return <span className="reportControl">
+  return <div className="reportControl">
     {message?<small role="status">{message}</small>:<button type="button" className="quietButton"
       onClick={()=>{setOpen(x=>!x);setError(null);}}>Report</button>}
     {open&&<form className="reportForm" onSubmit={submit}>
@@ -28,5 +28,5 @@ export default function ReportButton({kind,id,auth,authorId}) {
         <button type="button" onClick={()=>setOpen(false)}>Cancel</button></div>
       <ErrorBox error={error}/>
     </form>}
-  </span>;
+  </div>;
 }
