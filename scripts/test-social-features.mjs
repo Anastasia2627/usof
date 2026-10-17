@@ -38,11 +38,8 @@ assert.equal((await request('/social/follows/'+managed.id,{token:member})).data.
 assert.ok((await request('/social/following',{token:member})).data.some(u=>Number(u.id)===Number(managed.id)));
 await request('/social/follows/'+managed.id,{method:'DELETE',token:member,status:204});
 assert.equal((await request('/social/follows/'+managed.id,{token:member})).data.following,false);
-const message=(await request('/social/messages/'+managed.id,{method:'POST',token:member,status:201,body:{content:'Private test '+suffix}})).data;
-const thread=(await request('/social/messages/'+managed.id,{token:member})).data;
-assert.ok(thread.messages.some(m=>Number(m.id)===Number(message.id)));
-assert.ok((await request('/social/conversations',{token:mod})).data.some(c=>c.login==='asya'));
-await request('/social/messages/'+managed.id,{method:'POST',token:member,body:{content:''},status:422});
+await request('/social/conversations',{token:member,status:404});
+await request('/social/messages/'+managed.id,{token:member,status:404});
 const when=new Date(Date.now()+3600*1000).toISOString();
 const scheduled=(await request('/posts',{method:'POST',token:member,status:201,body:{
   title:'Scheduled '+suffix,content:'Scheduled social post',categories:[ids[0]],publishAt:when
@@ -73,4 +70,4 @@ await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{title:'Must no
 await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{locked:true}});
 await request('/posts/'+posted.id,{method:'PATCH',token:mod,body:{locked:false}});
 await request('/posts/'+posted.id,{method:'DELETE',token:mod,status:204});
-console.log('Social integrations passed: moderator permissions, verified comments, closing, hidden likes, scheduling, follows, DMs, interest topics');
+console.log('Social integrations passed: moderator permissions, verified comments, closing, hidden likes, scheduling, follows, interest topics');
