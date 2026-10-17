@@ -5,6 +5,8 @@ import { Avatar, ErrorBox, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import FormattedContent from '../FormattedContent.jsx';
 import PostPhotoGallery from '../PostPhotoGallery.jsx';
+import SuggestTopic from '../SuggestTopic.jsx';
+import DatePicker from '../DatePicker.jsx';
 import {assetUrl} from '../api.js';
 
 export default function PostEditor({ id }) {
@@ -249,6 +251,7 @@ export default function PostEditor({ id }) {
           {expandedTopics?t('Show fewer topics'):`${t('Show all topics')} (${categories.length})`}
           <Icon name="chevron" size={17}/>
         </button>}
+        <SuggestTopic/>
       </fieldset>
 
       <details className="editorOptions">
@@ -267,8 +270,8 @@ export default function PostEditor({ id }) {
               <strong>{t('Publish later')}</strong>
               <small>{t('Leave empty to publish now')}</small>
             </label>
-            <input id="editor-publish-date" type="datetime-local" value={form.publishAt}
-              onChange={e=>setForm({...form,publishAt:e.target.value})}/>
+            <DatePicker id="editor-publish-date" mode="datetime" label={t('Publish later')}
+              value={form.publishAt} onChange={value=>setForm({...form,publishAt:value})}/>
           </div>
         </div>
       </details>
