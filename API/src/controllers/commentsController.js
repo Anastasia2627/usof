@@ -3,7 +3,7 @@ import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
 import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
-import { assertMayModerateComment } from '../services/moderationPolicy.js';
+import { assertMayModerateComment, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createCommentForUser,
   deleteCommentForUser,
@@ -89,6 +89,8 @@ export async function removeCommentReaction(req, res) {
   const comment = await getVisibleComment(req.params.comment_id, req.user);
   if (req.user.role === 'moderator' && req.query.all === '1')
     await assertMayModerateComment(req.user,comment);
+  if(req.user.role==='moderator' && req.query.all==='1')
+    await assertMayClearReactions(req.user,{commentId:comment.id});
   await deleteReaction({
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
