@@ -178,9 +178,18 @@ try {
 
   // 16: admin updates first user.
   await open(admin,'/admin');
-  const row=admin.locator('tr').filter({has:admin.getByRole('textbox',{name:'Login for '+name})});
+  await admin.getByRole('button',{name:'Edit user '+name}).click();
+  const row=admin.locator('.adminUserRow').filter({has:admin.getByRole('textbox',{name:'Login for '+name})});
   await row.getByRole('textbox',{name:'Full name for '+name}).fill('Admin edited member');
-  await row.getByRole('button',{name:'Save'}).click();
+  await row.getByRole('button',{name:'Save user'}).click();
+  await admin.getByRole('button',{name:'Edit user '+name}).waitFor();
+
+  // The redesigned admin list is responsive and does not expose edit forms by default.
+  await mkdir('screenshots', { recursive: true });
+  await admin.screenshot({path:'screenshots/admin-desktop.png',fullPage:true});
+  await admin.setViewportSize({width:390,height:844});
+  await admin.screenshot({path:'screenshots/admin-mobile.png',fullPage:true});
+  await admin.setViewportSize({width:1280,height:800});
 
   // 17: author edits their own content, but not other users or admin.
   await open(user,'/edit/'+posts[0]);
@@ -191,7 +200,8 @@ try {
 
   // 18: admin adds a category; 19: admin deletes other's comment.
   await open(admin,'/admin');
-  await admin.locator('.tabs').getByRole('button',{name:'categories'}).click();
+  await admin.locator('.tabs').getByRole('button',{name:/categories/}).click();
+  await admin.locator('.adminCreate > summary').click();
   const categoryName='Review category '+suffix;
   await admin.locator('form').filter({hasText:'Create category'}).getByLabel('Title').fill(categoryName);
   await admin.getByRole('button',{name:'Create category'}).click();
