@@ -1,10 +1,13 @@
 import { mockApi } from './mockApi.js';
 
-const ORIGIN = (import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000').replace(/\/$/, '');
+// In local Vite development, the browser calls its own origin. Vite proxies
+// /api and /uploads to Node on 127.0.0.1:5000. Production still uses the
+// configured API origin, so the app can be deployed separately.
+const ORIGIN = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_ORIGIN || window.location.origin).replace(/\/$/, '');
 const BASE = ORIGIN + '/api';
 
-// Deliberate separation: only web:demo uses the local mock.
-// Ordinary "web" must never silently simulate a working database.
 const demoMode = import.meta.env.DEV && import.meta.env.MODE === 'demo';
 
 export class ApiError extends Error {
@@ -22,14 +25,8 @@ export function assetUrl(path) {
   if (/^https?:\/\//i.test(path)) return path;
   return ORIGIN + (path.startsWith('/') ? '' : '/') + path;
 }
-
-export function isDemoMode() {
-  return demoMode;
-}
-
-export function isPreviewMode() {
-  return demoMode;
-}
+export function isDemoMode() { return demoMode; }
+export function isPreviewMode() { return demoMode; }
 
 export async function api(path, { method = 'GET', body, token, formData, signal } = {}) {
   if (demoMode) return mockApi(path, { method, body, token, formData, signal });
@@ -48,13 +45,26 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
-    throw new ApiError('Cannot reach the Circle API. Start the backend and MySQL.', {
-      code: 'NETWORK_ERROR',
-    });
+    throw new ApiError(
+      'Cannot connect to Circle right now. Check that npm start is running, then retry.',
+      { code: 'NETWORK_ERROR' },
+    );
   }
 
   if (response.status === 204) return null;
-  const data = await response.json().catch(() => ({}));
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new ApiError('Circle API did not return JSON. Make sure npm start is running on port 5000.', {
+        status: response.status, code: 'API_UNAVAILABLE',
+      });
+    }
+    throw new ApiError('Unexpected response from Circle API.', {
+      status: response.status, code: 'INVALID_API_RESPONSE',
+    });
+  }
   if (!response.ok) {
     throw new ApiError(data?.error?.message || 'Request failed with status ' + response.status, {
       status: response.status,
