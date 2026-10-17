@@ -15,7 +15,7 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
 - Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
-The `web/src/basic.css` file is the only stylesheet loaded. It deliberately uses plain system fonts, one accent color and **no animations or decorative effects**. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
+The frontend loads `web/src/basic.css` plus `web/src/threads.css`: a responsive, monochrome Threads-inspired style with a centered conversation column and bottom mobile navigation. There are no decorative animations. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
 
 ## Run locally on macOS (Docker Desktop)
 
@@ -30,7 +30,7 @@ git switch --track origin/circle-full-requirements
 npm install
 ```
 
-If that branch already exists locally, use `git switch circle-full-requirements`
+If that branch already exists locally, use `git switch circle-threads-feed`
 followed by `git pull --ff-only`.
 
 In your **existing local** `.env`, set:
@@ -82,6 +82,29 @@ MySQL; do not delete the volume.
 
 The browser-only `npm run web:demo` preview is optional, and not suitable
 for defense because it does not store shared records or send email.
+
+## Fixing the guest feed network warning
+
+Public posts do **not** require login. If the guest home shows a network error
+even when Docker is healthy and `npm start` says the API is listening, use
+the **Threads UI branch** and restart the Vite process to pick up its new
+same-origin proxy config. The browser now fetches `/api/...` from port 5173,
+and Vite forwards the requests to `127.0.0.1:5000`.
+
+In **one** terminal run `npm start`. In the **other** terminate the previous
+Vite process with Ctrl+C, then run `npm run web`. Check both:
+
+```bash
+curl http://localhost:5000/api/health
+curl http://localhost:5173/api/health
+```
+
+Both should return `{"status":"ok"}` while the real DB is connected.
+If they do, reload the browser with Cmd+Shift+R. Do not switch to
+`web:demo` and do not reset the MySQL database to hide the warning.
+
+This branch also exposes a **Try again** action when a genuine API request
+fails; browser requests work while logged out as well as logged in.
 
 ## Real email — test it before fixing MySQL
 
