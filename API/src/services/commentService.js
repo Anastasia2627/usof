@@ -50,7 +50,7 @@ export async function getVisibleComment(
   return comment;
 }
 
-export async function listAdminComments(query) {
+export async function listAdminComments(query,actor) {
   const where = [];
   const params = [];
   if (query.status) {
