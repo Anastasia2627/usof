@@ -109,6 +109,48 @@ try {
   await page.getByText(/Page 2 of [2-9][0-9]*/).waitFor();
   await page.locator('.adminRow').first().waitFor({ state: 'visible' });
   assert.ok(await page.locator('.adminRow').count() > 0, 'Second page should show posts');
+
+  // All icons must be real Google SVGs; never translated ligature words.
+  await page.goto(frontend + '/#/', { waitUntil:'networkidle' });
+  await page.locator('.threadCard').first().waitFor();
+  assert.ok(await page.locator('.mainNav .googleSvgIcon svg').count() >= 6,'Sidebar uses bundled SVG icons');
+
+  // Saving a real database post is reflected on the Saved page and persists.
+  const topPost = page.locator('.threadCard').first();
+  const title = await topPost.locator('.postTitleLink').innerText();
+  const saveButton = topPost.getByRole('button', {name:'Save post'});
+  await saveButton.click();
+  await topPost.getByRole('button', {name:'Unsave post'}).waitFor();
+  await page.goto(frontend + '/#/saved', { waitUntil:'networkidle' });
+  await page.getByRole('heading', {name:'Saved posts'}).waitFor();
+  await page.locator('.threadCard .postTitleLink').filter({hasText:title}).first().waitFor();
+
+  // Real admin statistics are loaded from the existing dashboard API.
+  await page.goto(frontend + '/#/dashboard', { waitUntil:'networkidle' });
+  await page.getByRole('heading', {name:'Admin overview'}).waitFor();
+  assert.ok(await page.locator('.dashStat').count() >= 4,'Admin dashboard metrics must render');
+
+  // Settings must persist across reload and change actual theme and language.
+  await page.goto(frontend + '/#/settings', { waitUntil:'networkidle' });
+  await page.getByRole('radio', {name:'Dark'}).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.getByRole('radio', {name:'Українська'}).click();
+  await page.getByRole('heading',{name:'Налаштування'}).waitFor();
+  await page.reload({waitUntil:'networkidle'});
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  assert.equal(await page.locator('html').getAttribute('lang'),'uk');
+  await page.getByRole('radio', {name:'English'}).click();
+  await page.getByRole('radio', {name:'Light'}).click();
+
+  // Right click for moderators opens actions on a feed post.
+  await page.goto(frontend + '/#/', { waitUntil:'networkidle' });
+  await page.locator('.threadCard').first().waitFor();
+  await page.locator('.threadCard').first().click({button:'right'});
+  await page.getByRole('menu', {name:'Post actions'}).waitFor();
+  await page.getByRole('menuitem', {name:'Delete post'}).waitFor();
+  await page.keyboard.press('Escape');
+  await page.getByRole('menu', {name:'Post actions'}).waitFor({state:'detached'});
+
   console.log('Browser UI checks passed: real feed, profile navigation, mobile role/logout, and admin pagination.');
 } finally {
   await browser.close();
