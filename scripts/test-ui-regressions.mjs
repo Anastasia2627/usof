@@ -40,6 +40,36 @@ try{
   }
   await validateSettings(1280);
   await validateSettings(390);
+  // Tab-scoped text drafts survive an accidental refresh and can be discarded.
+  await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
+  await page.locator('#post-title').fill('A draft worth keeping');
+  await page.locator('#post-content').fill('Unsaved writing survives a refresh.');
+  await page.reload({waitUntil:'networkidle'});
+  assert.equal(await page.locator('#post-title').inputValue(),'A draft worth keeping');
+  assert.equal(await page.locator('#post-content').inputValue(),'Unsaved writing survives a refresh.');
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'Discard draft'}).click();
+  assert.equal(await page.locator('#post-title').inputValue(),'');
+  await page.reload({waitUntil:'networkidle'});
+  assert.equal(await page.locator('#post-title').inputValue(),'');
+
+  // Sharing is possible directly from the feed, without navigating through menus.
+  await admin.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.goto(origin+'/#/',{waitUntil:'networkidle'});
+  const share=page.getByRole('button',{name:'Copy link'}).first();
+  await share.waitFor();
+  await share.click();
+  await page.getByRole('button',{name:'Link copied'}).first().waitFor();
+  const copiedUrl=await page.evaluate(()=>navigator.clipboard.readText());
+  assert.match(copiedUrl,/\/#\/post\/\d+$/);
+
+  // Rounded interactive surfaces stay legible at common desktop/mobile sizes.
+  const card=page.locator('.threadCard').first();
+  const desktopRadius=await card.evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius));
+  assert.ok(desktopRadius>=14,'Feed cards should have comfortable rounded corners');
+  await page.setViewportSize({width:390,height:844});
+  const mobileRadius=await card.evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius));
+  assert.ok(mobileRadius>=14,'Feed cards must stay rounded on mobile');
   await admin.close();
 
   // Recreate an auth payload from a revoked/old session. The backend must
