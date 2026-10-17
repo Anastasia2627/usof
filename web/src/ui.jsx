@@ -305,7 +305,6 @@ export function Header() {
     ...(auth ? [
       { key:'create', text:'New post', destination:'/create', icon:'plus' },
       { key:'saved', text:'Saved', destination:'/saved', icon:'bookmarkBorder' },
-      { key:'notifications', text:'Notifications', destination:'/notifications', icon:'group' },
       { key:'dashboard', text:'Dashboard', destination:'/dashboard', icon:'analytics' },
     ] : []),
     { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
