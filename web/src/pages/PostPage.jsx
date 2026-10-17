@@ -3,6 +3,9 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
+import FormattedContent from '../FormattedContent.jsx';
+import ReportButton from '../ReportButton.jsx';
+import {assetUrl} from '../api.js';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
   const [items, setItems] = useState([]);
@@ -53,7 +56,7 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   </div>;
 }
 
-function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
+function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthorId, depth = 0 }) {
   const [reply, setReply] = useState('');
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState(null);
@@ -93,10 +96,17 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> Reviewed by moderator</span>}
       </div>
       <p className="commentContent">{item.content}</p>
+      {Number(acceptedId)===Number(item.id) && <span className="solutionTag">✓ Best answer</span>}
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
       <div className="commentActions">
+        {Number(auth?.user?.id)===Number(postAuthorId)&&item.status==='active'&&
+          <button type="button" className="solutionButton" onClick={()=>
+            run('/posts/'+postId+'/solution','PATCH',{
+              commentId:Number(acceptedId)===Number(item.id)?null:item.id
+            })}>{Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer'}</button>}
+        <ReportButton kind="comment" id={item.id} auth={auth} authorId={item.author_id}/>
         {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> Reply</button>}
         {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
           {active ? 'Deactivate' : 'Activate'}</button>}
@@ -117,7 +127,7 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
       </form>}
       <ErrorBox error={error} />
     </article>
-    {children.map(child => <Comment key={child.id} item={child} comments={comments} postId={postId} auth={auth} refresh={refresh} depth={depth + 1} />)}
+    {children.map(child => <Comment key={child.id} item={child} comments={comments} postId={postId} auth={auth} refresh={refresh} acceptedId={acceptedId} postAuthorId={postAuthorId} depth={depth + 1} />)}
   </div>;
 }
 
@@ -130,6 +140,7 @@ export default function PostPage({ id }) {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [lightbox,setLightbox] = useState(null);
   const {t} = usePreferences();
 
   async function load() {
@@ -216,8 +227,21 @@ export default function PostPage({ id }) {
         <StatusBadges item={post}/>
       </div>
       <h1>{post.title}</h1>
-      <p className="naturalPostContent">{post.content}</p>
+      {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
+      <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
+      {post.images?.length>0 && <div className="postPhotoGallery">
+        {post.images.map(image=><button type="button" key={image.id}
+          onClick={()=>setLightbox(assetUrl(image.url))} aria-label="View photo full size">
+          <img src={assetUrl(image.url)} alt="Post attachment" loading="lazy"/>
+        </button>)}
+      </div>}
+      {lightbox&&<div className="photoLightbox" role="dialog" aria-modal="true" aria-label="Full-size photo"
+        onClick={()=>setLightbox(null)}>
+        <button type="button" onClick={()=>setLightbox(null)} aria-label="Close photo">×</button>
+        <img src={lightbox} alt="Post attachment full size"/>
+      </div>}
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{x.title}</span>)}</div>
+      <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
       <div className="naturalPostReactions">
         <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
           visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
@@ -254,7 +278,7 @@ export default function PostPage({ id }) {
     <section className="naturalComments">
       <h2>Replies <span>{comments.length}</span></h2>
       {roots.length ? <div className="naturalCommentTree">
-        {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load}/>)}
+        {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} acceptedId={post.accepted_comment_id} postAuthorId={post.author_id}/>)}
       </div> : <div className="naturalEmptyReplies"><Icon name="comment" size={25}/>
         <p>No replies yet</p><small>Be the first to join the conversation</small></div>}
       {canComment ? <form className="naturalReplyComposer" onSubmit={sendComment}>
