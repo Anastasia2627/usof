@@ -471,3 +471,46 @@ html[data-theme="dark"] .editorRefined .postComposerForm .editorTitleInput,
 html[data-theme="dark"] .editorRefined .postComposerForm .editorContentInput { color: #f3f3f3; }
 html[data-theme="dark"] .roleHowTo { background: #262626; color: #cecece; }
 html[data-theme="dark"] .roleHowTo strong { color: #f5f5f5; }
+
+/* In-composer photo previews use the published post gallery component. */
+.editorPhotoLivePreview{margin:15px 0 0;padding:14px 0 0;border-top:1px solid #ededed}
+.editorPhotoPreviewHeading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+.editorPhotoPreviewHeading strong{font-size:12px;color:#292929}
+.editorPhotoPreviewHeading small{font-size:11px;color:#8a8a8a}
+.editorPhotoLivePreview .postPhotoGallery{margin:0;display:flex;align-items:stretch;flex-wrap:wrap;gap:9px}
+.editorPhotoLivePreview .postPhotoGallery img{width:clamp(110px,18vw,175px);height:auto;aspect-ratio:1;object-fit:cover;border-radius:10px}
+.postPreviewIdentity{display:flex;gap:8px;align-items:center;margin:0 0 12px;font-size:12px}
+.postPreviewCategories{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.postPreviewCategories span{font-size:11px;padding:6px 10px;border-radius:99px;background:#f1f1f1;color:#555}
+/* Admin role tools on every visible author name, compact until opened. */
+.moderatorControl{display:inline-flex;position:relative;vertical-align:middle;flex:none}
+.moderatorControlTrigger{border:0;background:transparent;color:#9a9a9a;border-radius:50%;padding:0 5px;min-height:23px;min-width:25px;font-size:18px;line-height:1;cursor:pointer}
+.moderatorControlTrigger:hover,.moderatorControlTrigger[aria-expanded=true]{background:#f1f1f1;color:#151515}
+.moderatorControlPopover{position:absolute;top:calc(100% + 7px);left:0;z-index:30;width:230px;max-width:calc(100vw - 35px);display:grid;gap:8px;border:1px solid #e4e4e4;background:#fff;border-radius:13px;padding:13px 14px;box-shadow:0 12px 36px rgba(0,0,0,.12);font-size:12px;color:#222}
+.moderatorControlPopover strong{overflow-wrap:anywhere;font-weight:720}
+.moderatorControlPopover small{font-size:11px;color:#797979}
+.moderatorControlPopover button{border:0;background:#191919;color:#fff;border-radius:999px;padding:10px;font-size:12px;font-weight:680}
+.moderatorControlPopover button:disabled{opacity:.6}
+.profileRoleHeading{display:flex;align-items:center;gap:10px}
+.searchMember{display:flex!important;align-items:center;justify-content:space-between;gap:10px;text-align:left}
+.searchMemberIdentity{border:0;background:transparent;display:flex;gap:11px;align-items:center;min-width:0;flex:1;text-align:left;padding:0;color:inherit;cursor:pointer}
+.searchMemberIdentity span{min-width:0}
+.searchMemberIdentity span small{display:block}
+/* Visible, in-app notifications and role update banner. */
+.headerNotify{position:relative;display:inline-grid;place-items:center;flex:none;width:37px;height:37px;border:0;border-radius:50%;background:transparent;color:#474747;cursor:pointer}
+.headerNotify:hover{background:#f3f3f3}
+.headerUnreadCount{position:absolute;right:0;top:-3px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;display:grid;place-items:center;background:#171717;color:#fff;font-size:10px;font-weight:700}
+.roleChangeBanner{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 20px;background:#f2f3ef;border-bottom:1px solid #dedfda;color:#222;text-align:center;font-size:12px;font-weight:650}
+.roleChangeBanner button{border:0;background:transparent;color:#333;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
+.roleChangeBanner button:last-child{font-size:20px;text-decoration:none}
+html[data-theme=dark] .moderatorControlPopover{background:#262626;border-color:#474747;color:white}
+html[data-theme=dark] .roleChangeBanner{background:#252525;border-color:#555;color:white}
+html[data-theme=dark] .roleChangeBanner button{color:white}
+html[data-theme=dark] .headerNotify{color:#efefef}
+html[data-theme=dark] .editorPhotoPreviewHeading strong{color:white}
+html[data-theme=dark] .postPreviewCategories span{background:#313131;color:#ddd}
+@media(max-width:650px){
+  .moderatorControlPopover{left:auto;right:0}
+  .editorPhotoPreviewHeading{align-items:flex-start}
+  .editorPhotoLivePreview .postPhotoGallery img{width:min(38vw,175px)}
+}
