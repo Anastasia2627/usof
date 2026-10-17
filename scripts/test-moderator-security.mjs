@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import jwt from 'jsonwebtoken';
+import {pool} from '../API/src/config/db.js';
 
 if (process.env.NODE_ENV !== 'test' || !/_(test|ci)$/.test(process.env.DB_NAME || '')) {
   throw new Error('Moderator security tests require a disposable *_ci or *_test database.');
@@ -27,9 +29,24 @@ const created=(await request('/users',{token:admin.token,method:'POST',expected:
 }})).data;
 const signedIn=await request('/auth/login',{method:'POST',body:{login:name,password}});
 const moderator=signedIn.token;
+const signedVersion=jwt.decode(moderator).ver;
+const [[beforeRole]]=await pool.execute('SELECT token_version FROM users WHERE id=?',[created.id]);
+assert.equal(Number(beforeRole.token_version),Number(signedVersion));
 
+await request('/users/'+created.id+'/role',{token:moderator,method:'PATCH',expected:403,body:{role:'moderator'}});
 await request('/users/'+created.id,{token:moderator,method:'PATCH',expected:403,body:{role:'moderator'}});
-await request('/users/'+created.id,{token:admin.token,method:'PATCH',body:{role:'moderator'}});
+const promotion=await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',body:{role:'moderator'}});
+assert.equal(promotion.sessionInvalidated,false,'Role-only changes must preserve sessions');
+assert.equal(promotion.data.role,'moderator');
+const [[afterPromotion]]=await pool.execute('SELECT token_version FROM users WHERE id=?',[created.id]);
+assert.equal(Number(afterPromotion.token_version),Number(beforeRole.token_version),
+  'Granting moderator role must not revoke previously signed tokens');
+const profileAfterPromotion=await request('/users/'+created.id,{token:moderator});
+assert.equal(profileAfterPromotion.data.role,'moderator');
+await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',body:{role:'moderator'}});
+const roleNotices=await request('/notifications',{token:moderator});
+assert.equal(roleNotices.data.filter(row=>row.type==='role_changed'&&row.title==='You are now a moderator').length,1,
+  'Reapplying the same role should not create duplicate notices');
 const activeSession=await request('/reports',{token:moderator});
 assert.ok(Array.isArray(activeSession.data),'promotion must work in an already-open session');
 const promoted=await request('/notifications?unread=1',{token:moderator});
@@ -136,10 +153,19 @@ const report=(await request('/posts/'+publicPost.id+'/report',{
 await request('/reports/'+report.id,{token:moderator,method:'PATCH',
   body:{status:'reviewed'}});
 
-await request('/users/'+created.id,{token:admin.token,method:'PATCH',body:{role:'user'}});
+const demotion=await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',body:{role:'user'}});
+assert.equal(demotion.sessionInvalidated,false,'Removing moderator permission must preserve the login');
+const [[afterDemotion]]=await pool.execute('SELECT token_version FROM users WHERE id=?',[created.id]);
+assert.equal(Number(afterDemotion.token_version),Number(beforeRole.token_version),
+  'Removing moderator permissions must never revoke the member session');
+assert.equal((await request('/users/'+created.id,{token:moderator})).data.role,'user');
 await request('/reports',{token:moderator,expected:403});
 await request('/reactions',{token:moderator,expected:403});
 await request('/posts/'+publicPost.id,{token:moderator,method:'DELETE',expected:403});
 const demoted=await request('/notifications',{token:moderator});
 assert.ok(demoted.data.some(row=>row.type==='role_changed'&&row.title.includes('removed')));
+await request('/users/'+admin.user.id+'/role',{token:admin.token,method:'PATCH',
+  body:{role:'user'},expected:403});
+await request('/users/'+created.id+'/role',{token:admin.token,method:'PATCH',
+  body:{role:'admin'},expected:422});
 console.log('Moderator security passed: own content, role changes, scoped moderation, admin protection, private scheduled posts, and notifications.');
