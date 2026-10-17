@@ -130,7 +130,7 @@ function CategoryRow({ category, auth, run }) {
 export default function AdminPage() {
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
-  const [tab, setTab] = useState('reports');
+  const [tab, setTab] = useState('users');
   const [reportStatus,setReportStatus] = useState('open');
   const [reportPage,setReportPage] = useState(1);
   const [reportPagination,setReportPagination] = useState(null);
@@ -165,6 +165,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage,reportStatus,reportPage]);
+  useEffect(()=>{if(auth?.user?.role==='moderator')setTab('reports');},[auth?.user?.role]);
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
 
