@@ -189,10 +189,10 @@ export default function PostEditor({ id }) {
         <div className={'checkGrid editorTopicList'+(expandedTopics?' topicsExpanded':'')}>
           {categories.map(category =>
             <label className="check editorTopic" key={category.id}>
-              <input type="checkbox" aria-label={category.title}
+              <input type="checkbox" aria-label={t(category.title)}
                 checked={form.categories.includes(Number(category.id))}
                 onChange={() => toggle(Number(category.id))} />
-              <span>{category.title}</span>
+              <span>{t(category.title)}</span>
             </label>
           )}
         </div>
