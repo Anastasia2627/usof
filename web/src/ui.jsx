@@ -5,36 +5,16 @@ import { api, assetUrl } from './api.js';
 export const go = (path) => { window.location.hash = path; };
 export const fmt = (date) => date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—';
 
-// Google Material Symbols Rounded, a lightweight shared icon font.
-// A single accessible component keeps icons consistent in nav and reactions.
+// Fixed Google Material Round SVGs bundled locally from Google's official icon source.
+import { iconsA } from './googleIconsA.js';
+import { iconsB } from './googleIconsB.js';
+const googleIcons = { ...iconsA, ...iconsB, favorite: iconsA.heart, chat: iconsA.comment };
 export function Icon({ name, size = 22 }) {
-  const glyphs = {
-    home: 'home',
-    search: 'search',
-    plus: 'add_circle',
-    categories: 'grid_view',
-    user: 'person',
-    shield: 'admin_panel_settings',
-    heart: 'favorite',
-    comment: 'chat_bubble',
-    dislike: 'thumb_down',
-    arrow: 'arrow_forward',
-    arrowBack: 'arrow_back',
-    logout: 'logout',
-    sliders: 'tune',
-    forum: 'forum',
-    favorite: 'favorite',
-    chat: 'chat_bubble',
-    group: 'groups',
-    more: 'more_horiz',
-    check: 'check',
-    chevron: 'expand_more',
-    close: 'close',
-    edit: 'edit',
-    refresh: 'refresh',
-  };
-  return <span className="material-symbols-rounded circleIcon" aria-hidden="true"
-    style={{ fontSize: size }}>{glyphs[name] || 'grid_view'}</span>;
+  // Static, trusted SVG strings only. No user input is ever interpolated.
+  const svg = googleIcons[name] || googleIcons.categories;
+  return <span className="circleIcon googleSvgIcon notranslate" translate="no"
+    aria-hidden="true" style={{ width: size, height: size }}
+    dangerouslySetInnerHTML={{ __html: svg }}/>;
 }
 
 export function trustName(rating) {
