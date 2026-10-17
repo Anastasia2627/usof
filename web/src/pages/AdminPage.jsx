@@ -55,7 +55,7 @@ function UserRow({ user, auth, onSave, onDelete }) {
         <label>Username<input aria-label={'Login for ' + user.login} required minLength="3" maxLength="50" value={form.login} onChange={event => setForm({ ...form, login: event.target.value })}/></label>
         <label>Email<input aria-label={'Email for ' + user.login} type="email" required value={form.email} onChange={event => setForm({ ...form, email: event.target.value })}/></label>
         <label>Full name<input aria-label={'Full name for ' + user.login} maxLength="100" value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })}/></label>
-        <label>Role<select aria-label={'Role for ' + user.login} value={form.role} onChange={event => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></label>
+        <label>Role<select aria-label={'Role for ' + user.login} value={form.role} onChange={event => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
       </div>
       <div className="adminFormActions">
         <button type="button" onClick={() => setEditing(false)}>Cancel</button>
@@ -140,12 +140,12 @@ export default function AdminPage() {
   const [newCategory, setNewCategory] = useState({ title: '', description: '' });
 
   async function load() {
-    if (auth?.user?.role !== 'admin') return;
+    if (!['admin','moderator'].includes(auth?.user?.role)) return;
     setError(null);
     setLoading(true);
     try {
       const [users, posts, categories, comments, reactions] = await Promise.all([
-        api('/users', { token: auth.token }),
+        moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
@@ -161,7 +161,7 @@ export default function AdminPage() {
 
   useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage]);
 
-  if (auth?.user?.role !== 'admin') return <main><div className="error">Admin access required.</div></main>;
+  if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
 
   async function run(work) {
     setError(null);
@@ -200,13 +200,14 @@ export default function AdminPage() {
     if (result) setNewCategory({ title: '', description: '' });
   }
 
+  const moderator = auth?.user?.role === 'moderator';
   const counts = {
     users: data.users.length,
     posts: postPagination.total,
     categories: data.categories.length,
     comments: data.comments.length,
   };
-  const sections = ['users', 'posts', 'categories', 'comments', 'reactions'];
+  const sections = moderator ? ['posts','comments','reactions'] : ['users', 'posts', 'categories', 'comments', 'reactions'];
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -240,7 +241,7 @@ export default function AdminPage() {
               <label>Login<input required minLength="3" maxLength="50" value={newUser.login} onChange={event => setNewUser({ ...newUser, login: event.target.value })}/></label>
               <label>Email<input type="email" required value={newUser.email} onChange={event => setNewUser({ ...newUser, email: event.target.value })}/></label>
               <label>Full name<input maxLength="100" value={newUser.fullName} onChange={event => setNewUser({ ...newUser, fullName: event.target.value })}/></label>
-              <label>Role<select value={newUser.role} onChange={event => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="admin">admin</option></select></label>
+              <label>Role<select value={newUser.role} onChange={event => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
               <label>Password<input type="password" minLength="8" maxLength="128" required value={newUser.password} onChange={event => setNewUser({ ...newUser, password: event.target.value })}/></label>
               <label>Confirm<input type="password" minLength="8" maxLength="128" required value={newUser.passwordConfirmation} onChange={event => setNewUser({ ...newUser, passwordConfirmation: event.target.value })}/></label>
             </div>
