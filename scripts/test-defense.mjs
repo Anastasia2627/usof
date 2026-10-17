@@ -196,6 +196,36 @@ try {
   const answer=user.locator('.commentCard').filter({hasText:'Admin replied '+suffix}).first();
   await answer.getByRole('button',{name:'Dislike',exact:true}).click();
   await answer.getByRole('button',{name:'Remove my vote'}).click();
+
+  // Notifications should read like messages rather than nested form buttons.
+  await open(user,'/notifications');
+  const notice=user.locator('.notificationItem').first();
+  await notice.waitFor({timeout:12000});
+  assert.equal(await notice.locator('.notificationMain').evaluate(
+    el=>getComputedStyle(el).borderTopWidth),'0px','Notification content must have no inner border');
+  for(const width of [1280,390]) {
+    await user.setViewportSize({width,height:800});
+    const cardBox=await notice.boundingBox();
+    const headlineBox=await notice.locator('.notificationTitle').boundingBox();
+    const descriptionBox=await notice.locator('.notificationDescription').boundingBox();
+    const dateBox=await notice.locator('.notificationTime').boundingBox();
+    const deleteBox=await notice.locator('.notificationDeleteIcon').boundingBox();
+    assert.ok(cardBox&&headlineBox&&descriptionBox&&dateBox&&deleteBox);
+    assert.ok(descriptionBox.y >= headlineBox.y+headlineBox.height-2,
+      'Notification description must sit beneath the heading');
+    assert.ok(dateBox.y >= descriptionBox.y+descriptionBox.height-2,
+      'Notification date must sit beneath the description');
+    assert.ok(deleteBox.x > headlineBox.x+headlineBox.width-3,
+      'Delete icon must be in its own column');
+    assert.ok(cardBox.x>=0 && cardBox.x+cardBox.width<=width+1,
+      'Notification card must stay inside mobile viewport');
+  }
+  await user.setViewportSize({width:390,height:844});
+  await user.screenshot({path:'screenshots/notifications-mobile.png',fullPage:true});
+  await user.setViewportSize({width:1280,height:800});
+  await user.screenshot({path:'screenshots/notifications-desktop.png',fullPage:true});
+  await open(user,'/post/'+posts[0]);
+
   await admin.reload();
   const adminCard=admin.locator('.commentCard').filter({hasText:rootReply}).first();
   await adminCard.getByRole('button',{name:'Deactivate'}).click();
