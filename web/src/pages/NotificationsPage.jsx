@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, fmt, go } from '../ui.jsx';
+import { ErrorBox, Icon, fmt, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 function announceChange() {
@@ -78,7 +78,8 @@ export default function NotificationsPage() {
   return <main>
     <div className="sectionTitle">
       <div><p className="eyebrow">{t('Inbox')}</p><h1>{t('Notifications')}</h1><p>{unreadCount} {t('unread')}</p></div>
-      <div className="toolbar"><label className="check"><input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} />{t('Unread only')}</label><button className="secondary" disabled={!unreadCount} onClick={markAllRead}>{t('Mark all read')}</button></div>
+      <div className="toolbar"><label className="check"><input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} />{t('Unread only')}</label><button className="secondary markAllRead" type="button" disabled={!unreadCount}
+        onClick={markAllRead}><Icon name="check" size={17}/>{t('Mark all read')}</button></div>
     </div>
     <ErrorBox error={error} />
     {loading
@@ -89,7 +90,9 @@ export default function NotificationsPage() {
             <span className="notificationDot" aria-hidden="true" />
             <span><strong>{t(item.title)}</strong><small>{t(item.body)}</small><small>{fmt(item.created_at)}</small></span>
           </button>
-          <button className="quietButton dangerText" aria-label="Delete notification" onClick={() => remove(item)}>{t('Delete')}</button>
+          <button type="button" className="quietButton dangerText notificationDeleteIcon"
+            aria-label={t('Delete notification')} title={t('Delete notification')}
+            onClick={() => remove(item)}><Icon name="trash" size={18}/></button>
         </article>)}</section>
         : <div className="card empty"><h2>{t('No notifications.')}</h2><p>{t(unreadOnly ? 'You have read everything.' : 'Updates from followed posts and your contributions will appear here.')}</p></div>}
   </main>;
