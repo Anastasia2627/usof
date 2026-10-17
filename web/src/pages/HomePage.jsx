@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
+import DatePicker from '../DatePicker.jsx';
 
 const FILTERS = ['sort', 'order', 'category', 'from', 'to', 'status'];
 const readFilters = params => ({
@@ -17,6 +18,13 @@ const readFilters = params => ({
 export default function HomePage({ hash, basePath = '/' }) {
   const auth = useSelector(state => state.auth);
   const {t} = usePreferences();
+  const filterRef=useRef(null);
+  useEffect(()=>{
+    const outside=event=>{if(filterRef.current?.open && !filterRef.current.contains(event.target))filterRef.current.open=false;};
+    const escape=event=>{if(event.key==='Escape'&&filterRef.current?.open)filterRef.current.open=false;};
+    document.addEventListener('pointerdown',outside);document.addEventListener('keydown',escape);
+    return()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',escape);};
+  },[]);
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [filters, setFilters] = useState(() => readFilters(params));
   const [posts, setPosts] = useState([]);
@@ -74,6 +82,7 @@ export default function HomePage({ hash, basePath = '/' }) {
       else query.delete(name);
     }
     query.delete('page');
+    if(filterRef.current)filterRef.current.open=false;
     go(query.size ? basePath + '?' + query : basePath);
   }
 
@@ -103,6 +112,14 @@ export default function HomePage({ hash, basePath = '/' }) {
   const popular = (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
   const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
   const activeFilters = ['category', 'from', 'to', 'status'].filter(key => Boolean(params.get(key))).length;
+  const today=new Date();
+  const todayISO=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+  function choosePeriod(days){
+    if(!days)return setFilters(f=>({...f,from:'',to:''}));
+    const from=new Date(today.getFullYear(),today.getMonth(),today.getDate()-(days-1));
+    const fromISO=[from.getFullYear(),String(from.getMonth()+1).padStart(2,'0'),String(from.getDate()).padStart(2,'0')].join('-');
+    setFilters(f=>({...f,from:fromISO,to:todayISO}));
+  }
   const canReset = activeFilters > 0 || Boolean(params.get('search')) ||
     Boolean(params.get('sort')) || Boolean(params.get('order'));
 
@@ -132,14 +149,19 @@ export default function HomePage({ hash, basePath = '/' }) {
           className={String(params.get('category') || '') === String(c.id) ? 'topicActive' : ''}
           onClick={() => chooseCategory(c.id)}>{t(c.title)}</button>)}
       </div>
-      <details className="filterDetails">
-        <summary title="More filters" aria-label="More filters">
+      <details className="filterDetails" ref={filterRef}>
+        <summary title={t('Filter posts')} aria-label="More filters">
           <Icon name="sliders" size={19}/>
           <span>{t('More')}</span>
           {activeFilters > 0 && <span className="activeFilterCount" aria-label={activeFilters + ' active filters'}>{activeFilters}</span>}
         </summary>
         <form className="filterBar" onSubmit={apply}>
-          <div className="filterPanelHeading">{t('Fine-tune your feed')}</div>
+          <div className="filterPanelTitle">
+            <div><strong>{t('Filter posts')}</strong><small>{t('Filter settings')}</small></div>
+            <button type="button" aria-label={t('Close filters')} title={t('Close filters')}
+              onClick={()=>{if(filterRef.current)filterRef.current.open=false;}}>
+              <Icon name="close" size={18}/></button>
+          </div>
           <div className="filterPanelGrid">
             <label>{t('Sort by')}
               <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
@@ -168,12 +190,20 @@ export default function HomePage({ hash, basePath = '/' }) {
             </label>}
           </div>
           <div className="filterPanelHeading filterDateHeading">{t('Date range')} <small>{t('Optional')}</small></div>
+          <div className="filterQuickPeriods" role="group" aria-label={t('Date range')}>
+            {[{days:0,title:'Any time'},{days:7,title:'Last 7 days'},{days:30,title:'Last 30 days'}].map(option=>
+              <button type="button" key={option.days}
+                aria-pressed={option.days===0?!filters.from&&!filters.to:
+                  filters.to===todayISO && filters.from===(() => {const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-(option.days-1));
+                    return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');})()}
+                onClick={()=>choosePeriod(option.days)}>{t(option.title)}</button>)}
+          </div>
           <div className="filterPanelDates">
-            <label>{t('From')}<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
-            <label>{t('To')}<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
+            <div className="filterDateControl"><span>{t('From')}</span><DatePicker label={t('From')} value={filters.from} onChange={value=>setFilters(f=>({...f,from:value}))}/></div>
+            <div className="filterDateControl"><span>{t('To')}</span><DatePicker label={t('To')} value={filters.to} onChange={value=>setFilters(f=>({...f,to:value}))}/></div>
           </div>
           <div className="filterPanelActions">
-            <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>{t('Clear all')}</button>
+            <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); if(filterRef.current)filterRef.current.open=false;go(basePath); }}>{t('Clear all')}</button>
             <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={18}/><span>{t('Apply')}</span></button>
           </div>
         </form>
