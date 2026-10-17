@@ -79,6 +79,8 @@ export function PostCard({ post }) {
   const showStatus = ['admin','moderator'].includes(auth?.user?.role) || Number(auth?.user?.id) === Number(post.author_id);
   const selfPost = Boolean(auth && Number(auth.user.id) === Number(post.author_id));
   const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const canModeratePost = auth?.user?.role==='admin' ||
+    (auth?.user?.role==='moderator' && post.author_role!=='admin');
   const isModerated = (post.status !== 'active' || Boolean(post.locked) || Boolean(post.publish_at && new Date(post.publish_at)>new Date())) && !isAdmin;
   const voteDisabled = busy || selfPost || isModerated;
   const voteTitle = selfPost
@@ -158,7 +160,7 @@ export function PostCard({ post }) {
     };
   },[contextMenu]);
   function openModeration(event) {
-    if (!isAdmin) return;
+    if (!canModeratePost) return;
     event.preventDefault();
     setContextMenu({
       x:Math.max(8,Math.min(event.clientX,window.innerWidth-225)),
@@ -177,7 +179,7 @@ export function PostCard({ post }) {
       if(window.confirm(t('Delete post?')))moderate('DELETE');
     }}
   ];
-  return <article className="threadCard" onContextMenu={isAdmin?openModeration:undefined}>
+  return <article className="threadCard" onContextMenu={canModeratePost?openModeration:undefined}>
     <div className="threadAvatarColumn">
       <button className="avatarButton" aria-label={`Profile of ${post.author_login}`} onClick={() => go(`/profile/${post.author_id}`)}>
         <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="md" />
@@ -214,13 +216,13 @@ export function PostCard({ post }) {
           className={saved?'activeSave':''} disabled={saving} onClick={toggleSave}>
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/>
         </button>}
-        {isAdmin && <button type="button" aria-label={t('Post actions')}
+        {canModeratePost && <button type="button" aria-label={t('Post actions')}
           title={t('Post actions')} className="postModerationTrigger"
           onClick={openModeration}><Icon name="more" size={20}/></button>}
       </div>
       <ErrorBox error={error} />
     </div>
-    {contextMenu && isAdmin && <div ref={contextRef} className="postContextMenu"
+    {contextMenu && canModeratePost && <div ref={contextRef} className="postContextMenu"
       style={{left:contextMenu.x,top:contextMenu.y}} role="menu" aria-label={t('Post actions')}>
       {actions.map(action=><button type="button" role="menuitem" key={action.text}
         className={action.danger?'dangerText':''} onClick={action.fn}>
