@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
 import { usePreferences } from './preferences.jsx';
+import ModeratorControl from './ModeratorControl.jsx';
 
 export const go = (path) => { window.location.hash = path; };
 export function fmt(date) {
@@ -186,6 +187,7 @@ export function PostCard({ post }) {
     <div className="threadBody">
       <div className="postMeta">
         <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
+        <ModeratorControl userId={post.author_id} login={post.author_login}/>
         <time dateTime={post.published_at||post.created_at} title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
         <StatusBadges item={showStatus ? post : { locked: post.locked }} />
       </div>
