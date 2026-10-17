@@ -277,7 +277,7 @@ export function Header() {
     ...(['admin','moderator'].includes(auth?.user?.role) ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
   ];
   const current = window.location.hash.split('?')[0].slice(1) || '/';
-  const guestLanding = !auth && current === '/';
+  const guestLanding = !auth && current === '/welcome';
 
   return <header className="siteHeader">
     <div className={guestLanding ? "headerInner guestOnlyHeader" : "headerInner"}>
