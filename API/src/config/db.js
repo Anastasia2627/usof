@@ -9,6 +9,7 @@ export const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'usof',
+  timezone: 'Z', // Scheduled DATETIME values are stored and read in UTC
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
