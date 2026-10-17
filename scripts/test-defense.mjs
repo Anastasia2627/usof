@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 if (process.env.NODE_ENV !== 'test' || !/(_test|_ci)$/.test(process.env.DB_NAME || '')) {
@@ -98,6 +99,17 @@ try {
     await user.locator('input[maxlength="180"]').fill('Review post '+i+' '+suffix);
     await user.locator('textarea[maxlength="50000"]').fill('Review content '+i);
     await user.locator('fieldset input[type=checkbox]').nth(i).check();
+    if (i === 0) {
+      const labels = user.locator('.editorTopic');
+      assert.ok(await labels.first().isVisible(), 'Topics should be offered as selectable chips');
+      assert.ok(await user.locator('fieldset input[type=checkbox]').nth(0).isChecked(), 'Native checkbox selection should be preserved');
+      assert.equal(await user.locator('.postComposerForm').evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
+      await mkdir('screenshots', { recursive: true });
+      await user.screenshot({ path: 'screenshots/editor-mobile.png', fullPage: true });
+      await user.setViewportSize({ width: 1280, height: 800 });
+      await user.screenshot({ path: 'screenshots/editor-desktop.png', fullPage: true });
+      await user.setViewportSize({ width: 390, height: 844 });
+    }
     await user.getByRole('button',{name:'Publish post'}).click();
     await user.waitForURL(/#\/post\/\d+$/);
     posts.push(Number(new URL(user.url()).hash.match(/post\/(\d+)/)[1]));
