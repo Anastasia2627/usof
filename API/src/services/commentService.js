@@ -33,7 +33,7 @@ export async function getVisibleComment(
 
   const isAdmin = ['admin','moderator'].includes(user?.role);
   const ownsPost = user && Number(user.sub) === Number(comment.post_author_id);
-  if (comment.post_status === 'inactive' && !isAdmin && (requireActivePost || !ownsPost)) {
+  if ((comment.post_status === 'inactive' || (comment.post_publish_at && new Date(comment.post_publish_at)>new Date())) && !isAdmin && (requireActivePost || !ownsPost)) {
     throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
   }
   if (requireActivePost && comment.post_status !== 'active' && !isAdmin) {
