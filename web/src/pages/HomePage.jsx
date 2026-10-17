@@ -164,29 +164,29 @@ export default function HomePage({ hash, basePath = '/' }) {
           </div>
           <div className="filterPanelGrid">
             <label>{t('Sort by')}
-              <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
+              <span className="filterSelectWrap"><select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
                 <option value="likes">{t('Number of likes')}</option>
                 <option value="date">{t('Publication date')}</option>
-              </select>
+              </select><Icon name="chevron" size={16}/></span>
             </label>
             <label>{t('Direction')}
-              <select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
+              <span className="filterSelectWrap"><select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
                 <option value="desc">{t('Descending')}</option>
                 <option value="asc">{t('Ascending')}</option>
-              </select>
+              </select><Icon name="chevron" size={16}/></span>
             </label>
             <label>{t('Category')}
-              <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
+              <span className="filterSelectWrap"><select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
                 <option value="">{t('All categories')}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{t(c.title)}</option>)}
-              </select>
+              </select><Icon name="chevron" size={16}/></span>
             </label>
             {auth && <label>{t('Status')}
-              <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
+              <span className="filterSelectWrap"><select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
                 <option value="">{t('All viewable')}</option>
                 <option value="active">{t('Active')}</option>
                 <option value="inactive">{t('Inactive')}</option>
-              </select>
+              </select><Icon name="chevron" size={16}/></span>
             </label>}
           </div>
           <div className="filterPanelHeading filterDateHeading">{t('Date range')} <small>{t('Optional')}</small></div>
