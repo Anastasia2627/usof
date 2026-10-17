@@ -165,10 +165,17 @@ export async function updateCommentForUser(user, idValue, body) {
     );
   }
 
-  await pool.execute(
-    'UPDATE comments SET status=?, locked=? WHERE id=?',
-    [status, locked ? 1 : 0, comment.id],
-  );
+  const connection=await pool.getConnection();
+  try{
+    await connection.beginTransaction();
+    await connection.execute('UPDATE comments SET status=?, locked=? WHERE id=?',
+      [status,locked?1:0,comment.id]);
+    if(status==='inactive'){
+      await connection.execute('UPDATE posts SET accepted_comment_id=NULL WHERE accepted_comment_id=?',[comment.id]);
+    }
+    await connection.commit();
+  }catch(error){await connection.rollback();throw error;}
+  finally{connection.release();}
   return getVisibleComment(comment.id, user);
 }
 
