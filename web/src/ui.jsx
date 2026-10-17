@@ -72,6 +72,12 @@ export function PostCard({ post }) {
   const [error, setError] = useState(null);
   const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
   const selfPost = Boolean(auth && Number(auth.user.id) === Number(post.author_id));
+  const isAdmin = auth?.user?.role === 'admin';
+  const isModerated = (post.status !== 'active' || Boolean(post.locked)) && !isAdmin;
+  const voteDisabled = busy || selfPost || isModerated;
+  const voteTitle = selfPost
+    ? 'You cannot react to your own post'
+    : isModerated ? 'Reactions are disabled on this post' : '';
 
   useEffect(() => {
     setCounts({ like: Number(post.like_count || 0), dislike: Number(post.dislike_count || 0), comment: Number(post.comment_count || 0) });
@@ -90,7 +96,7 @@ export function PostCard({ post }) {
 
   async function vote(type) {
     if (!auth) { go('/login'); return; }
-    if (selfPost || busy) return;
+    if (voteDisabled) return;
     setBusy(true); setError(null);
     try {
       if (myVote === type) {
@@ -127,14 +133,14 @@ export function PostCard({ post }) {
       <p className="threadExcerpt">{post.content?.slice(0, 260)}{post.content?.length > 260 ? '…' : ''}</p>
       <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{category.title}</span>)}</div>
       <div className="threadActions">
-        <button type="button" aria-label="Like" title={selfPost ? 'You cannot like your own post' : 'Like'} disabled={busy || selfPost}
+        <button type="button" aria-label="Like" title={voteTitle || 'Like'} disabled={voteDisabled}
           aria-pressed={myVote === 'like'} className={myVote === 'like' ? 'activeVote' : ''} onClick={() => vote('like')}>
           <Icon name="heart" size={20}/><span>{counts.like}</span>
         </button>
         <button type="button" aria-label="Comment" title="View replies" onClick={() => go(`/post/${post.id}`)}>
           <Icon name="comment" size={20}/><span>{counts.comment}</span>
         </button>
-        <button type="button" aria-label="Dislike" title={selfPost ? 'You cannot dislike your own post' : 'Dislike'} disabled={busy || selfPost}
+        <button type="button" aria-label="Dislike" title={voteTitle || 'Dislike'} disabled={voteDisabled}
           aria-pressed={myVote === 'dislike'} className={myVote === 'dislike' ? 'activeVote' : ''} onClick={() => vote('dislike')}>
           <Icon name="dislike" size={19}/><span>{counts.dislike}</span>
         </button>
