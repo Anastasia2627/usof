@@ -14,7 +14,6 @@ if (!/^[A-Za-z0-9_]+$/.test(database)) {
 
 const APP_TABLES = [
   'notifications',
-  'category_suggestions',
   'post_shares',
   'post_subscriptions',
   'favorites',
