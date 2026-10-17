@@ -199,44 +199,71 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
-  return <main className="postPage">
-    <article className="card questionCard">
-      <div className="questionHeading"><h1>{post.title}</h1><span className="scoreHero">Rating: {post.score || 0}</span></div>
-      <div className="postMeta">
-        By <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
-        <span>{fmt(post.created_at)}</span><StatusBadges item={post} />
+  return <main className="postPage naturalPostPage">
+    <div className="postBackRow"><button className="editorBack" type="button" onClick={()=>go('/')}
+      aria-label="Back to feed" title="Back to feed"><Icon name="arrowBack" size={21}/></button>
+      <strong>Discussion</strong>
+    </div>
+    <article className="naturalPost">
+      <div className="naturalPostAuthor">
+        <button type="button" className="avatarButton" onClick={()=>go('/profile/'+post.author_id)}>
+          <Avatar user={{login:post.author_login,avatar:post.author_avatar}} size="md"/>
+        </button>
+        <div><button className="authorLink" onClick={()=>go('/profile/'+post.author_id)}>@{post.author_login}</button>
+          <time dateTime={post.published_at||post.created_at}
+            title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
+        </div>
+        <StatusBadges item={post}/>
       </div>
-      <p className="content">{post.content}</p>
-      <div className="tags">{(post.categories || []).map(x => <span key={x.id}>{x.title}</span>)}</div>
-      <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} visible={isAdmin || post.status === 'active'}
-        writable={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
-      <div className="toolbar">
-        {auth && <button type="button" disabled={saving} aria-pressed={saved}
-          aria-label={saved ? t('Unsave post') : t('Save post')} onClick={toggleSave}>
-          <Icon name={saved?'bookmark':'bookmarkBorder'} size={19}/>
-          {saved?t('Saved'):t('Save')}
-        </button>}
-        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}><Icon name="edit" size={18}/> Edit</button>}
-        {isAdmin && <>
-          <button onClick={() => run('PATCH', { status: post.status === 'active' ? 'inactive' : 'active' })}>
-            {post.status === 'active' ? 'Deactivate' : 'Activate'}
-          </button>
-          <button onClick={() => run('PATCH', { locked: !post.locked })}>{post.locked ? 'Unlock' : 'Lock'}</button>
-        </>}
-        {(isOwner || isAdmin) && <button className="dangerText" onClick={deletePost}>Delete post</button>}
+      <h1>{post.title}</h1>
+      <p className="naturalPostContent">{post.content}</p>
+      <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{x.title}</span>)}</div>
+      <div className="naturalPostReactions">
+        <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
+          visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
+          writable={isAdmin||(post.status==='active'&&!post.locked)} onChange={load}/>
+        <span className="naturalPostCommentCount"><Icon name="comment" size={19}/>{comments.length}</span>
+        {auth && <button className="naturalPostIconButton" type="button" disabled={saving}
+          aria-pressed={saved} aria-label={saved?t('Unsave post'):t('Save post')}
+          title={saved?t('Unsave post'):t('Save post')} onClick={toggleSave}>
+          <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
       </div>
-      <ErrorBox error={error} />
+      {(isOwner||isAdmin) && <div className="naturalPostManagement">
+        {isOwner && !isAdmin && <button type="button" title="Edit post" aria-label="Edit post"
+          onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
+        {isOwner && <button type="button" title={post.closed?'Reopen discussion':'Close discussion'}
+          aria-label={post.closed?'Reopen discussion':'Close discussion'}
+          onClick={()=>run('PATCH',{closed:!Boolean(post.closed)})}>
+          <Icon name={post.closed?'unlock':'lock'} size={18}/><span>{post.closed?'Reopen':'Close'} discussion</span></button>}
+        {isOwner && <button type="button" title={post.hide_likes?'Show likes':'Hide likes'}
+          aria-label={post.hide_likes?'Show likes':'Hide likes'}
+          onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
+          <Icon name="heart" size={18}/><span>{post.hide_likes?'Show':'Hide'} likes</span></button>}
+        {isAdmin && <><button type="button" onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
+          <Icon name="check" size={18}/><span>{post.status==='active'?'Deactivate':'Activate'}</span></button>
+          <button type="button" onClick={()=>run('PATCH',{locked:!post.locked})}>
+          <Icon name={post.locked?'unlock':'lock'} size={18}/><span>{post.locked?'Unlock':'Lock'}</span></button></>}
+        <button type="button" className="dangerText" aria-label="Delete post" title="Delete post" onClick={deletePost}>
+          <Icon name="trash" size={18}/><span>Delete post</span></button>
+      </div>}
+      {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>The author has closed this discussion, replies are now read-only</p>}
+      {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
+        <Icon name="settings" size={18}/>Scheduled for {new Date(post.publish_at).toLocaleString()}</p>}
+      <ErrorBox error={error}/>
     </article>
-
-    <section className="commentsSection">
-      <h2>Comments ({comments.length})</h2>
-      <p className="muted">Sorted by likes (ascending).</p>
-      {roots.length ? roots.map(item => <Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} />)
-        : <div className="card">No comments yet.</div>}
-      {canComment ? <form className="card form commentComposer" onSubmit={sendComment}>
-        <label>New comment<textarea required maxLength="20000" value={text} onChange={e => setText(e.target.value)} /></label>
-        <button className="primary">Comment</button>
-      </form> : <p>{!auth ? 'Log in to comment or vote.' : 'Comments are disabled for this post.'}</p>}
+    <section className="naturalComments">
+      <h2>Replies <span>{comments.length}</span></h2>
+      {roots.length ? <div className="naturalCommentTree">
+        {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load}/>)}
+      </div> : <div className="naturalEmptyReplies"><Icon name="comment" size={25}/>
+        <p>No replies yet</p><small>Be the first to join the conversation</small></div>}
+      {canComment ? <form className="naturalReplyComposer" onSubmit={sendComment}>
+        <Avatar user={auth.user} size="md"/>
+        <label className="srOnly" htmlFor="main-reply-input">Write a reply</label>
+        <textarea id="main-reply-input" required maxLength="20000" rows="2"
+          placeholder="Add to the conversation…" value={text} onChange={e=>setText(e.target.value)}/>
+        <button className="primary" type="submit" aria-label="Send reply" title="Send reply"><Icon name="arrow" size={20}/></button>
+      </form> : <p className="naturalReplyLocked">{!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled'}</p>}
     </section>
   </main>;
 }
