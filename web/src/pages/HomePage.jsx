@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
+import { usePreferences } from '../preferences.jsx';
 
 const FILTERS = ['sort', 'order', 'category', 'from', 'to', 'status'];
 const readFilters = params => ({
@@ -15,6 +16,7 @@ const readFilters = params => ({
 
 export default function HomePage({ hash, basePath = '/' }) {
   const auth = useSelector(state => state.auth);
+  const {t} = usePreferences();
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [filters, setFilters] = useState(() => readFilters(params));
   const [posts, setPosts] = useState([]);
@@ -97,26 +99,26 @@ export default function HomePage({ hash, basePath = '/' }) {
   const activeFilters = ['category', 'from', 'to', 'status'].filter(key => Boolean(params.get(key))).length;
 
   return <main className="homePage">
-    <h1 className="feedPageTitle">{basePath === '/explore' ? 'Explore' : 'Home'}</h1>
+    <h1 className="feedPageTitle">{t(basePath === '/explore' ? 'Explore' : 'Home')}</h1>
     <div className="feedTabs" role="group" aria-label="Feed views">
-      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>Popular</button>
-      <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>Latest</button>
+      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>{t('Popular')}</button>
+      <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>{t('Latest')}</button>
     </div>
 
     {auth ? <button className="feedComposer" onClick={() => go('/create')}>
       <Avatar user={auth.user} size="md"/>
-      <span>What's on your mind?</span>
-      <strong>Post</strong>
+      <span>{t("What's on your mind?")}</span>
+      <strong>{t('Post')}</strong>
     </button> : <div className="feedComposer guestComposer">
       <span className="guestAvatar"><Icon name="user" size={21}/></span>
       <span>Join the conversation</span>
-      <button onClick={() => go('/login')}>Log in</button>
+      <button onClick={() => go('/login')}>{t('Log in')}</button>
     </div>}
 
     <div className="feedFilterStrip" aria-label="Filter conversations">
       <div className="feedTopicScroller" role="group" aria-label="Filter by topic">
         <button type="button" className={!params.get('category') ? 'topicActive' : ''}
-          aria-pressed={!params.get('category')} onClick={() => chooseCategory('')}>All</button>
+          aria-pressed={!params.get('category')} onClick={() => chooseCategory('')}>{t('All')}</button>
         {categories.map(c => <button key={c.id} type="button"
           aria-pressed={String(params.get('category') || '') === String(c.id)}
           className={String(params.get('category') || '') === String(c.id) ? 'topicActive' : ''}
@@ -125,46 +127,46 @@ export default function HomePage({ hash, basePath = '/' }) {
       <details className="filterDetails">
         <summary title="More filters" aria-label="More filters">
           <Icon name="sliders" size={19}/>
-          <span>More</span>
+          <span>{t('More')}</span>
           {activeFilters > 0 && <span className="activeFilterCount" aria-label={activeFilters + ' active filters'}>{activeFilters}</span>}
         </summary>
         <form className="filterBar" onSubmit={apply}>
-          <div className="filterPanelHeading">Fine-tune your feed</div>
+          <div className="filterPanelHeading">{t('Fine-tune your feed')}</div>
           <div className="filterPanelGrid">
-            <label>Sort by
+            <label>{t('Sort by')}
               <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
-                <option value="likes">Number of likes</option>
-                <option value="date">Publication date</option>
+                <option value="likes">{t('Number of likes')}</option>
+                <option value="date">{t('Publication date')}</option>
               </select>
             </label>
-            <label>Direction
+            <label>{t('Direction')}
               <select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
+                <option value="desc">{t('Descending')}</option>
+                <option value="asc">{t('Ascending')}</option>
               </select>
             </label>
-            <label>Category
+            <label>{t('Category')}
               <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
-                <option value="">All categories</option>
+                <option value="">{t('All categories')}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
             </label>
-            {auth && <label>Status
+            {auth && <label>{t('Status')}
               <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
-                <option value="">All viewable</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="">{t('All viewable')}</option>
+                <option value="active">{t('Active')}</option>
+                <option value="inactive">{t('Inactive')}</option>
               </select>
             </label>}
           </div>
-          <div className="filterPanelHeading filterDateHeading">Date range <small>Optional</small></div>
+          <div className="filterPanelHeading filterDateHeading">{t('Date range')} <small>{t('Optional')}</small></div>
           <div className="filterPanelDates">
-            <label>From<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
-            <label>To<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
+            <label>{t('From')}<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
+            <label>{t('To')}<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
           </div>
           <div className="filterPanelActions">
-            <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Clear all</button>
-            <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={18}/><span>Apply</span></button>
+            <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>{t('Clear all')}</button>
+            <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={18}/><span>{t('Apply')}</span></button>
           </div>
         </form>
       </details>
@@ -172,14 +174,14 @@ export default function HomePage({ hash, basePath = '/' }) {
 
     <ErrorBox error={error} onRetry={() => setRetry(value => value + 1)} />
     <section className="feedShell" aria-label="Posts">
-      {loading ? <p className="feedMessage">Loading conversations…</p>
+      {loading ? <p className="feedMessage">{t('Loading conversations…')}</p>
         : posts.length
           ? <div className="threadGrid">{posts.map(post => <PostCard key={post.id} post={post} />)}</div>
-          : !error ? <div className="feedMessage">No conversations found. Try changing your filters.</div> : null}
+          : !error ? <div className="feedMessage">{t("No conversations found. Try changing your filters.")}</div> : null}
       {pagination?.totalPages > 1 && <div className="pager">
-        <button disabled={pagination.page <= 1} onClick={() => navigate(pagination.page - 1)}>Previous</button>
-        <span>Page {pagination.page} of {pagination.totalPages}</span>
-        <button disabled={pagination.page >= pagination.totalPages} onClick={() => navigate(pagination.page + 1)}>Next</button>
+        <button disabled={pagination.page <= 1} onClick={() => navigate(pagination.page - 1)}>{t('Previous')}</button>
+        <span>{t('Page')} {pagination.page} {t('of')} {pagination.totalPages}</span>
+        <button disabled={pagination.page >= pagination.totalPages} onClick={() => navigate(pagination.page + 1)}>{t('Next')}</button>
       </div>}
     </section>
   </main>;
