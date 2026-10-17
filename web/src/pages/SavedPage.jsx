@@ -18,7 +18,9 @@ export default function SavedPage() {
   useEffect(() => {
     const changed = () => setVersion(value => value + 1);
     window.addEventListener('circle:saved-updated', changed);
-    return () => window.removeEventListener('circle:saved-updated', changed);
+    window.addEventListener('circle:posts-updated', changed);
+    return () => { window.removeEventListener('circle:saved-updated', changed);
+      window.removeEventListener('circle:posts-updated', changed); };
   }, []);
 
   useEffect(() => {
