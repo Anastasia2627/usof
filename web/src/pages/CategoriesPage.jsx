@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { ErrorBox, PostCard, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
+import SuggestTopic from '../SuggestTopic.jsx';
 
 export default function CategoriesPage() {
   const {t}=usePreferences();
@@ -30,6 +31,7 @@ export default function CategoriesPage() {
       {query&&<button type="button" aria-label={t('Clear search')} title={t('Clear search')}
         onClick={()=>setQuery('')}><Icon name="close" size={17}/></button>}
     </div>
+    <SuggestTopic/>
     <ErrorBox error={error} />
     {loading
       ? <div className="card loading">{t('Loading categories…')}</div>
