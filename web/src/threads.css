@@ -787,3 +787,20 @@ main.welcomePage {
   .mainNav button, .threadActions button, .filterDetails summary,
   .accountMenu > summary, .accountDropdown button { transition: none; }
 }
+
+.postPage .reactionButtons .reactionIconButton {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  color: #454545;
+}
+.postPage .reactionButtons .reactionIconButton:hover { background: #f1f1f1; color: #141414; }
+.postPage .commentActions button, .postPage .questionCard .toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
