@@ -28,6 +28,8 @@ export function Icon({ name, size = 22 }) {
     more: 'more_horiz',
     check: 'check',
     chevron: 'expand_more',
+    close: 'close',
+    edit: 'edit',
   };
   return <span className="material-symbols-rounded circleIcon" aria-hidden="true"
     style={{ fontSize: size }}>{glyphs[name] || 'grid_view'}</span>;
