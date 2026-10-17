@@ -1,6 +1,9 @@
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import sharp from 'sharp';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 dotenv.config();
 
@@ -522,6 +525,31 @@ async function initializeDatabase() {
       (5,3,NULL,'other','Seed example','reviewed'),
       (2,NULL,1,'other','Seed comment','dismissed'),
       (3,NULL,3,'other','Seed comment','reviewed')`);
+
+
+    // Five REAL files for the optional image table, attached only to inactive
+    // admin-owned fixture posts. These never pollute public conversation feeds.
+    const [firstFixture]=await connection.query(
+      "INSERT INTO posts(author_id,title,content,status) VALUES(1,'Image fixture A','Private media integration fixture','inactive')"
+    );
+    const [secondFixture]=await connection.query(
+      "INSERT INTO posts(author_id,title,content,status) VALUES(1,'Image fixture B','Private media integration fixture','inactive')"
+    );
+    for(const id of [firstFixture.insertId,secondFixture.insertId]) {
+      await connection.query('INSERT INTO post_categories(post_id,category_id) VALUES(?,1)',[id]);
+    }
+    const photoDir=path.resolve('API/uploads/posts');
+    await fs.mkdir(photoDir,{recursive:true});
+    for(let index=0;index<5;index++) {
+      const filename='seed-image-'+(index+1)+'.webp';
+      const sample=await sharp({create:{
+        width:120,height:120,channels:3,
+        background:['#e9dee7','#e6eadc','#dde9ee','#f4e3d4','#e2e1ef'][index],
+      }}).webp({quality:85}).toBuffer();
+      await fs.writeFile(path.join(photoDir,filename),sample);
+      await connection.query('INSERT INTO post_images(post_id,uploader_id,filename) VALUES(?,1,?)',
+        [index<3?firstFixture.insertId:secondFixture.insertId,filename]);
+    }
 
     console.log(
       resetRequested
