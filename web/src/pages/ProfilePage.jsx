@@ -218,7 +218,7 @@ export default function ProfilePage({ userId = null }) {
             aria-pressed={!category} onClick={() => changeFilter(setCategory, '')}>{t('All')}</button>
           {categories.map(item => <button key={item.id} type="button" className={String(category) === String(item.id) ? 'profileTopicActive' : ''}
             aria-pressed={String(category) === String(item.id)}
-            onClick={() => changeFilter(setCategory, String(item.id))}>{item.title}</button>)}
+            onClick={() => changeFilter(setCategory, String(item.id))}>{t(item.title)}</button>)}
         </div>
         {isSelf && <div className="profileStatusSelect">
           <label className="srOnly" htmlFor="profile-status">Status</label>
