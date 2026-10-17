@@ -39,7 +39,7 @@ assert.ok((await request('/social/following',{token:member})).data.some(u=>Numbe
 await request('/social/follows/'+managed.id,{method:'DELETE',token:member,status:204});
 assert.equal((await request('/social/follows/'+managed.id,{token:member})).data.following,false);
 const message=(await request('/social/messages/'+managed.id,{method:'POST',token:member,status:201,body:{content:'Private test '+suffix}})).data;
-const thread=(await request('/social/messages/'+managed.id,{token:mod})).data;
+const thread=(await request('/social/messages/'+managed.id,{token:member})).data;
 assert.ok(thread.messages.some(m=>Number(m.id)===Number(message.id)));
 assert.ok((await request('/social/conversations',{token:mod})).data.some(c=>c.login==='asya'));
 await request('/social/messages/'+managed.id,{method:'POST',token:member,body:{content:''},status:422});
