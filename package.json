@@ -34,7 +34,8 @@
     "test:features": "node scripts/test-community-features.mjs",
     "test:moderator": "node scripts/test-moderator-security.mjs",
     "test:ui:regressions": "node scripts/test-ui-regressions.mjs",
-    "check:icons": "node scripts/check-tabler-icons.mjs"
+    "check:icons": "node scripts/check-tabler-icons.mjs",
+    "test:topics": "node scripts/test-topic-suggestions.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
