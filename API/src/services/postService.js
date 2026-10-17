@@ -1,4 +1,6 @@
 import { pool } from '../config/db.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { Post } from '../models/Post.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
@@ -245,6 +247,8 @@ export async function updatePostForUser(user, idValue, body) {
     if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can reschedule');
     publishAt = publishDate(body.publishAt);
   }
+  if (body.categories !== undefined && user.role === 'moderator' && !isOwner)
+    throw new AppError(403,'ADMIN_REQUIRED','Moderators cannot change another author\'s categories');
   const categories = body.categories !== undefined ? normalizeCategories(body.categories) : null;
   const changedForFollowers = !isAdmin && (
     title !== post.title || content !== post.content || categories !== null
@@ -292,12 +296,14 @@ export async function deletePostForUser(user, idValue) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
   }
 
+  const [photos] = await pool.execute('SELECT filename FROM post_images WHERE post_id=?',[post.id]);
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     await connection.query('DELETE FROM posts WHERE id=?', [post.id]);
     await recalculateAllRatings(connection);
     await connection.commit();
+    for(const photo of photos) await fs.unlink(path.resolve('API/uploads/posts',path.basename(photo.filename))).catch(()=>{});
   } catch (error) {
     await connection.rollback();
     throw error;
