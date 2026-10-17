@@ -128,7 +128,7 @@ export default function HomePage({ hash, basePath = '/' }) {
         {categories.map(c => <button key={c.id} type="button"
           aria-pressed={String(params.get('category') || '') === String(c.id)}
           className={String(params.get('category') || '') === String(c.id) ? 'topicActive' : ''}
-          onClick={() => chooseCategory(c.id)}>{c.title}</button>)}
+          onClick={() => chooseCategory(c.id)}>{t(c.title)}</button>)}
       </div>
       <details className="filterDetails">
         <summary title="More filters" aria-label="More filters">
@@ -154,7 +154,7 @@ export default function HomePage({ hash, basePath = '/' }) {
             <label>{t('Category')}
               <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
                 <option value="">{t('All categories')}</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                {categories.map(c => <option key={c.id} value={c.id}>{t(c.title)}</option>)}
               </select>
             </label>
             {auth && <label>{t('Status')}
