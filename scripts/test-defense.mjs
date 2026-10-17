@@ -209,14 +209,13 @@ try {
     const headlineBox=await notice.locator('.notificationTitle').boundingBox();
     const descriptionBox=await notice.locator('.notificationDescription').boundingBox();
     const dateBox=await notice.locator('.notificationTime').boundingBox();
-    const deleteBox=await notice.locator('.notificationDeleteIcon').boundingBox();
-    assert.ok(cardBox&&headlineBox&&descriptionBox&&dateBox&&deleteBox);
+    assert.ok(cardBox&&headlineBox&&descriptionBox&&dateBox);
     assert.ok(descriptionBox.y >= headlineBox.y+headlineBox.height-2,
       'Notification description must sit beneath the heading');
     assert.ok(dateBox.y >= descriptionBox.y+descriptionBox.height-2,
       'Notification date must sit beneath the description');
-    assert.ok(deleteBox.x > headlineBox.x+headlineBox.width-3,
-      'Delete icon must be in its own column');
+    assert.equal(await notice.locator('.notificationDeleteIcon').count(),0,
+      'The delete action should exist only in the contextual menu');
     assert.ok(cardBox.x>=0 && cardBox.x+cardBox.width<=width+1,
       'Notification card must stay inside mobile viewport');
   }
