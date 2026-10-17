@@ -21,7 +21,8 @@ export default function SuggestTopic(){
   },[open,auth?.token]);
   if(!auth)return null;
   async function submit(event){
-    event.preventDefault();
+    event?.preventDefault();
+    if(title.trim().length<3){setError(t('Topic name must be 3–100 characters'));return;}
     setBusy(true);setError('');setMessage('');
     try{
       const result=await api('/categories/suggestions',{method:'POST',token:auth.token,body:{title,description}});
@@ -36,14 +37,14 @@ export default function SuggestTopic(){
     </button>
     {open&&<div className="suggestTopicPanel">
       <h3>{t('Have an idea for a new topic?')}</h3>
-      <form onSubmit={submit} className="suggestTopicForm">
+      <div className="suggestTopicForm" role="group" aria-label={t('Suggest a topic')}>
         <label>{t('Topic name')}<input required minLength="3" maxLength="100" value={title}
           onChange={event=>setTitle(event.target.value)} placeholder={t('Topic name')}/></label>
         <label>{t('Topic description (optional)')}<textarea maxLength="500" rows="2" value={description}
           onChange={event=>setDescription(event.target.value)}/></label>
-        <button type="submit" className="primary" disabled={busy}>
+        <button type="button" className="primary" disabled={busy||title.trim().length<3} onClick={submit}>
           <TablerIcon name="send" size={17}/>{t('Send suggestion')}</button>
-      </form>
+      </div>
       {error&&<p role="alert" className="suggestError">{error}</p>}
       {message&&<p role="status" className="suggestSuccess"><TablerIcon name="check" size={16}/>{message}</p>}
       {mySuggestions.length>0&&<div className="suggestHistory">
