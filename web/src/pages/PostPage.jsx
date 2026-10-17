@@ -266,7 +266,7 @@ export default function PostPage({ id }) {
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
       </div>
       {(isOwner||isAdmin) && <div className="naturalPostManagement">
-        {isOwner && !isAdmin && <button type="button" title="Edit post" aria-label="Edit post"
+        {isOwner && auth?.user?.role!=='admin' && <button type="button" title="Edit post" aria-label="Edit post"
           onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
         {isOwner && <button type="button" title={post.closed?'Reopen discussion':'Close discussion'}
           aria-label={post.closed?'Reopen discussion':'Close discussion'}
