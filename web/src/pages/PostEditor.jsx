@@ -9,7 +9,7 @@ export default function PostEditor({ id }) {
   const {t} = usePreferences();
   const editing = Boolean(id);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ title: '', content: '', categories: [] });
+  const [form, setForm] = useState({ title: '', content: '', categories: [], publishAt: '', hideLikes: false });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
@@ -22,6 +22,8 @@ export default function PostEditor({ id }) {
           title: result.data.title,
           content: result.data.content,
           categories: result.data.categories.map((category) => Number(category.id)),
+          publishAt: result.data.publish_at ? new Date(result.data.publish_at).toISOString().slice(0,16) : '',
+          hideLikes: Boolean(result.data.hide_likes),
         }))
         .catch(setError)
         .finally(() => setLoading(false));
@@ -55,7 +57,7 @@ export default function PostEditor({ id }) {
       const result = await api(editing ? `/posts/${id}` : '/posts', {
         method: editing ? 'PATCH' : 'POST',
         token: auth.token,
-        body: form,
+        body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null},
       });
       go(`/post/${result.data.id}`);
     } catch (err) {
@@ -103,12 +105,26 @@ export default function PostEditor({ id }) {
         </div>
       </fieldset>
 
+      <details className="editorOptions">
+        <summary><Icon name="settings" size={19}/> More options <Icon name="chevron" size={17}/></summary>
+        <label className="editorOptionRow"><Icon name="lock" size={18}/>
+          <span>Hide likes from other people<small>You can still see your own statistics</small></span>
+          <input type="checkbox" aria-label="Hide likes" checked={form.hideLikes}
+            onChange={e=>setForm({...form,hideLikes:e.target.checked})}/>
+        </label>
+        <label className="editorSchedule"><Icon name="settings" size={18}/>
+          <span>Publish later<small>Leave empty to publish now</small></span>
+          <input aria-label="Schedule publication" type="datetime-local" value={form.publishAt}
+            min={new Date(Date.now()+60000).toISOString().slice(0,16)}
+            onChange={e=>setForm({...form,publishAt:e.target.value})}/>
+        </label>
+      </details>
       <div className="editorActions">
         <span className="editorSelectionHint">{form.categories.length
           ? `${form.categories.length} ${t(form.categories.length === 1 ? 'topic' : 'topics')} ${t('selected')}`
           : t('Select a topic to continue')}</span>
         <button className="primary editorPublish" disabled={busy}>
-          {t(busy ? 'Saving…' : editing ? 'Save changes' : 'Publish post')}
+          {t(busy ? 'Saving…' : editing ? 'Save changes' : form.publishAt ? 'Schedule post' : 'Publish post')}
           {!busy && <Icon name="arrow" size={18}/>}
         </button>
       </div>
