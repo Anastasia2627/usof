@@ -190,7 +190,10 @@ export function PostCard({ post }) {
         <StatusBadges item={showStatus ? post : { locked: post.locked }} />
       </div>
       <h2><button className="postTitleLink" onClick={() => go(`/post/${post.id}`)}>{post.title}</button></h2>
+      {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
       <p className="threadExcerpt">{post.content?.slice(0, 260)}{post.content?.length > 260 ? '…' : ''}</p>
+      {post.images?.length>0&&<button type="button" className="threadPhoto" onClick={()=>go('/post/'+post.id)}
+        aria-label="View post photos"><img loading="lazy" src={assetUrl(post.images[0].url)} alt="Post photo"/></button>}
       <div className="tags">{(post.categories || []).map(category => <span key={category.id}>{category.title}</span>)}</div>
       <div className="threadActions">
         <button type="button" aria-label="Like" title={voteTitle || 'Like'} disabled={voteDisabled}
