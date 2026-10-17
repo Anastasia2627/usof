@@ -107,6 +107,35 @@ message action, messages page or messaging API. An existing `direct_messages`
 table (if present) is left intact for data safety, but fresh databases do not
 create it and the application never accesses it.
 
+## Server-side moderator permissions
+
+Role changes happen through the administrator-only `PATCH /api/users/:id`
+with `{"role":"moderator"}` or `{"role":"user"}`. The server reloads
+roles from MySQL on every authenticated request (rather than trusting a JWT
+role), so new permissions and revocations take effect even in open sessions.
+A notification records each actual role change. Only admins can create users,
+change another account's identity/role, manage categories or see the admin dashboard.
+The last remaining administrator cannot be demoted or deleted.
+
+**Moderators may:** review/dismiss reports; deactivate/reactivate, lock/unlock
+or delete community posts; moderate comments and reactions; edit their own
+post title/body, photos and categories. Ordinary users keep the status-only
+comment workflow required by the coursework.
+
+**Moderators may not:** grant roles or edit accounts; change another author's
+post text, categories or hidden-like setting; moderate administrator posts,
+administrator replies, or delete administrator reactions (including bulk
+clearing of votes); view other people's unpublished scheduled posts through
+the feed, search, a direct post URL or the moderation queues. Posts that are
+inactive *after publishing* remain available for moderation.
+
+The API enforces these restrictions, not just the React buttons. Relevant
+checks live in `API/src/services/moderationPolicy.js`, and the dedicated
+MySQL integration suite is `npm run test:moderator`. As with all integration
+tests in this project, use `NODE_ENV=test` and a disposable database ending
+in `_ci` or `_test`. The Circle GitHub Actions workflow runs this suite
+on every update to `circle-threads-feed`.
+
 ## New community features
 
 - **Post photos:** authors upload up to four JPEG/PNG/WebP photos (5 MB each); images are decoded and normalized to WebP, stored under `API/uploads/posts`, shown in cards and a full-screen gallery, and removable by the author.
