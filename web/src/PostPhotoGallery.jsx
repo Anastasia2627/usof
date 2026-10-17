@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {assetUrl} from './api.js';
+import TablerIcon from './TablerIcon.jsx';
 
 /** Shared gallery ensures editor previews look exactly like published post photos. */
 export default function PostPhotoGallery({images=[],local=false}) {
@@ -31,7 +32,7 @@ export default function PostPhotoGallery({images=[],local=false}) {
     </div>
     {opened&&<div className="photoLightbox" role="dialog" aria-modal="true"
       aria-label="Full-size post photo" onClick={()=>setOpened(null)}>
-      <button type="button" aria-label="Close photo" onClick={()=>setOpened(null)}>×</button>
+      <button type="button" aria-label="Close photo" title="Close photo" onClick={()=>setOpened(null)}><TablerIcon name="close" size={23}/></button>
       <img alt="Full-size post photo" src={opened} onClick={event=>event.stopPropagation()}/>
     </div>}
   </>;
