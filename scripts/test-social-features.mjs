@@ -51,7 +51,8 @@ const scheduled=(await request('/posts',{method:'POST',token:member,status:201,b
   title:'Scheduled '+suffix,content:'Scheduled social post',categories:[ids[0]],publishAt:when
 }})).data;
 await request('/posts/'+scheduled.id,{status:404});
-await request('/posts/'+scheduled.id,{token:mod});
+await request('/posts/'+scheduled.id,{token:mod,status:404});
+await request('/posts/'+scheduled.id,{token:admin});
 await request('/posts/'+scheduled.id+'/comments',{method:'POST',token:member,status:423,body:{content:'Not yet'}});
 const publicFeed=(await request('/posts?sort=date&limit=50')).data;
 assert.ok(!publicFeed.some(p=>p.id===scheduled.id),'Scheduled posts must never leak into guest feed');
