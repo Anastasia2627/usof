@@ -804,3 +804,241 @@ main.welcomePage {
   align-items: center;
   gap: 6px;
 }
+
+/* Editor: an open writing canvas, not a stack of bordered form cards. */
+main.editorPage {
+  max-width: 640px;
+  width: min(640px, calc(100% - 46px));
+  padding: 34px 0 72px;
+  margin: 0 auto 30px;
+  min-height: calc(100vh - 185px);
+}
+.editorTopbar {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.editorTopbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 740;
+  letter-spacing: -.03em;
+}
+.editorBack {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #666;
+  background: transparent;
+}
+.editorBack:hover { background: #f4f4f4; color: #171717; }
+.postComposerForm { display: block; padding: 0; background: #fff; }
+.editorIdentity {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 27px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 680;
+}
+.editorIdentity small {
+  margin-left: auto;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 400;
+}
+.editorInputGroup {
+  padding-left: 54px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ededed;
+}
+.postComposerForm .editorTitleInput,
+.postComposerForm .editorContentInput {
+  display: block;
+  width: 100%;
+  padding: 5px 0;
+  margin: 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  color: #181818;
+  background: transparent;
+  box-shadow: none;
+  line-height: 1.45;
+  outline: 0;
+}
+.postComposerForm .editorTitleInput {
+  font-size: 18px;
+  font-weight: 620;
+  letter-spacing: -.025em;
+  margin-top: 0;
+  margin-bottom: 9px;
+  height: 43px;
+}
+.postComposerForm .editorContentInput {
+  font-size: 15px;
+  min-height: 190px;
+  line-height: 1.7;
+  resize: vertical;
+}
+.postComposerForm .editorTitleInput::placeholder { color: #aaa; opacity: 1; }
+.postComposerForm .editorContentInput::placeholder { color: #a1a1a1; opacity: 1; }
+.postComposerForm .editorTitleInput:focus,
+.postComposerForm .editorContentInput:focus { outline: 0; border: 0; }
+.editorInputGroup:focus-within { border-bottom-color: #c9c9c9; }
+.postComposerForm .editorTitleInput:focus-visible,
+.postComposerForm .editorContentInput:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+.postComposerForm .editorCategories {
+  margin: 23px 0 24px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  border-radius: 0;
+}
+.editorCategories legend {
+  padding: 0;
+  margin: 0 0 14px;
+  font-weight: 670;
+  font-size: 14px;
+  color: #292929;
+}
+.editorCategories legend span {
+  margin-left: 9px;
+  color: #999;
+  font-weight: 400;
+  font-size: 12px;
+}
+.editorTopicList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.postComposerForm .editorTopic {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-height: 36px;
+  border: 0;
+  background: #f5f5f5;
+  border-radius: 999px;
+  color: #656565;
+  padding: 7px 15px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 560;
+  line-height: 1.25;
+  transition: background-color .12s ease, color .12s ease;
+}
+.postComposerForm .editorTopic:hover { background: #ebebeb; color: #111; }
+.postComposerForm .editorTopic:has(input:checked) {
+  background: #191919;
+  color: #fff;
+}
+.postComposerForm .editorTopic:has(input:checked):hover { background: #353535; }
+.postComposerForm .editorTopic:has(input:focus-visible) {
+  outline: 2px solid #444;
+  outline-offset: 3px;
+}
+.postComposerForm .editorTopic input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  opacity: 0;
+}
+.postComposerForm .editorTopic span { pointer-events: none; }
+.editorActions {
+  padding-top: 17px;
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.editorSelectionHint { color: #989898; font-size: 12px; }
+.postComposerForm button.editorPublish {
+  width: auto;
+  min-height: 42px;
+  padding: 10px 20px;
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+.postComposerForm .inlineError { margin: 17px 0; }
+
+/* Feed filters: lighter text-first controls without individual raised boxes. */
+.filterDetails .filterBar { column-gap: 17px; row-gap: 18px; padding: 10px 23px 24px; }
+.filterDetails .filterBar label {
+  color: #898989;
+  font-size: 12px;
+  font-weight: 530;
+  gap: 4px;
+}
+.filterDetails .filterBar select,
+.filterDetails .filterBar input[type="date"] {
+  display: block;
+  margin-top: 0;
+  min-height: 41px;
+  padding: 7px 2px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e6e6e6;
+  border-radius: 0;
+  box-shadow: none;
+  font-weight: 580;
+  color: #252525;
+  font-size: 13px;
+}
+.filterDetails .filterBar select:focus-visible,
+.filterDetails .filterBar input[type="date"]:focus-visible {
+  outline: 0;
+  border-bottom: 2px solid #171717;
+}
+.filterDetails .filterBar button.applyFilters {
+  border-radius: 999px;
+  min-height: 38px;
+}
+.filterDetails .filterBar button.resetFilters {
+  border: 0;
+  min-height: 38px;
+  justify-self: start;
+  border-radius: 999px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+@media (max-width:720px) {
+  main.editorPage { width: min(640px, calc(100% - 34px)); padding-top: 17px; }
+  .editorTopbar { gap: 9px; padding-bottom: 16px; }
+  .editorTopbar h1 { font-size: 19px; }
+  .editorIdentity { margin-top: 20px; }
+  .editorIdentity small { font-size: 11px; }
+  .editorInputGroup { padding-left: 0; }
+  .postComposerForm .editorContentInput { min-height: 200px; }
+  .editorCategories legend span { display: inline; }
+  .editorActions { gap: 10px; }
+  .filterDetails .filterBar { padding: 10px 17px 19px; column-gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .postComposerForm .editorTopic { transition: none; }
+}
