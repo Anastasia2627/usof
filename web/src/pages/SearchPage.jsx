@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
+import ModeratorControl from '../ModeratorControl.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 export default function SearchPage({ hash }) {
   const auth = useSelector(state => state.auth);
+  const {t}=usePreferences();
   const query = new URLSearchParams(hash.split('?')[1] || '').get('q')?.trim() || '';
   const [data, setData] = useState({ posts: [], users: [], categories: [] });
   const [error, setError] = useState(null);
@@ -35,10 +38,13 @@ export default function SearchPage({ hash }) {
       <section className="searchSection">
         <h2>People ({data.users.length})</h2>
         <div className="searchCards">
-          {data.users.map(user => <button className="card searchPerson" key={user.id} onClick={() => go('/profile/' + user.id)}>
-            <Avatar user={user} size="sm" />
-            <span><strong>@{user.login}</strong> <small>{user.full_name || 'Circle member'}</small></span>
-          </button>)}
+          {data.users.map(user => <div className="card searchPerson searchMember" key={user.id}>
+            <button className="searchMemberIdentity" onClick={() => go('/profile/' + user.id)}>
+              <Avatar user={user} size="sm" />
+              <span><strong>@{user.login}</strong> <small>{user.full_name || t('Circle member')}</small></span>
+            </button>
+            <ModeratorControl userId={user.id} login={user.login} role={user.role}/>
+          </div>)}
         </div>
         {!data.users.length && <p>No matching users.</p>}
       </section>
