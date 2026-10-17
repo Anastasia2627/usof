@@ -14,6 +14,7 @@ import SavedPage from './pages/SavedPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import InterestsPage from './pages/InterestsPage.jsx';
+import NotificationsPage from './pages/NotificationsPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -35,6 +36,7 @@ export default function App() {
   else if (path === '/welcome') page = <WelcomePage />;
   else if (path === '/explore') page = <HomePage hash={hash} basePath="/explore" />;
   else if (path === '/saved') page = <SavedPage />;
+  else if (path === '/notifications') page = <NotificationsPage />;
   else if (path === '/dashboard') page = <DashboardPage />;
   else if (path === '/settings') page = <SettingsPage />;
   else if (path === '/interests') page = <InterestsPage />;
