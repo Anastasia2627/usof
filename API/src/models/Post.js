@@ -110,7 +110,16 @@ export class Post extends BaseModel {
         description: row.description,
       });
     }
-    return posts.map((post) => ({ ...post, categories: categoriesByPost.get(Number(post.id)) || [] }));
+    const photos=await this.query(
+      `SELECT id,post_id,filename FROM post_images WHERE post_id IN (${placeholders}) ORDER BY id`,ids);
+    const imagesByPost=new Map(ids.map(id=>[id,[]]));
+    for(const image of photos)imagesByPost.get(Number(image.post_id))?.push({
+      id:image.id,url:'/uploads/posts/'+image.filename,
+    });
+    return posts.map(post=>({
+      ...post,categories:categoriesByPost.get(Number(post.id))||[],
+      images:imagesByPost.get(Number(post.id))||[],
+    }));
   }
 
   static async list({ clause = '', params = [], sort, order, limit, offset }) {
