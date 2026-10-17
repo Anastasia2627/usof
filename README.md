@@ -87,6 +87,26 @@ for defense because it does not store shared records or send email.
 
 The homepage `/#/` shows a public feed sorted by positive likes (descending) for both guests and signed-in members, with visible search, menu, category filters, date ascending/descending and pagination. Guests can read posts; writing, replying, voting and reporting require authentication. The original welcome design remains at `/#/welcome`.
 
+## Refined interface and moderator assignment
+
+The login and sign-up screens use a calm, two-column editorial layout on desktop
+and a compact stacked layout on mobile. The post composer keeps the original title,
+body, category selection, preview, photos, and publication options, now arranged in
+smaller visual sections. Every category remains selectable within a compact,
+scrollable list, including categories added after initialization.
+
+**Give a user moderator rights:** sign in as an admin, open **Admin → Users**,
+find the user's row and click **Make moderator**. Confirm the action; the
+user's role changes to `moderator` instantly in the admin list. The user should
+sign out and log back in to receive a new session. **Remove moderator** restores
+the standard `user` role. Only administrators can appoint or revoke moderators.
+The older Edit → Role selector is also available.
+
+Private direct messages have been retired. There is no Messages button, profile
+message action, messages page or messaging API. An existing `direct_messages`
+table (if present) is left intact for data safety, but fresh databases do not
+create it and the application never accesses it.
+
 ## New community features
 
 - **Post photos:** authors upload up to four JPEG/PNG/WebP photos (5 MB each); images are decoded and normalized to WebP, stored under `API/uploads/posts`, shown in cards and a full-screen gallery, and removable by the author.
