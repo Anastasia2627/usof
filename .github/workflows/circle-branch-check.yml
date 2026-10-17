@@ -112,6 +112,8 @@ jobs:
           curl -fsS "http://127.0.0.1:5173/api/posts?limit=8&sort=likes&order=desc" > /dev/null
       - name: Test functional UI at 390px and on admin pages
         run: npm run test:ui
+      - name: Check composer layout and revoked login recovery
+        run: npm run test:ui:regressions
       - name: Verify 20-step review scenarios
         run: npm run test:defense
       - name: Capture desktop and mobile Basic screenshots
