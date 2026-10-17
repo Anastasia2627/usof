@@ -141,7 +141,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
         {(isOwner || canModerate) && <button type="button" className="dangerText"
           title={t('Delete')} aria-label={t('Delete')} onClick={() => {
           if (window.confirm(t('Delete this comment and replies?'))) run(`/comments/${item.id}`, 'DELETE');
-        }}><Icon name="trash" size={18}/></button>
+        }}><Icon name="trash" size={18}/></button>}
       </div>
       {replying && <form className="replyForm" onSubmit={sendReply}>
         <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
