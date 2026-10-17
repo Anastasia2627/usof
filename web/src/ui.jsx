@@ -50,6 +50,7 @@ export function StatusBadges({ item }) {
 
 export function PostCard({ post }) {
   const auth = useSelector(state => state.auth);
+  const {t} = usePreferences();
   const [counts, setCounts] = useState({
     like: Number(post.like_count || 0),
     dislike: Number(post.dislike_count || 0),
@@ -57,6 +58,10 @@ export function PostCard({ post }) {
   });
   const [myVote, setMyVote] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null);
+  const contextRef = useRef(null);
   const [error, setError] = useState(null);
   const showStatus = auth?.user?.role === 'admin' || Number(auth?.user?.id) === Number(post.author_id);
   const selfPost = Boolean(auth && Number(auth.user.id) === Number(post.author_id));
@@ -72,8 +77,11 @@ export function PostCard({ post }) {
   }, [post.id, post.like_count, post.dislike_count, post.comment_count]);
 
   useEffect(() => {
-    if (!auth?.token) { setMyVote(null); return; }
+    if (!auth?.token) { setMyVote(null); setSaved(false); return; }
     let active = true;
+    api('/posts/' + post.id + '/engagement', { token: auth.token })
+      .then(r => { if (active) setSaved(Boolean(r.data.favorite)); })
+      .catch(() => { if (active) setSaved(false); });
     api('/posts/' + post.id + '/like', { token: auth.token })
       .then(result => {
         if (active) setMyVote(result.data.find(item => Number(item.author_id) === Number(auth.user.id))?.type || null);
@@ -104,7 +112,59 @@ export function PostCard({ post }) {
     finally { setBusy(false); }
   }
 
-  return <article className="threadCard">
+  async function toggleSave() {
+    if (!auth) { go('/login'); return; }
+    if (saving) return;
+    setSaving(true);setError(null);
+    try {
+      const value = !saved;
+      await api('/posts/' + post.id + '/favorite',{method:value?'POST':'DELETE',token:auth.token});
+      setSaved(value);
+      window.dispatchEvent(new Event('circle:saved-updated'));
+    } catch(e){setError(e);} finally{setSaving(false);}
+  }
+  async function moderate(method,body) {
+    setContextMenu(null);
+    try {
+      await api('/posts/' + post.id,{method,token:auth.token,...(body?{body}:{})});
+      window.dispatchEvent(new Event('circle:posts-updated'));
+    } catch(e){setError(e);}
+  }
+  useEffect(()=>{
+    if(!contextMenu)return;
+    const outside=event=>{if(!contextRef.current?.contains(event.target))setContextMenu(null);};
+    const escape=event=>{if(event.key==='Escape')setContextMenu(null);};
+    const close=()=>setContextMenu(null);
+    document.addEventListener('pointerdown',outside);
+    document.addEventListener('keydown',escape);
+    window.addEventListener('scroll',close,true);
+    return()=>{
+      document.removeEventListener('pointerdown',outside);
+      document.removeEventListener('keydown',escape);
+      window.removeEventListener('scroll',close,true);
+    };
+  },[contextMenu]);
+  function openModeration(event) {
+    if (!isAdmin) return;
+    event.preventDefault();
+    setContextMenu({
+      x:Math.max(8,Math.min(event.clientX,window.innerWidth-225)),
+      y:Math.max(8,Math.min(event.clientY,window.innerHeight-225))
+    });
+  }
+  const actions = [
+    {text:t('Open post'),icon:'arrow',fn:()=>{setContextMenu(null);go('/post/'+post.id);}},
+    {text:t(post.status==='active'?'Deactivate':'Activate'),
+      icon:post.status==='active'?'lock':'check',
+      fn:()=>moderate('PATCH',{status:post.status==='active'?'inactive':'active'})},
+    {text:t(post.locked?'Unlock':'Lock'),icon:post.locked?'unlock':'lock',
+      fn:()=>moderate('PATCH',{locked:!Boolean(post.locked)})},
+    {text:t('Delete post'),icon:'trash',danger:true,fn:()=>{
+      setContextMenu(null);
+      if(window.confirm(t('Delete post?')))moderate('DELETE');
+    }}
+  ];
+  return <article className="threadCard" onContextMenu={isAdmin?openModeration:undefined}>
     <div className="threadAvatarColumn">
       <button className="avatarButton" aria-label={`Profile of ${post.author_login}`} onClick={() => go(`/profile/${post.author_id}`)}>
         <Avatar user={{ login: post.author_login, avatar: post.author_avatar }} size="md" />
@@ -132,9 +192,23 @@ export function PostCard({ post }) {
           aria-pressed={myVote === 'dislike'} className={myVote === 'dislike' ? 'activeVote' : ''} onClick={() => vote('dislike')}>
           <Icon name="dislike" size={19}/><span>{counts.dislike}</span>
         </button>
+        {auth && <button type="button" aria-label={saved?t('Unsave post'):t('Save post')}
+          title={saved?t('Unsave post'):t('Save post')} aria-pressed={saved}
+          className={saved?'activeSave':''} disabled={saving} onClick={toggleSave}>
+          <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/>
+        </button>}
+        {isAdmin && <button type="button" aria-label={t('Post actions')}
+          title={t('Post actions')} className="postModerationTrigger"
+          onClick={openModeration}><Icon name="more" size={20}/></button>}
       </div>
       <ErrorBox error={error} />
     </div>
+    {contextMenu && isAdmin && <div ref={contextRef} className="postContextMenu"
+      style={{left:contextMenu.x,top:contextMenu.y}} role="menu" aria-label={t('Post actions')}>
+      {actions.map(action=><button type="button" role="menuitem" key={action.text}
+        className={action.danger?'dangerText':''} onClick={action.fn}>
+        <Icon name={action.icon} size={18}/>{action.text}</button>)}
+    </div>}
   </article>;
 }
 
