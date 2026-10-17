@@ -47,7 +47,7 @@ export default function App() {
   else if (path === '/explore') page = <HomePage hash={hash} basePath="/explore" />;
   else if (path === '/saved') page = <SavedPage />;
   else if (path === '/notifications') page = <NotificationsPage />;
-  else if (path === '/dashboard') page = <DashboardPage />;
+  else if (path === '/dashboard') page = auth?.user?.role==='admin'?<AdminPage initialTab="dashboard"/>:<DashboardPage />;
   else if (path === '/settings') page = <SettingsPage />;
   else if (path === '/interests') page = <InterestsPage />;
   else if (path === '/login') page = <AuthPage mode="login" />;
