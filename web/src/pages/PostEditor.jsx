@@ -203,13 +203,13 @@ export default function PostEditor({ id }) {
               <Icon name="check" size={15}/>
               <span title={file.name}>{file.name}</span>
               <button type="button" title="Remove photo" aria-label={'Remove '+file.name}
-                onClick={()=>setSelectedImages(items=>items.filter((_,index)=>index!==i))}>×</button>
+                onClick={()=>setSelectedImages(items=>items.filter((_,index)=>index!==i))}><Icon name="close" size={16}/></button>
             </div>)}
             {existingImages.map(image=><div className="editorPhotoPill editorUploadedPill" key={image.id}>
               <img src={assetUrl(image.url)} alt="Attached photo"/>
               <span>Photo {image.id}</span>
               <button type="button" title="Remove photo" aria-label={'Remove photo '+image.id}
-                onClick={()=>removeExisting(image.id)}>×</button>
+                onClick={()=>removeExisting(image.id)}><Icon name="close" size={16}/></button>
             </div>)}
           </div>
           <div className="editorPhotoLivePreview">
