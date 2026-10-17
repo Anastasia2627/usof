@@ -2,9 +2,11 @@ import React,{useEffect,useState} from 'react';
 import {useSelector} from 'react-redux';
 import {api} from '../api.js';
 import {ErrorBox,Icon,go} from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 export default function InterestsPage(){
   const auth=useSelector(state=>state.auth);
+  const {t}=usePreferences();
   const [topics,setTopics]=useState([]),[selected,setSelected]=useState([]),[saving,setSaving]=useState(false),[error,setError]=useState(null);
   useEffect(()=>{
     if(!auth?.token)return;
@@ -29,7 +31,7 @@ export default function InterestsPage(){
     <div className="interestSelection" role="group" aria-label="Topics that interest you">
       {topics.map(c=><button key={c.id} type="button" className={selected.includes(c.id)?'interestChosen':''}
         aria-pressed={selected.includes(c.id)} onClick={()=>toggle(c.id)}>
-        <Icon name={selected.includes(c.id)?'check':'plus'} size={16}/>{c.title}
+        <Icon name={selected.includes(c.id)?'check':'plus'} size={16}/>{t(c.title)}
       </button>)}
     </div>
     <ErrorBox error={error}/>
