@@ -233,7 +233,7 @@ export default function PostPage({ id }) {
   return <main className="postPage naturalPostPage">
     <div className="postBackRow"><button className="editorBack" type="button" onClick={()=>go('/')}
       aria-label="Back to feed" title="Back to feed"><Icon name="arrowBack" size={21}/></button>
-      <strong>Discussion</strong>
+      <strong>{t('Discussion')}</strong>
     </div>
     <article className="naturalPost">
       <div className="naturalPostAuthor">
@@ -248,7 +248,7 @@ export default function PostPage({ id }) {
         <StatusBadges item={post}/>
       </div>
       <h1>{post.title}</h1>
-      {post.accepted_comment_id && <span className="solutionTag">✓ Solved</span>}
+      {post.accepted_comment_id && <span className="solutionTag">✓ {t('Solved')}</span>}
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
       <PostPhotoGallery images={post.images||[]}/>}
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
@@ -269,17 +269,17 @@ export default function PostPage({ id }) {
         {isOwner && <button type="button" title={post.closed?'Reopen discussion':'Close discussion'}
           aria-label={post.closed?'Reopen discussion':'Close discussion'}
           onClick={()=>run('PATCH',{closed:!Boolean(post.closed)})}>
-          <Icon name={post.closed?'unlock':'lock'} size={18}/><span>{post.closed?'Reopen':'Close'} discussion</span></button>}
+          <Icon name={post.closed?'unlock':'lock'} size={18}/><span>{t(post.closed?'Reopen discussion':'Close discussion')}</span></button>}
         {isOwner && <button type="button" title={post.hide_likes?'Show likes':'Hide likes'}
           aria-label={post.hide_likes?'Show likes':'Hide likes'}
           onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
-          <Icon name="heart" size={18}/><span>{post.hide_likes?'Show':'Hide'} likes</span></button>}
+          <Icon name="heart" size={18}/><span>{t(post.hide_likes?'Show likes':'Hide likes')}</span></button>}
         {isAdmin && <><button type="button" onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
           <Icon name="check" size={18}/><span>{post.status==='active'?'Deactivate':'Activate'}</span></button>
           <button type="button" onClick={()=>run('PATCH',{locked:!post.locked})}>
           <Icon name={post.locked?'unlock':'lock'} size={18}/><span>{post.locked?'Unlock':'Lock'}</span></button></>}
         <button type="button" className="dangerText" aria-label="Delete post" title="Delete post" onClick={deletePost}>
-          <Icon name="trash" size={18}/><span>Delete post</span></button>
+          <Icon name="trash" size={18}/><span>{t('Delete post')}</span></button>
       </div>}
       {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>The author has closed this discussion, replies are now read-only</p>}
       {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
@@ -287,18 +287,18 @@ export default function PostPage({ id }) {
       <ErrorBox error={error}/>
     </article>
     <section className="naturalComments">
-      <h2>Replies <span>{comments.length}</span></h2>
+      <h2>{t('Replies')} <span>{comments.length}</span></h2>
       {roots.length ? <div className="naturalCommentTree">
         {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} acceptedId={post.accepted_comment_id} postAuthorId={post.author_id}/>)}
       </div> : <div className="naturalEmptyReplies"><Icon name="comment" size={25}/>
-        <p>No replies yet</p><small>Be the first to join the conversation</small></div>}
+        <p>{t('No replies yet')}</p><small>{t('Be the first to join the conversation')}</small></div>}
       {canComment ? <form className="naturalReplyComposer" onSubmit={sendComment}>
         <Avatar user={auth.user} size="md"/>
-        <label className="srOnly" htmlFor="main-reply-input">New comment</label>
+        <label className="srOnly" htmlFor="main-reply-input">{t('New comment')}</label>
         <textarea id="main-reply-input" required maxLength="20000" rows="2"
-          placeholder="Add to the conversation…" value={text} onChange={e=>setText(e.target.value)}/>
+          placeholder={t('Add to the conversation…')} value={text} onChange={e=>setText(e.target.value)}/>
         <button className="primary" type="submit" aria-label="Comment" title="Send reply"><Icon name="arrow" size={20}/></button>
-      </form> : <p className="naturalReplyLocked">{!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled'}</p>}
+      </form> : <p className="naturalReplyLocked">{t(!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled')}</p>}
     </section>
   </main>;
 }
