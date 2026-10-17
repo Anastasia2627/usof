@@ -85,6 +85,8 @@ jobs:
         run: npm run test:full
       - name: Check new social features and permission boundaries
         run: npm run test:social
+      - name: Verify image uploads, accepted answers, reports and moderator permissions
+        run: npm run test:features
       - name: Check all new server and test modules
         run: npm run check:full
       - name: Check configured Mac API port and proxy target
