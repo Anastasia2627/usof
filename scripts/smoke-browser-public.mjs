@@ -76,6 +76,8 @@ try {
   await page.locator('button.authSubmit').click();
   await page.locator('.verificationForm input[autocomplete="one-time-code"]').waitFor();
   await page.locator('.verificationForm button.authSubmit').click();
+  await page.waitForURL(/#\/interests$/);
+  await page.getByRole('button',{name:'Maybe later'}).click();
   await page.waitForURL(/#\/$/);
   await page.getByRole('button', { name: 'Profile of ' + newMember + ' (user)' }).waitFor();
   await page.locator('.accountMenu summary').click();
