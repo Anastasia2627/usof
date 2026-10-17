@@ -26,17 +26,17 @@ export default function SearchPage({ hash }) {
   }, [query, auth?.token]);
 
   return <main className="searchPage">
-    <h1>Search</h1>
-    {!query ? <p>Enter a name, post title, text or category in the search bar.</p> : <p>Results for <strong>{query}</strong></p>}
+    <h1>{t('Search')}</h1>
+    {!query ? <p>{t('Enter a name, post title, text or category in the search bar.')}</p> : <p>{t('Results for')} <strong>{query}</strong></p>}
     <ErrorBox error={error} />
-    {loading ? <p>Searching…</p> : <>
+    {loading ? <p>{t('Searching…')}</p> : <>
       <section className="searchSection">
-        <h2>Posts ({data.posts.length})</h2>
+        <h2>{t('Posts')} ({data.posts.length})</h2>
         {data.posts.length ? <div className="postList">{data.posts.map(post => <PostCard key={post.id} post={post} />)}</div>
-          : <p>No matching posts.</p>}
+          : <p>{t('No matching posts.')}</p>}
       </section>
       <section className="searchSection">
-        <h2>People ({data.users.length})</h2>
+        <h2>{t('People')} ({data.users.length})</h2>
         <div className="searchCards">
           {data.users.map(user => <div className="card searchPerson searchMember" key={user.id}>
             <button className="searchMemberIdentity" onClick={() => go('/profile/' + user.id)}>
@@ -46,16 +46,16 @@ export default function SearchPage({ hash }) {
             <ModeratorControl userId={user.id} login={user.login} role={user.role}/>
           </div>)}
         </div>
-        {!data.users.length && <p>No matching users.</p>}
+        {!data.users.length && <p>{t('No matching users.')}</p>}
       </section>
       <section className="searchSection">
-        <h2>Categories ({data.categories.length})</h2>
+        <h2>{t('Categories')} ({data.categories.length})</h2>
         <div className="searchCards">
           {data.categories.map(category => <button className="card searchPerson" key={category.id} onClick={() => go('/category/' + category.id)}>
             <strong>{t(category.title)}</strong><small>{t(category.description)}</small>
           </button>)}
         </div>
-        {!data.categories.length && <p>No matching categories.</p>}
+        {!data.categories.length && <p>{t('No matching categories.')}</p>}
       </section>
     </>}
   </main>;
