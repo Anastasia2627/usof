@@ -101,7 +101,9 @@ export default function NotificationsPage() {
         await api(`/notifications/${item.id}/read`, { method: 'PATCH', token: auth.token });
         announceChange();
       }
-      if (item.post_id) go(`/post/${item.post_id}`);
+      if (item.type==='category_suggestion'&&auth.user.role==='admin') go('/admin?tab=suggestions');
+      else if (item.type==='category_decision') go('/categories');
+      else if (item.post_id) go(`/post/${item.post_id}`);
       else await load();
     } catch (err) {
       setError(err);
