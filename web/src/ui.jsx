@@ -5,24 +5,29 @@ import { api, assetUrl } from './api.js';
 export const go = (path) => { window.location.hash = path; };
 export const fmt = (date) => date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—';
 
-// Simple monochrome, accessible symbols; no icon font or UI framework.
+// Google Material Symbols Rounded, a lightweight shared icon font.
+// A single accessible component keeps icons consistent in nav and reactions.
 export function Icon({ name, size = 22 }) {
-  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
-  const shapes = {
-    home: <><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-8h6v8"/></>,
-    search: <><circle cx="11" cy="11" r="7.5"/><path d="m16.5 16.5 5 5"/></>,
-    plus: <><path d="M12 4v16M4 12h16"/></>,
-    categories: <><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></>,
-    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
-    shield: <><path d="m12 2 9 4v6c0 5-3 8-9 10C6 20 3 17 3 12V6z"/><path d="m9 12 2 2 4-4"/></>,
-    heart: <path d="M20.5 5.5a5.3 5.3 0 0 0-7.5 0l-1 1-1-1a5.3 5.3 0 0 0-7.5 7.5l8.5 8.5 8.5-8.5a5.3 5.3 0 0 0 0-7.5z"/>,
-    comment: <path d="M20 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-4.5a9 9 0 0 1-.9-4A8.5 8.5 0 1 1 20 11.5z"/>,
-    dislike: <><path d="M7 13v7a2 2 0 0 0 4 0l2-6h6a2 2 0 0 0 1.8-3l-3-6A2 2 0 0 0 16 4H8a2 2 0 0 0-2 2v7z"/><path d="M2 5v9h4"/></>,
-    arrow: <><path d="m5 12 14 0M13 6l6 6-6 6"/></>,
-    logout: <><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="m14 8 4 4-4 4M18 12H9"/></>,
-    sliders: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5" fill="white"/><circle cx="15" cy="17" r="2.5" fill="white"/></>,
+  const glyphs = {
+    home: 'home',
+    search: 'search',
+    plus: 'add_circle',
+    categories: 'grid_view',
+    user: 'person',
+    shield: 'admin_panel_settings',
+    heart: 'favorite',
+    comment: 'chat_bubble',
+    dislike: 'thumb_down',
+    arrow: 'arrow_forward',
+    logout: 'logout',
+    sliders: 'tune',
+    forum: 'forum',
+    favorite: 'favorite',
+    chat: 'chat_bubble',
+    group: 'groups',
   };
-  return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" {...common}>{shapes[name] || shapes.categories}</svg>;
+  return <span className="material-symbols-rounded circleIcon" aria-hidden="true"
+    style={{ fontSize: size }}>{glyphs[name] || 'grid_view'}</span>;
 }
 
 export function trustName(rating) {
@@ -156,6 +161,7 @@ export function Header() {
 
   const nav = [
     { key: 'home', text: 'Home', destination: '/', icon: 'home' },
+    ...(!auth ? [{ key: 'explore', text: 'Explore', destination: '/explore', icon: 'forum' }] : []),
     { key: 'search', text: 'Search', destination: '/search', icon: 'search' },
     { key: 'categories', text: 'Categories', destination: '/categories', icon: 'categories' },
     ...(auth ? [{ key: 'create', text: 'New post', destination: '/create', icon: 'plus' }] : []),
