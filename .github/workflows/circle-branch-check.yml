@@ -1,8 +1,8 @@
-name: Circle full requirements check
+name: Circle Threads UI & connection check
 
 on:
   push:
-    branches: [circle-full-requirements]
+    branches: [circle-threads-feed]
   workflow_dispatch:
 
 jobs:
@@ -98,6 +98,10 @@ jobs:
           done
           cat web.log
           exit 1
+      - name: Check Vite proxy for guest API access
+        run: |
+          curl -fsS http://127.0.0.1:5173/api/health
+          curl -fsS "http://127.0.0.1:5173/api/posts?limit=8&sort=likes&order=desc" > /dev/null
       - name: Test functional UI at 390px and on admin pages
         run: npm run test:ui
       - name: Verify 20-step review scenarios
