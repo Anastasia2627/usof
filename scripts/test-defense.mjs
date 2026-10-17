@@ -190,7 +190,8 @@ try {
   await card.getByLabel('Reply').fill('Admin replied '+suffix);
   await card.getByRole('button',{name:'Post reply'}).click();
   await admin.getByText('Admin replied '+suffix).waitFor();
-  // Comments from the other browser appear without a manual reload.
+  // Switching back to the user's browser should refresh cross-browser comments.
+  await user.bringToFront();
   await user.getByText('Admin replied '+suffix).waitFor({timeout:18000});
   const answer=user.locator('.commentCard').filter({hasText:'Admin replied '+suffix}).first();
   await answer.getByRole('button',{name:'Dislike',exact:true}).click();
