@@ -50,3 +50,24 @@
   .appLayout>main:not(.homePage){padding-inline:12px}
 }
 @media(prefers-reduced-motion:reduce){.appLayout button,.appLayout .threadCard{transition:none!important}}
+
+
+/* Secondary empty-result states use the same quiet surface language. */
+.searchPage .searchSection>p,
+.adminPage .adminEmpty,
+.categoryDetailPage .empty {
+  margin: 12px 0 18px;
+  padding: 18px 20px;
+  color: var(--ui-muted);
+  background: var(--ui-soft);
+  border: 1px solid var(--ui-stroke);
+  border-radius: 14px;
+  line-height: 1.55;
+}
+.appLayout .searchPage .searchSection {min-width:0}
+.appLayout .searchPage .searchCards {min-width:0}
+.appLayout .adminPage .adminListItem {min-width:0}
+@media (max-width:720px) {
+  .appLayout .searchPage .searchSection>p,
+  .appLayout .adminPage .adminEmpty {padding:14px 16px}
+}
