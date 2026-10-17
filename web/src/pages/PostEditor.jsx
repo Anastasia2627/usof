@@ -116,13 +116,11 @@ export default function PostEditor({ id }) {
         <small>Posting to <b>circle</b></small>
       </div>
       <div className="editorInputGroup">
-        <label className="editorFieldLabel" htmlFor="post-title">Title</label>
-        <label className="srOnly" htmlFor="post-title">{t("Post title")}</label>
+        <label className="editorFieldLabel" htmlFor="post-title">{t("Post title")}</label>
         <input id="post-title" className="editorTitleInput" maxLength="180" required
           value={form.title} onChange={event => setForm({ ...form, title: event.target.value })}
           placeholder={t("Give your post a title…")} />
-        <label className="editorFieldLabel editorBodyLabel" htmlFor="post-content">Your post</label>
-        <label className="srOnly" htmlFor="post-content">{t("Post details")}</label>
+        <label className="editorFieldLabel editorBodyLabel" htmlFor="post-content">{t("Post details")}</label>
         <textarea ref={editorRef} id="post-content" className="editorContentInput" maxLength="50000" required
           value={form.content} onChange={event => setForm({ ...form, content: event.target.value })}
           placeholder={t("What's on your mind?")} />
@@ -134,7 +132,7 @@ export default function PostEditor({ id }) {
             <button type="button" aria-label="Numbered list" title="Numbered list" onClick={()=>applyFormat('1. ','',true)}>1.</button>
           </div>
           <button className="editorPreviewToggle" type="button" onClick={()=>setPreview(p=>!p)} aria-pressed={preview}>
-            <Icon name="eye" size={16}/>{preview?'Hide preview':'Preview'}
+            <Icon name="search" size={16}/>{preview?'Hide preview':'Preview'}
           </button>
         </div>
         {preview && <section className="markdownPreview" aria-label="Post preview">
@@ -175,8 +173,8 @@ export default function PostEditor({ id }) {
 
       <fieldset className="editorCategories">
         <legend>{t('Topics')} <span>{t('Choose one or more')}</span></legend>
-        <div className="checkGrid editorTopicList">
-          {categories.filter((category,index)=>expandedTopics||index<12||form.categories.includes(Number(category.id))).map(category =>
+        <div className={'checkGrid editorTopicList'+(expandedTopics?' topicsExpanded':'')}>
+          {categories.map(category =>
             <label className="check editorTopic" key={category.id}>
               <input type="checkbox" aria-label={category.title}
                 checked={form.categories.includes(Number(category.id))}
