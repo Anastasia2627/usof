@@ -157,7 +157,7 @@ export default function HomePage({ hash, basePath = '/' }) {
         </summary>
         <form className="filterBar" onSubmit={apply}>
           <div className="filterPanelTitle">
-            <div><strong>{t('Filter posts')}</strong><small>{t('Filter settings')}</small></div>
+            <div><strong>{t('Filter posts')}</strong></div>
             <button type="button" aria-label={t('Close filters')} title={t('Close filters')}
               onClick={()=>{if(filterRef.current)filterRef.current.open=false;}}>
               <Icon name="close" size={18}/></button>
@@ -189,7 +189,7 @@ export default function HomePage({ hash, basePath = '/' }) {
               </select><Icon name="chevron" size={16}/></span>
             </label>}
           </div>
-          <div className="filterPanelHeading filterDateHeading">{t('Date range')} <small>{t('Optional')}</small></div>
+          <div className="filterPanelHeading filterDateHeading">{t('Date range')}</div>
           <div className="filterQuickPeriods" role="group" aria-label={t('Date range')}>
             {[{days:0,title:'Any time'},{days:7,title:'Last 7 days'},{days:30,title:'Last 30 days'}].map(option=>
               <button type="button" key={option.days}

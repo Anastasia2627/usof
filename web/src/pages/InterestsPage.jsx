@@ -26,7 +26,6 @@ export default function InterestsPage(){
     <div className="socialIntro"><div className="socialCircle"><Icon name="heart" size={26}/></div>
       <span className="profileMicroLabel">{t('Make Circle yours')}</span>
       <h1>{t('What are you into?')}</h1>
-      <p>{t('Pick a few things you love, there are no wrong answers')}</p>
     </div>
     <div className="interestSelection" role="group" aria-label={t('Topics that interest you')}>
       {topics.map(c=><button key={c.id} type="button" className={selected.includes(c.id)?'interestChosen':''}
