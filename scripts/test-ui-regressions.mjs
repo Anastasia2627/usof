@@ -120,6 +120,22 @@ try{
   await page.getByRole('button',{name:'Apply filters'}).click();
   await page.waitForURL(/from=.*to=/);
 
+  // Topic proposals must work from inside the post composer without
+  // accidentally submitting a post (nested HTML forms are not allowed).
+  await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
+  const proposed='UI Topic '+Date.now();
+  await page.getByRole('button',{name:'Suggest a topic'}).click();
+  await page.getByLabel('Topic name').fill(proposed);
+  await page.getByRole('button',{name:'Send suggestion'}).click();
+  await page.getByText('Suggestion sent for review').waitFor();
+  assert.ok(page.url().includes('#/create'),'Submitting a topic idea must not publish a post');
+  await page.goto(origin+'/#/admin?tab=suggestions',{waitUntil:'networkidle'});
+  await page.getByText(proposed).waitFor();
+  const idea=page.locator('.suggestReviewCard').filter({hasText:proposed});
+  page.once('dialog',dialog=>dialog.accept());
+  await idea.getByRole('button',{name:'Reject'}).click();
+  await idea.waitFor({state:'detached'});
+
   // The dashboard is reachable from Admin and is no longer a sidebar item.
   await page.goto(origin+'/#/admin',{waitUntil:'networkidle'});
   await page.getByRole('navigation',{name:'Main navigation'})
