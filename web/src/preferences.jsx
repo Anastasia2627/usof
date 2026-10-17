@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const KEY = 'circle-display-preferences-v1';
-const LANGUAGE_NAMES = { en: 'English', uk: 'Українська', ru: 'Русский' };
+const LANGUAGE_NAMES = { en: 'English', uk: 'Українська' };
 
 const translations = {
   uk: {
@@ -52,54 +52,7 @@ const translations = {
     'A place for real conversations':'Місце для справжніх розмов',
     'Talk about what matters.':'Говоріть про важливе.',
   },
-  ru: {
-    'Home':'Главная', 'Explore':'Обзор', 'Search':'Поиск', 'Categories':'Категории',
-    'New post':'Новый пост', 'Admin':'Админка', 'Saved':'Сохранённое',
-    'Dashboard':'Статистика', 'Settings':'Настройки', 'Log in':'Войти',
-    'Sign up':'Регистрация', 'Log out':'Выйти', 'My profile':'Мой профиль',
-    'Account menu':'Меню аккаунта', 'Popular':'Популярные', 'Latest':'Новые',
-    'Filters':'Фильтры', 'More':'Ещё', 'All':'Все', 'All categories':'Все категории',
-    'Apply':'Применить', 'Clear all':'Очистить', 'Fine-tune your feed':'Настроить ленту',
-    'Sort by':'Сортировка', 'Direction':'Направление', 'Category':'Категория', 'Status':'Статус',
-    'Date range':'Период', 'Optional':'Необязательно', 'From':'От', 'To':'До',
-    'Number of likes':'По лайкам', 'Publication date':'По дате',
-    'Descending':'По убыванию', 'Ascending':'По возрастанию',
-    'All viewable':'Все доступные', 'Active':'Активные', 'Inactive':'Неактивные',
-    "What's on your mind?":'О чём думаете?', 'Post':'Опубликовать',
-    'Loading conversations…':'Загружаем посты…',
-    'No conversations found. Try changing your filters.':'Ничего не найдено. Попробуйте другие фильтры.',
-    'Previous':'Назад', 'Next':'Вперёд', 'Page':'Страница', 'of':'из',
-    'Like':'Нравится', 'Dislike':'Не нравится', 'Comment':'Комментировать',
-    'View replies':'Посмотреть ответы', 'Save post':'Сохранить пост',
-    'Unsave post':'Убрать из сохранённого', 'Save':'Сохранить', 'Saved posts':'Сохранённые посты',
-    'Your saved posts, all in one place.':'Все сохранённые посты в одном месте.',
-    'Nothing saved yet':'Пока ничего не сохранено',
-    'Save posts from the feed to find them here.':'Сохраняйте посты из ленты, чтобы найти их здесь.',
-    'Your activity':'Ваша активность', 'Overview':'Обзор',
-    'Posts':'Посты', 'Replies':'Ответы', 'Reputation':'Репутация',
-    'Received likes':'Полученные лайки', 'Following':'Подписки',
-    'Weekly goal':'Цель на неделю', 'Achievements':'Достижения',
-    'Community':'Сообщество', 'Activity':'Активность', 'Statistics':'Статистика',
-    'Admin overview':'Статистика сообщества', 'New members':'Новые участники',
-    'Comments':'Комментарии', 'Reactions':'Реакции',
-    'App appearance':'Вид приложения', 'Theme':'Тема', 'Light':'Светлая',
-    'Dark':'Тёмная', 'Language':'Язык', 'Display settings':'Настройки оформления',
-    'The changes are saved on this device.':'Изменения сохраняются на этом устройстве.',
-    'Theme and language update instantly.':'Тема и язык меняются сразу.',
-    'Post actions':'Действия с постом', 'Open post':'Открыть пост',
-    'Deactivate':'Деактивировать', 'Activate':'Активировать',
-    'Lock':'Заблокировать', 'Unlock':'Разблокировать', 'Delete':'Удалить',
-    'Delete post?':'Удалить пост?', 'Moderation':'Модерация',
-    'Remove from saved':'Убрать из сохранённого', 'No data yet':'Пока нет данных',
-    'Loading…':'Загрузка…', 'Try again':'Повторить',
-    'Members':'Участники', 'Topics':'Темы', 'Delete post':'Удалить пост',
-    'Edit profile':'Редактировать профиль', 'Your posts':'Ваши посты',
-    'Recent':'Недавние', 'All posts':'Все посты', 'Write your first post':'Написать первый пост',
-    'Profile':'Профиль', 'Close editor':'Закрыть редактор',
-    'My posts':'Мои посты', 'You must sign in to save posts.':'Войдите, чтобы сохранять посты.',
-    'A place for real conversations':'Место для настоящих разговоров',
-    'Talk about what matters.':'Говорите о важном.',
-  },
+
 };
 
 Object.assign(translations.uk, {
@@ -125,29 +78,7 @@ Object.assign(translations.uk, {
   'selected':'вибрано','topic':'тему','topics':'теми',
   'Log in to create or edit posts.':'Увійдіть, щоб писати та редагувати дописи.'
 });
-Object.assign(translations.ru, {
-  'Administrator':'Администратор','Circle member':'Участник Circle',
-  'Username':'Логин','Full name':'Полное имя','Change profile photo':'Изменить фото',
-  'Uploading photo…':'Загружаем фото…','Profile saved.':'Профиль сохранён.',
-  'Avatar updated.':'Фото обновлено.','Cancel':'Отмена','Save profile':'Сохранить профиль',
-  'Loading posts…':'Загружаем посты…','Nothing here yet':'Пока здесь пусто',
-  'Try another topic or status.':'Выберите другую тему или статус.',
-  'Your conversations will appear here.':'Здесь появятся ваши посты.',
-  'This member has not posted yet.':'Этот участник ещё ничего не опубликовал.',
-  'Account settings':'Настройки аккаунта','Delete account':'Удалить аккаунт',
-  'Deleting your account permanently removes your posts, comments and reactions.':'Удаление аккаунта навсегда удалит посты, комментарии и реакции.',
-  'Changing your username will sign you out. You can log in again with the new username.':'После изменения логина нужно будет войти снова.',
-  'Log in to view your profile.':'Войдите, чтобы посмотреть профиль.',
-  'Post title':'Название поста','Post details':'Текст поста',
-  'Give your post a title…':'Придумайте название поста…','Posting to Circle':'Публикация в Circle',
-  'Choose one or more':'Выберите одну или несколько','Saving…':'Сохраняем…',
-  'Publish post':'Опубликовать','Save changes':'Сохранить изменения',
-  'Edit post':'Редактировать пост','Loading editor…':'Загружаем редактор…',
-  'Select at least one category.':'Выберите хотя бы одну категорию.',
-  'Select a topic to continue':'Выберите тему для продолжения',
-  'selected':'выбрано','topic':'тема','topics':'темы',
-  'Log in to create or edit posts.':'Войдите, чтобы писать и редактировать посты.'
-});
+
 
 // New interface copy used by the refined login and composer.
 Object.assign(translations.uk, {
@@ -171,27 +102,7 @@ Object.assign(translations.uk, {
   'Show fewer topics':'Згорнути теми',
   'Up to 4 photos · JPEG, PNG, WebP · 5 MB each':'До 4 фото · JPEG, PNG, WebP · 5 МБ кожне'
 });
-Object.assign(translations.ru, {
-  'Good conversations start here.':'Хорошие разговоры начинаются здесь.',
-  'Share what you love. Find people who get it. Discover a little something new every day.':'Делитесь тем, что любите, находите единомышленников и узнавайте что-то новое.',
-  'Art & ideas':'Искусство и идеи', 'Little discoveries':'Маленькие открытия',
-  'Real people':'Настоящие люди', 'One community. Countless perspectives.':'Одно сообщество. Множество взглядов.',
-  'JOIN THE COMMUNITY':'ПРИСОЕДИНЯЙТЕСЬ', 'NICE TO SEE YOU AGAIN':'СНОВА РАДЫ ВАС ВИДЕТЬ',
-  'Welcome back':'С возвращением', 'Create account':'Создать аккаунт',
-  'A few details and you are ready to join the conversation.':'Ещё пара деталей — и можно присоединяться к обсуждениям.',
-  'Log in to pick up where you left off.':'Войдите, чтобы продолжить общение.',
-  'Email':'Электронная почта', 'Username or email':'Логин или почта',
-  'Password':'Пароль', 'Confirm password':'Подтвердите пароль',
-  'Please wait…':'Подождите…', 'New to Circle?':'Ещё нет аккаунта?',
-  'Already part of Circle?':'Уже с нами?', 'Create an account':'Создать аккаунт',
-  'Forgot password?':'Забыли пароль?',
-  'Need a new email verification code?':'Нужен новый код подтверждения?',
-  'Share an idea, ask a question, or start a conversation.':'Поделитесь идеей, задайте вопрос или начните разговор.',
-  'Add photos':'Добавить фото', 'Hide preview':'Скрыть просмотр',
-  'Preview':'Предпросмотр', 'Show all topics':'Показать все темы',
-  'Show fewer topics':'Свернуть темы',
-  'Up to 4 photos · JPEG, PNG, WebP · 5 MB each':'До 4 фото · JPEG, PNG, WebP · 5 МБ каждое'
-});
+
 
 // Localize built-in topics by their stable database titles/descriptions.
 // Custom user-created category names remain exactly as entered.
@@ -333,172 +244,33 @@ Object.assign(translations.uk,{
   "Unsave post": "Прибрати зі збережених",
   "Reply sent": "Відповідь надіслано"
 });
-Object.assign(translations.ru,{
-  "Anime": "Аниме",
-  "Art": "Искусство",
-  "Beauty": "Красота",
-  "Books": "Книги",
-  "Career": "Карьера",
-  "Cars": "Автомобили",
-  "Crafts": "Рукоделие",
-  "CSS": "CSS",
-  "Design": "Дизайн",
-  "Discussion": "Обсуждение",
-  "Education": "Образование",
-  "Events": "События",
-  "Fashion": "Мода",
-  "Fitness": "Фитнес",
-  "Food": "Еда",
-  "Games": "Игры",
-  "Git": "Git",
-  "History": "История",
-  "Humor": "Юмор",
-  "JavaScript": "JavaScript",
-  "Languages": "Языки",
-  "Lifestyle": "Образ жизни",
-  "Movies": "Кино",
-  "Music": "Музыка",
-  "MySQL": "MySQL",
-  "Nature": "Природа",
-  "Node.js": "Node.js",
-  "Pets": "Домашние животные",
-  "Photography": "Фотография",
-  "Questions": "Вопросы",
-  "React": "React",
-  "Relationships": "Отношения",
-  "Science": "Наука",
-  "Technology": "Технологии",
-  "Travel": "Путешествия",
-  "Wellbeing": "Самочувствие",
-  "Music, artists and playlists": "Музыка, исполнители и плейлисты",
-  "Films, series and recommendations": "Фильмы, сериалы и рекомендации",
-  "Video games, tabletop games and playing together": "Видеоигры, настольные игры и совместная игра",
-  "Books, stories and reading": "Книги, истории и чтение",
-  "Drawing, illustration and creativity": "Рисование, иллюстрация и творчество",
-  "Photos and visual storytelling": "Фото и визуальные истории",
-  "Trips, places and discoveries": "Поездки, места и открытия",
-  "Cooking, recipes and discoveries": "Кулинария, рецепты и открытия",
-  "Cats, dogs and animal friends": "Коты, собаки и другие питомцы",
-  "Sport, yoga and movement": "Спорт, йога и движение",
-  "Personal style and outfits": "Личный стиль и образы",
-  "Skincare and self care": "Уход за кожей и собой",
-  "Friendship, love and conversations": "Дружба, любовь и разговоры",
-  "Daily life and little discoveries": "Повседневная жизнь и маленькие открытия",
-  "Outdoors and the environment": "Природа вокруг и экология",
-  "Curiosity, experiments and discoveries": "Интересные факты, эксперименты и открытия",
-  "Tech beyond programming": "Технологии не только о программировании",
-  "Learning and student life": "Учёба и студенческая жизнь",
-  "Learning and speaking languages": "Изучение и общение на языках",
-  "Vehicles and motorsport": "Автомобили и автоспорт",
-  "Memes and funny stories": "Мемы и забавные истории",
-  "DIY, embroidery and handmade projects": "Поделки, вышивка и творчество",
-  "Work and career journeys": "Работа и карьерный путь",
-  "Rest, mental health and balance": "Отдых, эмоциональное здоровье и баланс",
-  "Ask the community anything": "Спросите сообщество о чём угодно",
-  "Opinions and everyday conversations": "Мнения и повседневные обсуждения",
-  "Plans, festivals and meetups": "Планы, фестивали и встречи",
-  "Graphic, digital and product design": "Графический, цифровой и продуктовый дизайн",
-  "Anime and animation": "Аниме и анимация",
-  "History and cultures": "История и культуры",
-  "JavaScript language and ecosystem": "Язык JavaScript и его экосистема",
-  "Server-side JavaScript": "Серверный JavaScript",
-  "React UI development": "Разработка интерфейсов на React",
-  "Relational database questions": "Вопросы о реляционных базах данных",
-  "Layouts and styling": "Макеты и стилизация",
-  "Version control": "Контроль версий",
-  "Notifications": "Уведомления",
-  "View notifications": "Посмотреть уведомления",
-  "Dismiss": "Закрыть",
-  "Your role was updated": "Ваша роль обновлена",
-  "You are now a moderator": "Вас назначили модератором",
-  "Your moderator role was removed": "Ваши права модератора сняты",
-  "Moderator": "Модератор",
-  "moderator": "модератор",
-  "user": "пользователь",
-  "admin": "администратор",
-  "Manage role": "Управлять ролью",
-  "Role": "Роль",
-  "Make moderator": "Назначить модератором",
-  "Remove moderator": "Снять модератора",
-  "Make moderator?": "Назначить модератором?",
-  "Remove moderator?": "Снять права модератора?",
-  "Administrators cannot be changed here.": "Роль администратора здесь не меняется.",
-  "Photo preview": "Предпросмотр фото",
-  "Exactly as in the published post · click to enlarge": "Как в готовом посте · нажмите для увеличения",
-  "Untitled post": "Пост без названия",
-  "Reply": "Ответить",
-  "Post reply": "Отправить ответ",
-  "Delete": "Удалить",
-  "Deactivate": "Деактивировать",
-  "Activate": "Активировать",
-  "Mark best answer": "Отметить лучший ответ",
-  "Remove best answer": "Убрать лучший ответ",
-  "Best answer": "Лучший ответ",
-  "Solved": "Решено",
-  "Replies": "Ответы",
-  "No replies yet": "Пока нет ответов",
-  "Be the first to join the conversation": "Начните обсуждение первыми",
-  "Add to the conversation…": "Добавьте ответ…",
-  "New comment": "Новый комментарий",
-  "Categories": "Категории",
-  "Browse posts by topic": "Просмотр постов по темам",
-  "No categories yet.": "Пока нет категорий.",
-  "Category": "Категория",
-  "All categories": "Все категории",
-  "No posts here yet": "Здесь пока нет постов",
-  "Choose another topic or start the conversation.": "Выберите другую тему или начните обсуждение.",
-  "Posts": "Посты",
-  "People": "Люди",
-  "Search": "Поиск",
-  "Results for": "Результаты по запросу",
-  "No matching posts.": "Посты не найдены.",
-  "No matching users.": "Пользователи не найдены.",
-  "No matching categories.": "Категории не найдены.",
-  "Search posts, people and categories": "Искать посты, людей и темы",
-  "Loading category…": "Загружаем категорию…",
-  "Admin": "Админка",
-  "Open": "Открыть",
-  "Edit post": "Редактировать пост",
-  "Delete post": "Удалить пост",
-  "Close discussion": "Закрыть обсуждение",
-  "Reopen discussion": "Возобновить обсуждение",
-  "Hide likes": "Скрыть лайки",
-  "Show likes": "Показать лайки",
-  "Log in to reply": "Войдите, чтобы ответить",
-  "Discussion closed": "Обсуждение закрыто",
-  "New replies are disabled": "Новые ответы отключены",
-  "Save post": "Сохранить пост",
-  "Unsave post": "Убрать из сохранённого",
-  "Reply sent": "Ответ отправлен"
-});
+
 
 Object.assign(translations.uk, {"Inbox":"Вхідні","unread":"непрочитаних","Unread only":"Лише непрочитані","Mark all read":"Позначити все як прочитане","No notifications.":"Немає сповіщень.","You have read everything.":"Ви прочитали всі сповіщення.","Loading notifications…":"Завантаження сповіщень…","Log in to see updates from your discussions.":"Увійдіть, щоб переглядати сповіщення.","Updates from followed posts and your contributions will appear here.":"Тут будуть оновлення ваших обговорень і підписок.","You can now review reports and moderate discussions. You cannot manage users.":"Тепер ви можете розглядати скарги й модерувати обговорення, але не керувати користувачами.","Your account now has standard member permissions.":"Ваш акаунт тепер має звичайні права учасника.","Your Circle account permissions have been updated.":"Ваші права в Circle оновлено.","Loading categories…":"Завантаження категорій…","Searching…":"Шукаємо…","Enter a name, post title, text or category in the search bar.":"Введіть ім’я, назву допису, текст або категорію.","The author has closed this discussion, replies are now read-only":"Автор закрив обговорення. Відповіді доступні лише для читання.","Reviewed by moderator":"Перевірено модератором","Edit":"Редагувати","Bold":"Жирний","Heading":"Заголовок","Bullet list":"Маркований список","Numbered list":"Нумерований список","Post preview":"Перегляд допису","More options":"Інші параметри","Hide likes from other people":"Приховати кількість вподобань","You can still see your own statistics":"Ви й надалі бачитимете власну статистику","Publish later":"Опублікувати пізніше","Leave empty to publish now":"Залиште порожнім, щоб опублікувати зараз","New post":"Новий допис","Cancel":"Скасувати","View votes":"Переглянути голоси","Clear votes":"Очистити голоси","Reply":"Відповісти","Mark best answer":"Обрати найкращу відповідь","Remove best answer":"Скасувати найкращу відповідь","Loading post…":"Завантаження допису…","Delete post and all its comments?":"Видалити допис і всі коментарі?","Loading…":"Завантаження…","Remove my vote":"Прибрати мій голос","Join the conversation":"Приєднатися до обговорення","Maybe later":"Можливо, пізніше","Continue":"Продовжити","Make Circle yours":"Налаштуйте Circle під себе","What are you into?":"Що вам цікаво?","Pick a few things you love, there are no wrong answers":"Оберіть кілька улюблених тем — тут немає неправильних відповідей","Sign in to select interests":"Увійдіть, щоб обрати інтереси","Topics that interest you":"Теми, які вас цікавлять","selected":"обрано"});
-Object.assign(translations.ru, {"Inbox":"Входящие","unread":"непрочитанных","Unread only":"Только непрочитанные","Mark all read":"Отметить всё прочитанным","No notifications.":"Нет уведомлений.","You have read everything.":"Вы прочитали все уведомления.","Loading notifications…":"Загрузка уведомлений…","Log in to see updates from your discussions.":"Войдите, чтобы смотреть уведомления.","Updates from followed posts and your contributions will appear here.":"Здесь будут обновления обсуждений и подписок.","You can now review reports and moderate discussions. You cannot manage users.":"Теперь вы можете рассматривать жалобы и модерировать обсуждения, но не управлять пользователями.","Your account now has standard member permissions.":"У вашего аккаунта теперь обычные права участника.","Your Circle account permissions have been updated.":"Ваши права в Circle обновлены.","Loading categories…":"Загрузка категорий…","Searching…":"Ищем…","Enter a name, post title, text or category in the search bar.":"Введите имя, название поста, текст или категорию.","The author has closed this discussion, replies are now read-only":"Автор закрыл обсуждение. Ответы доступны только для чтения.","Reviewed by moderator":"Проверено модератором","Edit":"Редактировать","Bold":"Жирный","Heading":"Заголовок","Bullet list":"Маркированный список","Numbered list":"Нумерованный список","Post preview":"Предпросмотр поста","More options":"Дополнительные параметры","Hide likes from other people":"Скрыть количество лайков","You can still see your own statistics":"Вы продолжите видеть свою статистику","Publish later":"Опубликовать позже","Leave empty to publish now":"Оставьте пустым, чтобы опубликовать сейчас","New post":"Новый пост","Cancel":"Отмена","View votes":"Посмотреть голоса","Clear votes":"Очистить голоса","Reply":"Ответить","Mark best answer":"Выбрать лучший ответ","Remove best answer":"Убрать лучший ответ","Loading post…":"Загрузка поста…","Delete post and all its comments?":"Удалить пост и все комментарии?","Loading…":"Загрузка…","Remove my vote":"Убрать мой голос","Join the conversation":"Присоединиться к обсуждению","Maybe later":"Возможно, позже","Continue":"Продолжить","Make Circle yours":"Настройте Circle под себя","What are you into?":"Чем вы увлекаетесь?","Pick a few things you love, there are no wrong answers":"Выберите несколько любимых тем — неправильных ответов здесь нет","Sign in to select interests":"Войдите, чтобы выбрать интересы","Topics that interest you":"Темы, которые вам интересны","selected":"выбрано"});
+
 Object.assign(translations.uk,{"Users":"Користувачі","Reports":"Скарги","Keep your community running smoothly.":"Керуйте спільнотою зручно та безпечно.","Refresh":"Оновити","Loading community data…":"Завантажуємо дані спільноти…","Reported content":"Скарги на вміст","Add member":"Додати учасника","Add topic":"Додати тему","Reactions":"Реакції","Content reports":"Скарги на вміст","Comments":"Коментарі","Members":"Учасники","Topics":"Теми","Create category":"Створити категорію","Description":"Опис","Full name":"Повне ім’я","Save user":"Зберегти користувача","Create user":"Створити користувача","Role":"Роль","Password":"Пароль","Confirm":"Підтвердити","Reported by":"Скаргу подав","Open discussion":"Відкрити обговорення","Mark reviewed":"Позначити перевіреним","Dismiss":"Відхилити","No reports in this category.":"Немає скарг цієї категорії.","Save topics":"Зберегти теми","Save category":"Зберегти категорію","No posts on this page.":"На цій сторінці немає дописів."});
-Object.assign(translations.ru,{"Users":"Пользователи","Reports":"Жалобы","Keep your community running smoothly.":"Управляйте сообществом удобно и безопасно.","Refresh":"Обновить","Loading community data…":"Загружаем данные сообщества…","Reported content":"Жалобы на контент","Add member":"Добавить участника","Add topic":"Добавить тему","Reactions":"Реакции","Content reports":"Жалобы на контент","Comments":"Комментарии","Members":"Участники","Topics":"Темы","Create category":"Создать категорию","Description":"Описание","Full name":"Полное имя","Save user":"Сохранить пользователя","Create user":"Создать пользователя","Role":"Роль","Password":"Пароль","Confirm":"Подтвердить","Reported by":"Жалобу отправил","Open discussion":"Открыть обсуждение","Mark reviewed":"Отметить проверенным","Dismiss":"Отклонить","No reports in this category.":"Нет жалоб этой категории.","Save topics":"Сохранить темы","Save category":"Сохранить категорию","No posts on this page.":"На этой странице нет постов."});
+
 Object.assign(translations.uk, {
   'More options':'Додаткові параметри',
   'Your session has expired. Please log in again.':'Термін дії сеансу завершився. Увійдіть знову.'
 });
-Object.assign(translations.ru, {
-  'More options':'Дополнительные параметры',
-  'Your session has expired. Please log in again.':'Срок действия сеанса истёк. Войдите снова.'
-});
+
 Object.assign(translations.uk,{"Copy link":"Скопіювати посилання","Link copied":"Посилання скопійовано","Unable to copy the link. Please copy the address from your browser.":"Не вдалося скопіювати посилання. Скопіюйте адресу з браузера.","No conversations found":"Дописи не знайдено","Try changing your filters or browse all discussions.":"Спробуйте інші фільтри або перегляньте всі обговорення.","Clear filters":"Скинути фільтри","Join the conversation":"Приєднуйтесь до обговорень","Delete notification":"Видалити сповіщення","Scheduled for":"Заплановано на","Discard this draft?":"Видалити чернетку?","Discard draft":"Очистити чернетку","Text draft saved in this tab. Photos must be selected again after reloading.":"Чернетку тексту збережено у вкладці. Після оновлення сторінки фото треба вибрати знову.","You cannot react to your own post":"Не можна оцінювати власний допис","Reactions are disabled on this post":"Реакції до цього допису вимкнені"});
-Object.assign(translations.ru,{"Copy link":"Скопировать ссылку","Link copied":"Ссылка скопирована","Unable to copy the link. Please copy the address from your browser.":"Не удалось скопировать ссылку. Скопируйте адрес из браузера.","No conversations found":"Публикации не найдены","Try changing your filters or browse all discussions.":"Попробуйте другие фильтры или посмотрите все обсуждения.","Clear filters":"Сбросить фильтры","Join the conversation":"Присоединяйтесь к обсуждению","Delete notification":"Удалить уведомление","Scheduled for":"Запланировано на","Discard this draft?":"Удалить черновик?","Discard draft":"Очистить черновик","Text draft saved in this tab. Photos must be selected again after reloading.":"Текст черновика сохранён во вкладке. После обновления страницы фото нужно выбрать снова.","You cannot react to your own post":"Нельзя оценивать собственный пост","Reactions are disabled on this post":"Реакции к этому посту отключены"});
+
 Object.assign(translations.uk,{"All caught up":"Усе прочитано","Notification filters":"Фільтри сповіщень","Show all":"Показати всі","New answer on your question":"Нова відповідь на ваше запитання","New reply on your question":"Нова репліка до вашого запитання","Someone replied to your comment":"Хтось відповів на ваш коментар","New reply in a followed discussion":"Нова відповідь в обговоренні, за яким ви стежите","New answer on a question you follow":"Нова відповідь на запитання, за яким ви стежите","A followed question was updated":"Оновлено запитання, за яким ви стежите","Your question received like":"Ваше запитання вподобали","Your answer received like":"Вашу відповідь вподобали","Your question received useful":"Ваше запитання позначили корисним","Your answer received useful":"Вашу відповідь позначили корисною","Your question received thanks":"За ваше запитання подякували","Your answer received thanks":"За вашу відповідь подякували","Your question received fire":"Ваше запитання отримало реакцію 🔥","Your answer received fire":"Ваша відповідь отримала реакцію 🔥","added an answer to your question.":"додав(-ла) відповідь на ваше запитання.","added a reply to your question.":"відповів(-ла) на ваше запитання.","replied to your comment.":"відповів(-ла) на ваш коментар.","reacted to your question.":"відреагував(-ла) на ваше запитання.","reacted to your answer.":"відреагував(-ла) на вашу відповідь.","updated a question you follow.":"оновив(-ла) запитання, за яким ви стежите.","added a reply to a question you follow.":"відповів(-ла) в обговоренні, за яким ви стежите.","added an answer to a question you follow.":"додав(-ла) відповідь на запитання, за яким ви стежите."});
-Object.assign(translations.ru,{"All caught up":"Всё прочитано","Notification filters":"Фильтры уведомлений","Show all":"Показать все","New answer on your question":"Новый ответ на ваш вопрос","New reply on your question":"Новый ответ в обсуждении вашего вопроса","Someone replied to your comment":"Кто-то ответил на ваш комментарий","New reply in a followed discussion":"Новый ответ в обсуждении, за которым вы следите","New answer on a question you follow":"Новый ответ на вопрос, за которым вы следите","A followed question was updated":"Обновлён вопрос, за которым вы следите","Your question received like":"Ваш вопрос понравился","Your answer received like":"Ваш ответ понравился","Your question received useful":"Ваш вопрос отметили полезным","Your answer received useful":"Ваш ответ отметили полезным","Your question received thanks":"За ваш вопрос поблагодарили","Your answer received thanks":"За ваш ответ поблагодарили","Your question received fire":"Ваш вопрос получил реакцию 🔥","Your answer received fire":"Ваш ответ получил реакцию 🔥","added an answer to your question.":"добавил(-а) ответ на ваш вопрос.","added a reply to your question.":"ответил(-а) на ваш вопрос.","replied to your comment.":"ответил(-а) на ваш комментарий.","reacted to your question.":"отреагировал(-а) на ваш вопрос.","reacted to your answer.":"отреагировал(-а) на ваш ответ.","updated a question you follow.":"обновил(-а) вопрос, за которым вы следите.","added a reply to a question you follow.":"ответил(-а) в обсуждении, за которым вы следите.","added an answer to a question you follow.":"добавил(-а) ответ на вопрос, за которым вы следите."});
+
 Object.assign(translations.uk,{"Search topics":"Пошук тем","Clear search":"Очистити пошук","No matching topics":"Тем не знайдено","matching topics":"знайдено тем","topics":"тем","Right-click for options":"Натисніть правою кнопкою для дій","Delete this notification?":"Видалити це сповіщення?","Delete notification":"Видалити сповіщення","Dashboard":"Статистика","Delete comment":"Видалити коментар","Open discussion":"Відкрити обговорення","Mark reviewed":"Позначити як перевірене","Dismiss":"Відхилити","Deactivate":"Деактивувати","Activate":"Активувати","Lock":"Заблокувати","Unlock":"Розблокувати","Open":"Відкрити"});
-Object.assign(translations.ru,{"Search topics":"Поиск тем","Clear search":"Очистить поиск","No matching topics":"Темы не найдены","matching topics":"найдено тем","topics":"тем","Right-click for options":"Нажмите правой кнопкой для действий","Delete this notification?":"Удалить это уведомление?","Delete notification":"Удалить уведомление","Dashboard":"Статистика","Delete comment":"Удалить комментарий","Open discussion":"Открыть обсуждение","Mark reviewed":"Отметить проверенным","Dismiss":"Отклонить","Deactivate":"Деактивировать","Activate":"Активировать","Lock":"Заблокировать","Unlock":"Разблокировать","Open":"Открыть"});
+
 Object.assign(translations.uk,{"Likes":"Вподобання","Dislikes":"Дизлайки","Remove all reactions?":"Прибрати всі реакції?","Delete this comment and replies?":"Видалити коментар і всі відповіді?","Report":"Поскаржитися","Edit post":"Редагувати допис"});
-Object.assign(translations.ru,{"Likes":"Лайки","Dislikes":"Дизлайки","Remove all reactions?":"Удалить все реакции?","Delete this comment and replies?":"Удалить комментарий и ответы?","Report":"Пожаловаться","Edit post":"Редактировать пост"});
+
+Object.assign(translations.uk,{"Suggest a topic":"Запропонувати тему","Have an idea for a new topic?":"Є ідея для нової теми?","Topic name":"Назва теми","Topic description (optional)":"Опис теми (необов'язково)","Send suggestion":"Надіслати пропозицію","Suggestion sent for review":"Пропозицію надіслано на перевірку","Your suggestions":"Ваші пропозиції","Suggested topics":"Запропоновані теми","Pending review":"Очікує розгляду","Approve":"Схвалити","Reject":"Відхилити","Approved":"Схвалено","Rejected":"Відхилено","Pending":"Очікує","New topic suggestion":"Нова пропозиція теми","Topic suggestion approved":"Пропозицію теми схвалено","Topic suggestion declined":"Пропозицію теми відхилено","Apply filters":"Застосувати фільтри","Filter posts":"Фільтрувати дописи","Sort":"Сортування","Topics":"Теми","Any time":"За весь час","Last 7 days":"Останні 7 днів","Last 30 days":"Останні 30 днів","Custom dates":"Обрати дати","Close filters":"Закрити фільтри","Pick a date":"Вибрати дату","Clear date":"Очистити дату","Choose a time":"Оберіть час","Today":"Сьогодні","Close calendar":"Закрити календар","Previous month":"Попередній місяць","Next month":"Наступний місяць","Filter by topic":"Фільтрувати за темою","Filter settings":"Налаштування фільтрів"});
 const PreferencesContext = createContext(null);
 function read() {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
     return {
       theme: saved.theme === 'dark' ? 'dark' : 'light',
-      language: Object.hasOwn(LANGUAGE_NAMES, saved.language) ? saved.language : 'en',
+      language: saved.language === 'ru' ? 'uk' : (Object.hasOwn(LANGUAGE_NAMES, saved.language) ? saved.language : 'en'),
     };
   } catch { return { theme:'light',language:'en' }; }
 }
