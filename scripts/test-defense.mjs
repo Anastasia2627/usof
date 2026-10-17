@@ -225,7 +225,7 @@ try {
 
   // 18: admin adds a category; 19: admin deletes other's comment.
   await open(admin,'/admin');
-  await admin.locator('.tabs').getByRole('button',{name:/categories/}).click();
+  await admin.locator('.tabs').getByRole('button',{name:/categories/i}).click();
   await admin.locator('.adminCreate > summary').click();
   const categoryName='Review category '+suffix;
   await admin.locator('form').filter({hasText:'Create category'}).getByLabel('Title').fill(categoryName);
