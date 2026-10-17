@@ -107,6 +107,7 @@ try {
   await page.getByText(/Page 1 of [2-9][0-9]*/).waitFor();
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByText(/Page 2 of [2-9][0-9]*/).waitFor();
+  await page.locator('.adminRow').first().waitFor({ state: 'visible' });
   assert.ok(await page.locator('.adminRow').count() > 0, 'Second page should show posts');
   console.log('Browser UI checks passed: real feed, profile navigation, mobile role/logout, and admin pagination.');
 } finally {
