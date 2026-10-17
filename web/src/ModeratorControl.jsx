@@ -2,6 +2,7 @@ import React, {useEffect,useState} from 'react';
 import {useSelector} from 'react-redux';
 import {api} from './api.js';
 import {usePreferences} from './preferences.jsx';
+import TablerIcon from './TablerIcon.jsx';
 
 // One reusable role control, visible on profiles, searches, posts and replies.
 // All permissions are enforced again in the backend.
@@ -41,7 +42,7 @@ export default function ModeratorControl({userId,login,role,onChanged}) {
   return <span className="moderatorControl" onClick={event=>event.stopPropagation()}>
     <button className="moderatorControlTrigger" type="button"
       title={t('Manage role')} aria-label={t('Manage role')+' @'+(login||userId)}
-      aria-expanded={open} onClick={()=>setOpen(v=>!v)}>⋯</button>
+      aria-expanded={open} onClick={()=>setOpen(v=>!v)}><TablerIcon name="more" size={20}/></button>
     {open&&<span className="moderatorControlPopover" role="group" aria-label={t('Manage role')}>
       <strong>@{login||userId}</strong>
       <small>{currentRole?t('Role')+': '+t(currentRole):t('Loading…')}</small>
