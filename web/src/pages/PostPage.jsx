@@ -111,7 +111,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
         {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
       </div>
       <p className="commentContent">{item.content}</p>
-      {Number(acceptedId)===Number(item.id) && <span className="solutionTag">✓ {t('Best answer')}</span>}
+      {Number(acceptedId)===Number(item.id) && <span className="solutionTag"><Icon name="check" size={16}/>{t('Best answer')}</span>}
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
