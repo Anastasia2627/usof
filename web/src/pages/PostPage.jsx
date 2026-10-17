@@ -39,15 +39,25 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   if (!visible) return null;
   return <div className="reactionPanel">
     <div className="reactionButtons">
-      {!hideCounts && <span className="reactionTotals">
+      {!hideCounts && !canVote && <span className="reactionTotals">
         <span title={t('Likes')} aria-label={t('Likes')+': '+items.filter(x=>x.type==='like').length}>
           <Icon name="heart" size={15}/>{items.filter(x=>x.type==='like').length}</span>
         <span title={t('Dislikes')} aria-label={t('Dislikes')+': '+items.filter(x=>x.type==='dislike').length}>
           <Icon name="dislike" size={15}/>{items.filter(x=>x.type==='dislike').length}</span>
       </span>}
       {canVote && <>
-        <button type="button" className="reactionIconButton" aria-label="Like" title="Like" onClick={() => change('POST', 'like')}><Icon name="heart" size={19}/></button>
-        <button type="button" className="reactionIconButton" aria-label="Dislike" title="Dislike" onClick={() => change('POST', 'dislike')}><Icon name="dislike" size={19}/></button>
+        <button type="button" className="reactionIconButton voteReaction"
+          aria-label={t('Like')} title={t('Like')} aria-pressed={own?.type==='like'}
+          onClick={() => change('POST','like')}>
+          <Icon name={own?.type==='like'?'heartFilled':'heart'} size={19}/>
+          {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='like').length}</span>}
+        </button>
+        <button type="button" className="reactionIconButton voteReaction"
+          aria-label={t('Dislike')} title={t('Dislike')} aria-pressed={own?.type==='dislike'}
+          onClick={() => change('POST','dislike')}>
+          <Icon name={own?.type==='dislike'?'dislikeFilled':'dislike'} size={19}/>
+          {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='dislike').length}</span>}
+        </button>
         {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
       {!hideCounts && <button type="button" aria-label="View votes" title="View votes" onClick={() => setOpen(x => !x)}><Icon name="group" size={18}/></button>}
