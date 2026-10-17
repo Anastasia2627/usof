@@ -25,7 +25,7 @@ export default function CategoriesPage() {
   const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
     .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
   return <main className="categoriesPage">
-    <p className="eyebrow">{t('Browse posts by topic')}</p>
+    
     <h1>{t('Categories')}</h1>
     <div className="topicSearchField categorySearchField">
       <Icon name="search" size={19}/>

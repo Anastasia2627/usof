@@ -48,7 +48,6 @@ export default function SavedPage() {
 
   return <main className="simpleFeaturePage">
     <div className="featureHeading"><Icon name="bookmark" size={26}/><h1>{t('Saved posts')}</h1></div>
-    <p className="featureSubheading">{t('Your saved posts, all in one place.')}</p>
     <div className="featureTabs" role="group" aria-label="Saved post sorting">
       <button type="button" className={sort === 'date' ? 'selectedTab' : ''}
         aria-pressed={sort === 'date'} onClick={() => {setSort('date');setPage(1);}}>{t('Recent')}</button>

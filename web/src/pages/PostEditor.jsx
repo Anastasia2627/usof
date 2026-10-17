@@ -151,13 +151,10 @@ export default function PostEditor({ id }) {
         <h1>{t(editing ? 'Edit post' : 'New post')}</h1>
       </div>
     </div>
-
-    <p className="editorLead">{t('Share an idea, ask a question, or start a conversation.')}</p>
     <form className="postComposerForm" onSubmit={submit}>
       <div className="editorIdentity">
         <Avatar user={auth.user} size="md"/>
         <span>@{auth.user.login}</span>
-        <small>{t('Posting to Circle')}</small>
       </div>
       <div className="editorInputGroup">
         <label className="editorFieldLabel" htmlFor="post-title">{t("Post title")}</label>
@@ -219,7 +216,7 @@ export default function PostEditor({ id }) {
           </div>
           <div className="editorPhotoLivePreview">
             <div className="editorPhotoPreviewHeading"><strong>{t('Photo preview')}</strong>
-              <small>{t('Exactly as in the published post · click to enlarge')}</small></div>
+              </div>
             <PostPhotoGallery images={photoPreviewItems} local/>
           </div>
           </>}

@@ -38,7 +38,7 @@ export default function DashboardPage({embedded=false}) {
   const Root=embedded?'section':'main';
   return <Root className={'simpleFeaturePage dashboardPage'+(embedded?' embeddedDashboard':'')}>
     <div className="featureHeading"><Icon name="analytics" size={27}/><h1>{t(admin?'Admin overview':'Your activity')}</h1></div>
-    <p className="featureSubheading">{admin?t('Community'):'@'+auth.user.login}</p>
+    {!admin&&<p className="featureSubheading">{'@'+auth.user.login}</p>}
     <ErrorBox error={error} onRetry={()=>setRetry(v=>v+1)}/>
     {loading ? <div className="dashStats" aria-label={t('Loading…')}>
       {[t('Members'),t('Posts'),t('Comments'),t('Reactions')].map(label =>
