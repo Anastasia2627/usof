@@ -97,8 +97,8 @@ scrollable list, including categories added after initialization.
 
 **Give a user moderator rights:** sign in as an admin, open **Admin → Users**,
 find the user's row and click **Make moderator**. Confirm the action; the
-user's role changes to `moderator` instantly in the admin list. The user should
-sign out and log back in to receive a new session. **Remove moderator** restores
+user's role changes to `moderator` instantly in the admin list and in their existing session.
+A persistent notification is created and the open site displays a role-change banner. **Remove moderator** restores
 the standard `user` role. Only administrators can appoint or revoke moderators.
 The older Edit → Role selector is also available.
 
