@@ -24,9 +24,13 @@ try {
   assert.equal((await proxyResponse.json()).status, 'ok');
   await page.goto(frontend + '/#/', { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Talk about what matters.' }).waitFor();
+  assert.equal(await page.locator('.headerSearch').count(), 0, 'Guest welcome must not show search');
+  assert.equal(await page.locator('.mainNav').count(), 0, 'Guest welcome must not show icon rail');
   assert.equal(await page.locator('.threadCard').count(), 0, 'Guest homepage must not show posts');
   await page.getByRole('button', { name: /Explore public conversations/ }).click();
   await page.locator('.threadCard').first().waitFor();
+  assert.equal(await page.locator('.headerSearch').count(), 1, 'Explore search must remain usable');
+  assert.equal(await page.locator('.mainNav').count(), 1, 'Explore navigation must remain usable');
   const firstPost = page.locator('.threadCard').first();
   const firstAuthor = firstPost.locator('.authorLink');
   await firstAuthor.click();
