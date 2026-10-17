@@ -180,6 +180,7 @@ try {
   await user.getByText(rootReply).waitFor();
   await open(admin,'/post/'+posts[0]);
   const postActions=admin.locator('.naturalPostManagement button');
+  await postActions.first().waitFor({state:'visible'});
   assert.ok(await postActions.count()>=3);
   for(const button of await postActions.all()) {
     assert.ok(await button.getAttribute('title'),'Post action needs hover tooltip');
