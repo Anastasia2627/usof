@@ -108,12 +108,12 @@ export default function PostEditor({ id }) {
       </div>
     </div>
 
-    <p className="editorLead">Share an idea, ask a question, or start a conversation.</p>
+    <p className="editorLead">{t('Share an idea, ask a question, or start a conversation.')}</p>
     <form className="postComposerForm" onSubmit={submit}>
       <div className="editorIdentity">
         <Avatar user={auth.user} size="md"/>
         <span>@{auth.user.login}</span>
-        <small>Posting to <b>circle</b></small>
+        <small>{t('Posting to Circle')}</small>
       </div>
       <div className="editorInputGroup">
         <label className="editorFieldLabel" htmlFor="post-title">{t("Post title")}</label>
@@ -132,7 +132,7 @@ export default function PostEditor({ id }) {
             <button type="button" aria-label="Numbered list" title="Numbered list" onClick={()=>applyFormat('1. ','',true)}>1.</button>
           </div>
           <button className="editorPreviewToggle" type="button" onClick={()=>setPreview(p=>!p)} aria-pressed={preview}>
-            <Icon name="search" size={16}/>{preview?'Hide preview':'Preview'}
+            <Icon name="search" size={16}/>{t(preview?'Hide preview':'Preview')}
           </button>
         </div>
         {preview && <section className="markdownPreview" aria-label="Post preview">
@@ -141,9 +141,9 @@ export default function PostEditor({ id }) {
         <div className="postPhotoEditor">
           <div className="editorPhotoAttachRow">
             <label className="editorPhotoAttach" htmlFor="post-photo-input">
-              <Icon name="plus" size={18}/> Add photos
+              <Icon name="plus" size={18}/> {t('Add photos')}
             </label>
-            <span>Up to 4 photos · JPEG, PNG, WebP · 5 MB each</span>
+            <span>{t('Up to 4 photos · JPEG, PNG, WebP · 5 MB each')}</span>
             <input id="post-photo-input" className="editorFileInput" type="file"
               accept="image/jpeg,image/png,image/webp" multiple onChange={e=>{
                 const chosen=Array.from(e.target.files||[]);
@@ -185,7 +185,7 @@ export default function PostEditor({ id }) {
         </div>
         {categories.length>12 && <button className="editorShowTopics" type="button"
           onClick={()=>setExpandedTopics(value=>!value)}>
-          {expandedTopics?'Show fewer topics':`Show all ${categories.length} topics`}
+          {expandedTopics?t('Show fewer topics'):`${t('Show all topics')} (${categories.length})`}
           <Icon name="chevron" size={17}/>
         </button>}
       </fieldset>
