@@ -64,6 +64,7 @@ export default function PostEditor({ id }) {
         .catch(setError)
         .finally(() => setLoading(false));
     }
+    return()=>window.removeEventListener('circle:categories-updated',refreshTopics);
   }, [id, editing, auth?.token]);
 
   if (!auth) return <main><div className="card">{t('Log in to create or edit posts.')}</div></main>;
