@@ -120,21 +120,39 @@ try{
   await page.getByRole('button',{name:'Apply filters'}).click();
   await page.waitForURL(/from=.*to=/);
 
-  // Topic proposals must work from inside the post composer without
-  // accidentally submitting a post (nested HTML forms are not allowed).
+  // Admins create topics immediately; regular members submit suggestions.
   await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
-  const proposed='UI Topic '+Date.now();
-  await page.getByRole('button',{name:'Suggest a topic'}).click();
-  await page.getByLabel('Topic name').fill(proposed);
-  await page.getByRole('button',{name:'Send suggestion'}).click();
-  await page.getByText('Suggestion sent for review').waitFor();
-  assert.ok(page.url().includes('#/create'),'Submitting a topic idea must not publish a post');
+  const direct='Admin Created '+Date.now();
+  await page.locator('.suggestTopicTrigger').click();
+  await page.locator('.suggestTopicForm input').fill(direct);
+  await page.locator('.suggestTopicForm button').click();
+  await page.getByText('Topic created').waitFor();
+  assert.ok(page.url().includes('#/create'),'Creating a topic must not submit the post');
+  await page.goto(origin+'/#/categories',{waitUntil:'networkidle'});
+  await page.getByRole('button',{name:new RegExp(direct)}).waitFor();
+
+  // Member topic suggestion must not be silently published.
+  const member=await browser.newContext({viewport:{width:1100,height:800}});
+  const memberPage=await member.newPage();
+  await memberPage.goto(origin+'/#/login',{waitUntil:'networkidle'});
+  await memberPage.locator('input[autocomplete="username"]').fill('asya');
+  await memberPage.locator('input[autocomplete="current-password"]').fill('Password123!');
+  await memberPage.locator('button.authSubmit').click();
+  await memberPage.waitForURL(/#\/$/);
+  await memberPage.goto(origin+'/#/create',{waitUntil:'networkidle'});
+  const proposed='Community Idea '+Date.now();
+  await memberPage.locator('.suggestTopicTrigger').click();
+  await memberPage.locator('.suggestTopicForm input').fill(proposed);
+  await memberPage.locator('.suggestTopicForm button').click();
+  await memberPage.getByText('Suggestion sent for review').waitFor();
+  assert.ok(memberPage.url().includes('#/create'),'Proposing a topic must not publish a post');
   await page.goto(origin+'/#/admin?tab=suggestions',{waitUntil:'networkidle'});
   await page.getByText(proposed).waitFor();
   const idea=page.locator('.suggestReviewCard').filter({hasText:proposed});
   page.once('dialog',dialog=>dialog.accept());
   await idea.getByRole('button',{name:'Reject'}).click();
   await idea.waitFor({state:'detached'});
+  await member.close();
 
   // The dashboard is reachable from Admin and is no longer a sidebar item.
   await page.goto(origin+'/#/admin',{waitUntil:'networkidle'});
