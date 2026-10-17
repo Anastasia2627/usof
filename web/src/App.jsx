@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Header, go } from './ui.jsx';
+import {usePreferences} from './preferences.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
 import CategoriesPage, { CategoryDetailPage } from './pages/CategoriesPage.jsx';
@@ -23,11 +24,20 @@ function currentHash() {
 export default function App() {
   const [hash, setHash] = useState(currentHash);
   const auth = useSelector(state => state.auth);
+  const {t}=usePreferences();
+  const [sessionExpired,setSessionExpired]=useState(false);
   useEffect(() => {
     const changed = () => setHash(currentHash());
     window.addEventListener('hashchange', changed);
     return () => window.removeEventListener('hashchange', changed);
   }, []);
+
+  useEffect(()=>{
+    const expired=()=>setSessionExpired(true);
+    window.addEventListener('circle:session-expired',expired);
+    return()=>window.removeEventListener('circle:session-expired',expired);
+  },[]);
+  useEffect(()=>{if(auth?.token)setSessionExpired(false);},[auth?.token]);
 
   const path = hash.split('?')[0];
   const parts = path.split('/').filter(Boolean);
@@ -55,5 +65,11 @@ export default function App() {
   else if (parts[0] === 'reset') page = <ResetPage token={parts[1] || ''} />;
   else page = <main className="narrow"><h1>Page not found</h1><button onClick={() => go('/')}>Home</button></main>;
 
-  return <><Header />{page}<footer>Circle · Conversations start here.</footer></>;
+  return <><Header />
+    {sessionExpired && <div className="sessionExpiredBanner" role="status">
+      <span>{t('Your session has expired. Please log in again.')}</span>
+      <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
+      <button type="button" aria-label={t('Dismiss')} onClick={()=>setSessionExpired(false)}>×</button>
+    </div>}
+    {page}<footer>Circle · Conversations start here.</footer></>;
 }
