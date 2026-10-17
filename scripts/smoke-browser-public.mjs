@@ -36,7 +36,7 @@ try {
   await firstAuthor.click();
   await page.waitForURL(/#\/profile\/\d+$/);
   // Profiles are public, but only the owner/admin may see private email.
-  await page.locator('.profileHero h1').waitFor();
+  await page.locator('.profileHeader h1').waitFor();
   const match = page.url().match(/profile\/(\d+)/);
   assert.ok(match, 'Author link opens a member profile');
   const profileRes = await fetch(backend + '/users/' + match[1]);
