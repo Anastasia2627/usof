@@ -138,10 +138,22 @@ export function AuthPage({ mode }) {
 
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
-  return <main className="authShell">
+  return <main className="authShell authRefined">
+    <aside className="authEditorial" aria-label="About Circle">
+      <div className="authEditorialBrand"><span aria-hidden="true">◎</span> circle</div>
+      <div className="authEditorialStory">
+        <span className="authEditorialEyebrow">A SPACE TO CONNECT</span>
+        <h2>Good conversations start here.</h2>
+        <p>Share what you love. Find people who get it. Discover a little something new every day.</p>
+        <div className="authEditorialTopics"><span>Art & ideas</span><span>Little discoveries</span><span>Real people</span></div>
+      </div>
+      <p className="authEditorialFootnote">One community. Countless perspectives.</p>
+    </aside>
     <section className="authPanel">
       {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
-        <h1>{register ? 'Create account' : 'Log in'}</h1>
+        <span className="authPanelEyebrow">{register ? 'JOIN THE COMMUNITY' : 'NICE TO SEE YOU AGAIN'}</span>
+        <h1>{register ? 'Create account' : 'Welcome back'}</h1>
+        <p className="authPanelCopy">{register ? 'A few details and you are ready to join the conversation.' : 'Log in to pick up where you left off.'}</p>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
           {register ? <>
@@ -162,9 +174,12 @@ export function AuthPage({ mode }) {
           <button className="primary authSubmit" disabled={busy}>{busy ? 'Please wait…' : register ? 'Create account' : 'Log in'}</button>
           <ErrorBox error={error} />
         </form>
-        <div className="toolbar">
-          <button onClick={() => go(register ? '/login' : '/register')}>{register ? 'Already registered? Log in' : 'Create an account'}</button>
-          {!register && <button onClick={() => go('/reset')}>Forgot password?</button>}
+        <div className="toolbar authSwitchLinks">
+          <p>{register ? 'Already part of Circle?' : 'New to Circle?'}</p>
+          <button type="button" onClick={() => go(register ? '/login' : '/register')}>
+            {register ? 'Log in' : 'Create an account'}
+          </button>
+          {!register && <button type="button" className="authForgotLink" onClick={() => go('/reset')}>Forgot password?</button>}
         </div>
         {!register && <div className="authRecovery">
           <button className="linkButton" onClick={() => setRecovery(value => !value)}>Need a new email verification code?</button>
