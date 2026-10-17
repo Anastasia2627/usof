@@ -194,7 +194,7 @@ try {
   }
   await card.getByRole('button',{name:'Like',exact:true}).click();
   await card.getByRole('button',{name:'Reply',exact:true}).click();
-  await card.getByLabel('Reply').fill('Admin replied '+suffix);
+  await card.getByRole('textbox',{name:'Reply'}).fill('Admin replied '+suffix);
   await card.getByRole('button',{name:'Post reply'}).click();
   await admin.getByText('Admin replied '+suffix).waitFor();
   // Switching back to the user's browser should refresh cross-browser comments.
