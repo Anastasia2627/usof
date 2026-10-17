@@ -63,6 +63,18 @@ try{
   const copiedUrl=await page.evaluate(()=>navigator.clipboard.readText());
   assert.match(copiedUrl,/\/#\/post\/\d+$/);
 
+  // Shared icon source: Tabler for feed, navigation, and post actions.
+  await page.locator('.threadCard .tablerSvgIcon svg.tabler-icon').first().waitFor();
+  assert.ok(await page.locator('.mainNav .tablerSvgIcon svg.tabler-icon').count()>=3,
+    'Navigation must use the chosen Tabler icon set');
+  assert.equal(await page.locator('.googleSvgIcon').count(),0,
+    'Old Google icons must not be rendered');
+  const like=page.locator('.threadCard button[aria-label="Like"]').first();
+  assert.equal(await like.locator('svg.tabler-icon').count(),1);
+  await page.goto(origin+'/#/post/1',{waitUntil:'networkidle'});
+  await page.locator('.naturalPost .tablerSvgIcon svg.tabler-icon').first().waitFor();
+  await page.goto(origin+'/#/',{waitUntil:'networkidle'});
+
   // Rounded interactive surfaces stay legible at common desktop/mobile sizes.
   const card=page.locator('.threadCard').first();
   const desktopRadius=await card.evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius));
