@@ -31,7 +31,7 @@ export default function ModeratorControl({userId,login,role,onChanged}) {
     if(!window.confirm(t(target==='moderator'?'Make moderator?':'Remove moderator?')+' @'+(login||userId)))return;
     setBusy(true);setError('');
     try{
-      await api('/users/'+userId,{token:auth.token,method:'PATCH',body:{role:target}});
+      await api('/users/'+userId+'/role',{token:auth.token,method:'PATCH',body:{role:target}});
       setCurrentRole(target);
       setOpen(false);
       window.dispatchEvent(new CustomEvent('circle:user-role-updated',{detail:{id:Number(userId),role:target}}));
