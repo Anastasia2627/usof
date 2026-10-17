@@ -6,7 +6,6 @@ export default function SettingsPage() {
   const { theme, language, setTheme, setLanguage, t } = usePreferences();
   return <main className="simpleFeaturePage settingsPage">
     <div className="featureHeading"><Icon name="settings" size={27}/><h1>{t('Settings')}</h1></div>
-    <p className="featureSubheading">{t('The changes are saved on this device.')}</p>
     <section className="settingsSection">
       <h2>{t('App appearance')}</h2>
       <p>{t('Theme')}</p>
@@ -30,6 +29,5 @@ export default function SettingsPage() {
         </button>)}
       </div>
     </section>
-    <p className="settingsHint">{t('Theme and language update instantly.')}</p>
   </main>;
 }
