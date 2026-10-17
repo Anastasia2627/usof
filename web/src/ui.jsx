@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api, assetUrl } from './api.js';
+import { usePreferences } from './preferences.jsx';
 
 export const go = (path) => { window.location.hash = path; };
 export const fmt = (date) => date ? new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '—';
@@ -139,6 +140,7 @@ export function PostCard({ post }) {
 
 export function Header() {
   const auth = useSelector(state => state.auth);
+  const {t} = usePreferences();
   const dispatch = useDispatch();
   const [search, setSearch] = useState('');
   const menuRef = useRef(null);
@@ -180,7 +182,12 @@ export function Header() {
     ...(!auth ? [{ key: 'explore', text: 'Explore', destination: '/explore', icon: 'forum' }] : []),
     { key: 'search', text: 'Search', destination: '/search', icon: 'search' },
     { key: 'categories', text: 'Categories', destination: '/categories', icon: 'categories' },
-    ...(auth ? [{ key: 'create', text: 'New post', destination: '/create', icon: 'plus' }] : []),
+    ...(auth ? [
+      { key:'create', text:'New post', destination:'/create', icon:'plus' },
+      { key:'saved', text:'Saved', destination:'/saved', icon:'bookmarkBorder' },
+      { key:'dashboard', text:'Dashboard', destination:'/dashboard', icon:'analytics' },
+    ] : []),
+    { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
     ...(auth?.user?.role === 'admin' ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
   ];
   const current = window.location.hash.split('?')[0].slice(1) || '/';
@@ -194,14 +201,14 @@ export function Header() {
         go(search.trim() ? `/search?q=${encodeURIComponent(search.trim())}` : '/search');
       }}>
         <Icon name="search" size={18}/>
-        <input aria-label="Search posts, people and categories" placeholder="Search" value={search} onChange={event => setSearch(event.target.value)} />
+        <input aria-label="Search posts, people and categories" placeholder={t('Search')} value={search} onChange={event => setSearch(event.target.value)} />
         <button className="searchSubmit" type="submit" aria-label="Search" title="Search"><Icon name="arrow" size={19}/></button>
       </form>}
       {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
         {nav.map(item => <button key={item.key} type="button" title={item.text}
           className={current === item.destination ? 'navActive' : ''}
-          aria-label={item.text} onClick={() => go(item.destination)}>
-          <Icon name={item.icon} size={24}/><span className="navLabel">{item.text}</span>
+          aria-label={t(item.text)} onClick={() => go(item.destination)}>
+          <Icon name={item.icon} size={24}/><span className="navLabel">{t(item.text)}</span>
         </button>)}
       </nav>}
       <div className="accountArea">
@@ -215,16 +222,16 @@ export function Header() {
             <div className="accountDropdown">
               <p className="accountDropdownTitle">@{auth.user.login} <small>{auth.user.role}</small></p>
               <button type="button" onClick={() => { menuRef.current.open = false; go('/profile'); }}>
-                <Icon name="user" size={19}/> My profile
+                <Icon name="user" size={19}/> {t('My profile')}
               </button>
               <button type="button" className="accountLogout" onClick={logout}>
-                <Icon name="logout" size={19}/> Log out
+                <Icon name="logout" size={19}/> {t('Log out')}
               </button>
             </div>
           </details>
         </> : <>
-          <button className="loginButton" onClick={() => go('/login')}>Log in</button>
-          <button className="primary signupButton" onClick={() => go('/register')}>Sign up</button>
+          <button className="loginButton" onClick={() => go('/login')}>{t('Log in')}</button>
+          <button className="primary signupButton" onClick={() => go('/register')}>{t('Sign up')}</button>
         </>}
       </div>
     </div>
