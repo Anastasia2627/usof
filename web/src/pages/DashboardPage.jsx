@@ -39,7 +39,10 @@ export default function DashboardPage() {
     <div className="featureHeading"><Icon name="analytics" size={27}/><h1>{t(admin?'Admin overview':'Your activity')}</h1></div>
     <p className="featureSubheading">{admin?t('Community'):'@'+auth.user.login}</p>
     <ErrorBox error={error} onRetry={()=>setRetry(v=>v+1)}/>
-    {loading?<p>{t('Loading…')}</p>:data&&(admin?<>
+    {loading ? <div className="dashStats" aria-label={t('Loading…')}>
+      {[t('Members'),t('Posts'),t('Comments'),t('Reactions')].map(label =>
+        <div className="dashStat dashSkeleton" key={label}><span>{label}</span><strong>—</strong></div>)}
+    </div> : data&&(admin?<>
       <div className="dashStats">
         <Metric label={t('Members')} value={data.overview?.users}/>
         <Metric label={t('Posts')} value={data.overview?.posts}/>
