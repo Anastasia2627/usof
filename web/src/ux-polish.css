@@ -543,3 +543,74 @@ html[data-theme="dark"] .naturalPostManagement button[aria-pressed="true"]{backg
   .naturalPostManagement .dangerText{margin-left:auto;}
   .naturalPostReactions{flex-wrap:wrap;gap:6px;}
 }
+
+/* Tabler Icons — one pack, one 24px grid, consistent 1.8 stroke.
+   Historic Google Material SVG rules remain in earlier stylesheets only as
+   dead styling; never force fill on outline Tabler icons. */
+.circleIcon.tablerSvgIcon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:var(--icon-size,auto);
+  height:var(--icon-size,auto);
+  line-height:1;
+  flex:none;
+  color:inherit;
+  font:inherit;
+  vertical-align:middle;
+  pointer-events:none;
+  user-select:none;
+  font-variation-settings:normal;
+}
+.circleIcon.tablerSvgIcon>svg {
+  display:block;
+  flex:none;
+  width:100%;
+  height:100%;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+  pointer-events:none;
+}
+.mainNav .tablerSvgIcon, .threadActions .tablerSvgIcon,
+.postContextMenu .tablerSvgIcon {pointer-events:none;}
+.threadActions .activeSave .tablerSvgIcon>svg {fill:currentColor;}
+.threadActions button.activeVote .tablerSvgIcon,
+.mainNav button.navActive .tablerSvgIcon{font-variation-settings:normal;}
+.threadActions button,.naturalPostReactions button,.naturalPostManagement button,
+.naturalCommentTree .commentActions button{
+  align-items:center;
+  justify-content:center;
+  column-gap:5px;
+}
+.threadActions .circleIcon.tablerSvgIcon,
+.naturalPostReactions .circleIcon.tablerSvgIcon{color:inherit;}
+.threadActions button.activeVote,.threadActions button.activeSave{
+  color:#171719;
+  background:#f2f2f3;
+}
+.threadActions button.activeVote .circleIcon.tablerSvgIcon>svg {
+  fill:currentColor;
+}
+/* Tabler's outlined shapes remain clear when the button isn't selected. */
+.threadActions button:not(.activeVote):not(.activeSave) .circleIcon.tablerSvgIcon>svg,
+.naturalPostManagement .circleIcon.tablerSvgIcon>svg,
+.naturalCommentTree .circleIcon.tablerSvgIcon>svg {
+  fill:none;
+}
+.moderatorControlTrigger{display:inline-grid;place-items:center;min-width:30px;min-height:30px;}
+.moderatorControlTrigger .circleIcon.tablerSvgIcon{width:20px;height:20px;}
+.photoLightbox button[aria-label="Close photo"]{display:grid;place-items:center;}
+.solutionTag .circleIcon.tablerSvgIcon,
+.modReviewed .circleIcon.tablerSvgIcon{color:inherit;margin-right:3px;}
+.roleChangeMessage{display:inline-flex;align-items:center;gap:7px;}
+.roleChangeBanner button .tablerSvgIcon{width:18px;height:18px;}
+html[data-theme=dark] .threadActions button.activeVote,
+html[data-theme=dark] .threadActions button.activeSave{
+  color:#f4f4f5;
+  background:#303136;
+}
+@media(max-width:650px){
+  .threadActions .circleIcon.tablerSvgIcon{width:19px!important;height:19px!important;}
+  .mainNav .circleIcon.tablerSvgIcon{width:23px!important;height:23px!important;}
+}
