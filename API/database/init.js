@@ -14,6 +14,7 @@ if (!/^[A-Za-z0-9_]+$/.test(database)) {
 
 const APP_TABLES = [
   'notifications',
+  'category_suggestions',
   'post_shares',
   'post_subscriptions',
   'favorites',
@@ -58,7 +59,7 @@ async function ensureCircleSchema(connection) {
   // Additive, idempotent migration: never drop existing user data.
   await connection.query("ALTER TABLE users MODIFY COLUMN role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user'");
   // Existing databases need the new notification kind, without deleting old notifications.
-  await connection.query("ALTER TABLE notifications MODIFY COLUMN type ENUM('comment','reply','post_updated','reaction','role_changed') NOT NULL");
+  await connection.query("ALTER TABLE notifications MODIFY COLUMN type ENUM('comment','reply','post_updated','reaction','role_changed','category_suggestion','category_decision') NOT NULL");
   const [postColumns] = await connection.query("SHOW COLUMNS FROM posts");
   const postKnown = new Set(postColumns.map(row=>row.Field));
   if (!postKnown.has('closed')) await connection.query("ALTER TABLE posts ADD COLUMN closed BOOLEAN NOT NULL DEFAULT 0");
@@ -116,6 +117,23 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY(comment_id) REFERENCES comments(id) ON DELETE CASCADE,
     FOREIGN KEY(resolved_by) REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB`);
+
+  await connection.query(`CREATE TABLE IF NOT EXISTS category_suggestions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    description VARCHAR(500) NOT NULL DEFAULT '',
+    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    reviewer_id INT UNSIGNED NULL,
+    category_id INT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME NULL,
+    INDEX idx_category_suggestions_status(status,created_at),
+    INDEX idx_category_suggestions_user(user_id,created_at),
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL
   ) ENGINE=InnoDB`);
 
   // A broad public conversation feed, without resetting the six existing
@@ -213,7 +231,7 @@ async function initializeDatabase() {
         );
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=0');
-      for (const table of ['content_reports','post_images','direct_messages','user_interests','user_follows',...APP_TABLES]) {
+      for (const table of ['category_suggestions','content_reports','post_images','direct_messages','user_interests','user_follows',...APP_TABLES]) {
         await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=1');
@@ -349,7 +367,7 @@ async function initializeDatabase() {
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT UNSIGNED NOT NULL,
         actor_id INT UNSIGNED NULL,
-        type ENUM('comment','reply','post_updated','reaction','role_changed') NOT NULL,
+        type ENUM('comment','reply','post_updated','reaction','role_changed','category_suggestion','category_decision') NOT NULL,
         post_id INT UNSIGNED NULL,
         comment_id INT UNSIGNED NULL,
         title VARCHAR(180) NOT NULL,
@@ -363,6 +381,23 @@ async function initializeDatabase() {
         INDEX idx_notifications_user_created(user_id, created_at), INDEX idx_notifications_user_read(user_id, read_at)
       ) ENGINE=InnoDB
     `);
+
+    await connection.query(`CREATE TABLE category_suggestions (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      user_id INT UNSIGNED NOT NULL,
+      title VARCHAR(100) NOT NULL,
+      description VARCHAR(500) NOT NULL DEFAULT '',
+      status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+      reviewer_id INT UNSIGNED NULL,
+      category_id INT UNSIGNED NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      reviewed_at DATETIME NULL,
+      INDEX idx_category_suggestions_status(status,created_at),
+      INDEX idx_category_suggestions_user(user_id,created_at),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB`);
 
     const passwordHash = await bcrypt.hash('Password123!', 12);
     const users = [
