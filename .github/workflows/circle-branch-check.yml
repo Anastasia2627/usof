@@ -1,8 +1,8 @@
-name: Circle full requirements check
+name: Circle Threads UI & connection check
 
 on:
   push:
-    branches: [circle-full-requirements]
+    branches: [circle-threads-feed]
   workflow_dispatch:
 
 jobs:
@@ -83,8 +83,20 @@ jobs:
         run: npm run test:email:integration
       - name: Extended API roles, search, replies and reaction moderation
         run: npm run test:full
+      - name: Check new social features and permission boundaries
+        run: npm run test:social
+      - name: Verify moderator server permissions, unpublished post privacy, and administrator protection
+        run: npm run test:moderator
+      - name: Verify image uploads, accepted answers, reports and moderator permissions
+        run: npm run test:features
+      - name: Verify member topic proposals and administrator review
+        run: npm run test:topics
       - name: Check all new server and test modules
         run: npm run check:full
+      - name: Check configured Mac API port and proxy target
+        run: node scripts/check-vite-api-port.mjs
+      - name: Verify Tabler icon mapping and no legacy SVGs
+        run: npm run check:icons
       - name: Build frontend
         run: npm run build
       - name: Install Chromium
@@ -98,8 +110,14 @@ jobs:
           done
           cat web.log
           exit 1
+      - name: Check Vite proxy for guest API access
+        run: |
+          curl -fsS http://127.0.0.1:5173/api/health
+          curl -fsS "http://127.0.0.1:5173/api/posts?limit=8&sort=likes&order=desc" > /dev/null
       - name: Test functional UI at 390px and on admin pages
         run: npm run test:ui
+      - name: Check composer layout and revoked login recovery
+        run: npm run test:ui:regressions
       - name: Verify 20-step review scenarios
         run: npm run test:defense
       - name: Capture desktop and mobile Basic screenshots
@@ -107,6 +125,11 @@ jobs:
           mkdir -p screenshots
           npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-desktop.png
           npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/" screenshots/basic-mobile.png
+          npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/explore" screenshots/explore-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/explore" screenshots/explore-mobile.png
+          npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/login" screenshots/login-desktop.png
+          npx playwright screenshot --browser chromium --viewport-size="390,844" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/login" screenshots/login-mobile.png
+          npx playwright screenshot --browser chromium --viewport-size="1280,800" --wait-for-timeout=1200 --full-page "http://localhost:5173/#/register" screenshots/register-desktop.png
       - name: Upload UI screenshots
         uses: actions/upload-artifact@v4
         with:

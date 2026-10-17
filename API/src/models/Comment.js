@@ -28,13 +28,14 @@ const COMMENT_LIKE_COUNT_SQL = `
 export class Comment extends BaseModel {
   static async findById(id) {
     const rows = await this.query(
-      `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
-              p.author_id AS post_author_id, p.status AS post_status, p.locked AS post_locked,
+      `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating, u.role AS author_role, pu.role AS post_author_role,
+              p.author_id AS post_author_id, p.status AS post_status, p.locked AS post_locked, p.closed AS post_closed, p.publish_at AS post_publish_at,
               ${COMMENT_SCORE_SQL} AS score,
               ${COMMENT_LIKE_COUNT_SQL} AS like_count
        FROM comments c
        JOIN users u ON u.id = c.author_id
        JOIN posts p ON p.id = c.post_id
+       JOIN users pu ON pu.id=p.author_id
        WHERE c.id=?
        LIMIT 1`,
       [id],
@@ -44,13 +45,14 @@ export class Comment extends BaseModel {
 
   static async listAdmin({ clause = '', params = [] } = {}) {
     return this.query(
-      `SELECT c.*, u.login AS author_login, u.rating AS author_rating, p.title AS post_title,
-              p.status AS post_status, p.locked AS post_locked,
+      `SELECT c.*, u.login AS author_login, u.rating AS author_rating, u.role AS author_role, pu.role AS post_author_role, p.title AS post_title,
+              p.status AS post_status, p.locked AS post_locked, p.closed AS post_closed, p.publish_at AS post_publish_at,
               ${COMMENT_SCORE_SQL} AS score,
               ${COMMENT_LIKE_COUNT_SQL} AS like_count
        FROM comments c
        JOIN users u ON u.id = c.author_id
        JOIN posts p ON p.id = c.post_id
+       JOIN users pu ON pu.id=p.author_id
        ${clause}
        ORDER BY c.created_at DESC`,
       params,
@@ -59,14 +61,15 @@ export class Comment extends BaseModel {
 
   static async listForPost(postId) {
     return this.query(
-      `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
-              p.status AS post_status,
+      `SELECT c.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating, u.role AS author_role, pu.role AS post_author_role,
+              p.status AS post_status, p.closed AS post_closed, p.publish_at AS post_publish_at,
               (p.locked OR p.status <> 'active') AS post_locked,
               ${COMMENT_SCORE_SQL} AS score,
               ${COMMENT_LIKE_COUNT_SQL} AS like_count
        FROM comments c
        JOIN users u ON u.id = c.author_id
        JOIN posts p ON p.id = c.post_id
+       JOIN users pu ON pu.id=p.author_id
        WHERE c.post_id=?
        ORDER BY like_count ASC, c.created_at ASC, c.id ASC`,
       [postId],

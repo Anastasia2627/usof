@@ -1,81 +1,88 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { ErrorBox, go } from '../ui.jsx';
+import { ErrorBox, Icon, go } from '../ui.jsx';
+import { usePreferences } from '../preferences.jsx';
 
 function Metric({ label, value }) {
-  return <article className="uxMetric">
-    <span>{label}</span>
-    <strong>{value}</strong>
-  </article>;
+  return <div className="dashStat"><span>{label}</span><strong>{Number(value || 0).toLocaleString()}</strong></div>;
 }
-
-export default function DashboardPage() {
-  const auth = useSelector((state) => state.auth);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!auth?.token) { setLoading(false); return; }
-    let active = true;
-    setLoading(true);
-    api('/dashboard/me', { token: auth.token })
-      .then((result) => { if (active) setData(result.data); })
-      .catch((err) => { if (active) setError(err); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [auth?.token]);
-
-  if (!auth) return <main className="narrow"><div className="card empty">
-    <h1>Your activity</h1><p>Log in to see your activity.</p>
-    <button className="primary" onClick={() => go('/login')}>Log in</button>
-  </div></main>;
-  if (loading) return <main className="uxDashboard"><p>Loading activity…</p></main>;
-  if (!data) return <main className="uxDashboard"><ErrorBox error={error} /></main>;
-
-  const { stats, trust, weeklyGoal } = data;
-  const progress = weeklyGoal.target ? Math.min(100, Math.round(weeklyGoal.current / weeklyGoal.target * 100)) : 0;
-
-  return <main className="uxDashboard">
-    <header className="uxPageHead">
-      <p className="uxOverline">CIRCLE / ACCOUNT</p>
-      <h1>Your activity</h1>
-      <p>Posts, replies and conversations you've saved.</p>
-    </header>
-
-    <section className="uxMetrics" aria-label="Your account numbers">
-      <Metric label="Posts" value={stats.posts} />
-      <Metric label="Replies" value={stats.answers} />
-      <Metric label="Reactions received" value={stats.positiveReactionsReceived} />
-      <Metric label="Saved posts" value={stats.favorites} />
-    </section>
-
-    <div className="uxDashboardSplit">
-      <section className="card uxSimplePanel">
-        <div className="uxPanelHead">
-          <h2>This week</h2>
-          <small>{weeklyGoal.current} of {weeklyGoal.target} replies</small>
-        </div>
-        <div className="uxWeeklyTrack" role="progressbar" aria-label="Weekly replies"
-          aria-valuemin="0" aria-valuemax={weeklyGoal.target} aria-valuenow={weeklyGoal.current}>
-          <span style={{ width: progress + '%' }} />
-        </div>
-        <p>{weeklyGoal.completed ? 'Weekly target reached.' : 'Join conversations when you have something to say.'}</p>
-        <div className="uxReputation">
-          <span>Reputation</span><strong>{trust.rating} · {trust.name}</strong>
-        </div>
-      </section>
-
-      <section className="card uxSimplePanel">
-        <h2>Your shortcuts</h2>
-        <div className="uxShortcutList">
-          <button onClick={() => go('/profile')}>My profile <span>↗</span></button>
-          <button onClick={() => go('/saved')}>Saved posts <span>↗</span></button>
-          <button onClick={() => go('/following')}>Followed conversations <span>↗</span></button>
-          <button onClick={() => go('/notifications')}>Notifications <span>{stats.unreadNotifications || 0}</span></button>
-        </div>
-      </section>
+function Growth({ data = [] }) {
+  const max = Math.max(1,...data.map(d=>Number(d.posts || 0)));
+  return <div className="dashGraph">
+    <div className="dashSpark" role="img" aria-label="Community posts over seven days">
+      {data.map(d=><div key={d.date} title={d.date + ': ' + d.posts} className="dashSparkItem">
+        <span style={{height:Math.max(5, Math.round(Number(d.posts || 0)/max*100))+'%'}}/>
+      </div>)}
     </div>
-  </main>;
+    <div className="dashLegend">{data.map(d=><span key={d.date}>{new Date(d.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'})}</span>)}</div>
+  </div>;
+}
+export default function DashboardPage({embedded=false}) {
+  const auth=useSelector(state=>state.auth);
+  const {t}=usePreferences();
+  const admin=auth?.user?.role==='admin';
+  const [data,setData]=useState(null), [error,setError]=useState(null), [loading,setLoading]=useState(true),[retry,setRetry]=useState(0);
+  useEffect(()=>{
+    if(!auth?.token){setLoading(false);return;}
+    const controller=new AbortController();
+    setLoading(true);setError(null);
+    api(admin?'/dashboard/admin':'/dashboard/me',{token:auth.token,signal:controller.signal})
+      .then(result=>{if(!controller.signal.aborted)setData(result.data);})
+      .catch(err=>{if(err.name!=='AbortError')setError(err);})
+      .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+    return ()=>controller.abort();
+  },[auth?.token,admin,retry]);
+
+  if(!auth)return <main className="simpleFeaturePage"><h1>{t('Statistics')}</h1><button className="primary" onClick={()=>go('/login')}>{t('Log in')}</button></main>;
+  const Root=embedded?'section':'main';
+  return <Root className={'simpleFeaturePage dashboardPage'+(embedded?' embeddedDashboard':'')}>
+    <div className="featureHeading"><Icon name="analytics" size={27}/><h1>{t(admin?'Admin overview':'Your activity')}</h1></div>
+    <p className="featureSubheading">{admin?t('Community'):'@'+auth.user.login}</p>
+    <ErrorBox error={error} onRetry={()=>setRetry(v=>v+1)}/>
+    {loading ? <div className="dashStats" aria-label={t('Loading…')}>
+      {[t('Members'),t('Posts'),t('Comments'),t('Reactions')].map(label =>
+        <div className="dashStat dashSkeleton" key={label}><span>{label}</span><strong>—</strong></div>)}
+    </div> : data&&(admin?<>
+      <div className="dashStats">
+        <Metric label={t('Members')} value={data.overview?.users}/>
+        <Metric label={t('Posts')} value={data.overview?.posts}/>
+        <Metric label={t('Comments')} value={data.overview?.comments}/>
+        <Metric label={t('Reactions')} value={data.overview?.reactions}/>
+      </div>
+      <section className="dashSection"><h2>{t('Activity')} <small>7 days</small></h2><Growth data={data.growth}/></section>
+      <section className="dashSection"><h2>{t('Moderation')}</h2>
+        <div className="dashInline"><span>{t('Inactive')} {t('Posts')}</span><strong>{data.overview?.inactive_posts||0}</strong></div>
+        <div className="dashInline"><span>{t('Comments')}</span><strong>{data.overview?.comments||0}</strong></div>
+        <div className="dashInline"><span>{t('New members')}</span><strong>{data.overview?.new_users_7d||0}</strong></div>
+        <button className="featureTextLink" onClick={()=>go('/admin')}>{t('Admin')} <Icon name="arrow" size={18}/></button>
+      </section>
+      <section className="dashSection"><h2>{t('Topics')}</h2>
+        {(data.topCategories||[]).map(item=><div key={item.id} className="dashInline"><span>{item.title}</span><strong>{item.posts}</strong></div>)}
+      </section>
+    </>:<>
+      <div className="dashStats">
+        <Metric label={t('Posts')} value={data.stats?.posts}/>
+        <Metric label={t('Replies')} value={data.stats?.answers}/>
+        <Metric label={t('Received likes')} value={data.stats?.positiveReactionsReceived}/>
+        <Metric label={t('Reputation')} value={data.trust?.rating}/>
+      </div>
+      <section className="dashSection">
+        <h2>{t('Weekly goal')} <small>{data.weeklyGoal?.current||0} / {data.weeklyGoal?.target||5}</small></h2>
+        <div className="dashProgress" role="progressbar" aria-valuenow={data.weeklyGoal?.current||0}
+          aria-valuemin={0} aria-valuemax={data.weeklyGoal?.target||5}>
+          <span style={{width:Math.min(100,Number(data.weeklyGoal?.current||0)/Math.max(1,Number(data.weeklyGoal?.target||5))*100)+'%'}}/>
+        </div><p className="dashHint">{data.trust?.name} · {data.trust?.rating||0} {t('Reputation')}</p>
+      </section>
+      <section className="dashSection"><h2>{t('Achievements')}</h2>
+        {(data.achievements||[]).map(item=><div className="dashAchievement" key={item.id}>
+          <Icon name={item.unlocked?'check':'lock'} size={20}/><div><strong>{item.title}</strong><p>{item.description}</p></div><small>{item.progress}/{item.target}</small>
+        </div>)}
+      </section>
+      <section className="dashSection"><h2>{t('Community')}</h2>
+        <div className="dashInline"><span>{t('Saved')}</span><strong>{data.stats?.favorites||0}</strong></div>
+        <div className="dashInline"><span>{t('Following')}</span><strong>{data.stats?.following||0}</strong></div>
+      </section>
+    </>)}
+  </Root>;
 }

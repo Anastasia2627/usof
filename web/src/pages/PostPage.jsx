@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, StatusBadges, fmt, go } from '../ui.jsx';
+import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
+import { usePreferences } from '../preferences.jsx';
+import FormattedContent from '../FormattedContent.jsx';
+import ReportButton from '../ReportButton.jsx';
+import PostPhotoGallery from '../PostPhotoGallery.jsx';
+import ModeratorControl from '../ModeratorControl.jsx';
 
-function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
+function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
+  const {t}=usePreferences();
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -33,35 +39,57 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
   if (!visible) return null;
   return <div className="reactionPanel">
     <div className="reactionButtons">
-      <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>
+      {!hideCounts && !canVote && <span className="reactionTotals">
+        <span title={t('Likes')} aria-label={t('Likes')+': '+items.filter(x=>x.type==='like').length}>
+          <Icon name="heart" size={15}/>{items.filter(x=>x.type==='like').length}</span>
+        <span title={t('Dislikes')} aria-label={t('Dislikes')+': '+items.filter(x=>x.type==='dislike').length}>
+          <Icon name="dislike" size={15}/>{items.filter(x=>x.type==='dislike').length}</span>
+      </span>}
       {canVote && <>
-        <button type="button" onClick={() => change('POST', 'like')}>Like</button>
-        <button type="button" onClick={() => change('POST', 'dislike')}>Dislike</button>
-        {own && <button type="button" onClick={() => change('DELETE')}>Remove my vote</button>}
+        <button type="button" className="reactionIconButton voteReaction"
+          aria-label={t('Like')} title={t('Like')} aria-pressed={own?.type==='like'}
+          onClick={() => change('POST','like')}>
+          <Icon name={own?.type==='like'?'heartFilled':'heart'} size={19}/>
+          {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='like').length}</span>}
+        </button>
+        <button type="button" className="reactionIconButton voteReaction"
+          aria-label={t('Dislike')} title={t('Dislike')} aria-pressed={own?.type==='dislike'}
+          onClick={() => change('POST','dislike')}>
+          <Icon name={own?.type==='dislike'?'dislikeFilled':'dislike'} size={19}/>
+          {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='dislike').length}</span>}
+        </button>
+        {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
-      <button type="button" onClick={() => setOpen(x => !x)}>{open ? 'Hide votes' : 'View votes'}</button>
-      {auth?.user?.role === 'admin' && items.length > 0 && <button type="button" onClick={() => {
-        if (window.confirm('Remove all reactions?')) {
-          api(path + '?all=1', { method: 'DELETE', token: auth.token })
-            .then(async () => { await load(); await onChange(); }).catch(setError);
-        }
-      }}>Clear votes</button>}
+      {!hideCounts && <button type="button" aria-label="View votes" title="View votes" onClick={() => setOpen(x => !x)}><Icon name="group" size={18}/></button>}
+      {auth?.user?.role === 'admin' && items.length > 0 &&
+        <button type="button" className="reactionIconButton" aria-label={t('Clear votes')}
+          title={t('Clear votes')} onClick={() => {
+          if (window.confirm(t('Remove all reactions?'))) {
+            api(path + '?all=1', { method: 'DELETE', token: auth.token })
+              .then(async () => { await load(); await onChange(); }).catch(setError);
+          }
+        }}><Icon name="trash" size={18}/></button>}
     </div>
     {open && <ul>{items.map(x => <li key={x.id}>{x.author_login}: {x.type}</li>)}</ul>}
     <ErrorBox error={error} />
   </div>;
 }
 
-function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
+function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthorId, depth = 0 }) {
+  const {t}=usePreferences();
   const [reply, setReply] = useState('');
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState(null);
   const children = comments.filter(x => Number(x.parent_comment_id) === Number(item.id));
-  const isAdmin = auth?.user?.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const canModerate = auth?.user?.role==='admin' ||
+    (auth?.user?.role==='moderator' && item.author_role!=='admin' && item.post_author_role!=='admin');
   const isOwner = Number(auth?.user?.id) === Number(item.author_id);
   const active = item.status === 'active';
-  const canReply = Boolean(auth && (isAdmin || (active && !item.locked && !item.post_locked)));
-  const canChangeStatus = Boolean(auth && (isAdmin || !item.locked));
+  const canReply = Boolean(auth && !item.post_closed && (isAdmin || (active && !item.locked && !item.post_locked)));
+  const canChangeStatus = Boolean(auth && (canModerate || (isOwner && !item.locked) ||
+    (auth.user.role==='user' && !item.locked &&
+      item.author_role!=='admin' && item.post_author_role!=='admin')));
 
   async function run(path, method, body) {
     setError(null);
@@ -86,30 +114,52 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         <div className="authorLine">
           <Avatar user={{ login: item.author_login, avatar: item.author_avatar }} size="sm" />
           <button className="authorLink" onClick={() => go(`/profile/${item.author_id}`)}>{item.author_login}</button>
+          <ModeratorControl userId={item.author_id} login={item.author_login}/>
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
+        {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
       </div>
       <p className="commentContent">{item.content}</p>
+      {Number(acceptedId)===Number(item.id) && <span className="solutionTag"><Icon name="check" size={16}/>{t('Best answer')}</span>}
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
       <div className="commentActions">
-        {canReply && <button onClick={() => setReplying(x => !x)}>Reply</button>}
-        {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
-          {active ? 'Deactivate' : 'Activate'}</button>}
-        {isAdmin && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { locked: !item.locked })}>{item.locked ? 'Unlock' : 'Lock'}</button>}
-        {(isOwner || isAdmin) && <button className="dangerText" onClick={() => {
-          if (window.confirm('Delete this comment and replies?')) run(`/comments/${item.id}`, 'DELETE');
-        }}>Delete</button>}
+        {Number(auth?.user?.id)===Number(postAuthorId)&&item.status==='active'&&
+          <button type="button" className="solutionButton" aria-label={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
+            title={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
+            aria-pressed={Number(acceptedId)===Number(item.id)}
+            onClick={()=>
+            run('/posts/'+postId+'/solution','PATCH',{
+              commentId:Number(acceptedId)===Number(item.id)?null:item.id
+            })}><Icon name="check" size={18}/></button>}
+        <ReportButton kind="comment" id={item.id} auth={auth} authorId={item.author_id}/>
+        {canReply && <button type="button" title={t('Reply')} aria-label={t('Reply')}
+          onClick={() => setReplying(x => !x)}><Icon name="comment" size={18}/></button>}
+        {canChangeStatus && <button type="button" title={t(active?'Deactivate':'Activate')}
+          aria-label={t(active?'Deactivate':'Activate')}
+          onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
+          <Icon name={active?'close':'check'} size={18}/></button>}
+        {canModerate && <button type="button" title={t(item.locked?'Unlock':'Lock')} aria-label={t(item.locked?'Unlock':'Lock')}
+          onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
+          <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
+        {canModerate && active && <button type="button" title={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
+          aria-label={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
+          onClick={()=>run('/comments/' + item.id + '/review','PATCH',{reviewed:!item.reviewed_by})}>
+          <Icon name="check" size={17}/></button>}
+        {(isOwner || canModerate) && <button type="button" className="dangerText"
+          title={t('Delete')} aria-label={t('Delete')} onClick={() => {
+          if (window.confirm(t('Delete this comment and replies?'))) run(`/comments/${item.id}`, 'DELETE');
+        }}><Icon name="trash" size={18}/></button>}
       </div>
       {replying && <form className="replyForm" onSubmit={sendReply}>
-        <label>Reply<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
-        <div className="toolbar"><button className="primary">Post reply</button><button type="button" onClick={() => setReplying(false)}>Cancel</button></div>
+        <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
+        <div className="toolbar"><button className="primary">{t('Post reply')}</button><button type="button" onClick={() => setReplying(false)}>{t('Cancel')}</button></div>
       </form>}
       <ErrorBox error={error} />
     </article>
-    {children.map(child => <Comment key={child.id} item={child} comments={comments} postId={postId} auth={auth} refresh={refresh} depth={depth + 1} />)}
+    {children.map(child => <Comment key={child.id} item={child} comments={comments} postId={postId} auth={auth} refresh={refresh} acceptedId={acceptedId} postAuthorId={postAuthorId} depth={depth + 1} />)}
   </div>;
 }
 
@@ -120,6 +170,10 @@ export default function PostPage({ id }) {
   const [text, setText] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [copied,setCopied] = useState(false);
+  const {t} = usePreferences();
 
   async function load() {
     try {
@@ -133,14 +187,45 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
     finally { setLoading(false); }
   }
-  useEffect(() => { setLoading(true); setPost(null); load(); }, [id, auth?.token]);
+  useEffect(() => { setLoading(true); setPost(null); setCopied(false); load(); }, [id, auth?.token]);
+  useEffect(() => {
+    if (!auth?.token) { setSaved(false); return; }
+    let live = true;
+    api('/posts/' + id + '/engagement',{token:auth.token})
+      .then(result=>{if(live)setSaved(Boolean(result.data.favorite));})
+      .catch(()=>{if(live)setSaved(false);});
+    return ()=>{live=false;};
+  },[id,auth?.token]);
 
-  if (loading) return <main><p>Loading post…</p></main>;
+  // Refresh replies while the post is open, including comments from other browsers.
+  // No page refresh is required to see new activity.
+  useEffect(()=>{
+    const poll=()=>{if(document.visibilityState==='visible')refreshReplies();};
+    const timer=window.setInterval(poll,6000);
+    window.addEventListener('focus',poll);
+    return ()=>{window.clearInterval(timer);window.removeEventListener('focus',poll);};
+  },[id,auth?.token]);
+
+  async function toggleSave() {
+    if (!auth || !post) return;
+    setSaving(true);setError(null);
+    try {
+      await api('/posts/' + id + '/favorite',{method:saved?'DELETE':'POST',token:auth.token});
+      setSaved(value=>!value);
+      window.dispatchEvent(new Event('circle:saved-updated'));
+    } catch(e){setError(e);} finally{setSaving(false);}
+  }
+
+
+  if (loading) return <main><p>{t('Loading post…')}</p></main>;
   if (!post) return <main><ErrorBox error={error} /></main>;
 
-  const isAdmin = auth?.user?.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
+  const canModeratePost = auth?.user?.role==='admin' ||
+    (auth?.user?.role==='moderator' && post.author_role!=='admin');
   const isOwner = Number(auth?.user?.id) === Number(post.author_id);
-  const canComment = Boolean(auth && (isAdmin || (post.status === 'active' && !post.locked)));
+  const canComment = Boolean(auth && !post.closed && !Boolean(post.publish_at && new Date(post.publish_at)>new Date()) && (isAdmin || (post.status === 'active' && !post.locked)));
+  const hideCounts = Boolean(post.hide_likes) && !isAdmin && !isOwner;
   const commentIds = new Set(comments.map(x => Number(x.id)));
   const roots = comments.filter(x => !x.parent_comment_id || !commentIds.has(Number(x.parent_comment_id)));
 
@@ -151,13 +236,33 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
+  async function refreshReplies(){
+    try{
+      const result=await api(`/posts/${id}/comments`,{token:auth?.token});
+      setComments(result.data);
+      setPost(current=>current?{...current,comment_count:result.data.length}:current);
+    }catch(err){setError(err);}
+  }
   async function sendComment(event) {
     event.preventDefault();
     try {
-      await api(`/posts/${id}/comments`, { method: 'POST', token: auth.token, body: { content: text } });
+      const result=await api(`/posts/${id}/comments`,{method:'POST',token:auth.token,body:{content:text}});
+      // The new reply is visible immediately, even if the subsequent network refresh is slow.
+      setComments(current=>current.some(item=>Number(item.id)===Number(result.data.id))
+        ?current:[...current,result.data]);
       setText('');
-      await load();
+      await refreshReplies();
     } catch (err) { setError(err); }
+  }
+
+  async function copyLink() {
+    try {
+      const url=window.location.origin+window.location.pathname+'#/post/'+id;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      setError(new Error(t('Unable to copy the link. Please copy the address from your browser.')));
+    }
   }
 
   async function deletePost() {
@@ -168,39 +273,88 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
-  return <main className="postPage">
-    <article className="card questionCard">
-      <div className="questionHeading"><h1>{post.title}</h1><span className="scoreHero">Rating: {post.score || 0}</span></div>
-      <div className="postMeta">
-        By <button className="authorLink" onClick={() => go(`/profile/${post.author_id}`)}>{post.author_login}</button>
-        <span>{fmt(post.created_at)}</span><StatusBadges item={post} />
+  return <main className="postPage naturalPostPage">
+    <div className="postBackRow"><button className="editorBack" type="button" onClick={()=>go('/')}
+      aria-label="Back to feed" title="Back to feed"><Icon name="arrowBack" size={21}/></button>
+      <strong>{t('Discussion')}</strong>
+    </div>
+    <article className="naturalPost">
+      <div className="naturalPostAuthor">
+        <button type="button" className="avatarButton" onClick={()=>go('/profile/'+post.author_id)}>
+          <Avatar user={{login:post.author_login,avatar:post.author_avatar}} size="md"/>
+        </button>
+        <div><button className="authorLink" onClick={()=>go('/profile/'+post.author_id)}>@{post.author_login}</button>
+          <ModeratorControl userId={post.author_id} login={post.author_login}/>
+          <time dateTime={post.published_at||post.created_at}
+            title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
+        </div>
+        <div className="naturalPostTopStatus">
+          <StatusBadges item={post}/>
+          {post.accepted_comment_id && <span className="solutionTag"><Icon name="check" size={15}/>{t('Solved')}</span>}
+        </div>
       </div>
-      <p className="content">{post.content}</p>
-      <div className="tags">{(post.categories || []).map(x => <span key={x.id}>{x.title}</span>)}</div>
-      <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} visible={isAdmin || post.status === 'active'}
-        writable={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
-      <div className="toolbar">
-        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit</button>}
-        {isAdmin && <>
-          <button onClick={() => run('PATCH', { status: post.status === 'active' ? 'inactive' : 'active' })}>
-            {post.status === 'active' ? 'Deactivate' : 'Activate'}
-          </button>
-          <button onClick={() => run('PATCH', { locked: !post.locked })}>{post.locked ? 'Unlock' : 'Lock'}</button>
+      <h1>{post.title}</h1>
+      <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
+      <PostPhotoGallery images={post.images||[]}/>
+      <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
+      <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
+      <div className="naturalPostReactions">
+        <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
+          visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
+          writable={isAdmin||(post.status==='active'&&!post.locked)} onChange={load}/>
+        <span className="naturalPostCommentCount"><Icon name="comment" size={19}/>{comments.length}</span>
+        <button className="naturalPostIconButton postCopyAction" type="button"
+          aria-label={t(copied?'Link copied':'Copy link')}
+          title={t(copied?'Link copied':'Copy link')} onClick={copyLink}>
+          <Icon name={copied?'check':'share'} size={19}/></button>
+        {auth && <button className="naturalPostIconButton" type="button" disabled={saving}
+          aria-pressed={saved} aria-label={saved?t('Unsave post'):t('Save post')}
+          title={saved?t('Unsave post'):t('Save post')} onClick={toggleSave}>
+          <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
+      </div>
+      {(isOwner||canModeratePost) && <div className="naturalPostManagement">
+        {isOwner && auth?.user?.role!=='admin' && <button type="button" title={t('Edit post')} aria-label={t('Edit post')}
+          onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
+        {isOwner && <button type="button" title={t(post.closed?'Reopen discussion':'Close discussion')}
+          aria-label={t(post.closed?'Reopen discussion':'Close discussion')} aria-pressed={Boolean(post.closed)}
+          onClick={()=>run('PATCH',{closed:!Boolean(post.closed)})}>
+          <Icon name={post.closed?'unlock':'lock'} size={19}/></button>}
+        {isOwner && <button type="button" title={t(post.hide_likes?'Show likes':'Hide likes')}
+          aria-label={t(post.hide_likes?'Show likes':'Hide likes')} aria-pressed={Boolean(post.hide_likes)}
+          onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
+          <Icon name="heart" size={19}/></button>}
+        {canModeratePost && <>
+          <button type="button" aria-label={t(post.status==='active'?'Deactivate':'Activate')}
+            title={t(post.status==='active'?'Deactivate':'Activate')}
+            onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
+            <Icon name={post.status==='active'?'close':'check'} size={19}/></button>
+          <button type="button" aria-label={t(post.locked?'Unlock':'Lock')}
+            title={t(post.locked?'Unlock':'Lock')} aria-pressed={Boolean(post.locked)}
+            onClick={()=>run('PATCH',{locked:!post.locked})}>
+            <Icon name={post.locked?'unlock':'shield'} size={19}/></button>
         </>}
-        {(isOwner || isAdmin) && <button className="dangerText" onClick={deletePost}>Delete post</button>}
-      </div>
-      <ErrorBox error={error} />
+        <button type="button" className="dangerText" aria-label={t('Delete post')}
+          title={t('Delete post')} onClick={deletePost}>
+          <Icon name="trash" size={19}/></button>
+      </div>}
+      {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
+      {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
+        <Icon name="settings" size={18}/>{t('Scheduled for')} {new Date(post.publish_at).toLocaleString()}</p>}
+      <ErrorBox error={error}/>
     </article>
-
-    <section className="commentsSection">
-      <h2>Comments ({comments.length})</h2>
-      <p className="muted">Sorted by likes (ascending).</p>
-      {roots.length ? roots.map(item => <Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} />)
-        : <div className="card">No comments yet.</div>}
-      {canComment ? <form className="card form commentComposer" onSubmit={sendComment}>
-        <label>New comment<textarea required maxLength="20000" value={text} onChange={e => setText(e.target.value)} /></label>
-        <button className="primary">Comment</button>
-      </form> : <p>{!auth ? 'Log in to comment or vote.' : 'Comments are disabled for this post.'}</p>}
+    <section className="naturalComments">
+      <h2>{t('Replies')} <span>{comments.length}</span></h2>
+      {roots.length ? <div className="naturalCommentTree">
+        {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} acceptedId={post.accepted_comment_id} postAuthorId={post.author_id}/>)}
+      </div> : <div className="naturalEmptyReplies"><Icon name="comment" size={25}/>
+        <p>{t('No replies yet')}</p><small>{t('Be the first to join the conversation')}</small></div>}
+      {canComment ? <form className="naturalReplyComposer" onSubmit={sendComment}>
+        <Avatar user={auth.user} size="md"/>
+        <label className="srOnly" htmlFor="main-reply-input">{t('New comment')}</label>
+        <textarea id="main-reply-input" required maxLength="20000" rows="2"
+          placeholder={t('Add to the conversation…')} value={text} onChange={e=>setText(e.target.value)}/>
+        <button className="primary" type="submit" aria-label="Comment" title="Send reply"><Icon name="arrow" size={20}/></button>
+      </form> : <p className="naturalReplyLocked">{t(!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled')}</p>}
     </section>
   </main>;
 }

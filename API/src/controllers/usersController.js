@@ -2,7 +2,7 @@ import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt } from '../utils/validation.js';
 import { listPostFeed } from '../services/postService.js';
-import { createManagedUser, deleteAccount, updateAccount } from '../services/accountService.js';
+import { createManagedUser, deleteAccount, updateAccount, changeAccountRole } from '../services/accountService.js';
 import { replaceAvatar } from '../services/avatarService.js';
 
 export async function listUsers(req, res) {
@@ -36,6 +36,10 @@ export async function updateUser(req, res) {
     actor: req.user,
     body: req.body,
   }));
+}
+
+export async function updateUserRole(req,res) {
+  res.json(await changeAccountRole({targetId:req.params.user_id,actor:req.user,body:req.body}));
 }
 
 export async function uploadAvatar(req, res) {

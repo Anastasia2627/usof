@@ -1,7 +1,12 @@
 import { BaseModel } from './BaseModel.js';
 
 export class Reaction extends BaseModel {
-  static async listAdmin({ limit = 100 } = {}) {
+  static async listAdmin({ limit = 100, actor = null } = {}) {
+    // Moderators should not browse other members' unpublished discussions.
+    const restricted=actor?.role==='moderator';
+    const where=restricted
+      ? 'WHERE (COALESCE(p.publish_at,cp.publish_at) IS NULL OR COALESCE(p.publish_at,cp.publish_at)<=UTC_TIMESTAMP() OR COALESCE(p.author_id,cp.author_id)=?)'
+      : '';
     return this.query(
       `SELECT r.id, r.author_id, u.login AS author_login, r.post_id, r.comment_id,
               r.type, r.created_at, COALESCE(p.title, cp.title) AS post_title
@@ -10,8 +15,9 @@ export class Reaction extends BaseModel {
        LEFT JOIN posts p ON p.id=r.post_id
        LEFT JOIN comments c ON c.id=r.comment_id
        LEFT JOIN posts cp ON cp.id=c.post_id
+       ${where}
        ORDER BY r.created_at DESC, r.id DESC LIMIT ?`,
-      [limit],
+      [...(restricted?[Number(actor.sub)]:[]),limit],
     );
   }
 

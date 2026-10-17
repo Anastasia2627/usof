@@ -10,6 +10,8 @@ import {
   unsavePost,
 } from '../controllers/engagementController.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { postImageUpload } from '../middleware/upload.js';
+import * as extras from '../controllers/postExtrasController.js';
 
 const router = Router();
 
@@ -25,6 +27,10 @@ router.delete('/:post_id/favorite', requireAuth, unsavePost);
 router.post('/:post_id/follow', requireAuth, followPost);
 router.delete('/:post_id/follow', requireAuth, unfollowPost);
 router.post('/:post_id/share', optionalAuth, recordShare);
+router.patch('/:post_id/solution', requireAuth, extras.setSolution);
+router.post('/:post_id/images', requireAuth, postImageUpload.single('image'), extras.uploadImage);
+router.delete('/:post_id/images/:image_id', requireAuth, extras.removeImage);
+router.post('/:post_id/report', requireAuth, extras.reportPost);
 router.post('/', requireAuth, controller.createPost);
 router.post('/:post_id/like', requireAuth, controller.reactToPost);
 router.patch('/:post_id', requireAuth, controller.updatePost);

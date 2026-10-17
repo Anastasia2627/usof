@@ -4,13 +4,13 @@ import { pingDatabase, pool } from './src/config/db.js';
 
 dotenv.config();
 
-const port = Number(process.env.APP_PORT || 5000);
+const port = Number(process.env.APP_PORT || 5050);
 let server;
 
 try {
   await pingDatabase();
   server = app.listen(port, () => {
-    console.log(`Usof API listening on http://localhost:${port}`);
+    console.log(`Circle API listening on http://127.0.0.1:${port}`);
   });
 } catch (error) {
   console.error(

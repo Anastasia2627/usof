@@ -2,6 +2,7 @@ import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
 import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
+import { assertMayModerateAuthors, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createPostForUser,
   deletePostForUser,
@@ -38,10 +39,14 @@ export async function getPostCategories(req, res) {
 
 export async function getPostReactions(req, res) {
   const post = await getVisiblePost(req.params.post_id, req.user);
-  if (post.status !== 'active' && req.user?.role !== 'admin') {
+  if (post.status !== 'active' && !['admin','moderator'].includes(req.user?.role)) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Active post not found');
   }
-  res.json({ data: await Reaction.listForPost(post.id) });
+  const items = await Reaction.listForPost(post.id);
+  const canInspect = ['admin','moderator'].includes(req.user?.role) || Number(req.user?.sub) === Number(post.author_id);
+  res.json({ data: post.hide_likes && !canInspect
+    ? items.filter(item => Number(item.author_id) === Number(req.user?.sub))
+    : items });
 }
 
 export async function reactToPost(req, res) {
@@ -50,7 +55,7 @@ export async function reactToPost(req, res) {
     userId: Number(req.user.sub),
     postId: Number(post.id),
     type: req.body.type,
-    isAdmin: req.user.role === 'admin',
+    isAdmin: ['admin','moderator'].includes(req.user.role),
   });
   if (reaction.changed) {
     await deliverNotifications([
@@ -67,10 +72,14 @@ export async function reactToPost(req, res) {
 
 export async function removePostReaction(req, res) {
   const post = await getVisiblePost(req.params.post_id, req.user);
+  if (req.user.role === 'moderator' && req.query.all === '1')
+    await assertMayModerateAuthors(req.user,[post.author_id]);
+  if(req.user.role==='moderator' && req.query.all==='1')
+    await assertMayClearReactions(req.user,{postId:post.id});
   await deleteReaction({
     userId: Number(req.user.sub),
     postId: Number(post.id),
-    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+    deleteAll: ['admin','moderator'].includes(req.user.role) && req.query.all === '1',
   });
   res.status(204).end();
 }

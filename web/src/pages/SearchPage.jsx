@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, PostCard, go } from '../ui.jsx';
+import ModeratorControl from '../ModeratorControl.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 export default function SearchPage({ hash }) {
   const auth = useSelector(state => state.auth);
+  const {t}=usePreferences();
   const query = new URLSearchParams(hash.split('?')[1] || '').get('q')?.trim() || '';
   const [data, setData] = useState({ posts: [], users: [], categories: [] });
   const [error, setError] = useState(null);
@@ -23,33 +26,36 @@ export default function SearchPage({ hash }) {
   }, [query, auth?.token]);
 
   return <main className="searchPage">
-    <h1>Search</h1>
-    {!query ? <p>Enter a name, post title, text or category in the search bar.</p> : <p>Results for <strong>{query}</strong></p>}
+    <h1>{t('Search')}</h1>
+    {!query ? <p>{t('Enter a name, post title, text or category in the search bar.')}</p> : <p>{t('Results for')} <strong>{query}</strong></p>}
     <ErrorBox error={error} />
-    {loading ? <p>Searching…</p> : <>
+    {loading ? <p>{t('Searching…')}</p> : <>
       <section className="searchSection">
-        <h2>Posts ({data.posts.length})</h2>
+        <h2>{t('Posts')} ({data.posts.length})</h2>
         {data.posts.length ? <div className="postList">{data.posts.map(post => <PostCard key={post.id} post={post} />)}</div>
-          : <p>No matching posts.</p>}
+          : <p>{t('No matching posts.')}</p>}
       </section>
       <section className="searchSection">
-        <h2>People ({data.users.length})</h2>
+        <h2>{t('People')} ({data.users.length})</h2>
         <div className="searchCards">
-          {data.users.map(user => <button className="card searchPerson" key={user.id} onClick={() => go('/profile/' + user.id)}>
-            <Avatar user={user} size="sm" />
-            <span><strong>@{user.login}</strong> <small>{user.full_name || 'Circle member'}</small></span>
-          </button>)}
+          {data.users.map(user => <div className="card searchPerson searchMember" key={user.id}>
+            <button className="searchMemberIdentity" onClick={() => go('/profile/' + user.id)}>
+              <Avatar user={user} size="sm" />
+              <span><strong>@{user.login}</strong> <small>{user.full_name || t('Circle member')}</small></span>
+            </button>
+            <ModeratorControl userId={user.id} login={user.login} role={user.role}/>
+          </div>)}
         </div>
-        {!data.users.length && <p>No matching users.</p>}
+        {!data.users.length && <p>{t('No matching users.')}</p>}
       </section>
       <section className="searchSection">
-        <h2>Categories ({data.categories.length})</h2>
+        <h2>{t('Categories')} ({data.categories.length})</h2>
         <div className="searchCards">
           {data.categories.map(category => <button className="card searchPerson" key={category.id} onClick={() => go('/category/' + category.id)}>
-            <strong>{category.title}</strong><small>{category.description}</small>
+            <strong>{t(category.title)}</strong><small>{t(category.description)}</small>
           </button>)}
         </div>
-        {!data.categories.length && <p>No matching categories.</p>}
+        {!data.categories.length && <p>{t('No matching categories.')}</p>}
       </section>
     </>}
   </main>;

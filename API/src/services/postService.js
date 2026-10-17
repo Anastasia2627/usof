@@ -1,13 +1,16 @@
 import { pool } from '../config/db.js';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { Post } from '../models/Post.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
 import { deliverNotifications, notifyPostFollowers } from './notificationService.js';
+import { assertMayModerateAuthors } from './moderationPolicy.js';
 
 const SORT_COLUMNS = {
   likes: 'like_count',
-  date: 'p.created_at',
+  date: 'COALESCE(p.publish_at, p.created_at)',
   trending: 'trend_score',
 };
 
@@ -61,15 +64,32 @@ async function assertCategoriesExist(connection, ids) {
   }
 }
 
+const elevated = user => ['admin','moderator'].includes(user?.role);
+const isScheduled = post => Boolean(post.publish_at && new Date(post.publish_at).getTime() > Date.now());
+function hideCounts(post,user) {
+  if (post.hide_likes && !elevated(user) && Number(user?.sub) !== Number(post.author_id))
+    return {...post,like_count:null,dislike_count:null,score:null};
+  return post;
+}
+function publishDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new AppError(422,'INVALID_PUBLISH_DATE','Invalid publication date');
+  const max = Date.now()+365*24*3600000;
+  if (date.getTime() > max) throw new AppError(422,'INVALID_PUBLISH_DATE','Cannot schedule more than one year ahead');
+  return date.toISOString().slice(0,19).replace('T',' ');
+}
+
 export async function getVisiblePost(idValue, user) {
   const id = positiveInt(idValue, 'INVALID_POST_ID', 'Invalid post id');
   const post = await Post.findById(id);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   const isOwner = user && Number(user.sub) === Number(post.author_id);
-  if (post.status === 'inactive' && user?.role !== 'admin' && !isOwner) {
+  if (((post.status === 'inactive' && !elevated(user)) ||
+      (isScheduled(post) && user?.role !== 'admin')) && !isOwner) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
-  return post;
+  return hideCounts(post,user);
 }
 
 export async function listPostFeed(query, user) {
@@ -80,12 +100,17 @@ export async function listPostFeed(query, user) {
   const where = [];
   const params = [];
 
-  if (user?.role !== 'admin') {
+  if (user?.role === 'moderator') {
+    // Moderation of already-published content is allowed, private scheduled
+    // drafts of other authors are not visible even to moderators.
+    where.push('(p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP() OR p.author_id=?)');
+    params.push(Number(user.sub));
+  } else if (!elevated(user)) {
     if (user) {
-      where.push("(p.status='active' OR p.author_id=?)");
+      where.push("((p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())) OR p.author_id=?)");
       params.push(Number(user.sub));
     } else {
-      where.push("p.status='active'");
+      where.push("p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())");
     }
   }
 
@@ -143,7 +168,7 @@ export async function listPostFeed(query, user) {
     offset: (page - 1) * limit,
   });
   return {
-    data: posts,
+    data: posts.map(post=>hideCounts(post,user)),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
 }
@@ -156,9 +181,12 @@ export async function createPostForUser(user, body) {
   try {
     await connection.beginTransaction();
     await assertCategoriesExist(connection, categories);
+    const scheduled = publishDate(body.publishAt);
+    if (body.hideLikes !== undefined && typeof body.hideLikes !== 'boolean')
+      throw new AppError(422, 'INVALID_HIDDEN_LIKES', 'hideLikes must be boolean');
     const [result] = await connection.query(
-      "INSERT INTO posts(author_id,title,content,status,locked) VALUES(?,?,?,'active',0)",
-      [Number(user.sub), title, content],
+      "INSERT INTO posts(author_id,title,content,status,locked,hide_likes,publish_at) VALUES(?,?,?,'active',0,?,?)",
+      [Number(user.sub), title, content, body.hideLikes ? 1 : 0, scheduled],
     );
     postId = Number(result.insertId);
     for (const categoryId of categories) {
@@ -179,13 +207,16 @@ export async function createPostForUser(user, body) {
 
 export async function updatePostForUser(user, idValue, body) {
   const post = await getVisiblePost(idValue, user);
-  const isAdmin = user.role === 'admin';
+  const isAdmin = elevated(user);
   const isOwner = Number(user.sub) === Number(post.author_id);
   if (!isAdmin && !isOwner) {
     throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
   }
   if (post.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-  if (isAdmin && (body.title !== undefined || body.content !== undefined)) {
+  if (user.role === 'moderator' && !isOwner)
+    await assertMayModerateAuthors(user, [post.author_id]);
+  if (isAdmin && (user.role === 'admin' || !isOwner) &&
+      (body.title !== undefined || body.content !== undefined)) {
     throw new AppError(
       403,
       'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
@@ -200,17 +231,41 @@ export async function updatePostForUser(user, idValue, body) {
   let content = post.content;
   let status = post.status;
   let locked = Boolean(post.locked);
+  let closed = Boolean(post.closed);
+  let hideLikes = Boolean(post.hide_likes);
+  let publishAt = post.publish_at || null;
   if (isAdmin) {
     if (body.status !== undefined) status = validateStatus(body.status);
-    if (body.locked !== undefined) locked = Boolean(body.locked);
-  } else if (body.title !== undefined || body.content !== undefined) {
+    if (body.locked !== undefined) {
+      if (typeof body.locked !== 'boolean')
+        throw new AppError(422,'INVALID_LOCKED','locked must be boolean');
+      locked = body.locked;
+    }
+  }
+  if (isOwner && user.role !== 'admin' && (body.title !== undefined || body.content !== undefined)) {
     const normalized = normalizePostText(body.title ?? post.title, body.content ?? post.content);
     title = normalized.title;
     content = normalized.content;
   }
 
+  if (body.closed !== undefined) {
+    if (!isOwner && !isAdmin) throw new AppError(403,'FORBIDDEN','Only the post owner or a moderator can close discussion');
+    if (typeof body.closed !== 'boolean') throw new AppError(422,'INVALID_CLOSED','closed must be boolean');
+    closed = body.closed;
+  }
+  if (body.hideLikes !== undefined) {
+    if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can hide likes');
+    if (typeof body.hideLikes !== 'boolean') throw new AppError(422,'INVALID_HIDDEN_LIKES','hideLikes must be boolean');
+    hideLikes = body.hideLikes;
+  }
+  if (body.publishAt !== undefined) {
+    if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can reschedule');
+    publishAt = publishDate(body.publishAt);
+  }
+  if (body.categories !== undefined && user.role === 'moderator' && !isOwner)
+    throw new AppError(403,'ADMIN_REQUIRED','Moderators cannot change another author\'s categories');
   const categories = body.categories !== undefined ? normalizeCategories(body.categories) : null;
-  const changedForFollowers = !isAdmin && (
+  const changedForFollowers = isOwner && user.role !== 'admin' && (
     title !== post.title || content !== post.content || categories !== null
   );
   const connection = await pool.getConnection();
@@ -218,8 +273,8 @@ export async function updatePostForUser(user, idValue, body) {
     await connection.beginTransaction();
     if (categories) await assertCategoriesExist(connection, categories);
     await connection.query(
-      'UPDATE posts SET title=?, content=?, status=?, locked=? WHERE id=?',
-      [title, content, status, locked ? 1 : 0, post.id],
+      'UPDATE posts SET title=?, content=?, status=?, locked=?, closed=?, hide_likes=?, publish_at=? WHERE id=?',
+      [title, content, status, locked ? 1 : 0, closed ? 1 : 0, hideLikes ? 1 : 0, publishAt, post.id],
     );
     if (categories) {
       await connection.query('DELETE FROM post_categories WHERE post_id=?', [post.id]);
@@ -252,16 +307,20 @@ export async function updatePostForUser(user, idValue, body) {
 
 export async function deletePostForUser(user, idValue) {
   const post = await getVisiblePost(idValue, user);
-  if (user.role !== 'admin' && Number(user.sub) !== Number(post.author_id)) {
+  if (!elevated(user) && Number(user.sub) !== Number(post.author_id)) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
   }
+  if (user.role === 'moderator' && Number(user.sub) !== Number(post.author_id))
+    await assertMayModerateAuthors(user, [post.author_id]);
 
+  const [photos] = await pool.execute('SELECT filename FROM post_images WHERE post_id=?',[post.id]);
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     await connection.query('DELETE FROM posts WHERE id=?', [post.id]);
     await recalculateAllRatings(connection);
     await connection.commit();
+    for(const photo of photos) await fs.unlink(path.resolve('API/uploads/posts',path.basename(photo.filename))).catch(()=>{});
   } catch (error) {
     await connection.rollback();
     throw error;

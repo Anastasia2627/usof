@@ -1,0 +1,344 @@
+/* Circle interface pass: one surface language for light/dark, no double borders. */
+:root{
+  --ui-bg:#fff;--ui-surface:#fff;--ui-elevated:#fff;
+  --ui-soft:#f5f5f7;--ui-soft-hover:#ececf0;
+  --ui-text:#202125;--ui-muted:#72757d;
+  --ui-stroke:#e7e8ec;--ui-accent:#202125;
+  --ui-shadow:0 16px 48px rgba(20,22,28,.10);
+  --ui-radius:16px;
+}
+html[data-theme=dark]{
+  --circle-ink:#f0f2f6;--circle-subtle:#a4aab5;--circle-border:#343a45;
+  --circle-surface:#1b2028;--circle-soft:#292f39;
+  --ui-bg:#13171d;--ui-surface:#1b2028;--ui-elevated:#252b35;
+  --ui-soft:#292f39;--ui-soft-hover:#333a46;--ui-text:#eef1f7;
+  --ui-muted:#aab2bf;--ui-stroke:#343b47;--ui-accent:#b7c6ff;
+  --ui-shadow:0 18px 60px rgba(0,0,0,.36);
+  background:var(--ui-bg);color-scheme:dark;
+}
+html[data-theme=dark] body,
+html[data-theme=dark] #root{background:var(--ui-bg)!important;color:var(--ui-text);}
+html[data-theme=dark] button:not(.primary):not(.topicActive),
+html[data-theme=dark] summary{color:var(--ui-text);}
+html[data-theme=dark] main,html[data-theme=dark] section,
+html[data-theme=dark] .featureHeading,html[data-theme=dark] h1,
+html[data-theme=dark] h2,html[data-theme=dark] h3 {color:var(--ui-text);}
+html[data-theme=dark] small,html[data-theme=dark] .muted,
+html[data-theme=dark] .postMeta,html[data-theme=dark] .eyebrow{color:var(--ui-muted);}
+html[data-theme=dark] .siteHeader,html[data-theme=dark] .headerInner,
+html[data-theme=dark] .mainNav,
+html[data-theme=dark] .accountDropdown,
+html[data-theme=dark] .postContextMenu,
+html[data-theme=dark] .filterDetails,
+html[data-theme=dark] .card,html[data-theme=dark] .threadCard,
+html[data-theme=dark] .naturalPost,html[data-theme=dark] .naturalCommentTree .commentCard,
+html[data-theme=dark] .naturalComments,
+html[data-theme=dark] .editorRefined .postComposerForm,
+html[data-theme=dark] .adminPage .adminListItem,
+html[data-theme=dark] .profileEditPanel,
+html[data-theme=dark] .authRefined .authPanel,
+html[data-theme=dark] .notificationItem,
+html[data-theme=dark] .adminCreateForm,
+html[data-theme=dark] .adminInlineForm{
+  background:var(--ui-surface)!important;color:var(--ui-text);
+  border-color:var(--ui-stroke)!important;
+}
+html[data-theme=dark] .homePage,
+html[data-theme=dark] .feedShell,
+html[data-theme=dark] .feedFilterStrip,
+html[data-theme=dark] .postComposerForm,
+html[data-theme=dark] .settingsPage{
+  background:transparent!important;
+}
+html[data-theme=dark] button:hover:not(:disabled):not(.primary):not(.topicActive){
+  background:var(--ui-soft-hover);color:var(--ui-text);
+}
+html[data-theme=dark] .primary,html[data-theme=dark] button.primary{
+  background:#d2daf8!important;color:#1c2332!important;border:0!important;
+}
+html[data-theme=dark] .primary:hover:not(:disabled),
+html[data-theme=dark] button.primary:hover:not(:disabled){background:#f1f3ff!important;}
+html[data-theme=dark] .feedTopicScroller button.topicActive,
+html[data-theme=dark] .profileTopicPills button.profileTopicActive,
+html[data-theme=dark] .editorRefined .editorTopic:has(input:checked){
+  background:#d2daf8!important;color:#1c2332!important;border:0!important;
+}
+html[data-theme=dark] input:not([type=checkbox]),html[data-theme=dark] textarea,
+html[data-theme=dark] select,
+html[data-theme=dark] .editorRefined .editorTitleInput,
+html[data-theme=dark] .editorRefined .editorContentInput{
+  color:var(--ui-text)!important;background:var(--ui-elevated)!important;
+  border-color:var(--ui-stroke)!important;
+}
+html[data-theme=dark] input::placeholder,html[data-theme=dark] textarea::placeholder{color:#8993a1!important;}
+html[data-theme=dark] .topicSearchField,html[data-theme=dark] .headerSearch,
+html[data-theme=dark] .feedTopicScroller button,
+html[data-theme=dark] .editorRefined .editorTopic,
+html[data-theme=dark] .settingsChoices button,
+html[data-theme=dark] .categoryCard,
+html[data-theme=dark] .feedEmptyIcon{
+  background:var(--ui-soft)!important;color:var(--ui-text)!important;
+  border:0!important;
+}
+html[data-theme=dark] .headerSearch input,
+html[data-theme=dark] .topicSearchField input{
+  background:transparent!important;border:0!important;color:var(--ui-text)!important;
+}
+html[data-theme=dark] .threadCard:hover,
+html[data-theme=dark] .feedComposer:hover{background:#202630!important;border-color:#3b4350!important;}
+html[data-theme=dark] .threadExcerpt,html[data-theme=dark] .naturalPostContent,
+html[data-theme=dark] .commentContent{color:#cdd3dd!important;}
+html[data-theme=dark] .threadBody .tags span,
+html[data-theme=dark] .naturalPost .tags span,
+html[data-theme=dark] .badges small{color:#d4d9e4!important;background:#303641!important;border:0!important;}
+html[data-theme=dark] .postMeta time,html[data-theme=dark] .notificationDescription,
+html[data-theme=dark] .notificationsHeading p{color:var(--ui-muted)!important;}
+html[data-theme=dark] .settingsChoices .settingsSelected{background:#363e4d!important;color:#fff!important;border:0!important;}
+html[data-theme=dark] .notificationContextMenu{background:var(--ui-elevated)!important;border-color:var(--ui-stroke)!important;}
+html[data-theme=dark] .suggestReviewCard,
+html[data-theme=dark] .suggestTopicPanel,
+html[data-theme=dark] .suggestHistory,
+html[data-theme=dark] .circleCalendar,
+html[data-theme=dark] .feedFilterStrip .filterDetails .filterBar{
+  background:var(--ui-elevated)!important;color:var(--ui-text)!important;border:0!important;
+}
+html[data-theme=dark] .notificationsPage .notificationItem.unread{background:#262d38!important;border:0!important;}
+html[data-theme=dark] .naturalPostTopStatus .solutionTag,
+html[data-theme=dark] .modReviewed{color:#a3e1bf!important;background:#223d32!important;border:0!important;}
+html[data-theme=dark] .threadActions button.activeVote,
+html[data-theme=dark] .threadActions button.activeSave{
+  background:#353e4e!important;color:#e0e6fb!important;
+}
+html[data-theme=dark] .mainNav button.navActive,
+html[data-theme=dark] .mainNav button:hover{color:#f1f4fa!important;background:var(--ui-soft)!important;border:0!important;}
+html[data-theme=dark] :is(button,input,textarea,select,summary):focus-visible{
+  outline:2px solid #c3ccff!important;outline-offset:3px;
+}
+/* Only thin dividers for true white-on-white separation; filled chips do not have borders. */
+.feedTopicScroller button,.profileTopicPills button,
+.feedComposer,.settingsChoices button.settingsSelected,
+.threadBody .tags span,.naturalPost .tags span,
+.notificationItem.unread,.adminRoleChip,
+.editorTopic:has(input:checked),.feedEmptyReset,
+.suggestTopicTrigger,.filterQuickPeriods button[aria-pressed=true]{border:0!important;}
+.threadCard,.naturalPost,.adminListItem,.notificationItem:not(.unread){
+  border-width:1px;
+}
+.threadCard:hover,.notificationItem:hover{box-shadow:0 2px 14px rgba(0,0,0,.025);}
+/* Topic proposals */
+.suggestTopic{display:block;margin:14px 0 5px;max-width:580px;}
+.suggestTopicTrigger{
+  display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:8px 12px;
+  background:var(--ui-soft);border:0;border-radius:999px;color:var(--ui-text);
+  font-size:12px;font-weight:650;
+}
+.suggestTopicTrigger:hover{background:var(--ui-soft-hover);}
+.suggestTopicPanel{
+  margin-top:11px;padding:20px;background:var(--ui-surface);
+  border:1px solid var(--ui-stroke);border-radius:18px;
+}
+.suggestTopicPanel h3{font-size:15px;margin:0 0 15px;}
+.suggestTopicForm{display:grid;gap:12px;}
+.suggestTopicForm label{font-weight:600;color:var(--ui-muted);font-size:12px;}
+.suggestTopicForm input,.suggestTopicForm textarea{min-height:41px;border-radius:12px;}
+.suggestTopicForm textarea{resize:vertical;}
+.suggestTopicForm button{justify-self:start;display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:11px 17px;}
+.suggestError{color:#b94a4a;font-size:12px;margin:7px 0 0;}
+.suggestSuccess{display:flex;align-items:center;gap:8px;color:#347d57;font-size:12px;margin:12px 0 0;}
+.suggestHistory{margin-top:17px;border-radius:14px;background:var(--ui-soft);padding:13px;display:grid;gap:7px;}
+.suggestHistory>strong{font-size:12px;margin-bottom:4px;}
+.suggestHistory>div{display:flex;gap:12px;justify-content:space-between;font-size:12px;}
+.suggestHistory small{font-size:11px;color:var(--ui-muted);}
+.suggestReviewTabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;}
+.suggestReviewTabs button{border:0;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:650;background:var(--ui-soft);color:var(--ui-muted);}
+.suggestReviewTabs button[aria-pressed=true]{background:var(--ui-text);color:var(--ui-surface);}
+.suggestReviewList{display:grid;gap:10px;}
+.suggestReviewCard{padding:17px;background:var(--ui-soft);border:0;border-radius:16px;display:grid;gap:9px;}
+.suggestReviewHead{display:flex;justify-content:space-between;gap:12px;align-items:center;}
+.suggestReviewHead strong{font-size:15px;}
+.suggestReviewHead small{color:var(--ui-muted);font-size:11px;}
+.suggestReviewCard p{font-size:13px;line-height:1.6;margin:0;color:var(--ui-muted);}
+.suggestReviewCard>small{font-size:11px;color:var(--ui-muted);}
+.suggestReviewActions{display:flex;align-items:center;gap:8px;margin-top:5px;}
+.suggestReviewActions button{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--ui-surface);font-size:12px;font-weight:650;padding:10px 15px;}
+/* Popover filters — narrow, spatially grouped, one click to clear/apply. */
+.feedFilterStrip{position:relative;z-index:5;overflow:visible;}
+.feedFilterStrip .filterDetails{position:static;flex:none;}
+.feedFilterStrip .filterDetails summary{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  height:38px;min-height:38px;padding:8px 13px;border:0!important;
+  background:var(--ui-soft);color:var(--ui-text);border-radius:999px;
+}
+.feedFilterStrip .filterDetails summary::after{display:none;}
+.feedFilterStrip .filterDetails[open] summary{background:var(--ui-soft-hover);border:0!important;}
+.feedFilterStrip .filterDetails .filterBar{
+  position:absolute;top:calc(100% + 8px);right:2px;left:auto;
+  width:min(420px,calc(100vw - 30px));max-width:calc(100vw - 30px);
+  display:flex;flex-direction:column;align-items:stretch;
+  padding:19px;gap:14px;margin:0;
+  background:var(--ui-surface);border:0;box-shadow:var(--ui-shadow);
+  border-radius:21px;z-index:80;overflow:visible;
+}
+.feedFilterStrip .filterDetails .filterPanelTitle{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  border-bottom:1px solid var(--ui-stroke);padding-bottom:13px;
+}
+.filterPanelTitle>div{display:flex;flex-direction:column;gap:2px;}
+.filterPanelTitle strong{font-size:16px;letter-spacing:-.02em;color:var(--ui-text);}
+.filterPanelTitle small{font-size:11px;color:var(--ui-muted);}
+.filterPanelTitle button{display:grid;place-items:center;width:33px;height:33px;padding:0;border:0;background:var(--ui-soft);border-radius:10px;}
+.feedFilterStrip .filterDetails .filterPanelGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+.feedFilterStrip .filterDetails .filterPanelGrid label{min-width:0;color:var(--ui-muted);font-size:11px;font-weight:650;gap:6px;}
+.feedFilterStrip .filterDetails .filterPanelGrid select{
+  appearance:none;background-color:var(--ui-soft);border:0;border-radius:11px;min-height:42px;
+  font-size:12px;padding:10px 12px;max-width:100%;color:var(--ui-text);
+}
+.feedFilterStrip .filterDetails .filterPanelHeading{
+  margin:0;display:flex;align-items:center;gap:7px;color:var(--ui-text);
+  font-size:13px;font-weight:700;
+}
+.feedFilterStrip .filterDetails .filterPanelHeading small{font-size:11px;color:var(--ui-muted);font-weight:500;}
+.filterQuickPeriods{display:flex;flex-wrap:wrap;gap:7px;margin-top:-4px;}
+.filterQuickPeriods button{flex:auto;font-size:11px;font-weight:650;min-height:37px;
+  padding:8px 10px;background:var(--ui-soft);color:var(--ui-muted);border:0;border-radius:999px;}
+.filterQuickPeriods button[aria-pressed=true]{background:#24262b;color:#fff;}
+.feedFilterStrip .filterDetails .filterPanelDates{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.filterDateControl{min-width:0;display:grid;gap:6px;}
+.filterDateControl>span{font-size:11px;color:var(--ui-muted);font-weight:650;}
+.feedFilterStrip .filterDetails .filterPanelActions{
+  padding-top:14px;border-top:1px solid var(--ui-stroke);
+  display:flex;align-items:center;justify-content:space-between;gap:9px;
+}
+.feedFilterStrip .filterDetails .filterPanelActions button{border:0;border-radius:999px;min-height:41px;font-size:12px;font-weight:680;}
+.feedFilterStrip .filterDetails .filterPanelActions .resetFilters{background:transparent;color:var(--ui-muted);}
+.feedFilterStrip .filterDetails .filterPanelActions .applyFilters{display:inline-flex;gap:7px;align-items:center;padding:10px 16px;}
+/* Calendar — consistent with the app, never OS native oversized month/year dropdown. */
+.circleDatePicker{position:relative;min-width:0;width:100%;font-weight:500;}
+.circleDateTrigger{
+  display:flex;align-items:center;justify-content:flex-start;gap:8px;
+  width:100%;min-height:43px;padding:10px 12px;border:0;
+  border-radius:12px;background:var(--ui-soft);color:var(--ui-text);text-align:left;
+  font-size:12px;line-height:1.4;
+}
+.circleDateTrigger>span:nth-child(2){flex:1;min-width:0;}
+.circleDateTrigger .datePlaceholder{color:var(--ui-muted);}
+.circleDateTrigger:hover,.circleDatePicker.isOpen>.circleDateTrigger{background:var(--ui-soft-hover);}
+.circleCalendar{
+  position:absolute;z-index:220;left:0;top:calc(100% + 8px);
+  width:280px;max-width:calc(100vw - 35px);
+  padding:15px;background:var(--ui-surface);border:1px solid var(--ui-stroke);
+  box-shadow:var(--ui-shadow);border-radius:17px;color:var(--ui-text);
+}
+.filterDateControl:last-child .circleCalendar{left:auto;right:0;}
+.calendarHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;}
+.calendarHeading strong{font-size:13px;font-weight:720;text-transform:capitalize;}
+.calendarHeading>div{display:flex;gap:3px;}
+.calendarHeading button{display:grid;place-items:center;width:31px;height:31px;padding:0;
+  background:var(--ui-soft);border:0;border-radius:9px;color:var(--ui-text);}
+.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
+.calendarGrid .weekday{text-align:center;line-height:30px;font-size:10px;font-weight:700;color:var(--ui-muted);}
+.calendarGrid .calendarDay{width:100%;aspect-ratio:1;padding:0;
+  border:0;border-radius:9px;background:transparent;color:var(--ui-text);
+  display:grid;place-items:center;font-size:12px;font-weight:580;}
+.calendarDay.outsideMonth{color:var(--ui-muted);opacity:.45;}
+.calendarGrid .calendarDay.today{box-shadow:inset 0 0 0 1px var(--ui-stroke);}
+.calendarGrid .calendarDay:hover{background:var(--ui-soft-hover);}
+.calendarGrid .calendarDay.selected,.calendarGrid .calendarDay.selected:hover{background:#24262b;color:#fff;}
+.calendarFooter{display:flex;justify-content:space-between;gap:12px;margin-top:14px;border-top:1px solid var(--ui-stroke);padding-top:11px;}
+.calendarFooter button{padding:7px 9px;border:0;background:transparent;border-radius:8px;color:var(--ui-muted);font-size:12px;font-weight:660;}
+.calendarFooter button:last-child{color:var(--ui-text);}
+.calendarTime{display:flex;align-items:center;justify-content:flex-start;gap:4px;margin-top:8px;}
+.calendarTime select{width:auto;min-width:64px;max-width:75px;border:0;border-radius:9px;padding:9px;background:var(--ui-soft);font-size:12px;color:var(--ui-text);}
+.editorRefined .editorSchedule .circleDatePicker{max-width:300px;}
+html[data-theme=dark] .circleDateTrigger,html[data-theme=dark] .calendarTime select,
+html[data-theme=dark] .calendarHeading button{background:var(--ui-soft)!important;color:var(--ui-text)!important;border:0!important;}
+html[data-theme=dark] .calendarDay.selected,
+html[data-theme=dark] .filterQuickPeriods button[aria-pressed=true]{background:#d2daf8!important;color:#1c2332!important;}
+html[data-theme=dark] .filterPanelTitle button{background:var(--ui-soft);color:var(--ui-text);}
+html[data-theme=dark] .feedFilterStrip .filterDetails .filterPanelGrid select{background:var(--ui-soft)!important;border:0!important;color:var(--ui-text)!important;}
+@media(max-width:650px){
+  .feedFilterStrip .filterDetails .filterBar{position:fixed;left:10px;right:10px;bottom:12px;top:auto;
+    width:calc(100vw - 20px);max-width:none;max-height:calc(100dvh - 24px);overflow-y:auto;
+    padding:18px;border-radius:20px;z-index:205;}
+  .feedFilterStrip .filterDetails .filterPanelGrid{gap:8px;}
+  .feedFilterStrip .filterDetails .filterPanelDates{gap:8px;}
+  .circleCalendar{position:relative;left:0;top:5px;box-shadow:none;border:1px solid var(--ui-stroke);width:min(280px,calc(100vw - 66px));}
+  .filterDateControl:last-child .circleCalendar{right:0;left:auto;}
+}
+
+/* Popover must stay above sticky header while scrolling to its bottom controls. */
+main.homePage:has(.filterDetails[open]){position:relative;z-index:1500;}
+main.homePage:has(.filterDetails[open]) .feedFilterStrip{z-index:1510;}
+main.homePage:has(.filterDetails[open]) .filterBar{z-index:1520;}
+
+/* Keep the scheduling calendar as wide as the original date field on desktop. */
+.editorRefined .editorOptionRows > .editorSchedule > .circleDatePicker {
+  display:block;
+  width:240px;
+  min-width:240px;
+  max-width:240px;
+  justify-self:end;
+}
+@media(max-width:620px){
+ .editorRefined .editorOptionRows > .editorSchedule > .circleDatePicker{
+   width:100%;min-width:0;max-width:100%;justify-self:stretch;
+ }
+}
+
+.filterSelectWrap{display:block;position:relative;min-width:0;width:100%;}
+.filterSelectWrap>select{width:100%;padding-right:35px!important;}
+.filterSelectWrap>.circleIcon{position:absolute;top:50%;right:11px;transform:translateY(-50%);pointer-events:none;color:var(--ui-muted);}
+
+/* Avatar crop setup — modal is above sticky navigation on both themes. */
+.avatarCropOverlay{
+  position:fixed;inset:0;z-index:3000;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(13,16,20,.58);padding:17px;
+  overscroll-behavior:contain;
+}
+.avatarCropDialog{
+  width:min(435px,100%);max-height:calc(100dvh - 34px);overflow-y:auto;
+  padding:23px;border-radius:22px;background:var(--ui-surface);
+  box-shadow:0 28px 80px rgba(0,0,0,.23);color:var(--ui-text);
+}
+.avatarCropHeading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:17px;}
+.avatarCropHeading h2{font-size:18px;font-weight:730;letter-spacing:-.025em;margin:0;}
+.avatarCropHeading button{display:grid;place-items:center;width:36px;height:36px;min-height:36px;
+  padding:0;border:0;border-radius:10px;background:var(--ui-soft);color:var(--ui-text);}
+.avatarCropViewport{
+  width:min(280px,100%);aspect-ratio:1;overflow:hidden;position:relative;
+  margin:0 auto 20px;border-radius:50%;background:var(--ui-soft);
+  touch-action:none;cursor:grab;user-select:none;
+  outline:4px solid var(--ui-soft);
+}
+.avatarCropViewport:active{cursor:grabbing;}
+.avatarCropViewport>img{
+  position:absolute;max-width:none;max-height:none;object-fit:contain;
+  transform:translate(-50%,-50%);pointer-events:none;user-select:none;
+}
+.avatarCropLoading{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--ui-muted);}
+.avatarCropControls{display:grid;gap:14px;margin:0 auto;max-width:350px;}
+.avatarCropControls label{display:grid;gap:8px;font-size:12px;font-weight:650;color:var(--ui-muted);}
+.avatarCropControls input[type=range]{display:block;width:100%;height:22px;accent-color:var(--ui-accent);cursor:pointer;}
+.avatarCropControls input[type=range]:disabled{opacity:.35;cursor:not-allowed;}
+.avatarCropActions{margin-top:21px;display:flex;align-items:center;justify-content:flex-end;gap:9px;}
+.avatarCropActions button{border:0;border-radius:999px;padding:10px 16px;min-height:41px;font-size:12px;
+  font-weight:690;background:var(--ui-soft);color:var(--ui-text);}
+.avatarCropActions button.primary{display:flex;align-items:center;gap:8px;}
+.avatarCropError{font-size:12px;color:#b44141;margin:10px 0 0;}
+.adminCategoryCreate{
+  padding:16px 18px;border-radius:17px;background:var(--ui-soft);border:0;margin:0 0 17px;
+}
+.adminCategoryCreateHeading{display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+.adminCategoryCreateHeading h3{font-size:14px;font-weight:730;margin:0;}
+.adminCategoryCreate .adminCreateForm{border:0;box-shadow:none;background:transparent;padding:0;margin:0;}
+.adminCategoryCreate .adminFormActions button{display:inline-flex;align-items:center;gap:7px;
+  border:0;border-radius:999px;padding:10px 17px;}
+html[data-theme=dark] .avatarCropDialog{background:var(--ui-elevated);color:var(--ui-text);}
+html[data-theme=dark] .adminCategoryCreate{background:var(--ui-soft);border:0;}
+@media(max-width:440px){
+  .avatarCropDialog{padding:17px;border-radius:18px;}
+  .avatarCropHeading h2{font-size:16px;}
+  .avatarCropViewport{width:min(252px,100%);}
+  .adminCategoryCreate{padding:13px;}
+}

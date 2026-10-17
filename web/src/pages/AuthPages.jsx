@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { api, isDemoMode } from '../api.js';
 import { ErrorBox, go } from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 function VerificationForm({ email, delivery, initialCode, login, password, onLogin }) {
   const [code, setCode] = useState(initialCode || '');
@@ -71,6 +72,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
 }
 
 export function AuthPage({ mode }) {
+  const {t}=usePreferences();
   const dispatch = useDispatch();
   const register = mode === 'register';
   const [form, setForm] = useState({
@@ -83,9 +85,9 @@ export function AuthPage({ mode }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  function logIn(result) {
+  function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
-    go('/');
+    go(firstRegistration ? '/interests' : '/');
   }
 
   async function submit(event) {
@@ -99,7 +101,7 @@ export function AuthPage({ mode }) {
           login: form.login, email: form.email, fullName: form.fullName,
           password: form.password, passwordConfirmation: form.passwordConfirmation,
         } });
-        if (isDemoMode()) logIn({ token: result.token, user: result.user });
+        if (isDemoMode()) logIn({ token: result.token, user: result.user },true);
         else setVerification({ email: form.email, delivery: result.emailDelivery, initialCode: result.verificationCode || '',
           login: form.login, password: form.password });
       } else {
@@ -138,36 +140,51 @@ export function AuthPage({ mode }) {
 
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
-  return <main className="authShell">
+  return <main className="authShell authRefined">
+    <aside className="authEditorial" aria-label="About Circle">
+      <div className="authEditorialBrand"><span aria-hidden="true">◎</span> circle</div>
+      <div className="authEditorialStory">
+        <span className="authEditorialEyebrow">A SPACE TO CONNECT</span>
+        <h2>{t('Good conversations start here.')}</h2>
+        <p>{t('Share what you love. Find people who get it. Discover a little something new every day.')}</p>
+        <div className="authEditorialTopics"><span>{t('Art & ideas')}</span><span>{t('Little discoveries')}</span><span>{t('Real people')}</span></div>
+      </div>
+      <p className="authEditorialFootnote">{t('One community. Countless perspectives.')}</p>
+    </aside>
     <section className="authPanel">
-      {verification ? <VerificationForm {...verification} onLogin={logIn} /> : <>
-        <h1>{register ? 'Create account' : 'Log in'}</h1>
+      {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
+        <span className="authPanelEyebrow">{t(register ? 'JOIN THE COMMUNITY' : 'NICE TO SEE YOU AGAIN')}</span>
+        <h1>{t(register ? 'Create account' : 'Welcome back')}</h1>
+        <p className="authPanelCopy">{t(register ? 'A few details and you are ready to join the conversation.' : 'Log in to pick up where you left off.')}</p>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
           {register ? <>
-            <label>Username<input autoComplete="username" required minLength="3" maxLength="50" value={form.login} onChange={field('login')} /></label>
-            <label>Full name<input maxLength="100" value={form.fullName} onChange={field('fullName')} /></label>
-            <label>Email<input type="email" autoComplete="email" required value={form.email} onChange={field('email')} /></label>
-          </> : <label>Username or email
+            <label>{t('Username')}<input autoComplete="username" required minLength="3" maxLength="50" value={form.login} onChange={field('login')} /></label>
+            <label>{t('Full name')}<input maxLength="100" value={form.fullName} onChange={field('fullName')} /></label>
+            <label>{t('Email')}<input type="email" autoComplete="email" required value={form.email} onChange={field('email')} /></label>
+          </> : <label>{t('Username or email')}
             <input autoComplete="username" required value={form.identifier} onChange={field('identifier')} />
           </label>}
-          <label>Password
+          <label>{t('Password')}
             <input type="password" autoComplete={register ? 'new-password' : 'current-password'}
               required minLength={register ? 8 : undefined} value={form.password} onChange={field('password')} />
           </label>
-          {register && <label>Confirm password
+          {register && <label>{t('Confirm password')}
             <input type="password" autoComplete="new-password" required minLength="8"
               value={form.passwordConfirmation} onChange={field('passwordConfirmation')} />
           </label>}
-          <button className="primary authSubmit" disabled={busy}>{busy ? 'Please wait…' : register ? 'Create account' : 'Log in'}</button>
+          <button className="primary authSubmit" disabled={busy}>{t(busy ? 'Please wait…' : register ? 'Create account' : 'Log in')}</button>
           <ErrorBox error={error} />
         </form>
-        <div className="toolbar">
-          <button onClick={() => go(register ? '/login' : '/register')}>{register ? 'Already registered? Log in' : 'Create an account'}</button>
-          {!register && <button onClick={() => go('/reset')}>Forgot password?</button>}
+        <div className="toolbar authSwitchLinks">
+          <p>{t(register ? 'Already part of Circle?' : 'New to Circle?')}</p>
+          <button type="button" onClick={() => go(register ? '/login' : '/register')}>
+            {t(register ? 'Log in' : 'Create an account')}
+          </button>
+          {!register && <button type="button" className="authForgotLink" onClick={() => go('/reset')}>{t('Forgot password?')}</button>}
         </div>
         {!register && <div className="authRecovery">
-          <button className="linkButton" onClick={() => setRecovery(value => !value)}>Need a new email verification code?</button>
+          <button className="linkButton" onClick={() => setRecovery(value => !value)}>{t('Need a new email verification code?')}</button>
           {recovery && <form className="form" onSubmit={resendAfterLeaving}>
             <label>Registration email<input type="email" required value={recoveryEmail}
               onChange={e => setRecoveryEmail(e.target.value)} /></label>

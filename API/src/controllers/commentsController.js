@@ -1,6 +1,9 @@
 import { Reaction } from '../models/Reaction.js';
+import { pool } from '../config/db.js';
+import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
 import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
+import { assertMayModerateComment, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createCommentForUser,
   deleteCommentForUser,
@@ -11,7 +14,7 @@ import {
 } from '../services/commentService.js';
 
 export async function listComments(req, res) {
-  res.json({ data: await listAdminComments(req.query) });
+  res.json({ data: await listAdminComments(req.query,req.user) });
 }
 
 export async function listPostComments(req, res) {
@@ -63,7 +66,7 @@ export async function reactToComment(req, res) {
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
     type: req.body.type,
-    isAdmin: req.user.role === 'admin',
+    isAdmin: ['admin','moderator'].includes(req.user.role),
   });
   if (reaction.changed) {
     await deliverNotifications([
@@ -84,10 +87,28 @@ export async function reactToComment(req, res) {
 
 export async function removeCommentReaction(req, res) {
   const comment = await getVisibleComment(req.params.comment_id, req.user);
+  if (req.user.role === 'moderator' && req.query.all === '1')
+    await assertMayModerateComment(req.user,comment);
+  if(req.user.role==='moderator' && req.query.all==='1')
+    await assertMayClearReactions(req.user,{commentId:comment.id});
   await deleteReaction({
     userId: Number(req.user.sub),
     commentId: Number(comment.id),
-    deleteAll: req.user.role === 'admin' && req.query.all === '1',
+    deleteAll: ['admin','moderator'].includes(req.user.role) && req.query.all === '1',
   });
   res.status(204).end();
+}
+
+export async function reviewComment(req,res) {
+  if (!['admin','moderator'].includes(req.user.role))
+    throw new AppError(403,'MODERATOR_REQUIRED','Moderator permission required');
+  const comment=await getVisibleComment(req.params.comment_id,req.user);
+  if (comment.status !== 'active')
+    throw new AppError(409,'COMMENT_INACTIVE','Only active replies can be reviewed');
+  if(req.user.role==='moderator') await assertMayModerateComment(req.user,comment);
+  if (typeof req.body.reviewed !== 'boolean')
+    throw new AppError(422,'INVALID_REVIEW','reviewed must be boolean');
+  await pool.execute('UPDATE comments SET reviewed_by=? WHERE id=?',
+    [req.body.reviewed ? req.user.sub : null,comment.id]);
+  res.json({data:await getVisibleComment(comment.id,req.user)});
 }

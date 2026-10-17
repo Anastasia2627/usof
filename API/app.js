@@ -9,9 +9,11 @@ import dashboardRoutes from './src/routes/dashboardRoutes.js';
 import libraryRoutes from './src/routes/libraryRoutes.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 import postRoutes from './src/routes/postRoutes.js';
+import socialRoutes from './src/routes/socialRoutes.js';
 import userRoutes from './src/routes/userRoutes.js';
 import searchRoutes from './src/routes/searchRoutes.js';
 import reactionsAdminRoutes from './src/routes/reactionsAdminRoutes.js';
+import reportRoutes from './src/routes/reportRoutes.js';
 import { pingDatabase } from './src/config/db.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { AppError } from './src/utils/AppError.js';
@@ -31,7 +33,7 @@ app.use('/uploads', express.static(path.resolve('API/uploads')));
 app.get('/api/health', async (req, res, next) => {
   try {
     await pingDatabase();
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', features: { categorySuggestions: true, avatarCropUpload: true } });
   } catch {
     next(new AppError(503, 'DATABASE_UNAVAILABLE', 'Database is unavailable'));
   }
@@ -41,7 +43,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/reactions', reactionsAdminRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/social', socialRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/library', libraryRoutes);

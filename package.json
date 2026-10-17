@@ -17,9 +17,9 @@
     "test:requirements": "node scripts/verify-backend-requirements.mjs",
     "test:creative": "node scripts/smoke-creative.mjs",
     "test:smoke": "node scripts/smoke-public.mjs && npm run test:requirements && npm run test:creative",
-    "check:backend": "node --check API/server.js && node --check API/app.js && node --check API/database/init.js && node --check API/src/models/BaseModel.js && node --check API/src/models/User.js && node --check API/src/models/Category.js && node --check API/src/models/Post.js && node --check API/src/models/Comment.js && node --check API/src/models/Reaction.js && node --check API/src/models/Engagement.js && node --check API/src/models/Notification.js && node --check API/src/controllers/authController.js && node --check API/src/controllers/usersController.js && node --check API/src/controllers/postsController.js && node --check API/src/controllers/categoriesController.js && node --check API/src/controllers/commentsController.js && node --check API/src/controllers/engagementController.js && node --check API/src/controllers/notificationController.js && node --check API/src/controllers/dashboardController.js && node --check API/src/routes/postRoutes.js && node --check API/src/routes/libraryRoutes.js && node --check API/src/routes/notificationRoutes.js && node --check API/src/routes/dashboardRoutes.js && node --check API/src/middleware/auth.js && node --check API/src/middleware/errorHandler.js && node --check API/src/middleware/upload.js && node --check API/src/services/accountService.js && node --check API/src/services/avatarService.js && node --check API/src/services/authService.js && node --check API/src/services/postService.js && node --check API/src/services/commentService.js && node --check API/src/services/categoryService.js && node --check API/src/services/reactionService.js && node --check API/src/services/notificationService.js && node --check API/src/services/dashboardService.js && node --check API/src/services/mailService.js && node --check API/src/utils/validation.js && node --check scripts/verify-backend-requirements.mjs && node --check scripts/smoke-creative.mjs",
+    "check:backend": "node --check API/server.js && node --check API/app.js && node --check API/database/init.js && node --check API/src/models/BaseModel.js && node --check API/src/models/User.js && node --check API/src/models/Category.js && node --check API/src/models/Post.js && node --check API/src/models/Comment.js && node --check API/src/models/Reaction.js && node --check API/src/models/Engagement.js && node --check API/src/models/Notification.js && node --check API/src/controllers/authController.js && node --check API/src/controllers/usersController.js && node --check API/src/controllers/postsController.js && node --check API/src/controllers/categoriesController.js && node --check API/src/controllers/commentsController.js && node --check API/src/controllers/engagementController.js && node --check API/src/controllers/notificationController.js && node --check API/src/controllers/dashboardController.js && node --check API/src/routes/socialRoutes.js && node --check API/src/routes/postRoutes.js && node --check API/src/routes/libraryRoutes.js && node --check API/src/routes/notificationRoutes.js && node --check API/src/routes/dashboardRoutes.js && node --check API/src/middleware/auth.js && node --check API/src/middleware/errorHandler.js && node --check API/src/middleware/upload.js && node --check API/src/services/accountService.js && node --check API/src/services/avatarService.js && node --check API/src/services/authService.js && node --check API/src/services/postService.js && node --check API/src/services/commentService.js && node --check API/src/services/categoryService.js && node --check API/src/services/reactionService.js && node --check API/src/services/notificationService.js && node --check API/src/services/dashboardService.js && node --check API/src/services/mailService.js && node --check API/src/utils/validation.js && node --check scripts/verify-backend-requirements.mjs && node --check scripts/smoke-creative.mjs",
     "test:email:integration": "node scripts/smoke-email-verification.mjs",
-    "test:ui": "node scripts/smoke-browser-public.mjs",
+    "test:ui": "node scripts/smoke-public-home.mjs",
     "mail:send-test": "node scripts/send-test-email.mjs",
     "test:mail:syntax": "node --check scripts/check-smtp.mjs && node --check scripts/send-test-email.mjs && node --check scripts/smtp-sink.mjs",
     "db:local:up": "docker compose -f compose.circle-mysql.yml up -d --wait",
@@ -28,7 +28,14 @@
     "check:defense": "node --check scripts/test-defense.mjs",
     "test:ui:legacy": "node scripts/smoke-browser.mjs",
     "test:full": "node scripts/test-extended.mjs",
-    "check:full": "node --check API/src/models/Category.js && node --check API/src/models/Post.js && node --check API/src/models/Reaction.js && node --check API/src/services/searchService.js && node --check API/src/controllers/searchController.js && node --check API/src/routes/searchRoutes.js && node --check API/src/controllers/reactionsAdminController.js && node --check API/src/routes/reactionsAdminRoutes.js && node --check API/src/controllers/usersController.js && node --check API/src/controllers/commentsController.js && node --check scripts/test-extended.mjs && node --check scripts/smoke-browser-public.mjs"
+    "test:social": "node scripts/test-social-features.mjs",
+    "check:full": "node --check API/src/models/Category.js && node --check API/src/models/Post.js && node --check API/src/models/Reaction.js && node --check API/src/services/searchService.js && node --check API/src/controllers/searchController.js && node --check API/src/routes/searchRoutes.js && node --check API/src/controllers/reactionsAdminController.js && node --check API/src/routes/reactionsAdminRoutes.js && node --check API/src/controllers/usersController.js && node --check API/src/controllers/commentsController.js && node --check scripts/test-extended.mjs && node --check scripts/smoke-browser-public.mjs && node --check API/src/services/reportService.js && node --check API/src/services/postImageService.js && node --check API/src/controllers/postExtrasController.js && node --check API/src/controllers/commentExtrasController.js && node --check API/src/routes/reportRoutes.js && node --check scripts/smoke-public-home.mjs && node --check scripts/test-community-features.mjs && node --check API/src/services/moderationPolicy.js && node --check scripts/test-moderator-security.mjs && node --check scripts/test-ui-regressions.mjs",
+    "test:ui:extended": "node scripts/smoke-browser-public.mjs",
+    "test:features": "node scripts/test-community-features.mjs",
+    "test:moderator": "node scripts/test-moderator-security.mjs",
+    "test:ui:regressions": "node scripts/test-ui-regressions.mjs",
+    "check:icons": "node scripts/check-tabler-icons.mjs",
+    "test:topics": "node scripts/test-topic-suggestions.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -43,7 +50,8 @@
     "react-dom": "^19.1.1",
     "react-redux": "^9.2.0",
     "redux": "^5.0.1",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "@tabler/icons-react": "^3.49.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.2",
