@@ -10,6 +10,7 @@ router.get('/:user_id/posts', optionalAuth, controller.listUserPosts);
 router.get('/:user_id', optionalAuth, controller.getUser);
 router.post('/', requireAuth, requireAdmin, controller.createUser);
 router.patch('/avatar', requireAuth, avatarUpload.single('avatar'), controller.uploadAvatar);
+router.patch('/:user_id/role',requireAuth,requireAdmin,controller.updateUserRole);
 router.patch('/:user_id', requireAuth, controller.updateUser);
 router.delete('/:user_id', requireAuth, controller.deleteUser);
 
