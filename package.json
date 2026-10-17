@@ -33,7 +33,8 @@
     "test:ui:extended": "node scripts/smoke-browser-public.mjs",
     "test:features": "node scripts/test-community-features.mjs",
     "test:moderator": "node scripts/test-moderator-security.mjs",
-    "test:ui:regressions": "node scripts/test-ui-regressions.mjs"
+    "test:ui:regressions": "node scripts/test-ui-regressions.mjs",
+    "check:icons": "node scripts/check-tabler-icons.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -48,7 +49,8 @@
     "react-dom": "^19.1.1",
     "react-redux": "^9.2.0",
     "redux": "^5.0.1",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "@tabler/icons-react": "^3.49.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.2",
