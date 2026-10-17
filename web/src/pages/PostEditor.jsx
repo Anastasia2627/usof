@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import FormattedContent from '../FormattedContent.jsx';
+import PostPhotoGallery from '../PostPhotoGallery.jsx';
 import {assetUrl} from '../api.js';
 
 export default function PostEditor({ id }) {
@@ -15,6 +16,7 @@ export default function PostEditor({ id }) {
   const [selectedImages,setSelectedImages] = useState([]);
   const [draftPostId,setDraftPostId] = useState(null);
   const [existingImages,setExistingImages] = useState([]);
+  const photoPreviewItems=useMemo(()=>[...existingImages,...selectedImages.map(file=>({file}))],[existingImages,selectedImages]);
   const [preview,setPreview] = useState(false);
   const [expandedTopics,setExpandedTopics] = useState(false);
   const editorRef=React.useRef(null);
@@ -136,7 +138,11 @@ export default function PostEditor({ id }) {
           </button>
         </div>
         {preview && <section className="markdownPreview" aria-label="Post preview">
-          <h2>{form.title||'Untitled post'}</h2><FormattedContent text={form.content}/>
+          <div className="postPreviewIdentity"><Avatar user={auth.user} size="sm"/><strong>@{auth.user.login}</strong></div>
+          <h2>{form.title||t('Untitled post')}</h2>
+          <FormattedContent text={form.content}/>
+          <div className="postPreviewCategories">{categories.filter(category=>form.categories.includes(Number(category.id)))
+            .map(category=><span key={category.id}>{t(category.title)}</span>)}</div>
         </section>}
         <div className="postPhotoEditor">
           <div className="editorPhotoAttachRow">
@@ -154,7 +160,8 @@ export default function PostEditor({ id }) {
                 setError(null);
               }}/>
           </div>
-          {(selectedImages.length>0||existingImages.length>0) && <div className="editorPhotoList">
+          {(selectedImages.length>0||existingImages.length>0) && <>
+            <div className="editorPhotoList">
             {selectedImages.map((file,i)=><div className="editorPhotoPill" key={file.name+file.size+i}>
               <Icon name="check" size={15}/>
               <span title={file.name}>{file.name}</span>
@@ -167,7 +174,13 @@ export default function PostEditor({ id }) {
               <button type="button" title="Remove photo" aria-label={'Remove photo '+image.id}
                 onClick={()=>removeExisting(image.id)}>×</button>
             </div>)}
-          </div>}
+          </div>
+          <div className="editorPhotoLivePreview">
+            <div className="editorPhotoPreviewHeading"><strong>{t('Photo preview')}</strong>
+              <small>{t('Exactly as in the published post · click to enlarge')}</small></div>
+            <PostPhotoGallery images={photoPreviewItems} local/>
+          </div>
+          </>}
         </div>
       </div>
 
