@@ -91,6 +91,39 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(receiver_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB`);
 
+
+  // Non-destructive migrations for answers, photos and moderation.
+  const [answerColumn] = await connection.query("SHOW COLUMNS FROM posts LIKE 'accepted_comment_id'");
+  if (!answerColumn.length) await connection.query(
+    "ALTER TABLE posts ADD COLUMN accepted_comment_id INT UNSIGNED NULL, ADD CONSTRAINT fk_post_solution FOREIGN KEY (accepted_comment_id) REFERENCES comments(id) ON DELETE SET NULL"
+  );
+  await connection.query(`CREATE TABLE IF NOT EXISTS post_images (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    post_id INT UNSIGNED NOT NULL, uploader_id INT UNSIGNED NOT NULL,
+    filename VARCHAR(110) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_post_images(post_id,id),
+    FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY(uploader_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
+  await connection.query(`CREATE TABLE IF NOT EXISTS content_reports (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    reporter_id INT UNSIGNED NOT NULL,
+    post_id INT UNSIGNED NULL, comment_id INT UNSIGNED NULL,
+    reason VARCHAR(24) NOT NULL, details VARCHAR(500) NOT NULL DEFAULT '',
+    status ENUM('open','reviewed','dismissed') NOT NULL DEFAULT 'open',
+    resolved_by INT UNSIGNED NULL, resolved_at DATETIME NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_report_post(reporter_id,post_id),
+    UNIQUE KEY uq_report_comment(reporter_id,comment_id),
+    INDEX idx_reports_status(status,created_at),
+    CONSTRAINT ck_report_target CHECK ((post_id IS NOT NULL)+(comment_id IS NOT NULL)=1),
+    FOREIGN KEY(reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY(comment_id) REFERENCES comments(id) ON DELETE CASCADE,
+    FOREIGN KEY(resolved_by) REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB`);
+
   // A broad public conversation feed, without resetting the six existing
   // course/demo categories or touching existing posts.
   const topics = [
@@ -472,6 +505,23 @@ async function initializeDatabase() {
     `);
 
     await ensureCircleSchema(connection);
+
+
+    // Five meaningful fixtures for every additional social table.
+    await connection.query(`INSERT INTO user_follows(follower_id,followed_id) VALUES
+      (2,3),(2,4),(3,2),(4,5),(5,2)`);
+    await connection.query(`INSERT INTO user_interests(user_id,category_id) VALUES
+      (2,1),(3,2),(4,3),(5,4),(2,5)`);
+    await connection.query(`INSERT INTO direct_messages(sender_id,receiver_id,content) VALUES
+      (2,3,'Welcome to Circle!'),(3,2,'Glad to be here!'),
+      (4,5,'Did you see the new topic?'),(5,4,'Yes, thanks!'),
+      (2,4,'What are you reading?')`);
+    await connection.query(`INSERT INTO content_reports(reporter_id,post_id,comment_id,reason,details,status) VALUES
+      (3,1,NULL,'other','Seed example','dismissed'),
+      (4,2,NULL,'off_topic','Seed example','dismissed'),
+      (5,3,NULL,'other','Seed example','reviewed'),
+      (2,NULL,1,'other','Seed comment','dismissed'),
+      (3,NULL,3,'other','Seed comment','reviewed')`);
 
     console.log(
       resetRequested
