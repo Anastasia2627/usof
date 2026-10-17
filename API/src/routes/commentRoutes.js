@@ -2,13 +2,13 @@ import { Router } from 'express';
 import * as controller from '../controllers/commentsController.js';
 import {
   optionalAuth,
-  requireAdmin,
+  requireModerator,
   requireAuth,
 } from '../middleware/auth.js';
 
 const router = Router();
 
-router.get('/', requireAuth, requireAdmin, controller.listComments);
+router.get('/', requireAuth, requireModerator, controller.listComments);
 router.get('/:comment_id', optionalAuth, controller.getComment);
 router.post('/:comment_id/replies', requireAuth, controller.replyToComment);
 router.get('/:comment_id/like', optionalAuth, controller.getCommentReactions);
