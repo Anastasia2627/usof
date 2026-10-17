@@ -307,17 +307,6 @@ export function Header() {
     }
   }
 
-  const nav = [
-    { key: 'home', text: 'Home', destination: '/', icon: 'home' },
-    ...(!auth ? [{ key: 'explore', text: 'Explore', destination: '/explore', icon: 'forum' }] : []),
-    { key: 'categories', text: 'Categories', destination: '/categories', icon: 'categories' },
-    ...(auth ? [
-      { key:'create', text:'New post', destination:'/create', icon:'plus' },
-      { key:'saved', text:'Saved', destination:'/saved', icon:'bookmarkBorder' },
-    ] : []),
-    { key:'settings', text:'Settings', destination:'/settings', icon:'settings' },
-    ...(['admin','moderator'].includes(auth?.user?.role) ? [{ key: 'admin', text: 'Admin', destination: '/admin', icon: 'shield' }] : []),
-  ];
   const current = window.location.hash.split('?')[0].slice(1) || '/';
   const guestLanding = !auth && current === '/welcome';
 
@@ -332,13 +321,6 @@ export function Header() {
         <input aria-label="Search posts, people and categories" placeholder={t('Search')} value={search} onChange={event => setSearch(event.target.value)} />
         <button className="searchSubmit" type="submit" aria-label="Search" title="Search"><Icon name="arrow" size={19}/></button>
       </form>}
-      {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
-        {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
-          className={current === item.destination ? 'navActive' : ''}
-          aria-label={t(item.text)} onClick={() => go(item.destination)}>
-          <Icon name={item.icon} size={24} filled={current === item.destination}/><span className="navLabel">{t(item.text)}</span>
-        </button>)}
-      </nav>}
       <div className="accountArea">
         {auth ? <>
           <button className="headerNotify" aria-label={t('Notifications')+(unread?' ('+unread+')':'')}
@@ -374,4 +356,34 @@ export function Header() {
       <button type="button" onClick={()=>setRoleNotice('')} aria-label={t('Dismiss')} title={t('Dismiss')}><Icon name="close" size={18}/></button>
     </div>}
   </>;
+}
+
+export function Sidebar() {
+  const auth=useSelector(state=>state.auth);
+  const {t}=usePreferences();
+  const current=window.location.hash.split('?')[0].slice(1)||'/';
+  if(!auth && current==='/welcome')return null;
+  const nav=[
+    {text:'Home',destination:'/',icon:'home'},
+    ...(!auth?[{text:'Explore',destination:'/explore',icon:'forum'}]:[]),
+    {text:'Categories',destination:'/categories',icon:'categories'},
+    ...(auth?[
+      {text:'New post',destination:'/create',icon:'plus'},
+      {text:'Saved',destination:'/saved',icon:'bookmarkBorder'},
+    ]:[]),
+    {text:'Settings',destination:'/settings',icon:'settings'},
+    ...(['admin','moderator'].includes(auth?.user?.role)?
+      [{text:'Admin',destination:'/admin',icon:'shield'}]:[]),
+  ];
+  return <nav className="mainNav" aria-label={t('Main navigation')}>
+    {nav.map(item=>{
+      const active=current===item.destination ||
+        (item.destination==='/categories'&&current.startsWith('/category/'));
+      return <button key={item.destination} type="button" title={t(item.text)}
+        aria-label={t(item.text)} aria-current={active?'page':undefined}
+        className={active?'navActive':''} onClick={()=>go(item.destination)}>
+        <Icon name={item.icon} size={24} filled={active}/><span className="navLabel">{t(item.text)}</span>
+      </button>;
+    })}
+  </nav>;
 }

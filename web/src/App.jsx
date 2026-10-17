@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Header, Icon, go } from './ui.jsx';
+import { Header, Sidebar, Icon, go } from './ui.jsx';
 import {usePreferences} from './preferences.jsx';
 import { AuthPage, ResetPage, VerifyPage } from './pages/AuthPages.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -71,5 +71,5 @@ export default function App() {
       <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
       <button type="button" aria-label={t('Dismiss')} title={t('Dismiss')} onClick={()=>setSessionExpired(false)}><Icon name="close" size={18}/></button>
     </div>}
-    {page}<footer>Circle · Conversations start here.</footer></>;
+    <div className={`appLayout ${path === '/admin' || (path === '/dashboard' && auth?.user?.role === 'admin') ? 'appLayoutWide' : ''}`}><Sidebar />{page}</div></>;
 }
