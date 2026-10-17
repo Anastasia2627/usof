@@ -223,6 +223,10 @@ try {
   await user.screenshot({path:'screenshots/notifications-mobile.png',fullPage:true});
   await user.setViewportSize({width:1280,height:800});
   await user.screenshot({path:'screenshots/notifications-desktop.png',fullPage:true});
+  await notice.click({button:'right'});
+  await user.locator('.notificationContextMenu [role=menuitem]').waitFor();
+  await user.keyboard.press('Escape');
+  await user.locator('.notificationContextMenu').waitFor({state:'detached'});
   await open(user,'/post/'+posts[0]);
 
   await admin.reload();
