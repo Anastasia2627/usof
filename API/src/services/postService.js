@@ -6,6 +6,7 @@ import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
 import { deliverNotifications, notifyPostFollowers } from './notificationService.js';
+import { assertMayModerateAuthors } from './moderationPolicy.js';
 
 const SORT_COLUMNS = {
   likes: 'like_count',
@@ -84,7 +85,8 @@ export async function getVisiblePost(idValue, user) {
   const post = await Post.findById(id);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   const isOwner = user && Number(user.sub) === Number(post.author_id);
-  if ((post.status === 'inactive' || isScheduled(post)) && !elevated(user) && !isOwner) {
+  if (((post.status === 'inactive' && !elevated(user)) ||
+      (isScheduled(post) && user?.role !== 'admin')) && !isOwner) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
   return hideCounts(post,user);
@@ -98,7 +100,12 @@ export async function listPostFeed(query, user) {
   const where = [];
   const params = [];
 
-  if (!elevated(user)) {
+  if (user?.role === 'moderator') {
+    // Moderation of already-published content is allowed, private scheduled
+    // drafts of other authors are not visible even to moderators.
+    where.push('(p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP() OR p.author_id=?)');
+    params.push(Number(user.sub));
+  } else if (!elevated(user)) {
     if (user) {
       where.push("((p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())) OR p.author_id=?)");
       params.push(Number(user.sub));
@@ -206,7 +213,10 @@ export async function updatePostForUser(user, idValue, body) {
     throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
   }
   if (post.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-  if (isAdmin && (body.title !== undefined || body.content !== undefined)) {
+  if (user.role === 'moderator' && !isOwner)
+    await assertMayModerateAuthors(user, [post.author_id]);
+  if (isAdmin && (user.role === 'admin' || !isOwner) &&
+      (body.title !== undefined || body.content !== undefined)) {
     throw new AppError(
       403,
       'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
@@ -226,8 +236,13 @@ export async function updatePostForUser(user, idValue, body) {
   let publishAt = post.publish_at || null;
   if (isAdmin) {
     if (body.status !== undefined) status = validateStatus(body.status);
-    if (body.locked !== undefined) locked = Boolean(body.locked);
-  } else if (body.title !== undefined || body.content !== undefined) {
+    if (body.locked !== undefined) {
+      if (typeof body.locked !== 'boolean')
+        throw new AppError(422,'INVALID_LOCKED','locked must be boolean');
+      locked = body.locked;
+    }
+  }
+  if (isOwner && user.role !== 'admin' && (body.title !== undefined || body.content !== undefined)) {
     const normalized = normalizePostText(body.title ?? post.title, body.content ?? post.content);
     title = normalized.title;
     content = normalized.content;
@@ -239,7 +254,7 @@ export async function updatePostForUser(user, idValue, body) {
     closed = body.closed;
   }
   if (body.hideLikes !== undefined) {
-    if (!isOwner && !isAdmin) throw new AppError(403,'FORBIDDEN','Only the post owner can hide likes');
+    if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can hide likes');
     if (typeof body.hideLikes !== 'boolean') throw new AppError(422,'INVALID_HIDDEN_LIKES','hideLikes must be boolean');
     hideLikes = body.hideLikes;
   }
@@ -250,7 +265,7 @@ export async function updatePostForUser(user, idValue, body) {
   if (body.categories !== undefined && user.role === 'moderator' && !isOwner)
     throw new AppError(403,'ADMIN_REQUIRED','Moderators cannot change another author\'s categories');
   const categories = body.categories !== undefined ? normalizeCategories(body.categories) : null;
-  const changedForFollowers = !isAdmin && (
+  const changedForFollowers = isOwner && user.role !== 'admin' && (
     title !== post.title || content !== post.content || categories !== null
   );
   const connection = await pool.getConnection();
@@ -295,6 +310,8 @@ export async function deletePostForUser(user, idValue) {
   if (!elevated(user) && Number(user.sub) !== Number(post.author_id)) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
   }
+  if (user.role === 'moderator' && Number(user.sub) !== Number(post.author_id))
+    await assertMayModerateAuthors(user, [post.author_id]);
 
   const [photos] = await pool.execute('SELECT filename FROM post_images WHERE post_id=?',[post.id]);
   const connection = await pool.getConnection();
