@@ -52,7 +52,7 @@ export default function SearchPage({ hash }) {
         <h2>Categories ({data.categories.length})</h2>
         <div className="searchCards">
           {data.categories.map(category => <button className="card searchPerson" key={category.id} onClick={() => go('/category/' + category.id)}>
-            <strong>{category.title}</strong><small>{category.description}</small>
+            <strong>{t(category.title)}</strong><small>{t(category.description)}</small>
           </button>)}
         </div>
         {!data.categories.length && <p>No matching categories.</p>}
