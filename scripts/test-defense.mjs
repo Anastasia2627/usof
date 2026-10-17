@@ -80,10 +80,12 @@ try {
   assert.ok(await user.locator('.accountMenu summary').isVisible());
   await avatar.click();
   await user.waitForURL(/#\/profile$/);
+  await user.getByRole('button',{name:'Edit profile'}).click();
   await user.getByLabel('Full name').fill('Review participant');
   await user.getByRole('button',{name:'Save profile'}).click();
   await user.getByText('Profile saved.').waitFor();
   await user.reload();
+  await user.getByRole('button',{name:'Edit profile'}).click();
   // The profile is loaded asynchronously after refresh; wait for MySQL data.
   await user.waitForFunction(() => {
     const input = Array.from(document.querySelectorAll('input')).find(
@@ -91,6 +93,14 @@ try {
     );
     return input?.value === 'Review participant';
   });
+
+  // Keep screenshots of the actual redesigned profile in the same disposable test.
+  await user.waitForTimeout(150);
+  await mkdir('screenshots', { recursive: true });
+  await user.screenshot({ path: 'screenshots/profile-mobile.png', fullPage: true });
+  await user.setViewportSize({ width: 1280, height: 800 });
+  await user.screenshot({ path: 'screenshots/profile-desktop.png', fullPage: true });
+  await user.setViewportSize({ width: 390, height: 844 });
 
   // 10 and 11: create 2 posts, edit content and categories.
   const posts=[];
