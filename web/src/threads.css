@@ -1356,3 +1356,233 @@ main.profilePage {
   .profileTopicBar { padding-left: 0; padding-right: 0; }
   .profilePostList .threadCard { padding-left: 0; padding-right: 0; }
 }
+
+/* Admin is a restrained moderation workspace, not a dashboard full of cards. */
+main.adminPage {
+  width: min(940px, calc(100% - 125px));
+  max-width: 940px;
+  margin: 0 auto 80px;
+  padding: 39px 0 70px;
+}
+.adminTop { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 30px; }
+.adminEyebrow { margin: 0 0 7px; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; color: #9b9b9b; font-weight: 730; }
+.adminTop h1 { font-size: 31px; margin: 0 0 4px; font-weight: 800; letter-spacing: -.055em; }
+.adminSubtitle { color: #929292; font-size: 13px; margin: 0; }
+.adminRefresh { border: 0; border-radius: 999px; background: #f6f6f6; color: #686868; display: inline-flex; gap: 6px; align-items: center; justify-content: center; font-weight: 640; font-size: 12px; min-height: 39px; padding: 9px 14px; }
+.adminRefresh:hover { color: #111; background: #eeeeee; }
+.adminPage .adminTabs {
+  overflow-x: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  scrollbar-width: none;
+  border-bottom: 1px solid #ededed;
+  margin: 0 0 22px;
+  padding: 0;
+  align-items: stretch;
+}
+.adminTabs::-webkit-scrollbar { display: none; }
+.adminPage .adminTabs button {
+  flex: 0 0 auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #929292;
+  padding: 13px 17px;
+  font-size: 13px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+.adminPage .adminTabs button:hover { color: #222; background: #fafafa; }
+.adminPage .adminTabs button.active { color: #171717; background: #fff; }
+.adminPage .adminTabs button.active::after { content: ""; position: absolute; bottom: 0; left: 14px; right: 14px; height: 2px; background: #111; }
+.adminTabCount { font-size: 11px; font-weight: 650; color: #999; }
+.adminTabs button.active .adminTabCount { color: #333; }
+.adminPage .adminStack { gap: 0; display: block; }
+.adminSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 1px 6px 13px;
+}
+.adminSectionHeader h2 { margin: 0; font-size: 18px; letter-spacing: -.03em; font-weight: 770; }
+.adminSectionHeader span { color: #999; font-size: 12px; }
+.adminCreate { border-top: 1px solid #eee; }
+.adminCreate > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 680;
+  padding: 14px 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #484848;
+}
+.adminCreate > summary::-webkit-details-marker { display: none; }
+.adminCreate > summary:hover { background: #fafafa; color: #111; }
+.adminCreate > summary > .circleIcon:last-child { margin-left: auto; color: #999; }
+.adminCreate[open] > summary > .circleIcon:last-child { transform: rotate(180deg); }
+.adminCreateForm, .adminInlineForm { padding: 20px 13px 23px; background: #fafafa; border-radius: 12px; margin: 0 0 14px; }
+.adminCreateForm h3 { font-size: 15px; font-weight: 750; margin: 0 0 16px; }
+.adminFields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px 20px; }
+.adminFields label { display: grid; font-size: 12px; color: #777; font-weight: 540; gap: 5px; }
+.adminFields input, .adminFields select {
+  margin: 0;
+  width: 100%;
+  min-height: 38px;
+  color: #222;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e2e2e2;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 590;
+  padding: 7px 2px;
+}
+.adminFields input:focus-visible,.adminFields select:focus-visible { outline: 0; border-bottom: 2px solid #222; }
+.adminFormActions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+.adminFormActions button { padding: 9px 17px; border: 0; background: transparent; font-size: 12px; font-weight: 680; border-radius: 999px; }
+.adminFormActions button.primary { background: #151515; color: #fff; }
+.adminFormActions button.primary:hover { background: #333; }
+.adminSimpleList { border-top: 1px solid #ededed; }
+.adminListItem {
+  display: block;
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: white;
+}
+.adminListItem:hover { background: #fdfdfd; }
+.adminItemLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+  min-width: 0;
+  padding: 15px 8px;
+}
+.adminItemText { flex: 1 1 auto; min-width: 0; }
+.adminItemText .adminName, .adminItemText h3 {
+  border: 0;
+  background: none;
+  text-align: left;
+  margin: 0 0 5px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 740;
+  color: #222;
+  overflow-wrap: anywhere;
+}
+.adminItemText .adminName:hover { background: transparent; text-decoration: underline; }
+.adminItemText p { color: #888; font-size: 12px; line-height: 1.55; margin: 0; overflow-wrap: anywhere; }
+.adminItemText p.adminCommentText { margin-top: 7px; color: #4a4a4a; font-size: 13px; }
+.adminRoleChip {
+  display: inline-block;
+  flex: none;
+  background: #f4f4f4;
+  color: #626262;
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 5px 10px;
+  font-weight: 620;
+  text-transform: capitalize;
+}
+.adminScore { color: #929292; flex: none; font-size: 12px; min-width: 41px; }
+.adminRowTools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: none;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.adminPage .adminRowTools button {
+  min-height: 35px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.adminPage .adminRowTools button:hover { color: #151515; background: #f1f1f1; }
+.adminPage .adminRowTools button.dangerText { color: #a74747; }
+.adminPage .adminRowTools button.dangerText:hover { background: #fff2f2; color: #a92323; }
+.adminPage .adminRowTools button:disabled { opacity: .35; cursor: default; }
+.adminPostMeta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 6px; color: #aaa; font-size: 12px; }
+.adminPostMeta .adminName { font-size: 12px; color: #666; font-weight: 720; margin: 0; }
+.adminPostMeta strong { color: #666; }
+.adminPostTopics { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.adminPostTopics span { border-radius: 999px; background: #f6f6f6; color: #838383; padding: 4px 9px; font-size: 11px; }
+.adminPage .adminPostTools { max-width: 380px; }
+.adminInnerDetails { margin-top: 11px; }
+.adminInnerDetails summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #777;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.adminInnerDetails summary::-webkit-details-marker { display:none; }
+.adminInnerDetails[open] summary .circleIcon { transform: rotate(180deg); }
+.adminTopicChoices { padding: 11px 0 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+.adminTopicChoice { position: relative; cursor: pointer; font-size: 11px; }
+.adminTopicChoice input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; width: 100%; height: 100%; }
+.adminTopicChoice span { display: block; padding: 7px 12px; border-radius: 999px; background: #f4f4f4; color: #666; }
+.adminTopicChoice:hover span { background: #ececec; color: #111; }
+.adminTopicChoice:has(input:checked) span { background: #222; color: white; }
+.adminTopicChoice:has(input:focus-visible) span { outline: 2px solid #111; outline-offset: 2px; }
+.adminPage .adminSaveTopics {
+  padding: 8px 15px;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 660;
+  border: 0;
+  border-radius: 999px;
+  background: #171717;
+  color: white;
+}
+.adminSectionNote { color: #999; padding: 0 6px 13px; font-size: 12px; margin: 0; }
+.adminEmpty, .adminLoading { padding: 38px 10px; text-align: center; color: #aaa; font-size: 13px; }
+.adminPage .pager { margin-top: 19px; }
+@media (max-width: 1020px) {
+  main.adminPage { width: min(790px, calc(100% - 100px)); max-width: 790px; }
+  .adminPage .adminPostTools { max-width: 270px; }
+}
+@media (max-width: 720px) {
+  main.adminPage { width: calc(100% - 32px); max-width: 660px; padding: 24px 0 70px; margin-bottom: 65px; }
+  .adminTop { margin-bottom: 19px; }
+  .adminTop h1 { font-size: 26px; }
+  .adminSubtitle { font-size: 12px; }
+  .adminRefresh { padding: 8px; min-height: 34px; }
+  .adminRefresh span { display: none; }
+  .adminPage .adminTabs button { padding: 12px 11px; font-size: 12px; gap: 5px; }
+  .adminItemLine { gap: 8px; flex-wrap: wrap; padding: 13px 3px; }
+  .adminItemLine .avatar-md { width: 38px; height: 38px; }
+  .adminRoleChip { padding: 4px 8px; font-size: 10px; }
+  .adminScore { display: none; }
+  .adminRowTools { width: 100%; justify-content: flex-start; margin-left: 46px; gap: 4px; }
+  .adminPostTools { margin-left: 0; }
+  .adminPage .adminPostTools { max-width: unset; }
+  .adminPage .adminRowTools button { padding: 6px 9px; }
+  .adminFields { grid-template-columns: 1fr; gap: 11px; }
+  .adminCreateForm, .adminInlineForm { padding: 16px 13px; }
+}
