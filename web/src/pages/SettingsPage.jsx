@@ -8,7 +8,6 @@ export default function SettingsPage() {
     <div className="featureHeading"><Icon name="settings" size={27}/><h1>{t('Settings')}</h1></div>
     <section className="settingsSection">
       <h2>{t('App appearance')}</h2>
-      <p>{t('Theme')}</p>
       <div className="settingsChoices" role="radiogroup" aria-label="Theme">
         {['light','dark'].map(value=><button type="button" role="radio" aria-checked={theme===value}
           key={value} className={theme===value?'settingsSelected':''} onClick={()=>setTheme(value)}>
