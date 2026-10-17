@@ -268,8 +268,9 @@ export default function AdminPage({initialTab='users'}) {
         <h1>{t('Admin')}</h1>
         <p className="adminSubtitle">{t('Keep your community running smoothly.')}</p>
       </div>
-      <button className="adminRefresh" type="button" onClick={load} disabled={loading} title="Refresh data">
-        <Icon name="refresh" size={19}/><span>{t('Refresh')}</span>
+      <button className="adminRefresh adminIconAction" type="button" onClick={load}
+        aria-label={t('Refresh')} disabled={loading} title={t('Refresh')}>
+        <Icon name="refresh" size={19}/>
       </button>
     </header>
     <nav className="tabs adminTabs" aria-label="Admin sections">
