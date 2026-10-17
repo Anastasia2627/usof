@@ -206,6 +206,7 @@ export async function deleteAccount({ targetId, actor }) {
 
   const connection = await pool.getConnection();
   let avatar = null;
+  let photoFiles=[];
   try {
     await connection.beginTransaction();
     const adminIds = actor.role === 'admin' ? await lockAdmins(connection) : [];
@@ -214,6 +215,8 @@ export async function deleteAccount({ targetId, actor }) {
 
     protectLastAdmin(adminIds, current, '__deleted__');
     avatar = current.avatar;
+    const [photos]=await connection.query('SELECT filename FROM post_images WHERE uploader_id=?',[id]);
+    photoFiles=photos.map(photo=>photo.filename);
     await connection.query('DELETE FROM users WHERE id=?', [id]);
     await recalculateAllRatings(connection);
     await connection.commit();
@@ -226,5 +229,8 @@ export async function deleteAccount({ targetId, actor }) {
 
   if (avatar?.startsWith('/uploads/avatars/')) {
     await fs.unlink(path.resolve('API/uploads/avatars', path.basename(avatar))).catch(() => {});
+  }
+  for(const filename of photoFiles){
+    await fs.unlink(path.resolve('API/uploads/posts',path.basename(filename))).catch(()=>{});
   }
 }
