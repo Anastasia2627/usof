@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 
 const origin=process.env.TEST_WEB_ORIGIN||'http://localhost:5173';
 const browser=await chromium.launch({args:['--no-sandbox']});
@@ -153,6 +154,27 @@ try{
   await idea.getByRole('button',{name:'Reject'}).click();
   await idea.waitFor({state:'detached'});
   await member.close();
+
+  // Image selection opens crop controls BEFORE any network upload.
+  await page.goto(origin+'/#/profile',{waitUntil:'networkidle'});
+  await page.getByRole('button',{name:'Edit profile'}).click();
+  const png=await sharp({create:{width:560,height:800,channels:3,
+    background:{r:120,g:155,b:205}}}).png().toBuffer();
+  const avatarInput=page.getByLabel('Avatar',{exact:true});
+  await avatarInput.setInputFiles({name:'portrait.png',mimeType:'image/png',buffer:png});
+  const crop=page.getByRole('dialog',{name:'Adjust profile photo'});
+  await crop.waitFor();
+  await crop.locator('img').waitFor();
+  assert.equal(await crop.getByLabel('Zoom').count(),1);
+  assert.equal(await crop.getByLabel('Move up / down').count(),1);
+  assert.equal(await crop.getByLabel('Move left / right').count(),1);
+  await crop.getByRole('button',{name:'Cancel'}).click();
+  await crop.waitFor({state:'detached'});
+  await avatarInput.setInputFiles({name:'portrait.png',mimeType:'image/png',buffer:png});
+  await crop.locator('img').waitFor();
+  await crop.getByRole('button',{name:'Save photo'}).click();
+  await crop.waitFor({state:'detached',timeout:15000});
+  await page.getByText('Avatar updated.').waitFor();
 
   // The dashboard is reachable from Admin and is no longer a sidebar item.
   await page.goto(origin+'/#/admin',{waitUntil:'networkidle'});
