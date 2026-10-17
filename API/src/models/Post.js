@@ -72,14 +72,14 @@ function metricsSql() {
 
 export class Post extends BaseModel {
   static async findCoreById(id) {
-    const rows = await this.query('SELECT id, author_id, status, locked FROM posts WHERE id=? LIMIT 1', [id]);
+    const rows = await this.query('SELECT id, author_id, status, locked, closed, publish_at, hide_likes FROM posts WHERE id=? LIMIT 1', [id]);
     return rows[0] || null;
   }
 
   static async findById(id) {
     const rows = await this.query(
       `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
-              ${metricsSql()}
+              ${metricsSql()}, COALESCE(p.publish_at,p.created_at) AS published_at
        FROM posts p
        JOIN users u ON u.id = p.author_id
        WHERE p.id=?
@@ -120,7 +120,7 @@ export class Post extends BaseModel {
     );
     const rows = await this.query(
       `SELECT p.*, u.login AS author_login, u.avatar AS author_avatar, u.rating AS author_rating,
-              ${metricsSql()}
+              ${metricsSql()}, COALESCE(p.publish_at,p.created_at) AS published_at
        FROM posts p
        JOIN users u ON u.id = p.author_id
        ${clause}
