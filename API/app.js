@@ -33,7 +33,7 @@ app.use('/uploads', express.static(path.resolve('API/uploads')));
 app.get('/api/health', async (req, res, next) => {
   try {
     await pingDatabase();
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', features: { categorySuggestions: true, avatarCropUpload: true } });
   } catch {
     next(new AppError(503, 'DATABASE_UNAVAILABLE', 'Database is unavailable'));
   }
