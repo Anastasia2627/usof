@@ -270,3 +270,17 @@ html[data-theme=dark] .feedFilterStrip .filterDetails .filterPanelGrid select{ba
 main.homePage:has(.filterDetails[open]){position:relative;z-index:1500;}
 main.homePage:has(.filterDetails[open]) .feedFilterStrip{z-index:1510;}
 main.homePage:has(.filterDetails[open]) .filterBar{z-index:1520;}
+
+/* Keep the scheduling calendar as wide as the original date field on desktop. */
+.editorRefined .editorOptionRows > .editorSchedule > .circleDatePicker {
+  display:block;
+  width:240px;
+  min-width:240px;
+  max-width:240px;
+  justify-self:end;
+}
+@media(max-width:620px){
+ .editorRefined .editorOptionRows > .editorSchedule > .circleDatePicker{
+   width:100%;min-width:0;max-width:100%;justify-self:stretch;
+ }
+}
