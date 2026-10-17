@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 function UserRow({ user, auth, onSave, onDelete }) {
   const [editing, setEditing] = useState(false);
@@ -84,6 +85,7 @@ function UserRow({ user, auth, onSave, onDelete }) {
 }
 
 function PostCategoryEditor({ post, categories, auth, run }) {
+  const {t}=usePreferences();
   const [selected, setSelected] = useState(post.categories?.map(item => Number(item.id)) || []);
   useEffect(() => setSelected(post.categories?.map(item => Number(item.id)) || []), [post.id, post.categories]);
   const toggle = id => setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
@@ -93,7 +95,7 @@ function PostCategoryEditor({ post, categories, auth, run }) {
     <div className="adminTopicChoices">
       {categories.map(category => <label className="adminTopicChoice" key={category.id}>
         <input type="checkbox" checked={selected.includes(Number(category.id))} onChange={() => toggle(Number(category.id))}/>
-        <span>{category.title}</span>
+        <span>{t(category.title)}</span>
       </label>)}
     </div>
     <button className="primary adminSaveTopics" type="button" disabled={!selected.length}
@@ -102,6 +104,7 @@ function PostCategoryEditor({ post, categories, auth, run }) {
 }
 
 function CategoryRow({ category, auth, run }) {
+  const {t}=usePreferences();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(category.title);
   const [description, setDescription] = useState(category.description || '');
@@ -124,8 +127,8 @@ function CategoryRow({ category, auth, run }) {
   return <div className="adminListItem">
     <div className="adminItemLine">
       <div className="adminItemText">
-        <h3>{category.title}</h3>
-        <p>{category.description || 'No description'}</p>
+        <h3>{t(category.title)}</h3>
+        <p>{t(category.description || 'No description')}</p>
       </div>
       <div className="adminRowTools">
         <button type="button" aria-label={'Edit category ' + category.title} onClick={() => setEditing(value => !value)}><Icon name="edit" size={18}/><span>Edit</span></button>
@@ -146,6 +149,7 @@ function CategoryRow({ category, auth, run }) {
 }
 
 export default function AdminPage() {
+  const {t}=usePreferences();
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const [tab, setTab] = useState('users');
@@ -321,7 +325,7 @@ export default function AdminPage() {
               <div className="adminItemText">
                 <div className="adminPostMeta"><button className="adminName" onClick={() => go('/profile/' + post.author_id)}>@{post.author_login}</button> · #{post.id} <StatusBadges item={post}/></div>
                 <h3>{post.title}</h3>
-                <div className="adminPostTopics">{post.categories?.map(item => <span key={item.id}>{item.title}</span>)}</div>
+                <div className="adminPostTopics">{post.categories?.map(item => <span key={item.id}>{t(item.title)}</span>)}</div>
                 {!moderator&&<PostCategoryEditor post={post} categories={data.categories} auth={auth} run={run}/>}
               </div>
               <div className="adminRowTools adminPostTools">
