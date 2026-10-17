@@ -136,6 +136,28 @@ tests in this project, use `NODE_ENV=test` and a disposable database ending
 in `_ci` or `_test`. The Circle GitHub Actions workflow runs this suite
 on every update to `circle-threads-feed`.
 
+## UX improvements
+
+Circle uses one understated rounded design language for the feed, discussion
+pages, editors, member profiles, saved posts, settings, notifications and admin
+controls. Small repeated actions (save, share, votes, delete notification) are
+icon-only with accessible labels; important tasks keep text next to their icon.
+
+- **Share** any post directly from its feed card or detail page using the share
+  icon; the copied URL opens the same post.
+- **Text draft recovery:** while writing a new post, text, selected categories
+  and publication settings are saved in the current browser tab. They survive
+  a refresh and can be discarded. **Images are not persisted** and must be
+  reselected after a reload. After successfully publishing, the draft clears.
+- **Empty feed recovery:** if filters return no posts, clear them in one click.
+- **Notifications:** compact single-icon delete action and labelled mark-all-read.
+
+These are optional usability features beyond the Basic PDF; they require no
+database changes. The underlying permissions and sorting/filtering rules remain
+covered by the course requirements and automated review tests.
+
+Design/flow audit: [docs/UX_AUDIT_OCT2026.md](docs/UX_AUDIT_OCT2026.md).
+
 ## New community features
 
 - **Post photos:** authors upload up to four JPEG/PNG/WebP photos (5 MB each); images are decoded and normalized to WebP, stored under `API/uploads/posts`, shown in cards and a full-screen gallery, and removable by the author.
