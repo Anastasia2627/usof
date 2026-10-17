@@ -105,6 +105,8 @@ try {
       assert.ok(await user.locator('fieldset input[type=checkbox]').nth(0).isChecked(), 'Native checkbox selection should be preserved');
       assert.equal(await user.locator('.postComposerForm').evaluate(el => getComputedStyle(el).borderTopWidth), '0px');
       await mkdir('screenshots', { recursive: true });
+      // Capture after the subtle 120ms selection transition has finished.
+      await user.waitForTimeout(180);
       await user.screenshot({ path: 'screenshots/editor-mobile.png', fullPage: true });
       await user.setViewportSize({ width: 1280, height: 800 });
       await user.screenshot({ path: 'screenshots/editor-desktop.png', fullPage: true });
