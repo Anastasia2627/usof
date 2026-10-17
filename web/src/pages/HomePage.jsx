@@ -60,10 +60,21 @@ export default function HomePage({ hash, basePath = '/' }) {
 
   function apply(event) {
     event.preventDefault();
-    const query = new URLSearchParams();
+    const query = new URLSearchParams(params);
     for (const name of FILTERS) {
       if (filters[name]) query.set(name, filters[name]);
+      else query.delete(name);
     }
+    query.delete('page');
+    go(query.size ? basePath + '?' + query : basePath);
+  }
+
+  function chooseCategory(categoryId) {
+    const query = new URLSearchParams(params);
+    if (categoryId) query.set('category', String(categoryId));
+    else query.delete('category');
+    query.delete('page');
+    setFilters(current => ({ ...current, category: String(categoryId) }));
     go(query.size ? basePath + '?' + query : basePath);
   }
 
@@ -102,43 +113,62 @@ export default function HomePage({ hash, basePath = '/' }) {
       <button onClick={() => go('/login')}>Log in</button>
     </div>}
 
-    <details className="filterDetails">
-      <summary><Icon name="sliders" size={19}/><span>Filters</span>
-        {activeFilters > 0 && <span className="activeFilterCount" aria-label={activeFilters + ' active filters'}>{activeFilters}</span>}
-        <Icon name="chevron" size={19}/>
-      </summary>
-      <form className="filterBar" onSubmit={apply}>
-        <label>Sort by
-          <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
-            <option value="likes">Number of likes</option>
-            <option value="date">Publication date</option>
-          </select>
-        </label>
-        <label>Direction
-          <select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
-          </select>
-        </label>
-        <label>Category
-          <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
-            <option value="">All categories</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-          </select>
-        </label>
-        <label>From<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
-        <label>To<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
-        {auth && <label>Status
-          <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
-            <option value="">All viewable</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </label>}
-        <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={19}/><span>Apply</span></button>
-        <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Clear</button>
-      </form>
-    </details>
+    <div className="feedFilterStrip" aria-label="Filter conversations">
+      <div className="feedTopicScroller" role="group" aria-label="Filter by topic">
+        <button type="button" className={!params.get('category') ? 'topicActive' : ''}
+          aria-pressed={!params.get('category')} onClick={() => chooseCategory('')}>All</button>
+        {categories.map(c => <button key={c.id} type="button"
+          aria-pressed={String(params.get('category') || '') === String(c.id)}
+          className={String(params.get('category') || '') === String(c.id) ? 'topicActive' : ''}
+          onClick={() => chooseCategory(c.id)}>{c.title}</button>)}
+      </div>
+      <details className="filterDetails">
+        <summary title="More filters" aria-label="More filters">
+          <Icon name="sliders" size={19}/>
+          <span>More</span>
+          {activeFilters > 0 && <span className="activeFilterCount" aria-label={activeFilters + ' active filters'}>{activeFilters}</span>}
+        </summary>
+        <form className="filterBar" onSubmit={apply}>
+          <div className="filterPanelHeading">Fine-tune your feed</div>
+          <div className="filterPanelGrid">
+            <label>Sort by
+              <select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}>
+                <option value="likes">Number of likes</option>
+                <option value="date">Publication date</option>
+              </select>
+            </label>
+            <label>Direction
+              <select aria-label="Sort direction" value={filters.order} onChange={e => setFilters({ ...filters, order: e.target.value })}>
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </label>
+            <label>Category
+              <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
+                <option value="">All categories</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+            </label>
+            {auth && <label>Status
+              <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
+                <option value="">All viewable</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>}
+          </div>
+          <div className="filterPanelHeading filterDateHeading">Date range <small>Optional</small></div>
+          <div className="filterPanelDates">
+            <label>From<input type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} /></label>
+            <label>To<input type="date" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} /></label>
+          </div>
+          <div className="filterPanelActions">
+            <button className="resetFilters" type="button" onClick={() => { setFilters(readFilters(new URLSearchParams())); go(basePath); }}>Clear all</button>
+            <button className="primary applyFilters" type="submit" aria-label="Apply filters"><Icon name="check" size={18}/><span>Apply</span></button>
+          </div>
+        </form>
+      </details>
+    </div>
 
     <ErrorBox error={error} onRetry={() => setRetry(value => value + 1)} />
     <section className="feedShell" aria-label="Posts">
