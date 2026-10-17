@@ -168,12 +168,14 @@ export default function AdminPage({initialTab='users'}) {
   const dispatch = useDispatch();
   const [tab, setTab] = useState(initialTab);
   const [categoryQuery,setCategoryQuery] = useState('');
+  const [suggestionStatus,setSuggestionStatus]=useState('pending');
+  const [reviewBusy,setReviewBusy]=useState(null);
   const [reportStatus,setReportStatus] = useState('open');
   const [reportPage,setReportPage] = useState(1);
   const [reportPagination,setReportPagination] = useState(null);
   const [postPage, setPostPage] = useState(1);
   const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [] });
+  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [] });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -184,15 +186,16 @@ export default function AdminPage({initialTab='users'}) {
     setError(null);
     setLoading(true);
     try {
-      const [users, posts, categories, comments, reactions, reports] = await Promise.all([
+      const [users, posts, categories, comments, reactions, reports,suggestions] = await Promise.all([
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
         api('/reactions?limit=100', { token: auth.token }),
         api('/reports?status='+reportStatus+'&page='+reportPage,{token:auth.token}),
+        moderator?Promise.resolve({data:[]}):api('/categories/suggestions?status='+suggestionStatus,{token:auth.token}),
       ]);
-      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data });
+      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data, suggestions:suggestions.data });
       setReportPagination(reports.pagination);
       const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
       setPostPagination(pagination);
@@ -201,7 +204,7 @@ export default function AdminPage({initialTab='users'}) {
     finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage,reportStatus,reportPage]);
+  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage,reportStatus,reportPage,suggestionStatus]);
   useEffect(()=>{if(auth?.user?.role==='moderator')setTab('reports');},[auth?.user?.role]);
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
@@ -251,15 +254,26 @@ export default function AdminPage({initialTab='users'}) {
     if (result) setNewCategory({ title: '', description: '' });
   }
 
+  async function decideSuggestion(item,status){
+    if(reviewBusy)return;
+    if(!window.confirm(t(status==='approved'?'Approve':'Reject')+' «'+item.title+'»?'))return;
+    setReviewBusy(item.id);setError(null);
+    try{
+      await api('/categories/suggestions/'+item.id,{method:'PATCH',token:auth.token,body:{status}});
+      await load();
+    }catch(err){setError(err);}finally{setReviewBusy(null);}
+  }
+
   const moderator = auth?.user?.role === 'moderator';
   const counts = {
     users: data.users.length,
     posts: postPagination.total,
     categories: data.categories.length,
+    suggestions: data.suggestions.length,
     comments: data.comments.length,
     reports: reportPagination?.total||0,
   };
-  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','reports','posts','categories','comments','reactions'];
+  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','suggestions','reports','posts','categories','comments','reactions'];
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -368,6 +382,28 @@ export default function AdminPage({initialTab='users'}) {
           <span aria-live="polite">Page {postPage} of {Math.max(1, postPagination.totalPages)} · {postPagination.total} posts</span>
           <button type="button" disabled={postPage >= Math.max(1, postPagination.totalPages) || loading} onClick={() => setPostPage(value => value + 1)}>Next</button>
         </nav>
+      </section>}
+
+      {tab === 'suggestions' && !moderator && <section className="adminStack topicSuggestionAdmin">
+        <div className="adminSectionHeader"><h2>{t('Suggested topics')}</h2><span>{data.suggestions.length}</span></div>
+        <div className="suggestReviewTabs" role="group" aria-label={t('Suggested topics')}>
+          {['pending','approved','rejected','all'].map(status=><button type="button" key={status}
+            aria-pressed={suggestionStatus===status} onClick={()=>setSuggestionStatus(status)}>
+            {t(status==='pending'?'Pending':status==='approved'?'Approved':status==='rejected'?'Rejected':'All')}</button>)}
+        </div>
+        {data.suggestions.length?
+        <div className="suggestReviewList">{data.suggestions.map(item=><article className="suggestReviewCard" key={item.id}>
+          <div className="suggestReviewHead"><strong>{item.title}</strong>
+            <small>{t(item.status==='pending'?'Pending':item.status==='approved'?'Approved':'Rejected')}</small></div>
+          {item.description&&<p>{item.description}</p>}
+          <small>@{item.suggested_by} · {new Date(item.created_at).toLocaleDateString()}</small>
+          {item.status==='pending'&&<div className="suggestReviewActions">
+            <button type="button" disabled={reviewBusy===item.id} className="primary"
+              onClick={()=>decideSuggestion(item,'approved')}><Icon name="check" size={17}/>{t('Approve')}</button>
+            <button type="button" disabled={reviewBusy===item.id}
+              onClick={()=>decideSuggestion(item,'rejected')}><Icon name="close" size={17}/>{t('Reject')}</button>
+          </div>}
+        </article>)}</div>:<p className="adminEmpty">{t('No matching topics')}</p>}
       </section>}
 
       {tab === 'categories' && <section className="adminStack">
