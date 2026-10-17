@@ -9,6 +9,7 @@ import PostPhotoGallery from '../PostPhotoGallery.jsx';
 import ModeratorControl from '../ModeratorControl.jsx';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
+  const {t}=usePreferences();
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -58,6 +59,7 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
 }
 
 function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthorId, depth = 0 }) {
+  const {t}=usePreferences();
   const [reply, setReply] = useState('');
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState(null);
@@ -95,10 +97,10 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
-        {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> Reviewed by moderator</span>}
+        {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
       </div>
       <p className="commentContent">{item.content}</p>
-      {Number(acceptedId)===Number(item.id) && <span className="solutionTag">✓ Best answer</span>}
+      {Number(acceptedId)===Number(item.id) && <span className="solutionTag">✓ {t('Best answer')}</span>}
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
@@ -107,11 +109,11 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
           <button type="button" className="solutionButton" onClick={()=>
             run('/posts/'+postId+'/solution','PATCH',{
               commentId:Number(acceptedId)===Number(item.id)?null:item.id
-            })}>{Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer'}</button>}
+            })}>{t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}</button>}
         <ReportButton kind="comment" id={item.id} auth={auth} authorId={item.author_id}/>
-        {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> Reply</button>}
+        {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> {t('Reply')}</button>}
         {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
-          {active ? 'Deactivate' : 'Activate'}</button>}
+          {t(active ? 'Deactivate' : 'Activate')}</button>}
         {isAdmin && <button title={item.locked?'Unlock':'Lock'} aria-label={item.locked?'Unlock':'Lock'}
           onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
           <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
@@ -121,11 +123,11 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
           <Icon name="check" size={17}/></button>}
         {(isOwner || isAdmin) && <button className="dangerText" onClick={() => {
           if (window.confirm('Delete this comment and replies?')) run(`/comments/${item.id}`, 'DELETE');
-        }}>Delete</button>}
+        }}>{t('Delete')}</button>}
       </div>
       {replying && <form className="replyForm" onSubmit={sendReply}>
-        <label>Reply<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
-        <div className="toolbar"><button className="primary">Post reply</button><button type="button" onClick={() => setReplying(false)}>Cancel</button></div>
+        <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
+        <div className="toolbar"><button className="primary">{t('Post reply')}</button><button type="button" onClick={() => setReplying(false)}>{t('Cancel')}</button></div>
       </form>}
       <ErrorBox error={error} />
     </article>
@@ -186,7 +188,7 @@ export default function PostPage({ id }) {
   }
 
 
-  if (loading) return <main><p>Loading post…</p></main>;
+  if (loading) return <main><p>{t('Loading post…')}</p></main>;
   if (!post) return <main><ErrorBox error={error} /></main>;
 
   const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
