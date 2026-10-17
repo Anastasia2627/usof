@@ -86,10 +86,19 @@ await request('/comments/'+adminComment.id,{token:moderator,method:'PATCH',
 await request('/comments/'+adminComment.id+'/review',{token:moderator,
   method:'PATCH',body:{reviewed:true},expected:403});
 await request('/comments/'+adminComment.id,{token:moderator,method:'DELETE',expected:403});
+await request('/comments/'+adminComment.id,{token:member.token,method:'PATCH',
+  body:{status:'inactive'},expected:403});
 const memberOnAdmin=(await request('/posts/'+adminPost.id+'/comments',{
   token:member.token,method:'POST',expected:201,body:{content:'Reply on admin thread'},
 })).data;
 await request('/comments/'+memberOnAdmin.id,{token:moderator,method:'DELETE',expected:403});
+const modOwnReply=(await request('/posts/'+adminPost.id+'/comments',{
+  token:moderator,method:'POST',expected:201,body:{content:'My reply on administrator thread'},
+})).data;
+// Author controls stay available even when the post belongs to an administrator.
+await request('/comments/'+modOwnReply.id,{token:moderator,method:'PATCH',
+  body:{status:'inactive'}});
+await request('/comments/'+modOwnReply.id,{token:moderator,method:'DELETE',expected:204});
 
 await request('/posts/'+publicPost.id+'/like',{token:admin.token,method:'POST',body:{type:'like'}});
 const adminReaction=(await request('/reactions',{token:moderator})).data
