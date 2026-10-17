@@ -49,7 +49,9 @@ export default function PostEditor({ id }) {
   },[draftKey,form]);
 
   useEffect(() => {
-    api('/categories').then((result) => setCategories(result.data)).catch(setError);
+    const refreshTopics=()=>api('/categories').then(result=>setCategories(result.data)).catch(setError);
+    refreshTopics();
+    window.addEventListener('circle:categories-updated',refreshTopics);
     if (editing && auth) {
       api(`/posts/${id}`, { token: auth.token })
         .then((result) => { setExistingImages(result.data.images||[]); setForm({
