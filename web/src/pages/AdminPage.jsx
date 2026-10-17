@@ -408,17 +408,19 @@ export default function AdminPage({initialTab='users'}) {
 
       {tab === 'categories' && <section className="adminStack">
         <div className="adminSectionHeader"><h2>{t('Topics')}</h2><span>{data.categories.length} total</span></div>
-        <details className="adminCreate">
-          <summary><Icon name="plus" size={20}/> {t('Add topic')} <Icon name="chevron" size={17}/></summary>
+        <section className="adminCreate adminCategoryCreate">
+          <div className="adminCategoryCreateHeading"><Icon name="plus" size={19}/><h3>{t('Create a new topic')}</h3></div>
           <form className="adminCreateForm" onSubmit={createCategory}>
-            <h3>Create category</h3>
             <div className="adminFields">
-              <label>Title<input required maxLength="100" value={newCategory.title} onChange={event => setNewCategory({ ...newCategory, title: event.target.value })}/></label>
-              <label>Description<input value={newCategory.description} onChange={event => setNewCategory({ ...newCategory, description: event.target.value })}/></label>
+              <label>{t('Topic name')}<input required minLength="3" maxLength="100"
+                value={newCategory.title} onChange={event => setNewCategory({ ...newCategory, title: event.target.value })}/></label>
+              <label>{t('Topic description (optional)')}<input maxLength="500"
+                value={newCategory.description} onChange={event => setNewCategory({ ...newCategory, description: event.target.value })}/></label>
             </div>
-            <div className="adminFormActions"><button className="primary" type="submit">Create category</button></div>
+            <div className="adminFormActions"><button className="primary" type="submit">
+              <Icon name="plus" size={18}/>{t('Create topic')}</button></div>
           </form>
-        </details>
+        </section>
         <div className="topicSearchField adminTopicSearch">
           <Icon name="search" size={17}/>
           <input type="search" aria-label={t('Search topics')}
