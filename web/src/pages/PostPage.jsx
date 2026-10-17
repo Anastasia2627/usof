@@ -117,24 +117,31 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
         onChange={refresh} />
       <div className="commentActions">
         {Number(auth?.user?.id)===Number(postAuthorId)&&item.status==='active'&&
-          <button type="button" className="solutionButton" onClick={()=>
+          <button type="button" className="solutionButton" aria-label={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
+            title={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
+            aria-pressed={Number(acceptedId)===Number(item.id)}
+            onClick={()=>
             run('/posts/'+postId+'/solution','PATCH',{
               commentId:Number(acceptedId)===Number(item.id)?null:item.id
-            })}>{t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}</button>}
+            })}><Icon name="check" size={18}/></button>}
         <ReportButton kind="comment" id={item.id} auth={auth} authorId={item.author_id}/>
-        {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> {t('Reply')}</button>}
-        {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
-          {t(active ? 'Deactivate' : 'Activate')}</button>}
-        {canModerate && <button title={item.locked?'Unlock':'Lock'} aria-label={item.locked?'Unlock':'Lock'}
+        {canReply && <button type="button" title={t('Reply')} aria-label={t('Reply')}
+          onClick={() => setReplying(x => !x)}><Icon name="comment" size={18}/></button>}
+        {canChangeStatus && <button type="button" title={t(active?'Deactivate':'Activate')}
+          aria-label={t(active?'Deactivate':'Activate')}
+          onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
+          <Icon name={active?'close':'check'} size={18}/></button>}
+        {canModerate && <button type="button" title={t(item.locked?'Unlock':'Lock')} aria-label={t(item.locked?'Unlock':'Lock')}
           onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
           <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
-        {canModerate && active && <button title={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
-          aria-label={item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'}
+        {canModerate && active && <button type="button" title={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
+          aria-label={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
           onClick={()=>run('/comments/' + item.id + '/review','PATCH',{reviewed:!item.reviewed_by})}>
           <Icon name="check" size={17}/></button>}
-        {(isOwner || canModerate) && <button className="dangerText" onClick={() => {
-          if (window.confirm('Delete this comment and replies?')) run(`/comments/${item.id}`, 'DELETE');
-        }}>{t('Delete')}</button>}
+        {(isOwner || canModerate) && <button type="button" className="dangerText"
+          title={t('Delete')} aria-label={t('Delete')} onClick={() => {
+          if (window.confirm(t('Delete this comment and replies?'))) run(`/comments/${item.id}`, 'DELETE');
+        }}><Icon name="trash" size={18}/></button>
       </div>
       {replying && <form className="replyForm" onSubmit={sendReply}>
         <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
