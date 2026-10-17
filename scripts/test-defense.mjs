@@ -40,23 +40,24 @@ try {
   assert.deepEqual(expected.map(x=>Number(x.like_count)),
     expected.map(x=>Number(x.like_count)).sort((a,b)=>b-a));
 
-  // 2 and 3: date ascending/descending, filtering by category.
+  // 2 and 3: expand the compact Threads-like filters, then sort and filter.
+  await user.locator('.filterDetails summary').click();
   await user.getByLabel('Sort by').selectOption('date');
   await user.getByLabel('Sort direction').selectOption('asc');
-  await user.getByRole('button',{name:'Apply'}).click();
+  await user.getByRole('button',{name:'Apply filters'}).click();
   await user.waitForURL(/order=asc/);
   // Wait until the URL-synchronizing React effect has updated the filter form.
   await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'asc');
   await user.getByLabel('Sort direction').selectOption('desc');
   await user.waitForFunction(() => document.querySelector('[aria-label="Sort direction"]')?.value === 'desc');
-  await user.getByRole('button',{name:'Apply'}).click();
+  await user.getByRole('button',{name:'Apply filters'}).click();
   await user.waitForURL(/order=desc/);
   await user.waitForLoadState('networkidle');
   // Wait for the route-to-form synchronization effect before editing next field.
   await user.waitForTimeout(200);
   const cats=(await fetchApi('/categories')).data;
   await user.getByLabel('Category').selectOption(String(cats[0].id));
-  await user.getByRole('button',{name:'Apply'}).click();
+  await user.getByRole('button',{name:'Apply filters'}).click();
   await user.waitForURL(/category=/);
 
   // 4, 5, 6: actual registration, email code and login.
