@@ -21,6 +21,25 @@ export default function ProfilePage({ userId = null }) {
   const [category, setCategory] = useState('');
   const [page, setPage] = useState(1);
   const [editOpen, setEditOpen] = useState(false);
+  const [followState,setFollowState]=useState({followers:0,following:false});
+  const [followBusy,setFollowBusy]=useState(false);
+  useEffect(()=>{
+    if(!auth?.token||!viewedId||isSelf)return;
+    let live=true;
+    api('/social/follows/'+viewedId,{token:auth.token})
+      .then(r=>{if(live)setFollowState(r.data);}).catch(()=>{});
+    return ()=>{live=false;};
+  },[auth?.token,viewedId,isSelf]);
+  async function toggleFollow(){
+    if(!auth)return go('/login');
+    setFollowBusy(true);setError(null);
+    try{
+      const next=!followState.following;
+      await api('/social/follows/'+viewedId,{method:next?'POST':'DELETE',token:auth.token});
+      setFollowState(v=>({following:next,followers:v.followers+(next?1:-1)}));
+    }catch(err){setError(err);}finally{setFollowBusy(false);}
+  }
+
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
@@ -140,6 +159,16 @@ export default function ProfilePage({ userId = null }) {
     </section>
     <div className="profileInfoRow">
       <span className="profileRating"><Icon name="favorite" size={18}/><strong>{user?.rating || 0}</strong> {t('Reputation').toLowerCase()}</span>
+      {!isSelf && auth && <div className="profileSocialActions">
+        <span className="profileFollowers">{followState.followers} followers</span>
+        <button type="button" className="profileEditToggle" onClick={toggleFollow} disabled={followBusy}
+          aria-pressed={followState.following} title={followState.following?'Unfollow':'Follow'}>
+          <Icon name={followState.following?'check':'plus'} size={18}/>
+          {followState.following?'Following':'Follow'}
+        </button>
+        <button type="button" className="profileEditToggle" onClick={()=>go('/messages/'+viewedId)}
+          title="Send private message"><Icon name="comment" size={18}/>Message</button>
+      </div>}
       {isSelf && <button type="button" className="profileEditToggle" aria-expanded={editOpen}
         onClick={() => { setEditOpen(v => !v); setError(null); setMessage(''); }}>
         <Icon name="edit" size={18}/>{t(editOpen ? 'Close editor' : 'Edit profile')}
