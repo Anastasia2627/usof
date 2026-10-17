@@ -83,9 +83,9 @@ export function AuthPage({ mode }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  function logIn(result) {
+  function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
-    go('/');
+    go(firstRegistration ? '/interests' : '/');
   }
 
   async function submit(event) {
@@ -99,7 +99,7 @@ export function AuthPage({ mode }) {
           login: form.login, email: form.email, fullName: form.fullName,
           password: form.password, passwordConfirmation: form.passwordConfirmation,
         } });
-        if (isDemoMode()) logIn({ token: result.token, user: result.user });
+        if (isDemoMode()) logIn({ token: result.token, user: result.user },true);
         else setVerification({ email: form.email, delivery: result.emailDelivery, initialCode: result.verificationCode || '',
           login: form.login, password: form.password });
       } else {
@@ -140,7 +140,7 @@ export function AuthPage({ mode }) {
 
   return <main className="authShell">
     <section className="authPanel">
-      {verification ? <VerificationForm {...verification} onLogin={logIn} /> : <>
+      {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
         <h1>{register ? 'Create account' : 'Log in'}</h1>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
