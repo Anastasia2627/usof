@@ -451,3 +451,42 @@ footer { margin-top: 0; border-top: 1px solid #f2f2f2; font-size: 12px; color: #
   .threadCard { gap: 9px; grid-template-columns: 38px minmax(0,1fr); }
   .avatar-md { width: 38px; height: 38px; }
 }
+
+/* Conversation details use the same uninterrupted editorial feed rhythm. */
+.postPage .questionCard,
+.postPage .commentCard,
+.postPage .commentComposer {
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  box-shadow: none;
+}
+.postPage .questionCard { padding: 19px 7px 22px; }
+.postPage .commentsSection { padding-top: 0; border-top: 0; margin-top: 18px; }
+.postPage .commentsSection h2 { margin: 0 0 10px; }
+.postPage .commentCard { padding: 16px 8px; }
+.postPage .commentBranch { border-left: 2px solid #f4f4f4; padding-left: 9px; }
+.postPage .commentBranch .commentBranch { border-left-color: #ececec; }
+.postPage .commentActions button,
+.postPage .reactionButtons button {
+  border: 0;
+  background: transparent;
+  color: #555;
+  font-size: 13px;
+  border-radius: 9px;
+}
+.postPage .commentActions button:hover,
+.postPage .reactionButtons button:hover { background: #f3f3f3; color: #111; }
+.postPage .commentComposer { padding: 18px 8px; }
+.postPage .commentComposer button.primary { border-radius: 999px; }
+.postPage .authorLine .authorLink { font-weight: 700; }
+.searchPage .searchSection h2 { padding-bottom: 9px; border-bottom: 1px solid #eee; }
+.searchPage .searchPerson { border: 0; border-bottom: 1px solid #eee; border-radius: 0; }
+.searchPage .searchPerson:hover { background: #fafafa; }
+.profileHero { border-color: #eee; }
+.profileHero h1 { font-size: 24px; }
+.editorPage form.card { border: 1px solid #eee; }
+@media (max-width:720px) {
+  .postPage .commentBranch { padding-left: 5px; margin-left: calc(min(var(--depth), 3) * 7px); }
+  .postPage .questionCard { padding-left: 0; padding-right: 0; }
+}
