@@ -93,7 +93,7 @@ export function CategoryDetailPage({ id }) {
   if (loading) return <main><div className="card loading">{t('Loading category…')}</div></main>;
 
   return <main>
-    <button className="linkButton" onClick={() => go('/categories')}>← {t('All categories')}</button>
+    <button className="linkButton" onClick={() => go('/categories')}><Icon name="arrowBack" size={17}/> {t('All categories')}</button>
     <section className="hero categoryHero">
       <p className="eyebrow">{t('Category')} {String(id).padStart(2, '0')}</p>
       <h1>{t(category?.title || 'Category')}</h1>
