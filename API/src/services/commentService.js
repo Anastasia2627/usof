@@ -16,7 +16,7 @@ export async function getVisiblePostCore(idValue, user) {
   const post = await Post.findCoreById(postId);
   if (!post) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   const ownsPost = user && Number(user.sub) === Number(post.author_id);
-  if (post.status === 'inactive' && user?.role !== 'admin' && !ownsPost) {
+  if ((post.status === 'inactive' || (post.publish_at && new Date(post.publish_at)>new Date())) && !['admin','moderator'].includes(user?.role) && !ownsPost) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
   return post;
@@ -31,7 +31,7 @@ export async function getVisibleComment(
   const comment = await Comment.findById(id);
   if (!comment) throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(user?.role);
   const ownsPost = user && Number(user.sub) === Number(comment.post_author_id);
   if (comment.post_status === 'inactive' && !isAdmin && (requireActivePost || !ownsPost)) {
     throw new AppError(404, 'COMMENT_NOT_FOUND', 'Comment not found');
@@ -73,11 +73,13 @@ export async function createCommentForUser(user, postIdValue, body) {
   }
 
   const post = await getVisiblePostCore(postIdValue, user);
-  const isAdmin = user.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(user.role);
   if (!isAdmin && post.status !== 'active') {
     throw new AppError(404, 'POST_NOT_AVAILABLE', 'Active post not found');
   }
   if (!isAdmin && post.locked) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
+  if (post.closed) throw new AppError(423, 'POST_CLOSED', 'The author has closed this discussion');
+  if (post.publish_at && new Date(post.publish_at) > new Date()) throw new AppError(423, 'POST_SCHEDULED', 'This discussion is not published yet');
 
   let parent = null;
   if (body.parentCommentId !== undefined && body.parentCommentId !== null) {
@@ -129,7 +131,7 @@ export async function createCommentForUser(user, postIdValue, body) {
 
 export async function updateCommentForUser(user, idValue, body) {
   const comment = await getVisibleComment(idValue, user);
-  const isAdmin = user.role === 'admin';
+  const isAdmin = ['admin','moderator'].includes(user.role);
   if (body.content !== undefined) {
     throw new AppError(
       403,
@@ -172,7 +174,7 @@ export async function updateCommentForUser(user, idValue, body) {
 
 export async function deleteCommentForUser(user, idValue) {
   const comment = await getVisibleComment(idValue, user);
-  if (user.role !== 'admin' && Number(user.sub) !== Number(comment.author_id)) {
+  if (!['admin','moderator'].includes(user.role) && Number(user.sub) !== Number(comment.author_id)) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete this comment');
   }
 
