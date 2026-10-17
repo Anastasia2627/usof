@@ -132,9 +132,6 @@ export async function createCommentForUser(user, postIdValue, body) {
 export async function updateCommentForUser(user, idValue, body) {
   const comment = await getVisibleComment(idValue, user);
   const isAdmin = ['admin','moderator'].includes(user.role);
-  if (!isAdmin && Number(user.sub) !== Number(comment.author_id)) {
-    throw new AppError(403,'FORBIDDEN','Only the author or a moderator can change comment status');
-  }
   if (body.content !== undefined) {
     throw new AppError(
       403,
