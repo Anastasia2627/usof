@@ -101,6 +101,54 @@ const translations = {
     'Talk about what matters.':'Говорите о важном.',
   },
 };
+
+Object.assign(translations.uk, {
+  'Administrator':'Адміністратор', 'Circle member':'Учасник Circle',
+  'Username':'Логін','Full name':'Повне ім’я','Change profile photo':'Змінити фото',
+  'Uploading photo…':'Завантажуємо фото…','Profile saved.':'Профіль збережено.',
+  'Avatar updated.':'Фото оновлено.','Cancel':'Скасувати','Save profile':'Зберегти профіль',
+  'Loading posts…':'Завантажуємо дописи…','Nothing here yet':'Поки тут порожньо',
+  'Try another topic or status.':'Оберіть іншу тему або статус.',
+  'Your conversations will appear here.':'Тут з’являться ваші дописи.',
+  'This member has not posted yet.':'Цей учасник ще нічого не опублікував.',
+  'Account settings':'Налаштування акаунта','Delete account':'Видалити акаунт',
+  'Deleting your account permanently removes your posts, comments and reactions.':'Видалення акаунта назавжди видалить дописи, коментарі й реакції.',
+  'Changing your username will sign you out. You can log in again with the new username.':'Після зміни логіна потрібно буде увійти знову.',
+  'Log in to view your profile.':'Увійдіть, щоб переглянути профіль.',
+  'Post title':'Назва допису','Post details':'Текст допису',
+  'Give your post a title…':'Дайте назву допису…','Posting to Circle':'Публікація в Circle',
+  'Choose one or more':'Оберіть одну або кілька','Saving…':'Зберігаємо…',
+  'Publish post':'Опублікувати','Save changes':'Зберегти зміни',
+  'Edit post':'Редагувати допис','Loading editor…':'Завантажуємо редактор…',
+  'Select at least one category.':'Оберіть хоча б одну категорію.',
+  'Select a topic to continue':'Оберіть тему для продовження',
+  'selected':'вибрано','topic':'тему','topics':'теми',
+  'Log in to create or edit posts.':'Увійдіть, щоб писати та редагувати дописи.'
+});
+Object.assign(translations.ru, {
+  'Administrator':'Администратор','Circle member':'Участник Circle',
+  'Username':'Логин','Full name':'Полное имя','Change profile photo':'Изменить фото',
+  'Uploading photo…':'Загружаем фото…','Profile saved.':'Профиль сохранён.',
+  'Avatar updated.':'Фото обновлено.','Cancel':'Отмена','Save profile':'Сохранить профиль',
+  'Loading posts…':'Загружаем посты…','Nothing here yet':'Пока здесь пусто',
+  'Try another topic or status.':'Выберите другую тему или статус.',
+  'Your conversations will appear here.':'Здесь появятся ваши посты.',
+  'This member has not posted yet.':'Этот участник ещё ничего не опубликовал.',
+  'Account settings':'Настройки аккаунта','Delete account':'Удалить аккаунт',
+  'Deleting your account permanently removes your posts, comments and reactions.':'Удаление аккаунта навсегда удалит посты, комментарии и реакции.',
+  'Changing your username will sign you out. You can log in again with the new username.':'После изменения логина нужно будет войти снова.',
+  'Log in to view your profile.':'Войдите, чтобы посмотреть профиль.',
+  'Post title':'Название поста','Post details':'Текст поста',
+  'Give your post a title…':'Придумайте название поста…','Posting to Circle':'Публикация в Circle',
+  'Choose one or more':'Выберите одну или несколько','Saving…':'Сохраняем…',
+  'Publish post':'Опубликовать','Save changes':'Сохранить изменения',
+  'Edit post':'Редактировать пост','Loading editor…':'Загружаем редактор…',
+  'Select at least one category.':'Выберите хотя бы одну категорию.',
+  'Select a topic to continue':'Выберите тему для продолжения',
+  'selected':'выбрано','topic':'тема','topics':'темы',
+  'Log in to create or edit posts.':'Войдите, чтобы писать и редактировать посты.'
+});
+
 const PreferencesContext = createContext(null);
 function read() {
   try {
