@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import sharp from 'sharp';
 
 if (process.env.NODE_ENV !== 'test' || !/(_test|_ci)$/.test(process.env.DB_NAME || '')) {
   throw new Error('Use only a disposable CI database');
@@ -108,6 +109,11 @@ try {
   await user.screenshot({ path: 'screenshots/profile-desktop.png', fullPage: true });
   await user.setViewportSize({ width: 390, height: 844 });
 
+  // Ordinary members must never see controls to delete someone else's post.
+  await open(user,'/post/1');
+  assert.equal(await user.getByRole('button',{name:'Delete post'}).count(),0,
+    'Ordinary members must not have a delete button on another author post');
+
   // 10 and 11: create 2 posts, edit content and categories.
   const posts=[];
   for(let i=0;i<2;i++){
@@ -116,6 +122,12 @@ try {
     await user.locator('textarea[maxlength="50000"]').fill('Review content '+i);
     await user.locator('fieldset input[type=checkbox]').nth(i).check();
     if (i === 0) {
+      const photo=await sharp({create:{width:32,height:32,channels:3,background:'#edc8db'}}).png().toBuffer();
+      await user.locator('#post-photo-input').setInputFiles({name:'review.png',mimeType:'image/png',buffer:photo});
+      await user.locator('.editorPhotoLivePreview .postPhotoGallery img').first().waitFor();
+      await user.locator('.editorPhotoLivePreview .postPhotoGallery button').first().click();
+      await user.getByRole('dialog',{name:'Full-size post photo'}).waitFor();
+      await user.getByRole('button',{name:'Close photo'}).click();
       const labels = user.locator('.editorTopic');
       assert.ok(await labels.first().isVisible(), 'Topics should be offered as selectable chips');
       assert.ok(await user.locator('fieldset input[type=checkbox]').nth(0).isChecked(), 'Native checkbox selection should be preserved');
@@ -131,6 +143,10 @@ try {
     await user.getByRole('button',{name:'Publish post'}).click();
     await user.waitForURL(/#\/post\/\d+$/);
     posts.push(Number(new URL(user.url()).hash.match(/post\/(\d+)/)[1]));
+    if(i===0){
+      await user.locator('.naturalPost .postPhotoGallery img').first().waitFor();
+      assert.equal((await fetchApi('/posts/'+posts[0])).data.images.length,1);
+    }
   }
   await open(user,'/edit/'+posts[0]);
   await user.locator('input[maxlength="180"]').fill('Review EDITED '+suffix);
@@ -174,7 +190,8 @@ try {
   await card.getByLabel('Reply').fill('Admin replied '+suffix);
   await card.getByRole('button',{name:'Post reply'}).click();
   await admin.getByText('Admin replied '+suffix).waitFor();
-  await user.reload();
+  // Comments from the other browser appear without a manual reload.
+  await user.getByText('Admin replied '+suffix).waitFor({timeout:18000});
   const answer=user.locator('.commentCard').filter({hasText:'Admin replied '+suffix}).first();
   await answer.getByRole('button',{name:'Dislike',exact:true}).click();
   await answer.getByRole('button',{name:'Remove my vote'}).click();
