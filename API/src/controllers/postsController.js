@@ -2,7 +2,7 @@ import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
 import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
-import { assertMayModerateAuthors } from '../services/moderationPolicy.js';
+import { assertMayModerateAuthors, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createPostForUser,
   deletePostForUser,
@@ -74,6 +74,8 @@ export async function removePostReaction(req, res) {
   const post = await getVisiblePost(req.params.post_id, req.user);
   if (req.user.role === 'moderator' && req.query.all === '1')
     await assertMayModerateAuthors(req.user,[post.author_id]);
+  if(req.user.role==='moderator' && req.query.all==='1')
+    await assertMayClearReactions(req.user,{postId:post.id});
   await deleteReaction({
     userId: Number(req.user.sub),
     postId: Number(post.id),
