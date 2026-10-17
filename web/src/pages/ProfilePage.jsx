@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
 import ModeratorControl from '../ModeratorControl.jsx';
+import AvatarCropper from '../AvatarCropper.jsx';
 
 export default function ProfilePage({ userId = null }) {
   const auth = useSelector(state => state.auth);
@@ -42,6 +43,7 @@ export default function ProfilePage({ userId = null }) {
   }
 
   const [uploading, setUploading] = useState(false);
+  const [avatarFile,setAvatarFile] = useState(null);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -108,21 +110,32 @@ export default function ProfilePage({ userId = null }) {
     } catch (err) { setError(err); }
   }
 
-  async function upload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setError(null);
-    setMessage('');
-    setUploading(true);
-    const data = new FormData();
-    data.append('avatar', file);
+  function selectAvatar(event) {
+    const file=event.target.files?.[0];
+    event.target.value='';
+    if(!file)return;
+    setMessage('');setError(null);
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
+      setError(new Error(t('Choose a JPEG, PNG or WebP image.')));return;
+    }
+    if(file.size>5*1024*1024){
+      setError(new Error(t('Image must be smaller than 5 MB.')));return;
+    }
+    setAvatarFile(file);
+  }
+
+  async function uploadCroppedAvatar(blob){
+    setUploading(true);setError(null);setMessage('');
     try {
-      const result = await api('/users/avatar', { method: 'PATCH', token: auth.token, formData: data });
+      const data=new FormData();
+      data.append('avatar',new File([blob],'avatar.webp',{type:'image/webp'}));
+      const result=await api('/users/avatar',{method:'PATCH',token:auth.token,formData:data});
       setUser(result.data);
-      dispatch({ type: 'AUTH_USER_SET', payload: result.data });
+      dispatch({type:'AUTH_USER_SET',payload:result.data});
       setMessage(t('Avatar updated.'));
-    } catch (err) { setError(err); }
-    finally { setUploading(false); event.target.value = ''; }
+      setAvatarFile(null);
+    }catch(err){setError(err);throw err;}
+    finally{setUploading(false);}
   }
 
   async function deleteAccount() {
@@ -186,7 +199,7 @@ export default function ProfilePage({ userId = null }) {
       <label className="profilePhotoPicker">
         <Icon name="user" size={19}/>
         {t(uploading ? 'Uploading photo…' : 'Change profile photo')}
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={upload}
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={selectAvatar}
           aria-label="Avatar" disabled={uploading} />
       </label>
       <p className="profileEditNote">{t('Changing your username will sign you out. You can log in again with the new username.')}</p>
@@ -196,6 +209,8 @@ export default function ProfilePage({ userId = null }) {
       </div>
       <ErrorBox error={error}/>
     </form>}
+    {avatarFile&&<AvatarCropper file={avatarFile} onSave={uploadCroppedAvatar}
+      onCancel={()=>setAvatarFile(null)} busy={uploading}/>}
     {message && <p className="profileSaved" role="status"><Icon name="check" size={19}/>{message}</p>}
     {!editOpen && <ErrorBox error={error}/>}
 
