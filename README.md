@@ -83,23 +83,21 @@ MySQL; do not delete the volume.
 The browser-only `npm run web:demo` preview is optional, and not suitable
 for defense because it does not store shared records or send email.
 
-## Guest welcome and protected actions
+## Public home and assessment compliance
 
-Opening `http://localhost:5173/#/` without signing in shows a welcoming
-registration/login screen **without post previews**. The header contains an
-`Explore` button and the welcome screen contains an `Explore public conversations`
-link. That opens `/#/explore` with **read-only** public posts, sorting and
-category filters. Guests may read but need an account to create posts, reply
-or vote. Once signed in, `/#/` shows the normal feed.
+The homepage `/#/` shows a public feed sorted by positive likes (descending) for both guests and signed-in members, with visible search, menu, category filters, date ascending/descending and pagination. Guests can read posts; writing, replying, voting and reporting require authentication. The original welcome design remains at `/#/welcome`.
 
-Note: The original university defense checklist begins by showing public posts
-on the homepage. For this customized pre-login design, demonstrate the same
-sorting/filter functions under **Explore** first, then register. This is a UI
-deviation from the literal first step, not a missing feed feature.
+## New community features
 
-Icons come from Google's official **Material Symbols Rounded** collection.
-They are loaded from Google Fonts using a subset of only the necessary icons;
-navigation and core actions use the same rounded family.
+- **Post photos:** authors upload up to four JPEG/PNG/WebP photos (5 MB each); images are decoded and normalized to WebP, stored under `API/uploads/posts`, shown in cards and a full-screen gallery, and removable by the author.
+- **Best answer:** a post author can mark/unmark one active reply as accepted, so the post displays `Solved` and the selected reply displays `Best answer`.
+- **Reporting:** signed-in users may report someone else's post or comment for spam, abuse, off-topic content or other reasons; duplicates are rejected. Reports are handled in the Admin → Reports queue.
+- **Formatting:** posts support headings, bold text and ordered/unordered lists. The composer offers toolbar buttons and a live safe preview; text is rendered as React nodes without injecting user-supplied HTML.
+- **Moderators:** administrators can grant/revoke `moderator` in Admin → Members → Edit → Role. Moderators can review reports, lock, deactivate or delete posts and comments, and moderate reactions; they cannot create users, change roles, manage categories or edit other authors' post text/categories. The server checks every permission.
+
+On an existing database, run `npm run db:init` to apply additive schema upgrades without erasing users/posts. Use `npm run db:reset` only on a disposable database.
+
+Integration test in CI: `npm run test:features` (requires `NODE_ENV=test` and a disposable `*_ci` or `*_test` database). Tests include real image upload and readback, owner-only deletion, accepted answers, reports and moderator permissions.
 
 ## Fixing the guest feed network warning (macOS AirPlay port collision)
 
@@ -168,7 +166,7 @@ For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `
 
 ## Screenshots and verification
 
-The circle-threads-feed branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
+The circle-threads-feed branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older images under `docs/screenshots` are historical. For current screenshots of the public home, post/profile, editor and mobile UI, open the latest successful Circle workflow run in GitHub Actions and download its `circle-basic-screenshots` artifact.
 
 ## Documentation
 
