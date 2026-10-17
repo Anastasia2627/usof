@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
-import { Avatar, ErrorBox, StatusBadges, fmt, go } from '../ui.jsx';
+import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
   const [items, setItems] = useState([]);
@@ -35,9 +35,9 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange }) {
     <div className="reactionButtons">
       <span>{items.filter(x => x.type === 'like').length} likes · {items.filter(x => x.type === 'dislike').length} dislikes</span>
       {canVote && <>
-        <button type="button" onClick={() => change('POST', 'like')}>Like</button>
-        <button type="button" onClick={() => change('POST', 'dislike')}>Dislike</button>
-        {own && <button type="button" onClick={() => change('DELETE')}>Remove my vote</button>}
+        <button type="button" className="reactionIconButton" aria-label="Like" title="Like" onClick={() => change('POST', 'like')}><Icon name="heart" size={19}/></button>
+        <button type="button" className="reactionIconButton" aria-label="Dislike" title="Dislike" onClick={() => change('POST', 'dislike')}><Icon name="dislike" size={19}/></button>
+        {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
       <button type="button" onClick={() => setOpen(x => !x)}>{open ? 'Hide votes' : 'View votes'}</button>
       {auth?.user?.role === 'admin' && items.length > 0 && <button type="button" onClick={() => {
@@ -95,7 +95,7 @@ function Comment({ item, comments, postId, auth, refresh, depth = 0 }) {
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
       <div className="commentActions">
-        {canReply && <button onClick={() => setReplying(x => !x)}>Reply</button>}
+        {canReply && <button onClick={() => setReplying(x => !x)}><Icon name="comment" size={17}/> Reply</button>}
         {canChangeStatus && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
           {active ? 'Deactivate' : 'Activate'}</button>}
         {isAdmin && <button onClick={() => run(`/comments/${item.id}`, 'PATCH', { locked: !item.locked })}>{item.locked ? 'Unlock' : 'Lock'}</button>}
@@ -180,7 +180,7 @@ export default function PostPage({ id }) {
       <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id} visible={isAdmin || post.status === 'active'}
         writable={isAdmin || (post.status === 'active' && !post.locked)} onChange={load} />
       <div className="toolbar">
-        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}>Edit</button>}
+        {isOwner && !isAdmin && <button onClick={() => go(`/edit/${post.id}`)}><Icon name="edit" size={18}/> Edit</button>}
         {isAdmin && <>
           <button onClick={() => run('PATCH', { status: post.status === 'active' ? 'inactive' : 'active' })}>
             {post.status === 'active' ? 'Deactivate' : 'Activate'}
