@@ -69,6 +69,25 @@ try {
   // This is the REAL API registration form, not the isolated demo mode.
   const newMember = 'member' + Date.now().toString(36);
   await page.goto(frontend + '/#/register', { waitUntil: 'networkidle' });
+  await page.locator('.authCosmicImage').waitFor({state:'visible'});
+  assert.equal(await page.locator('.authEditorialPhoto,.authEditorialStory,.authPhotoRing').count(),0,
+    'No floating photo cards or redundant slogan blocks on registration');
+  const layout=await page.evaluate(()=>{
+    const photo=document.querySelector('.authCosmicSide').getBoundingClientRect();
+    const form=document.querySelector('.authPanel').getBoundingClientRect();
+    return {photoHeight:photo.height,formRight:form.right,screenWidth:innerWidth};
+  });
+  assert.ok(layout.photoHeight>=140&&layout.formRight<=layout.screenWidth+2,
+    'Photo and form fit inside mobile viewport');
+  await page.setViewportSize({width:1280,height:820});
+  const desktop=await page.evaluate(()=>{
+    const photo=document.querySelector('.authCosmicSide').getBoundingClientRect();
+    const form=document.querySelector('.authPanel').getBoundingClientRect();
+    return {photoWidth:photo.width,formWidth:form.width,photoRight:photo.right,formLeft:form.left};
+  });
+  assert.ok(desktop.photoWidth>350&&desktop.formWidth>350&&desktop.formLeft>=desktop.photoRight,
+    'Desktop form and photo stay in two separate columns');
+  await page.setViewportSize({width:390,height:844});
   await page.locator('input[autocomplete="username"]').fill(newMember);
   await page.locator('input[autocomplete="email"]').fill(newMember + '@example.test');
   await page.locator('input[autocomplete="new-password"]').nth(0).fill('Password123!');
