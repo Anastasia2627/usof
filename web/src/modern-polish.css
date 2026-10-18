@@ -61,42 +61,6 @@ main.welcomePage.welcomeEditorial {
 .welcomeEditorial .welcomeHighlights svg {color:var(--circle-violet);}
 .welcomeEditorial .welcomeHighlights p {display:none;}
 /* Login, sign-up and email verification use the same focused visual language. */
-main.authRefined {width:min(1030px,calc(100% - 44px));max-width:1030px;
-  grid-template-columns:minmax(0,.97fr) minmax(0,1fr);min-height:590px;
-  border-radius:24px;border:1px solid #e9e6ec;box-shadow:0 25px 65px rgba(49,31,77,.055);}
-.authRefined .authVisualSide {min-height:590px;overflow:hidden;position:relative;
-  display:flex;justify-content:space-between;align-items:stretch;flex-direction:column;padding:37px 41px;
-  background:#0c0b16;color:#fff;isolation:isolate;}
-.authVisualSide::before {content:'';position:absolute;z-index:-1;inset:-20%;
-  background:radial-gradient(ellipse at 72% 48%,rgba(100,61,231,.96),transparent 48%),
-    radial-gradient(ellipse at 0% 100%,rgba(25,47,111,.7),transparent 50%);}
-.authRefined .authVisualSide .authEditorialBrand {position:relative;z-index:3;color:#fff;font-size:25px;font-weight:820;}
-.authVisualBackdrop {position:absolute;inset:12% 1% 19%;z-index:0;pointer-events:none;}
-.authVisualHalo {position:absolute;top:7%;left:16%;width:75%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(ellipse,#9976fa7a,transparent 68%);filter:blur(8px);}
-.authVisualOrbit {position:absolute;width:46%;height:49%;border:1px solid rgba(255,255,255,.19);border-radius:50%;}
-.authOrbitOne {left:14%;top:9%;transform:rotate(26deg) scaleX(1.4);}
-.authOrbitTwo {right:6%;bottom:8%;transform:rotate(-32deg) scaleX(.75);}
-.authVisualTile {position:absolute;display:grid;place-items:center;color:#fff;
-  border:1px solid rgba(255,255,255,.28);border-radius:23px;font-size:clamp(55px,8vw,115px);font-weight:400;
-  box-shadow:0 20px 54px rgba(0,0,0,.34);backdrop-filter:blur(4px);}
-.authVisualTileOne {top:10%;left:15%;width:48%;height:48%;transform:rotate(-12deg);background:linear-gradient(135deg,#8968c9,#5c39bb);}
-.authVisualTileTwo {top:25%;right:9%;width:43%;height:48%;transform:rotate(13deg);background:linear-gradient(130deg,#356bdc,#50bcd3);}
-.authVisualTileThree {bottom:7%;left:28%;width:47%;height:38%;transform:rotate(-5deg);background:linear-gradient(145deg,#7153e2,#c191f2);}
-.authRefined .authVisualSide .authEditorialStory {position:relative;z-index:2;max-width:370px;margin:auto 0 0;padding:50px 0 0;}
-.authRefined .authVisualSide .authEditorialStory h2 {font-size:clamp(25px,3.5vw,39px);margin:0 0 11px;
-  color:white;line-height:1.09;max-width:350px;letter-spacing:-.063em;}
-.authRefined .authVisualSide .authEditorialStory p {margin:0;color:#d6cbf0;line-height:1.65;max-width:345px;}
-.authRefined .authPanel {padding:clamp(27px,5vw,60px);background:#fff;}
-.authRefined .authPanel h1 {margin:0 0 9px;font-size:clamp(29px,3.3vw,39px);letter-spacing:-.055em;line-height:1.15;}
-.authRefined .authPanel .authPanelCopy {margin:0 0 28px;font-size:13px;line-height:1.6;}
-.authRefined .authForm {gap:15px;}
-.authRefined .authForm input {border-radius:13px;background:#faf9fc;border:1px solid #e9e6ef;
-  min-height:46px;font-size:13px;padding:10px 14px;}
-.authRefined .authForm input:focus {border-color:#9a74ec;box-shadow:0 0 0 4px #8b65e918;}
-.authRefined .authForm button.authSubmit {border-radius:999px;background:#1b1922;color:#fff;}
-.authRefined .authForm button.authSubmit:hover:not(:disabled) {background:#6f49ce;}
-.authRefined .authSwitchLinks button {color:#6847bc;}
 .authRefined .verificationVisual {height:104px;}
 /* Intentionally no stacked all-caps eyebrow labels above headings. */
 .adminEyebrow,.profileMicroLabel,.authPanelEyebrow,.authEditorialEyebrow,
@@ -172,13 +136,6 @@ main.authRefined {width:min(1030px,calc(100% - 44px));max-width:1030px;
   .welcomeCinematicVisual {min-height:250px;height:250px;}
   .welcomeEditorial .welcomeHighlights {grid-template-columns:1fr;gap:8px;}
   .welcomeEditorial .welcomeHighlights>div {padding:13px 18px;}
-  main.authRefined {width:calc(100% - 26px);grid-template-columns:1fr;margin:18px auto 85px;}
-  .authRefined .authVisualSide {min-height:130px;padding:21px 23px;}
-  .authVisualSide .authVisualBackdrop {display:none;}
-  .authRefined .authVisualSide .authEditorialStory {padding:7px 0 0;margin:0;max-width:none;}
-  .authRefined .authVisualSide .authEditorialStory h2 {font-size:20px;margin:0;}
-  .authRefined .authVisualSide .authEditorialStory p {display:none;}
-  .authRefined .authPanel {padding:28px 24px;}
   .mainNav button[title]::after {display:none;}
 }
 @media(prefers-reduced-motion:reduce) {
