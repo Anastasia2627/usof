@@ -227,6 +227,9 @@ export default function AdminPage({initialTab='users'}) {
   });
   const [data, setData] = useState({ users: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
+  const [banFromReport,setBanFromReport]=useState(null);
+  const [reportBanReason,setReportBanReason]=useState('');
+  const [reportBanNote,setReportBanNote]=useState('');
   const [appealsWarning,setAppealsWarning]=useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -305,6 +308,24 @@ export default function AdminPage({initialTab='users'}) {
     return result;
   }
 
+  async function hideReportedContent(report){
+    if(!window.confirm(t('Hide the reported content from public view?')))return;
+    const kind=report.post_id?'posts':'comments';
+    const id=report.post_id||report.comment_id;
+    await run(()=>api('/'+kind+'/'+id,{
+      method:'PATCH',token:auth.token,body:{status:'inactive'},
+    }));
+  }
+  async function confirmReportBan(report){
+    const target=Number(report.post_author_id||report.comment_author_id);
+    if(!target)return;
+    const result=await run(()=>api('/users/'+target+'/ban',{
+      method:'POST',token:auth.token,
+      body:{reason:reportBanReason,internalNote:reportBanNote},
+    }));
+    if(result){setBanFromReport(null);setReportBanReason('');setReportBanNote('');}
+  }
+
   async function banMember(user,reason) {
     return run(()=>api('/users/'+user.id+'/ban',{method:'POST',token:auth.token,body:reason}));
   }
@@ -360,7 +381,6 @@ export default function AdminPage({initialTab='users'}) {
   return <main className="adminPage">
     <header className="adminTop">
       <div>
-        <p className="adminEyebrow">Circle / Management</p>
         <h1>{t('Admin')}</h1>
         <p className="adminSubtitle">{t('Keep your community running smoothly.')}</p>
       </div>
@@ -379,35 +399,72 @@ export default function AdminPage({initialTab='users'}) {
     <ErrorBox error={error}/>
     {tab === 'dashboard' && !moderator && <DashboardPage embedded/>}
     {loading && tab !== 'dashboard' ? <p className="adminLoading">{t('Loading community data…')}</p> : <>
-      {tab === 'reports' && <section className="adminStack" aria-label="Content reports">
+      {tab==='reports'&&<section className="adminStack" aria-label={t('Content reports')}>
         <div className="adminSectionHeader"><h2>{t('Reported content')}</h2>
-          <span>{reportPagination?.total||0} reports</span></div>
-        <label className="reportsFilter">Show
+          <span>{reportPagination?.total||0}</span></div>
+        <label className="reportsFilter">{t('Show')}
           <select value={reportStatus} onChange={e=>{setReportStatus(e.target.value);setReportPage(1);}}>
-            <option value="open">Open</option><option value="reviewed">Reviewed</option>
-            <option value="dismissed">Dismissed</option><option value="all">All</option>
+            <option value="open">{t('Open')}</option><option value="reviewed">{t('Reviewed')}</option>
+            <option value="dismissed">{t('Dismissed')}</option><option value="all">{t('All')}</option>
           </select>
         </label>
         <div className="adminSimpleList">
-          {data.reports.length?data.reports.map(report=><article key={report.id} className="adminListItem">
-            <div className="adminItemText">
-              <strong>{report.reason.replace('_',' ')} · {report.status}</strong>
-              <p>Reported by @{report.reporter_login} · {report.post_title||report.comment_content||'Deleted item'}</p>
-              {report.details&&<p>{report.details}</p>}
-            </div>
-            <div className="adminRowTools">
-              <button type="button" className="adminIconAction" aria-label={t('Open discussion')} title={t('Open discussion')} onClick={()=>go('/post/'+(report.post_id||report.comment_post_id))}><Icon name="arrow" size={17}/></button>
-              {report.status!=='reviewed'&&<button type="button" className="adminIconAction" aria-label={t('Mark reviewed')} title={t('Mark reviewed')} onClick={()=>run(()=>api('/reports/'+report.id,{
-                method:'PATCH',token:auth.token,body:{status:'reviewed'}}))}><Icon name="check" size={17}/></button>}
-              {report.status!=='dismissed'&&<button type="button" className="adminIconAction" aria-label={t('Dismiss')} title={t('Dismiss')} onClick={()=>run(()=>api('/reports/'+report.id,{
-                method:'PATCH',token:auth.token,body:{status:'dismissed'}}))}><Icon name="close" size={17}/></button>}
-            </div>
-          </article>):<p className="adminEmpty">No reports in this category.</p>}
+          {data.reports.length?data.reports.map(report=>{
+            const authorId=Number(report.post_author_id||report.comment_author_id);
+            return <article key={report.id} className="adminListItem">
+              <div className="adminItemText">
+                <strong>{t(report.reason.replace('_',' '))} · {t(report.status)}</strong>
+                <p>{t('Reported by')} @{report.reporter_login} · {report.post_title||report.comment_content||t('Deleted item')}</p>
+                {report.details&&<p>{report.details}</p>}
+                {Boolean(report.recommend_ban)&&
+                  <p className="modBanRecommendation">{t('Moderator recommends banning the author of this content')}</p>}
+              </div>
+              <div className="adminRowTools">
+                <button type="button" className="adminIconAction" aria-label={t('Open discussion')}
+                  title={t('Open discussion')} onClick={()=>go('/post/'+(report.post_id||report.comment_post_id))}>
+                  <Icon name="arrow" size={17}/></button>
+                <button type="button" className="adminIconAction" aria-label={t('Hide reported content')}
+                  title={t('Hide reported content')} onClick={()=>hideReportedContent(report)}>
+                  <Icon name="lock" size={17}/></button>
+                {!moderator&&authorId>0&&
+                  <button type="button" className="adminIconAction"
+                    aria-label={t('Review account restriction')} title={t('Review account restriction')}
+                    onClick={()=>{setBanFromReport(report.id);setReportBanReason('');setReportBanNote('');}}>
+                    <Icon name="shield" size={17}/></button>}
+                {report.status!=='reviewed'&&<button type="button" className="adminIconAction"
+                  aria-label={t('Mark reviewed')} title={t('Mark reviewed')}
+                  onClick={()=>run(()=>api('/reports/'+report.id,{
+                    method:'PATCH',token:auth.token,body:{status:'reviewed'}}))}>
+                    <Icon name="check" size={17}/></button>}
+                {report.status!=='dismissed'&&<button type="button" className="adminIconAction"
+                  aria-label={t('Dismiss')} title={t('Dismiss')}
+                  onClick={()=>run(()=>api('/reports/'+report.id,{
+                    method:'PATCH',token:auth.token,body:{status:'dismissed'}}))}>
+                    <Icon name="close" size={17}/></button>}
+              </div>
+              {!moderator&&banFromReport===report.id&&
+                <form className="adminInlineForm banEditor" onSubmit={event=>{event.preventDefault();confirmReportBan(report);}}>
+                  <h3>{t('Block the reported author')}</h3>
+                  <label>{t('Official reason (shown to the user)')}
+                    <textarea required minLength={5} maxLength={500} value={reportBanReason}
+                      onChange={event=>setReportBanReason(event.target.value)}/>
+                  </label>
+                  <label>{t('Private admin note (never shown to the user)')}
+                    <textarea maxLength={2000} value={reportBanNote}
+                      onChange={event=>setReportBanNote(event.target.value)}/>
+                  </label>
+                  <div className="adminFormActions">
+                    <button type="button" onClick={()=>setBanFromReport(null)}>{t('Cancel')}</button>
+                    <button type="submit" className="primary">{t('Confirm block')}</button>
+                  </div>
+                </form>}
+            </article>;
+          }):<p className="adminEmpty">{t('No reports in this category.')}</p>}
         </div>
-        {reportPagination?.totalPages>1&&<nav className="pager" aria-label="Report pages">
-          <button type="button" disabled={reportPage<=1} onClick={()=>setReportPage(p=>p-1)}>Previous</button>
-          <span>Page {reportPage} of {reportPagination.totalPages}</span>
-          <button type="button" disabled={reportPage>=reportPagination.totalPages} onClick={()=>setReportPage(p=>p+1)}>Next</button>
+        {reportPagination?.totalPages>1&&<nav className="pager" aria-label={t('Report pages')}>
+          <button type="button" disabled={reportPage<=1} onClick={()=>setReportPage(p=>p-1)}>{t('Previous')}</button>
+          <span>{t('Page')} {reportPage} {t('of')} {reportPagination.totalPages}</span>
+          <button type="button" disabled={reportPage>=reportPagination.totalPages} onClick={()=>setReportPage(p=>p+1)}>{t('Next')}</button>
         </nav>}
       </section>}
       {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
