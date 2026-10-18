@@ -5,23 +5,35 @@ import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
 import ModeratorControl from '../ModeratorControl.jsx';
 import AvatarCropper from '../AvatarCropper.jsx';
+import {useInfiniteRecords,InfiniteScrollEnd} from '../InfiniteScroll.jsx';
 
 export default function ProfilePage({ userId = null }) {
   const auth = useSelector(state => state.auth);
-  const {t} = usePreferences();
+  const {t,language} = usePreferences();
   const dispatch = useDispatch();
   const viewedId = userId || auth?.user?.id;
   const isSelf = Boolean(auth && Number(viewedId) === Number(auth.user.id));
   const [user, setUser] = useState(userId ? null : (auth?.user || null));
   const [name, setName] = useState(auth?.user?.full_name || '');
   const [login, setLogin] = useState(auth?.user?.login || '');
-  const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [pagination, setPagination] = useState(null);
   const [sort, setSort] = useState('date');
   const [status, setStatus] = useState('');
   const [category, setCategory] = useState('');
-  const [page, setPage] = useState(1);
+  const {
+    records:posts,loading:postsLoading,hasMore,error:postsError,loadMore,retry:retryPosts,
+  }=useInfiniteRecords({
+    identity:String(viewedId||'')+'|'+sort+'|'+status+'|'+category+'|'+(auth?.token||''),
+    enabled:Boolean(viewedId),
+    request:(page,signal)=>{
+      const query=new URLSearchParams({
+        author:String(viewedId),page:String(page),limit:'12',sort,order:'desc',
+      });
+      if(status)query.set('status',status);
+      if(category)query.set('category',category);
+      return api('/posts?'+query,{token:auth?.token,signal});
+    },
+  });
   const [editOpen, setEditOpen] = useState(false);
   const [followState,setFollowState]=useState({followers:0,following:false});
   const [followBusy,setFollowBusy]=useState(false);
@@ -56,35 +68,20 @@ export default function ProfilePage({ userId = null }) {
   }, [auth?.token]);
 
   useEffect(() => {
-    if (!viewedId) return;
-    let active = true;
+    if(!viewedId)return;
+    let active=true;
     setLoading(true);
-    setError(null);
-    const query = new URLSearchParams({
-      author: String(viewedId),
-      limit: '6',
-      page: String(page),
-      sort,
-      order: 'desc',
-    });
-    if (status) query.set('status', status);
-    if (category) query.set('category', category);
-
-    Promise.all([
-      api(`/users/${viewedId}`, { token: auth?.token }),
-      api(`/users/${viewedId}/posts?${query}`, { token: auth?.token }),
-    ]).then(([userResult, postResult]) => {
-      if (!active) return;
-      setUser(userResult.data);
-      setName(userResult.data.full_name || '');
-      setLogin(userResult.data.login || '');
-      setPosts(postResult.data);
-      setPagination(postResult.pagination);
-      if (isSelf) dispatch({ type: 'AUTH_USER_SET', payload: userResult.data });
-    }).catch(err => { if (active) setError(err); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [auth?.token, viewedId, isSelf, sort, status, category, page, dispatch]);
+    api('/users/'+viewedId,{token:auth?.token})
+      .then(result=>{
+        if(!active)return;
+        setUser(result.data);
+        setName(result.data.full_name||'');
+        setLogin(result.data.login||'');
+        if(isSelf)dispatch({type:'AUTH_USER_SET',payload:result.data});
+      }).catch(err=>{if(active)setError(err);})
+      .finally(()=>{if(active)setLoading(false);});
+    return()=>{active=false;};
+  },[viewedId,auth?.token,isSelf,dispatch]);
 
   if (!auth && !userId) return <main><div className="card">{t('Log in to view your profile.')} <button onClick={() => go('/login')}>{t('Log in')}</button></div></main>;
 
@@ -144,10 +141,7 @@ export default function ProfilePage({ userId = null }) {
     } catch (err) { setError(err); }
   }
 
-  function changeFilter(setter, value) {
-    setter(value);
-    setPage(1);
-  }
+  function changeFilter(setter,value){setter(value);}
 
   function cancelEdit() {
     setName(user?.full_name || '');
@@ -197,7 +191,7 @@ export default function ProfilePage({ userId = null }) {
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={selectAvatar}
           aria-label="Avatar" disabled={uploading} />
       </label>
-      <p className="profileEditNote">{t('Changing your username will sign you out. You can log in again with the new username.')}</p>
+      <p className="profileEditNote">{language==='uk'?'Зміни профілю збережуться без виходу з акаунта.':'Profile changes update without signing you out.'}</p>
       <div className="profileEditActions">
         <button className="profileCancelEdit" type="button" onClick={cancelEdit}>{t('Cancel')}</button>
         <button className="primary" type="submit">{t('Save profile')}</button>
@@ -239,7 +233,7 @@ export default function ProfilePage({ userId = null }) {
           </select>
         </div>}
       </div>
-      {loading
+      {(loading||postsLoading)&&!posts.length
         ? <p className="profilePostMessage">{t('Loading posts…')}</p>
         : posts.length
           ? <div className="profilePostList">{posts.map(post => <PostCard key={post.id} post={post}/>)}</div>
@@ -249,11 +243,9 @@ export default function ProfilePage({ userId = null }) {
             <p>{t(category || status ? 'Try another topic or status.' : isSelf ? 'Your conversations will appear here.' : 'This member has not posted yet.')}</p>
             {isSelf && !category && !status && <button type="button" onClick={() => go('/create')}>{t('Write your first post')} <Icon name="arrow" size={18}/></button>}
           </div>}
-      {pagination?.totalPages > 1 && <nav className="pager" aria-label="Profile post pages">
-        <button disabled={page <= 1} onClick={() => setPage(value => value - 1)}>{t('Previous')}</button>
-        <span>{t('Page')} {pagination.page} {t('of')} {pagination.totalPages}</span>
-        <button disabled={page >= pagination.totalPages} onClick={() => setPage(value => value + 1)}>{t('Next')}</button>
-      </nav>}
+      {!posts.length&&<ErrorBox error={postsError} onRetry={retryPosts}/>}
+      <InfiniteScrollEnd records={posts} hasMore={hasMore} loading={postsLoading}
+        error={postsError} loadMore={loadMore} retry={retryPosts} language={language}/>
     </section>
     {isSelf && <details className="profileSettings">
       <summary>{t('Account settings')} <Icon name="chevron" size={18}/></summary>
