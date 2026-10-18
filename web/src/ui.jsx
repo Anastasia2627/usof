@@ -342,7 +342,7 @@ export function Header() {
           </button>
           <button className="profileButton" aria-label={`Profile of ${auth.user.login} (${auth.user.role})`} onClick={() => go('/profile')}>
             <Avatar user={auth.user} size="sm" />
-            <span className="accountIdentity"><small>@{auth.user.login}</small><span className="accountRole">{auth.user.role}</span></span>
+            <span className="accountIdentity"><small>@{auth.user.login}</small><span className="accountRole">{t(auth.user.role)}</span></span>
           </button>
           <details className="accountMenu" ref={menuRef}>
             <summary aria-label="Account menu" title="Account menu"><Icon name="more" size={23}/></summary>

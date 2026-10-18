@@ -411,6 +411,27 @@ Object.assign(translations.uk, {
   "Unblock": "Розблокувати",
   "Warning": "Попередження"
 });
+Object.assign(translations.uk,{
+  "admin":"адміністратор","moderator":"модератор","user":"користувач",
+  "Show all":"Показати всі","Notifications":"Сповіщення",
+  "Right-click for options":"Натисніть правою кнопкою для дій",
+  "All caught up":"Нових сповіщень немає",
+  "No notifications.":"Сповіщень поки немає.",
+  "Report sent to moderators.":"Скаргу надіслано модераторам.",
+  "They will lose site access, but can still appeal this restriction.":"Користувач втратить доступ до сайту, але зможе оскаржити блокування.",
+  "New report":"Нова скарга","No matching posts.":"Дописи не знайдені.",
+  "No matching users.":"Користувачів не знайдено.",
+  "No matching categories.":"Категорій не знайдено.",
+  "No conversations found":"Дописи не знайдено",
+  "Try changing your filters or browse all discussions.":"Спробуйте змінити фільтри або перегляньте всі дописи.",
+  "You cannot delete your own admin account":"Не можна видалити власний акаунт адміністратора",
+  "Ban appeals are unavailable":"Оскарження тимчасово недоступні",
+  "Failed to fetch":"Не вдалося завантажити дані",
+  "Account restrictions":"Блокування акаунта",
+  "Suggested topics":"Запропоновані теми",
+  "Report pages":"Сторінки скарг",
+  "New account ban appeal":"Нове оскарження блокування"
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {
