@@ -410,7 +410,7 @@ export default function AdminPage({initialTab='users'}) {
         </nav>}
       </section>}
       {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
-        <div className="adminSectionHeader"><h2>Ban appeals</h2><span>{counts.appeals} waiting</span></div>
+        <div className="adminSectionHeader"><h2>{t('Ban appeals')}</h2><span>{counts.appeals} waiting</span></div>
         {appealsWarning&&<p className="adminAppealsWarning" role="alert">{appealsWarning}</p>}
         <div className="adminSimpleList">
           {data.appeals.length ? data.appeals.map(item=><article className="adminListItem banAppealCard" key={item.id}>
