@@ -250,7 +250,7 @@ export function Header() {
   // The backend reads the role from MySQL on each request. Sync it in the UI so
   // promotions and revocations do not leave outdated moderation buttons visible.
   useEffect(()=>{
-    if(!auth?.token||!auth.user?.id){setUnread(0);setRoleNotice('');return;}
+    if(!auth?.token||!auth.user?.id||auth.user.banned_at){setUnread(0);setRoleNotice('');return;}
     let active=true;
     const sync=async()=>{
       if(document.visibilityState==='hidden')return;
@@ -261,10 +261,12 @@ export function Header() {
         ]);
         if(!active)return;
         setUnread(Number(notifications.unreadCount||0));
-        if(account.data.role!==auth.user.role){
+        if (['login','full_name','email','avatar','role','banned_at','ban_reason']
+          .some(key=>String(account.data[key]??'')!==String(auth.user[key]??''))) {
+          const roleChanged=account.data.role!==auth.user.role;
           const role=account.data.role;
           dispatch({type:'AUTH_USER_SET',payload:{...auth.user,...account.data}});
-          setRoleNotice(role==='moderator'?t('You are now a moderator'):role==='user'?t('Your moderator role was removed'):t('Your role was updated'));
+          if(roleChanged) setRoleNotice(role==='moderator'?t('You are now a moderator'):role==='user'?t('Your moderator role was removed'):t('Your role was updated'));
         }
       }catch{/* The header remains usable while the network is unavailable. */}
     };
@@ -332,13 +334,6 @@ export function Header() {
         <input aria-label="Search posts, people and categories" placeholder={t('Search')} value={search} onChange={event => setSearch(event.target.value)} />
         <button className="searchSubmit" type="submit" aria-label="Search" title="Search"><Icon name="arrow" size={19}/></button>
       </form>}
-      {!guestLanding && <nav className="mainNav" aria-label="Main navigation">
-        {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
-          className={current === item.destination ? 'navActive' : ''}
-          aria-label={t(item.text)} onClick={() => go(item.destination)}>
-          <Icon name={item.icon} size={24} filled={current === item.destination}/><span className="navLabel">{t(item.text)}</span>
-        </button>)}
-      </nav>}
       <div className="accountArea">
         {auth ? <>
           <button className="headerNotify" aria-label={t('Notifications')+(unread?' ('+unread+')':'')}
@@ -368,6 +363,13 @@ export function Header() {
       </div>
     </div>
   </header>
+    {!guestLanding && !auth?.user?.banned_at && <nav className="mainNav" aria-label="Main navigation">
+      {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
+        className={current === item.destination ? 'navActive' : ''}
+        aria-label={t(item.text)} onClick={() => go(item.destination)}>
+        <Icon name={item.icon} size={24} filled={current === item.destination}/><span className="navLabel">{t(item.text)}</span>
+      </button>)}
+    </nav>}
     {roleNotice&&<div role="status" className="roleChangeBanner">
       <span className="roleChangeMessage"><Icon name="check" size={17}/>{roleNotice}</span>
       <button type="button" onClick={()=>{setRoleNotice('');go('/notifications');}}>{t('View notifications')}</button>

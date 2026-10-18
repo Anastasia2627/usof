@@ -67,6 +67,14 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   }
   if (!response.ok) {
+    if (token && response.status === 403 && data?.error?.code === 'ACCOUNT_BANNED' &&
+        store.getState().auth?.token === token) {
+      store.dispatch({ type: 'AUTH_USER_SET', payload: {
+        ...store.getState().auth.user,
+        banned_at: data.error.details?.banned_at || new Date().toISOString(),
+        ban_reason: data.error.details?.ban_reason || '',
+      } });
+    }
     // Invalid tokens (including sessions revoked on an older build) must not
     // leave the feed showing the same 401 error below every single post.
     // Only clear the exact session used by this request: old in-flight requests

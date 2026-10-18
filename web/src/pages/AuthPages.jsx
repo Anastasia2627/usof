@@ -54,17 +54,23 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
   }
 
   return <form className="authForm verificationForm" onSubmit={verify}>
-    <h1>Confirm your email</h1>
-    <p>Enter the six-digit code sent to <b>{email}</b>.</p>
+    <div className="verificationVisual" aria-hidden="true">
+      <span className="verifyHalo verifyHaloOne"></span><span className="verifyHalo verifyHaloTwo"></span>
+      <span className="verificationLetter">✉<span>✦</span></span>
+    </div>
+    <span className="verifyStep">01 <span></span> 02 · ALMOST THERE</span>
+    <h1>One little step left.</h1>
+    <p>We sent a six-digit code to <b>{email}</b>. Let's make sure it's really you.</p>
     {lastDelivery && lastDelivery !== 'sent' && <p className="error card">Your account was created, but no email was sent. Configure SMTP and request a new code. Avoid registering again with the same address.</p>}
-    <label>Verification code
-      <input inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
-        value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+    <label className="verifyCodeLabel">Your verification code
+      <input aria-label="Six-digit verification code" className="verifyCodeInput" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
+        placeholder="••••••" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
     </label>
+    <p className="verifyHint">Check your inbox and spam folder. The code expires in 20 minutes.</p>
     <div className="toolbar">
-      <button className="primary authSubmit" disabled={busy}>Verify email</button>
-      <button type="button" onClick={resend} disabled={busy}>Resend code</button>
-      <button type="button" onClick={() => go('/login')}>Log in</button>
+      <button className="primary authSubmit" disabled={busy || code.length !== 6}>Confirm email <span aria-hidden="true">→</span></button>
+      <button className="verifyResend" type="button" onClick={resend} disabled={busy}>Send a new code</button>
+      <button className="verifyResend" type="button" onClick={() => go('/login')}>Back to login</button>
     </div>
     {message && <p role="status">{message}</p>}
     <ErrorBox error={error} />
@@ -87,7 +93,7 @@ export function AuthPage({ mode }) {
 
   function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
-    go(firstRegistration ? '/interests' : '/');
+    go(result.user?.banned_at ? '/ban' : firstRegistration ? '/interests' : '/');
   }
 
   async function submit(event) {

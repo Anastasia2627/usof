@@ -5,11 +5,15 @@ import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import DashboardPage from './DashboardPage.jsx';
 
-function UserRow({ user, auth, onSave, onDelete }) {
+function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
   const {t}=usePreferences();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [roleBusy, setRoleBusy] = useState(false);
+  const [showBan, setShowBan] = useState(false);
+  const [banReason, setBanReason] = useState('');
+  const [adminNote, setAdminNote] = useState('');
+  const [banBusy, setBanBusy] = useState(false);
   const [form, setForm] = useState({
     login: user.login,
     email: user.email,
@@ -35,6 +39,21 @@ function UserRow({ user, auth, onSave, onDelete }) {
     } finally { setSaving(false); }
   }
 
+  async function submitBan(event) {
+    event.preventDefault();
+    setBanBusy(true);
+    try {
+      const result = await onBan(user,{reason:banReason,internalNote:adminNote});
+      if(result){setShowBan(false);setBanReason('');setAdminNote('');}
+    } finally { setBanBusy(false); }
+  }
+
+  async function unblock() {
+    if(!window.confirm('Restore access for @'+user.login+'?'))return;
+    setBanBusy(true);
+    try{await onUnban(user);}finally{setBanBusy(false);}
+  }
+
   async function quickRole() {
     const nextRole=user.role==='moderator'?'user':'moderator';
     const question=nextRole==='moderator'
@@ -53,9 +72,14 @@ function UserRow({ user, auth, onSave, onDelete }) {
         <button type="button" className="adminName" onClick={() => go('/profile/' + user.id)}>{user.login}</button>
         <p>{user.full_name || user.email}</p>
       </div>
-      <span className="adminRoleChip">{user.role}</span>
+      <span className="adminRoleChip">{user.banned_at ? 'Banned' : user.role}</span>
       <span className="adminScore" title="User rating">{Number(user.rating || 0)} pts</span>
       <div className="adminRowTools">
+        {user.role!=='admin' && (user.banned_at ?
+          <button type="button" className="adminIconAction" title="Unban user" aria-label={'Unban '+user.login}
+            disabled={banBusy} onClick={unblock}><Icon name="unlock" size={18}/></button> :
+          <button type="button" className="adminIconAction" title="Ban user" aria-label={'Ban '+user.login}
+            onClick={()=>setShowBan(v=>!v)}><Icon name="lock" size={18}/></button>)}
         {user.role!=='admin' && <button type="button" className={user.role==='moderator'?'roleQuickButton roleRevoke':'roleQuickButton'}
           disabled={roleBusy || saving} aria-label={(user.role==='moderator'?'Remove moderator from ':'Make moderator: ')+user.login}
           onClick={quickRole}>
@@ -73,6 +97,25 @@ function UserRow({ user, auth, onSave, onDelete }) {
         </button>
       </div>
     </div>
+    {showBan && !user.banned_at && <form className="adminInlineForm banEditor" onSubmit={submitBan}>
+      <h3>Block @{user.login}</h3>
+      <p>They will lose site access, but can still appeal this restriction.</p>
+      <label>Official reason (shown to the user)
+        <textarea minLength={5} maxLength={500} required value={banReason} onChange={e=>setBanReason(e.target.value)} />
+      </label>
+      <label>Private admin note (never shown to the user)
+        <textarea maxLength={2000} value={adminNote} onChange={e=>setAdminNote(e.target.value)} />
+      </label>
+      <div className="adminFormActions">
+        <button type="button" onClick={()=>setShowBan(false)}>Cancel</button>
+        <button className="primary" disabled={banBusy}>Confirm block</button>
+      </div>
+    </form>}
+    {user.banned_at && <div className="adminBanSummary">
+      <strong>Blocked {new Date(user.banned_at).toLocaleString()}</strong>
+      <p>Official reason: {user.ban_reason}</p>
+      {user.ban_internal_note && <p>Private note: {user.ban_internal_note}</p>}
+    </div>}
     {editing && <form className="adminInlineForm" onSubmit={save}>
       <div className="adminFields">
         <label>Username<input aria-label={'Login for ' + user.login} required minLength="3" maxLength="50" value={form.login} onChange={event => setForm({ ...form, login: event.target.value })}/></label>
@@ -175,7 +218,8 @@ export default function AdminPage({initialTab='users'}) {
   const [reportPagination,setReportPagination] = useState(null);
   const [postPage, setPostPage] = useState(1);
   const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [] });
+  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
+  const [appealNotes,setAppealNotes]=useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -186,7 +230,7 @@ export default function AdminPage({initialTab='users'}) {
     setError(null);
     setLoading(true);
     try {
-      const [users, posts, categories, comments, reactions, reports,suggestions] = await Promise.all([
+      const [users, posts, categories, comments, reactions, reports,suggestions,appeals] = await Promise.all([
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
@@ -194,8 +238,9 @@ export default function AdminPage({initialTab='users'}) {
         api('/reactions?limit=100', { token: auth.token }),
         api('/reports?status='+reportStatus+'&page='+reportPage,{token:auth.token}),
         moderator?Promise.resolve({data:[]}):api('/categories/suggestions?status='+suggestionStatus,{token:auth.token}),
+        moderator?Promise.resolve({data:[]}):api('/users/ban-appeals',{token:auth.token}),
       ]);
-      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data, suggestions:suggestions.data });
+      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data, suggestions:suggestions.data, appeals:appeals.data });
       setReportPagination(reports.pagination);
       const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
       setPostPagination(pagination);
@@ -231,11 +276,24 @@ export default function AdminPage({initialTab='users'}) {
     const path = '/users/' + user.id + (roleOnly ? '/role' : '');
     const result = await run(() => api(path, { method: 'PATCH', token: auth.token,
       body: roleOnly ? {role:form.role} : form }));
-    if (result?.sessionInvalidated && Number(user.id) === Number(auth.user.id)) {
-      dispatch({ type: 'AUTH_CLEAR' });
-      go('/login');
+    if(result?.data && Number(user.id) === Number(auth.user.id)) {
+      dispatch({type:'AUTH_USER_SET',payload:{...auth.user,...result.data}});
     }
     return result;
+  }
+
+  async function banMember(user,reason) {
+    return run(()=>api('/users/'+user.id+'/ban',{method:'POST',token:auth.token,body:reason}));
+  }
+  async function unbanMember(user) {
+    return run(()=>api('/users/'+user.id+'/ban',{method:'DELETE',token:auth.token}));
+  }
+  async function decideAppeal(item,status) {
+    const action=status==='approved'?'Approve and unblock':'Reject';
+    if(!window.confirm(action+' the appeal by @'+item.login+'?'))return;
+    return run(()=>api('/users/ban-appeals/'+item.id,{
+      method:'PATCH',token:auth.token,body:{status,reviewNote:appealNotes[item.id]||''},
+    }));
   }
 
   function deleteUser(user) {
@@ -272,8 +330,9 @@ export default function AdminPage({initialTab='users'}) {
     suggestions: data.suggestions.length,
     comments: data.comments.length,
     reports: reportPagination?.total||0,
+    appeals: data.appeals.filter(item=>item.status==='pending').length,
   };
-  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','suggestions','reports','posts','categories','comments','reactions'];
+  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','appeals','suggestions','reports','posts','categories','comments','reactions'];
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -328,6 +387,30 @@ export default function AdminPage({initialTab='users'}) {
           <button type="button" disabled={reportPage>=reportPagination.totalPages} onClick={()=>setReportPage(p=>p+1)}>Next</button>
         </nav>}
       </section>}
+      {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
+        <div className="adminSectionHeader"><h2>Ban appeals</h2><span>{counts.appeals} waiting</span></div>
+        <div className="adminSimpleList">
+          {data.appeals.length ? data.appeals.map(item=><article className="adminListItem banAppealCard" key={item.id}>
+            <div className="adminItemText">
+              <strong>@{item.login} · {item.status}</strong>
+              <p>Blocked: {new Date(item.ban_started_at).toLocaleString()}</p>
+              <p><b>Official reason:</b> {item.ban_reason}</p>
+              {item.ban_internal_note&&<p className="appealPrivate"><b>Private admin note:</b> {item.ban_internal_note}</p>}
+              <p><b>User's appeal:</b> {item.explanation}</p>
+              <small>Submitted {new Date(item.created_at).toLocaleString()}</small>
+              {item.status!=='pending'&&<p><b>Decision:</b> {item.status}{item.review_note?' · '+item.review_note:''}</p>}
+            </div>
+            {item.status==='pending'&&<div className="banAppealActions">
+              <label>Review note (optional)
+                <textarea maxLength={1000} value={appealNotes[item.id]||''}
+                  onChange={e=>setAppealNotes(v=>({...v,[item.id]:e.target.value}))}/>
+              </label>
+              <button type="button" className="primary" onClick={()=>decideAppeal(item,'approved')}>Approve & unban</button>
+              <button type="button" onClick={()=>decideAppeal(item,'rejected')}>Reject appeal</button>
+            </div>}
+          </article>) : <p className="adminEmpty">No appeals yet.</p>}
+        </div>
+      </section>}
       {tab === 'users' && <section className="adminStack">
         <div className="adminSectionHeader"><h2>{t('Members')}</h2>
           <span>{data.users.length} total</span>
@@ -352,7 +435,7 @@ export default function AdminPage({initialTab='users'}) {
           </form>
         </details>
         <div className="adminSimpleList">
-          {data.users.map(user => <UserRow key={user.id + '-' + user.login + '-' + user.role} user={user} auth={auth} onSave={saveUser} onDelete={deleteUser}/>)}
+          {data.users.map(user => <UserRow key={user.id + '-' + user.login + '-' + user.role + '-' + user.banned_at} user={user} auth={auth} onSave={saveUser} onDelete={deleteUser} onBan={banMember} onUnban={unbanMember}/>)}
         </div>
       </section>}
 

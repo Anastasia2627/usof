@@ -98,15 +98,10 @@ export default function ProfilePage({ userId = null }) {
         token: auth.token,
         body: { fullName: name, login },
       });
-      if (result.sessionInvalidated) {
-        dispatch({ type: 'AUTH_CLEAR' });
-        go('/login');
-      } else {
-        setUser(result.data);
-        dispatch({ type: 'AUTH_USER_SET', payload: result.data });
-        setEditOpen(false);
-        setMessage(t('Profile saved.'));
-      }
+      setUser(result.data);
+      dispatch({ type: 'AUTH_USER_SET', payload: result.data });
+      setEditOpen(false);
+      setMessage(t('Profile saved.'));
     } catch (err) { setError(err); }
   }
 

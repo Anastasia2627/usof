@@ -16,6 +16,7 @@ import DashboardPage from './pages/DashboardPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import InterestsPage from './pages/InterestsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
+import BanPage from './pages/BanPage.jsx';
 
 function currentHash() {
   return window.location.hash.slice(1) || '/';
@@ -50,6 +51,7 @@ export default function App() {
   else if (path === '/dashboard') page = auth?.user?.role==='admin'?<AdminPage initialTab="dashboard"/>:<DashboardPage />;
   else if (path === '/settings') page = <SettingsPage />;
   else if (path === '/interests') page = <InterestsPage />;
+  else if (path === '/ban') page = <BanPage />;
   else if (path === '/login') page = <AuthPage mode="login" />;
   else if (path === '/register') page = <AuthPage mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
@@ -64,6 +66,9 @@ export default function App() {
   else if (parts[0] === 'verify') page = <VerifyPage token={parts[1] || ''} />;
   else if (parts[0] === 'reset') page = <ResetPage token={parts[1] || ''} />;
   else page = <main className="narrow"><h1>Page not found</h1><button onClick={() => go('/')}>Home</button></main>;
+
+  // A restriction takes precedence over every normal page, including stored routes.
+  if (auth?.user?.banned_at) page = <BanPage />;
 
   return <><Header />
     {sessionExpired && <div className="sessionExpiredBanner" role="status">
