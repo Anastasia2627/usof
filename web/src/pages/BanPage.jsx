@@ -66,68 +66,58 @@ export default function BanPage(){
     <button className="primary" onClick={()=>go('/login')}>{t('Log in')}</button>
   </main>;
 
-  return <main className="banPage banNightPage">
-    <section className="banNightStage" aria-labelledby="banNightTitle">
-      <div className="banNightLight banNightLightLeft" aria-hidden="true"/>
-      <div className="banNightLight banNightLightRight" aria-hidden="true"/>
-
-      <div className="banNightHeading">
-        <h1 id="banNightTitle">{t('Account blocked')}</h1>
+  return <main className="banPage banEditorialPage">
+    <header className="banNightStage banEditorialHero">
+      <h1 id="restriction-title">{t('Account blocked')}</h1>
+      <div className="banEditorialUnderline" aria-hidden="true"/>
+    </header>
+    <section className="banNightPanel banEditorialDetails" aria-labelledby="restriction-title">
+      <div className="banEditorialReason">
+        <span className="banEditorialCaption">{t('Official reason')}</span>
+        <h2>{auth.user?.ban_reason||
+          t('Account access has been restricted by an administrator.')}</h2>
+        {auth.user?.banned_at&&<time dateTime={auth.user.banned_at}>
+          {t('Blocked on')} · {formatDate(auth.user.banned_at)}
+        </time>}
       </div>
-
-      <div className="banNightWord" aria-hidden="true">circle</div>
-
-      <section className="banNightPanel" aria-label={t('Account restriction details')}>
-        <div className="banNightReason">
-          <span className="banNightLabel">{t('Official reason')}</span>
-          <h2>{auth.user?.ban_reason||
-            t('Account access has been restricted by an administrator.')}</h2>
-          {auth.user?.banned_at&&<time dateTime={auth.user.banned_at}>
-            {t('Blocked on')} · {formatDate(auth.user.banned_at)}
-          </time>}
-        </div>
-        <div className="banNightAppeal">
-          {initialLoading
-            ? <p role="status" className="banNightLoading">{t('Loading…')}</p>
-            : appeal
-              ? <>
-                <div className="banNightAppealTitle">
-                  <h3>{t('Your appeal')}</h3>
-                  <span className={'banNightAppealBadge banNightAppealBadge-'+appeal.status}>
-                    {t(appeal.status)}
-                  </span>
-                </div>
-                <p className="banNightExplanation">{appeal.explanation}</p>
-                {appeal.review_note&&<p className="banNightDecision">
-                  <strong>{t('Admin response')}</strong> {appeal.review_note}
-                </p>}
-                <time className="banNightTime" dateTime={appeal.created_at}>
-                  {t('Submitted')} · {formatDate(appeal.created_at)}
-                </time>
-              </>
-              : <form onSubmit={submit} className="banNightForm">
-                <h3>{t('Appeal this decision')}</h3>
-                <label htmlFor="banNightAppealInput">{t('Your appeal')}</label>
-                <textarea id="banNightAppealInput" value={text}
-                  onChange={event=>setText(event.target.value)}
-                  minLength={5} maxLength={4000} required
-                  placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
-                <div className="banNightFormActions">
-                  <span>{text.length}/4000</span>
-                  <button className="primary" type="submit" disabled={busy||text.trim().length<5}>
-                    {t(busy?'Sending…':'Submit appeal')} <Icon name="arrow" size={16}/>
-                  </button>
-                </div>
-              </form>}
-        </div>
+      <div className="banEditorialAppeal">
+        {initialLoading?<p role="status">{t('Loading…')}</p>
+          :appeal?<div className="banEditorialAppealStatus">
+            <div className="banEditorialStatusLine">
+              <h2>{t('Your appeal')}</h2>
+              <span className={'banNightAppealBadge banAppealStatus-'+appeal.status}>
+                {t(appeal.status)}
+              </span>
+            </div>
+            <p className="banNightExplanation">{appeal.explanation}</p>
+            {appeal.review_note&&<p className="banEditorialReview">
+              <strong>{t('Admin response')}</strong> {appeal.review_note}
+            </p>}
+            <time dateTime={appeal.created_at}>
+              {t('Submitted')} · {formatDate(appeal.created_at)}
+            </time>
+          </div>:<form className="banNightForm banEditorialForm" onSubmit={submit}>
+            <h2>{t('Appeal this decision')}</h2>
+            <label className="srOnly" htmlFor="banAppealInput">{t('Your appeal')}</label>
+            <textarea id="banAppealInput" value={text}
+              onChange={event=>setText(event.target.value)}
+              required minLength={5} maxLength={4000} rows="4"
+              placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
+            <div className="banEditorialSubmit">
+              <span>{text.length}/4000</span>
+              <button type="submit" className="primary" disabled={busy||text.trim().length<5}>
+                {t(busy?'Sending…':'Submit appeal')} <Icon name="arrow" size={17}/>
+              </button>
+            </div>
+          </form>}
         <ErrorBox error={error}/>
-        <div className="banNightPanelFooter">
-          <button type="button" onClick={refresh} disabled={busy}>
-            <Icon name="refresh" size={16}/>{t('Refresh status')}
-          </button>
-          <button type="button" onClick={logOut}>{t('Log out')}</button>
-        </div>
-      </section>
+      </div>
     </section>
+    <nav className="banEditorialFooter" aria-label={t('Account restriction details')}>
+      <button type="button" onClick={refresh} disabled={busy}>
+        <Icon name="refresh" size={17}/>{t('Refresh status')}
+      </button>
+      <button type="button" onClick={logOut}>{t('Log out')}</button>
+    </nav>
   </main>;
 }
