@@ -2,8 +2,10 @@ import React,{useEffect,useState} from 'react';
 import {useDispatch,useSelector} from 'react-redux';
 import {api} from '../api.js';
 import {ErrorBox,go} from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 export default function BanPage(){
+  const {t}=usePreferences();
   const auth=useSelector(state=>state.auth);
   const dispatch=useDispatch();
   const [appeal,setAppeal]=useState(null);
@@ -38,7 +40,7 @@ export default function BanPage(){
     event.preventDefault();setBusy(true);setError(null);setNotice('');
     try{
       await api('/auth/ban-appeal',{method:'POST',token:auth.token,body:{explanation:text}});
-      setNotice('Your appeal was received. An administrator will review it.');
+      setNotice(t('Your appeal was received. An administrator will review it.'));
       setText('');
       await refresh();
     }catch(err){setError(err);}finally{setBusy(false);}
@@ -49,33 +51,32 @@ export default function BanPage(){
     go('/login');
   }
 
-  if(!auth)return <main className="banPage"><h1>Sign in to view your account status.</h1><button onClick={()=>go('/login')}>Log in</button></main>;
+  if(!auth)return <main className="banPage"><h1>{t('Sign in to view your account status.')}</h1><button onClick={()=>go('/login')}>{t('Log in')}</button></main>;
   return <main className="banPage">
     <div className="banSymbol" aria-hidden="true">✳</div>
-    <span className="interestEyebrow">CIRCLE / ACCOUNT STATUS</span>
-    <h1>Your account has been restricted.</h1>
-    <p className="banLead">You can't access Circle while this restriction is active. You can still send an appeal for review.</p>
+    <h1>{t('Your account has been restricted.')}</h1>
+    <p className="banLead">{t("You can't access Circle while this restriction is active. You can still send an appeal for review.")}</p>
     <section className="banReasonCard">
-      <span>Official reason</span>
-      <p>{auth.user?.ban_reason || 'Account access has been restricted by an administrator.'}</p>
-      {auth.user?.banned_at&&<small>Restricted on {new Date(auth.user.banned_at).toLocaleString()}</small>}
+      <span>{t('Official reason')}</span>
+      <p>{auth.user?.ban_reason || t('Account access has been restricted by an administrator.')}</p>
+      {auth.user?.banned_at&&<small>{t('Blocked on')} {new Date(auth.user.banned_at).toLocaleString()}</small>}
     </section>
     {appeal ? <section className="appealState">
-      <h2>Appeal {appeal.status}</h2>
+      <h2>{t('Your appeal')} · {t(appeal.status)}</h2>
       <p>{appeal.explanation}</p>
-      {appeal.review_note&&<p>Admin response: {appeal.review_note}</p>}
-      <small>Submitted {new Date(appeal.created_at).toLocaleString()}</small>
+      {appeal.review_note&&<p>{t('Decision')}: {appeal.review_note}</p>}
+      <small>{t('Submitted')} {new Date(appeal.created_at).toLocaleString()}</small>
     </section> : <form className="banAppealForm" onSubmit={submit}>
-      <h2>Tell us what happened</h2>
-      <label>Your appeal
+      <h2>{t('Tell us what happened')}</h2>
+      <label>{t('Your appeal')}
         <textarea value={text} onChange={e=>setText(e.target.value)}
-          minLength={5} maxLength={4000} required placeholder="Explain why you believe this restriction should be reconsidered…"/>
+          minLength={5} maxLength={4000} required placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
       </label>
-      <button className="primary" disabled={busy}>Submit appeal →</button>
+      <button className="primary" disabled={busy}>{t('Submit appeal')} →</button>
     </form>}
     {notice&&<p role="status">{notice}</p>}
     <ErrorBox error={error}/>
-    <div className="banUtility"><button type="button" onClick={refresh}>Refresh status</button>
-      <button type="button" onClick={logOut}>Log out</button></div>
+    <div className="banUtility"><button type="button" onClick={refresh}>{t('Refresh status')}</button>
+      <button type="button" onClick={logOut}>{t('Log out')}</button></div>
   </main>;
 }
