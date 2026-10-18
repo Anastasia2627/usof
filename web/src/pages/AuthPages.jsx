@@ -196,9 +196,9 @@ export function AuthPage({ mode }) {
         {!register && <div className="authRecovery">
           <button className="linkButton" onClick={() => setRecovery(value => !value)}>{t('Need a new email verification code?')}</button>
           {recovery && <form className="form" onSubmit={resendAfterLeaving}>
-            <label>Registration email<input type="email" required value={recoveryEmail}
+            <label>{t('Registration email')}<input type="email" required value={recoveryEmail}
               onChange={e => setRecoveryEmail(e.target.value)} /></label>
-            <button className="secondary" disabled={busy}>Send new code</button>
+            <button className="secondary" disabled={busy}>{t('Send new code')}</button>
             {recoveryMessage && <p role="status">{recoveryMessage}</p>}
           </form>}
         </div>}
@@ -208,6 +208,7 @@ export function AuthPage({ mode }) {
 }
 
 export function VerifyPage({ token }) {
+  const {t}=usePreferences();
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(Boolean(token));
@@ -222,15 +223,16 @@ export function VerifyPage({ token }) {
 
   return <main className="authStandalone">
     <section className="verificationLinkPanel">
-      <h1>Email confirmation</h1>
-      {busy ? <p>Verifying…</p> : message && <p>{message}</p>}
+      <h1>{t('Email confirmation')}</h1>
+      {busy ? <p>{t('Verifying…')}</p> : message && <p>{t(message)}</p>}
       <ErrorBox error={error} />
-      <button className="primary" onClick={() => go('/login')}>Continue to login</button>
+      <button className="primary" onClick={() => go('/login')}>{t('Continue to login')}</button>
     </section>
   </main>;
 }
 
 export function ResetPage({ token }) {
+  const {t}=usePreferences();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -264,16 +266,16 @@ export function ResetPage({ token }) {
 
   return <main className="authStandalone">
     <form className="resetPanel authForm" onSubmit={submit}>
-      <h1>{token ? 'Choose new password' : 'Reset password'}</h1>
+      <h1>{t(token ? 'Choose new password' : 'Reset password')}</h1>
       {token ? <>
-        <label>New password<input type="password" required minLength="8" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
-        <label>Confirm password<input type="password" required minLength="8" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></label>
-      </> : <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
-      <button className="primary" disabled={busy}>{token ? 'Change password' : 'Send reset link'}</button>
+        <label>{t('New password')}<input type="password" required minLength="8" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
+        <label>{t('Confirm password')}<input type="password" required minLength="8" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></label>
+      </> : <label>{t('Email')}<input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
+      <button className="primary" disabled={busy}>{t(token ? 'Change password' : 'Send reset link')}</button>
       {message && <p role="status">{message}</p>}
       {devToken && <button type="button" onClick={() => go('/reset/' + devToken)}>Use local test token</button>}
       <ErrorBox error={error} />
-      <button type="button" onClick={() => go('/login')}>Back to login</button>
+      <button type="button" onClick={() => go('/login')}>{t('Back to login')}</button>
     </form>
   </main>;
 }
