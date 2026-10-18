@@ -488,3 +488,139 @@ html[data-theme=dark] .appealReviewMessage p{color:#ded5e5;}
   .categoryEditorialCard,
   .categoryCardArrow{transition:none;}
 }
+
+
+/* Report moderation mirrors the appeal inbox: select a case, then act once. */
+.reportWorkbenchHeading{display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.reportWorkbenchHeading .reportsFilter{margin:0;}
+.reportWorkbenchHeading .reportsFilter select{
+  min-height:38px;padding:8px 32px 8px 14px;
+  border:1px solid #ebe7f0;
+  border-radius:999px;background:#faf9fc;
+  font-size:12px;font-weight:640;color:#51485b;
+}
+.reportWorkspace{
+  display:grid;grid-template-columns:minmax(215px,.38fr) minmax(0,.62fr);
+  min-height:400px;max-width:100%;
+  border-top:1px solid #ece8ef;border-bottom:1px solid #ece8ef;
+}
+.reportWorkspaceList{min-width:0;max-height:650px;overflow:auto;border-right:1px solid #ece8ef;}
+.reportInboxItem {
+  display:flex;flex-direction:column;align-items:stretch;gap:9px;
+  width:100%;min-height:115px;padding:19px 20px;
+  border:0;border-bottom:1px solid #eeeaf0;
+  background:transparent;text-align:left;color:#2f2938;
+}
+.reportInboxItem.selected {background:#f8f5fc;box-shadow:inset 3px 0 #8465bf;}
+.reportInboxItem:hover:not(.selected){background:#fbfafd;}
+.reportInboxHeading{display:flex;align-items:center;gap:9px;font-size:13px;}
+.reportInboxHeading strong{font-weight:760;overflow-wrap:anywhere;}
+.reportInboxContent{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;max-width:100%;
+  color:#6f6876;font-size:12px;line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.reportInboxFoot {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;color:#99919f;font-size:11px;
+}
+.reportInboxFoot span:last-child{color:#6f50a2;font-weight:700;}
+.reportWorkspaceDetail{
+  display:flex;flex-direction:column;min-width:0;
+  padding:29px clamp(24px,3.2vw,43px) 33px;
+}
+.reportWorkspaceTop {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:18px;padding-bottom:23px;border-bottom:1px solid #efebf2;
+}
+.reportWorkspaceTop h3{
+  margin:0 0 8px;font-size:22px;letter-spacing:-.04em;
+  font-weight:785;color:#28212e;
+}
+.reportWorkspaceTop span:not(.reportStatus){
+  display:block;font-size:12px;color:#8e8594;
+}
+.reportStatus{
+  color:#6645a0;background:#f1eafb;
+  border-radius:999px;padding:7px 11px;
+  font-size:11px;font-weight:700;
+}
+.reportReviewSection{padding:21px 0;border-bottom:1px solid #f0edf2;}
+.reportReviewSection>span{
+  display:block;margin:0 0 10px;
+  font-size:11px;font-weight:740;color:#847b8b;
+}
+.reportReviewSection>strong{display:block;font-size:14px;font-weight:740;color:#3c3444;}
+.reportReviewSection p{
+  margin:0;color:#4a4350;font-size:14px;line-height:1.65;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.reportRecommendation{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:16px 0;border-bottom:1px solid #ede9f0;
+  font-size:12px;font-weight:660;line-height:1.5;color:#6545a0;
+}
+.reportRecommendation .circleIcon{flex:none;}
+.reportReviewActions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+  padding:24px 0 6px;
+}
+.reportReviewActions button{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:38px;padding:9px 12px;
+  border:0;border-radius:10px;
+  background:#f5f3f6;color:#52495b;
+  font-size:12px;font-weight:685;
+}
+.reportReviewActions button:hover{background:#ebe3f4;color:#583b99;}
+.reportReviewActions button:first-child{background:#231d2c;color:#fff;}
+.reportReviewActions button:first-child:hover{background:#48355f;}
+.reportBanSection{margin-top:13px;border-top:1px solid #efeaf2;padding-top:16px;}
+.reportBanTrigger{
+  display:flex;align-items:center;gap:9px;
+  background:transparent;border:0;padding:7px 0;
+  color:#9a606c;font-size:12px;font-weight:680;
+}
+.reportBanTrigger:hover{color:#813c50;}
+.reportBanInline{display:grid;gap:15px;margin-top:13px;max-width:470px;}
+.reportBanInline label{display:grid;gap:8px;font-size:12px;font-weight:680;color:#716779;}
+.reportBanInline textarea{
+  width:100%;min-height:68px;resize:vertical;
+  border:1px solid #e8e3ea;border-radius:10px;
+  background:#fcfbfd;padding:11px;
+  color:#2b2533;font-size:13px;line-height:1.5;
+}
+.reportBanActions{display:flex;align-items:center;justify-content:flex-end;gap:12px;}
+.reportBanActions button{
+  border:0;background:transparent;border-radius:999px;
+  padding:10px 15px;font-size:12px;
+  font-weight:700;color:#756c7d;
+}
+.reportBanActions button.primary{background:#26202e;color:#fff;}
+@media(max-width:860px){
+  .reportWorkspace{grid-template-columns:minmax(185px,.38fr) minmax(0,.62fr);}
+}
+@media(max-width:640px){
+  .reportWorkspace{grid-template-columns:1fr;}
+  .reportWorkspaceList{max-height:210px;border-right:0;border-bottom:1px solid #ece8ef;}
+  .reportWorkspaceDetail{padding:24px 18px;}
+  .reportInboxItem{min-height:90px;padding:14px 18px;}
+  .reportReviewActions{gap:7px;}
+  .reportReviewActions button{padding:9px 11px;}
+}
+html[data-theme=dark] .reportWorkspace,
+html[data-theme=dark] .reportWorkspaceList,
+html[data-theme=dark] .reportInboxItem,
+html[data-theme=dark] .reportWorkspaceTop,
+html[data-theme=dark] .reportReviewSection,
+html[data-theme=dark] .reportBanSection{border-color:#463c4d;}
+html[data-theme=dark] .reportInboxItem{color:#f0ebf4;}
+html[data-theme=dark] .reportInboxItem.selected{background:#342940;}
+html[data-theme=dark] .reportInboxItem:hover:not(.selected){background:#282230;}
+html[data-theme=dark] .reportWorkspaceTop h3,
+html[data-theme=dark] .reportReviewSection strong{color:#f4edf8;}
+html[data-theme=dark] .reportReviewSection p{color:#d8d1e1;}
+html[data-theme=dark] .reportReviewActions button{background:#322a3d;color:#ded4e9;}
+html[data-theme=dark] .reportReviewActions button:first-child{background:#6b52a3;color:white;}
+html[data-theme=dark] .reportBanInline textarea{background:#2d2735;color:#f1ebf6;border-color:#4a3e54;}
