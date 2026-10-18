@@ -76,5 +76,5 @@ export default function App() {
       <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
       <button type="button" aria-label={t('Dismiss')} title={t('Dismiss')} onClick={()=>setSessionExpired(false)}><Icon name="close" size={18}/></button>
     </div>}
-    {page}<footer>Circle · Conversations start here.</footer></>;
+    {page}</>;
 }

@@ -497,10 +497,7 @@ export default function AdminPage({initialTab='users'}) {
         <div className="adminSectionHeader"><h2>{t('Members')}</h2>
           <span>{data.users.length} total</span>
         </div>
-        <p className="roleHowTo"><Icon name="shield" size={18}/>
-          To give someone moderator access, click <strong>Make moderator</strong> next to their account.
-          Moderators can manage reports and content, not users or roles. The change applies automatically and an in-app notification is sent.
-        </p>
+
         <details className="adminCreate">
           <summary><Icon name="plus" size={20}/> {t('Add member')} <Icon name="chevron" size={17}/></summary>
           <form className="adminCreateForm" onSubmit={createUser}>
