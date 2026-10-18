@@ -146,7 +146,7 @@ export function AuthPage({ mode }) {
 
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
-  return <main className="authShell authRefined">
+  return <main className={'authShell authRefined '+(register?'authRegistration':'authLogin')}>
     <aside className="authEditorial authVisualSide authCosmicSide" aria-hidden="true">
       {/* NASA / ESA / CSA / STScI — James Webb's Cosmic Cliffs. */}
       <img className="authCosmicImage"
