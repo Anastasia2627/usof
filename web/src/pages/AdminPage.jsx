@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
@@ -227,6 +227,8 @@ export default function AdminPage({initialTab='users'}) {
   });
   const [data, setData] = useState({ users: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
+  const [commentMenu,setCommentMenu]=useState(null);
+  const commentMenuRef=useRef(null);
   const [banFromReport,setBanFromReport]=useState(null);
   const [reportBanReason,setReportBanReason]=useState('');
   const [reportBanNote,setReportBanNote]=useState('');
@@ -278,6 +280,50 @@ export default function AdminPage({initialTab='users'}) {
   useEffect(()=>{setTab(initialTab);},[initialTab]);
   useEffect(()=>{if(tab==='reports'||tab==='appeals')load();},[tab]);
   useEffect(()=>{if(auth?.user?.role==='moderator')setTab('reports');},[auth?.user?.role]);
+  useEffect(()=>{
+    if(!commentMenu)return;
+    const closeOnPointer=event=>{
+      if(!commentMenuRef.current?.contains(event.target))setCommentMenu(null);
+    };
+    const closeOnEscape=event=>{
+      if(event.key==='Escape')setCommentMenu(null);
+    };
+    const closeOnScroll=()=>setCommentMenu(null);
+    document.addEventListener('pointerdown',closeOnPointer);
+    document.addEventListener('keydown',closeOnEscape);
+    window.addEventListener('scroll',closeOnScroll,true);
+    return()=>{
+      document.removeEventListener('pointerdown',closeOnPointer);
+      document.removeEventListener('keydown',closeOnEscape);
+      window.removeEventListener('scroll',closeOnScroll,true);
+    };
+  },[commentMenu]);
+  function openCommentMenu(event,comment){
+    event.preventDefault();
+    const rect=event.currentTarget.getBoundingClientRect();
+    const x=event.clientX>0?event.clientX:rect.right-24;
+    const y=event.clientY>0?event.clientY:rect.top+24;
+    setCommentMenu({
+      id:comment.id,
+      x:Math.max(10,Math.min(x,window.innerWidth-242)),
+      y:Math.max(10,Math.min(y,window.innerHeight-238)),
+    });
+  }
+  async function commentAction(comment,action){
+    setCommentMenu(null);
+    if(action==='open'){go('/post/'+comment.post_id);return;}
+    if(action==='delete'){
+      if(!window.confirm(t('Delete this comment?')))return;
+      await run(()=>api('/comments/'+comment.id,{method:'DELETE',token:auth.token}));
+      return;
+    }
+    const body=action==='status'
+      ?{status:comment.status==='active'?'inactive':'active'}
+      :{locked:!Boolean(comment.locked)};
+    await run(()=>api('/comments/'+comment.id,{
+      method:'PATCH',token:auth.token,body,
+    }));
+  }
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
 
@@ -597,30 +643,73 @@ export default function AdminPage({initialTab='users'}) {
         </div>
       </section>}
 
-      {tab === 'comments' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>{t('Comments')}</h2><span>{data.comments.length} listed</span></div>
-        <div className="adminSimpleList">
-          {data.comments.length ? data.comments.map(comment => <article className="adminListItem adminRow" key={comment.id}>
-            <div className="adminItemLine">
-              <div className="adminItemText">
-                <div className="adminPostMeta"><strong>@{comment.author_login}</strong> on {comment.post_title} <StatusBadges item={comment}/></div>
-                <p className="adminCommentText">{comment.content}</p>
-              </div>
-              <div className="adminRowTools adminPostTools">
-                <button type="button" className="adminIconAction" aria-label={t('Open')} title={t('Open')} onClick={() => go('/post/' + comment.post_id)}><Icon name="arrow" size={17}/></button>
-                {(!moderator||(comment.author_role!=='admin' && comment.post_author_role!=='admin'))&&<>
-                <button type="button" className="adminIconAction" aria-label={t(comment.status === 'active' ? 'Deactivate' : 'Activate')} title={t(comment.status === 'active' ? 'Deactivate' : 'Activate')} onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { status: comment.status === 'active' ? 'inactive' : 'active' } }))}><Icon name={comment.status === 'active' ? 'lock' : 'unlock'} size={17}/></button>
-                <button type="button" className="adminIconAction" aria-label={t(comment.locked ? 'Unlock' : 'Lock')} title={t(comment.locked ? 'Unlock' : 'Lock')} onClick={() => run(() => api('/comments/' + comment.id, { method: 'PATCH', token: auth.token, body: { locked: !Boolean(comment.locked) } }))}><Icon name={comment.locked ? 'unlock' : 'shield'} size={17}/></button>
-                <button type="button" className="adminIconAction dangerText" aria-label={t('Delete comment')} title={t('Delete comment')} onClick={() => { if (window.confirm('Delete this comment?')) run(() => api('/comments/' + comment.id, { method: 'DELETE', token: auth.token })); }}><Icon name="trash" size={17}/></button></>}
-              </div>
-            </div>
-          </article>) : <p className="adminEmpty">No comments.</p>}
+      {tab === 'comments' && <section className="adminStack adminCommentsSection">
+        <div className="adminSectionHeader">
+          <h2>{t('Comments')}</h2><span>{data.comments.length}</span>
         </div>
+        <div className="adminSimpleList">
+          {data.comments.length ? data.comments.map(comment =>
+            <article className="adminListItem adminRow adminCommentItem" key={comment.id}
+              onContextMenu={event=>openCommentMenu(event,comment)}
+              tabIndex={0}
+              aria-label={t('Comment options')+' · @'+comment.author_login}
+              onKeyDown={event=>{
+                if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10'))
+                  openCommentMenu(event,comment);
+              }}>
+              <div className="adminItemLine">
+                <div className="adminItemText">
+                  <div className="adminPostMeta">
+                    <strong>@{comment.author_login}</strong> · {comment.post_title}
+                    <StatusBadges item={comment}/>
+                  </div>
+                  <p className="adminCommentText">{comment.content}</p>
+                </div>
+                <button type="button" className="adminCommentMore"
+                  aria-label={t('Comment options')}
+                  title={t('Comment options')}
+                  aria-haspopup="menu"
+                  aria-expanded={commentMenu?.id===comment.id}
+                  onClick={event=>openCommentMenu(event,comment)}>
+                  <Icon name="more" size={20}/>
+                </button>
+              </div>
+            </article>
+          ) : <p className="adminEmpty">{t('No comments.')}</p>}
+        </div>
+        {commentMenu&&(()=>{
+          const comment=data.comments.find(item=>item.id===commentMenu.id);
+          if(!comment)return null;
+          const canAct=!moderator||
+            (comment.author_role!=='admin'&&comment.post_author_role!=='admin');
+          return <div className="adminCommentMenu"
+            role="menu" aria-label={t('Comment options')}
+            ref={commentMenuRef}
+            style={{left:commentMenu.x,top:commentMenu.y}}>
+            <button role="menuitem" onClick={()=>commentAction(comment,'open')}>
+              <Icon name="arrow" size={18}/>{t('Open discussion')}
+            </button>
+            {canAct&&<>
+              <button role="menuitem" onClick={()=>commentAction(comment,'status')}>
+                <Icon name={comment.status==='active'?'eye':'unlock'} size={18}/>
+                {t(comment.status==='active'?'Hide comment':'Show comment')}
+              </button>
+              {!moderator&&<button role="menuitem" onClick={()=>commentAction(comment,'locked')}>
+                <Icon name={comment.locked?'unlock':'lock'} size={18}/>
+                {t(comment.locked?'Unlock comment':'Lock comment')}
+              </button>}
+              <div className="adminCommentMenuDivider" role="separator"/>
+              <button role="menuitem" className="adminCommentMenuDanger"
+                onClick={()=>commentAction(comment,'delete')}>
+                <Icon name="trash" size={18}/>{t('Delete comment')}
+              </button>
+            </>}
+          </div>;
+        })()}
       </section>}
 
       {tab === 'reactions' && <section className="adminStack">
         <div className="adminSectionHeader"><h2>{t('Reactions')}</h2><span>100 latest maximum</span></div>
-        <p className="adminSectionNote">Removing a reaction recalculates the author's rating.</p>
         <div className="adminSimpleList">
           {data.reactions.length ? data.reactions.map(item => <div className="adminListItem" key={item.id}>
             <div className="adminItemLine">
