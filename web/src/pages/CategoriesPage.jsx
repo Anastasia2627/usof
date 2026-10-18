@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { ErrorBox, PostCard, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import SuggestTopic from '../SuggestTopic.jsx';
+import { useInfiniteRecords, InfiniteScrollEnd } from '../InfiniteScroll.jsx';
 
 export default function CategoriesPage() {
   const {t}=usePreferences();
@@ -48,68 +49,50 @@ export default function CategoriesPage() {
   </main>;
 }
 
-export function CategoryDetailPage({ id }) {
-  const {t}=usePreferences();
-  const auth = useSelector(state => state.auth);
-  const [category, setCategory] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => setPage(1), [id]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-
-    // Unlike /categories/:id/posts (legacy, first 50), the public posts API
-    // supports real pagination. Categories must never silently hide older posts.
-    const query = new URLSearchParams({
-      category: String(id),
-      page: String(page),
-      limit: '8',
-      sort: 'date',
-      order: 'desc',
-    });
-    Promise.all([
-      api(`/categories/${id}`, { signal: controller.signal }),
-      api('/posts?' + query, { token: auth?.token, signal: controller.signal }),
-    ])
-      .then(([categoryResult, postResult]) => {
-        if (controller.signal.aborted) return;
-        setCategory(categoryResult.data);
-        setPosts(postResult.data);
-        setPagination(postResult.pagination);
-      })
-      .catch(err => {
-        if (err.name !== 'AbortError' && !controller.signal.aborted) setError(err);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+export function CategoryDetailPage({id}){
+  const {t,language}=usePreferences();
+  const auth=useSelector(state=>state.auth);
+  const [category,setCategory]=useState(null);
+  const [categoryError,setCategoryError]=useState(null);
+  const [categoryLoading,setCategoryLoading]=useState(true);
+  const {records:posts,loading,hasMore,error,loadMore,retry}=useInfiniteRecords({
+    identity:String(id)+'|'+(auth?.token||''),
+    request:(page,signal)=>{
+      const query=new URLSearchParams({
+        category:String(id),page:String(page),limit:'12',sort:'date',order:'desc',
       });
-    return () => controller.abort();
-  }, [id, page, auth?.token]);
+      return api('/posts?'+query,{token:auth?.token,signal});
+    },
+  });
 
-  if (loading) return <main><div className="card loading">{t('Loading category…')}</div></main>;
+  useEffect(()=>{
+    const controller=new AbortController();
+    setCategoryLoading(true);setCategoryError(null);
+    api('/categories/'+id,{signal:controller.signal})
+      .then(result=>{if(!controller.signal.aborted)setCategory(result.data);})
+      .catch(err=>{if(err.name!=='AbortError')setCategoryError(err);})
+      .finally(()=>{if(!controller.signal.aborted)setCategoryLoading(false);});
+    return()=>controller.abort();
+  },[id]);
 
-  return <main>
-    <button className="linkButton" onClick={() => go('/categories')}><Icon name="arrowBack" size={17}/> {t('All categories')}</button>
+  return <main className="categoryDetailPage">
+    <button className="linkButton" onClick={()=>go('/categories')}>
+      <Icon name="arrowBack" size={17}/> {t('All categories')}
+    </button>
     <section className="hero categoryHero">
-      <p className="eyebrow">{t('Category')} {String(id).padStart(2, '0')}</p>
-      <h1>{t(category?.title || 'Category')}</h1>
-      {category?.description && <p>{t(category.description)}</p>}
+      <p className="eyebrow">{t('Category')} {String(id).padStart(2,'0')}</p>
+      <h1>{t(category?.title||'Category')}</h1>
+      {category?.description&&<p>{t(category.description)}</p>}
     </section>
-    <ErrorBox error={error} />
-    {!error && (posts.length
-      ? <section className="postList">{posts.map(post => <PostCard key={post.id} post={post} />)}</section>
-      : <div className="card empty"><h2>{t('No posts here yet')}</h2><p>{t('Choose another topic or start the conversation.')}</p></div>)}
-    {!error && pagination?.totalPages > 1 && <nav className="pager" aria-label="Category post pages">
-      <button type="button" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>{t('Previous')}</button>
-      <span>Page {pagination.page} of {pagination.totalPages} · {pagination.total} posts</span>
-      <button type="button" disabled={page >= pagination.totalPages} onClick={() => setPage(p => p + 1)}>{t('Next')}</button>
-    </nav>}
+    <ErrorBox error={categoryError||(!posts.length?error:null)} onRetry={retry}/>
+    {categoryLoading || (loading&&!posts.length)
+      ? <div className="card loading">{t('Loading category…')}</div>
+      :posts.length?<section className="postList">{posts.map(post=><PostCard key={post.id} post={post}/>)}</section>
+      : !error&&!categoryError?<div className="card empty">
+          <h2>{t('No posts here yet')}</h2>
+          <p>{t('Choose another topic or start the conversation.')}</p>
+        </div>:null}
+    <InfiniteScrollEnd records={posts} loading={loading} hasMore={hasMore}
+      error={error} loadMore={loadMore} retry={retry} language={language}/>
   </main>;
 }
