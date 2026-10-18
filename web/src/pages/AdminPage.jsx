@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import DashboardPage from './DashboardPage.jsx';
+import {useInfiniteRecords,InfiniteScrollEnd} from '../InfiniteScroll.jsx';
 
 function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
   const {t}=usePreferences();
@@ -206,7 +207,7 @@ function CategoryRow({ category, auth, run }) {
 }
 
 export default function AdminPage({initialTab='users'}) {
-  const {t}=usePreferences();
+  const {t,language}=usePreferences();
   const auth = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const [tab, setTab] = useState(initialTab);
@@ -216,9 +217,15 @@ export default function AdminPage({initialTab='users'}) {
   const [reportStatus,setReportStatus] = useState('open');
   const [reportPage,setReportPage] = useState(1);
   const [reportPagination,setReportPagination] = useState(null);
-  const [postPage, setPostPage] = useState(1);
-  const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
-  const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
+  const [postsRefresh,setPostsRefresh]=useState(0);
+  const postsFeed=useInfiniteRecords({
+    identity:(auth?.token||'')+'|'+postsRefresh,
+    enabled:Boolean(auth?.token && ['admin','moderator'].includes(auth?.user?.role)),
+    request:(page,signal)=>api('/posts?'+new URLSearchParams({
+      page:String(page),limit:'20',sort:'date',order:'desc',
+    }),{token:auth?.token,signal}),
+  });
+  const [data, setData] = useState({ users: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
   const [appealsWarning,setAppealsWarning]=useState('');
   const [error, setError] = useState(null);
@@ -235,7 +242,6 @@ export default function AdminPage({initialTab='users'}) {
       // One unavailable endpoint must not hide every admin section and show 0 members.
       const endpoints = [
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
-        api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
         api('/reactions?limit=100', { token: auth.token }),
@@ -245,10 +251,9 @@ export default function AdminPage({initialTab='users'}) {
       ];
       const results = await Promise.allSettled(endpoints);
       const values = results.map(item=>item.status==='fulfilled'?item.value:null);
-      const [users, posts, categories, comments, reactions, reports, suggestions, appeals] = values;
+      const [users, categories, comments, reactions, reports, suggestions, appeals] = values;
       setData(previous=>({
         users:users?.data??previous.users,
-        posts:posts?.data??previous.posts,
         categories:categories?.data??previous.categories,
         comments:comments?.data??previous.comments,
         reactions:reactions?.data??previous.reactions,
@@ -256,22 +261,17 @@ export default function AdminPage({initialTab='users'}) {
         suggestions:suggestions?.data??previous.suggestions,
         appeals:appeals?.data??previous.appeals,
       }));
-      setAppealsWarning(results[7].status==='rejected'
+      setAppealsWarning(results[6].status==='rejected'
         ? 'Ban appeals are unavailable in the running API. Stop the old server, run npm run db:init and restart npm start.'
         : '');
       if (reports) setReportPagination(reports.pagination);
-      if (posts) {
-        const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
-        setPostPagination(pagination);
-        if (postPage > Math.max(1, pagination.totalPages)) setPostPage(Math.max(1, pagination.totalPages));
-      }
-      const baseError=results.slice(0,7).find(item=>item.status==='rejected');
+      const baseError=results.slice(0,6).find(item=>item.status==='rejected');
       if (baseError) setError(baseError.reason);
     } catch (err) { setError(err); }
     finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, [auth?.token, auth?.user?.role, postPage,reportStatus,reportPage,suggestionStatus]);
+  useEffect(() => { load(); }, [auth?.token, auth?.user?.role,reportStatus,reportPage,suggestionStatus]);
   useEffect(()=>{if(auth?.user?.role==='moderator')setTab('reports');},[auth?.user?.role]);
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
@@ -281,6 +281,7 @@ export default function AdminPage({initialTab='users'}) {
     try {
       const result = await work();
       await load();
+      setPostsRefresh(v=>v+1);
       return result;
     } catch (err) {
       setError(err);
@@ -347,7 +348,7 @@ export default function AdminPage({initialTab='users'}) {
   const moderator = auth?.user?.role === 'moderator';
   const counts = {
     users: data.users.length,
-    posts: postPagination.total,
+    posts: postsFeed.total,
     categories: data.categories.length,
     suggestions: data.suggestions.length,
     comments: data.comments.length,
@@ -463,9 +464,9 @@ export default function AdminPage({initialTab='users'}) {
       </section>}
 
       {tab === 'posts' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>{t('Posts')}</h2><span>{postPagination.total} total</span></div>
+        <div className="adminSectionHeader"><h2>{t('Posts')}</h2><span>{postsFeed.total} total</span></div>
         <div className="adminSimpleList">
-          {data.posts.length ? data.posts.map(post => <article className="adminListItem adminRow" key={post.id}>
+          {postsFeed.records.length ? postsFeed.records.map(post => <article className="adminListItem adminRow" key={post.id}>
             <div className="adminItemLine">
               <div className="adminItemText">
                 <div className="adminPostMeta"><button className="adminName" onClick={() => go('/profile/' + post.author_id)}>@{post.author_login}</button> · #{post.id} <StatusBadges item={post}/></div>
@@ -481,13 +482,12 @@ export default function AdminPage({initialTab='users'}) {
                 <button type="button" className="adminIconAction dangerText" aria-label={t('Delete post')} title={t('Delete post')} onClick={() => { if (window.confirm('Delete this post?')) run(() => api('/posts/' + post.id, { method: 'DELETE', token: auth.token })); }}><Icon name="trash" size={17}/></button></>}
               </div>
             </div>
-          </article>) : <p className="adminEmpty">No posts on this page.</p>}
+          </article>) : <p className="adminEmpty">{postsFeed.loading?'Loading posts…':'No posts yet.'}</p>}
         </div>
-        <nav className="pager" aria-label="Admin post pages">
-          <button type="button" disabled={postPage <= 1 || loading} onClick={() => setPostPage(value => Math.max(1, value - 1))}>Previous</button>
-          <span aria-live="polite">Page {postPage} of {Math.max(1, postPagination.totalPages)} · {postPagination.total} posts</span>
-          <button type="button" disabled={postPage >= Math.max(1, postPagination.totalPages) || loading} onClick={() => setPostPage(value => value + 1)}>Next</button>
-        </nav>
+        {!postsFeed.records.length&&<ErrorBox error={postsFeed.error} onRetry={postsFeed.retry}/>}
+        <InfiniteScrollEnd records={postsFeed.records} loading={postsFeed.loading}
+          hasMore={postsFeed.hasMore} loadMore={postsFeed.loadMore}
+          error={postsFeed.error} retry={postsFeed.retry} language={language}/>
       </section>}
 
       {tab === 'suggestions' && !moderator && <section className="adminStack topicSuggestionAdmin">
