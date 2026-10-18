@@ -105,258 +105,177 @@
   outline:3px solid #b99afa;outline-offset:2px;
 }
 
-/* Ban screen: one editorial shell instead of multiple empty boxes. */
-#root > main.banPage.banStudioPage {
-  width:min(1130px,calc(100% - 40px))!important;
-  max-width:1130px!important;
+/* Immersive editorial restriction screen inspired by the dark blue reference.
+   Keep account state, reason and appeal accessible; no fake control mockups. */
+#root > main.banPage.banNightPage {
+  grid-column:2;
+  width:min(1180px,calc(100% - 38px))!important;
+  max-width:1180px!important;
+  margin:24px auto 60px!important;
   padding:0!important;
-  margin:clamp(20px,4vw,54px) auto 72px!important;
+  min-width:0;
 }
-.banStudioLayout {
-  display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);
-  border-radius:27px;overflow:hidden;
-  min-height:575px;
-  background:white;
-  border:1px solid #e8e5ed;
-  box-shadow:0 25px 65px rgba(43,29,70,.055);
+.banNightStage {
+  isolation:isolate;
+  position:relative;overflow:hidden;
+  border-radius:24px;
+  background:radial-gradient(ellipse at 50% 70%,#171459 0%,#06060e 56%,#030308 92%);
+  min-height:735px;
+  color:#fff;
+  display:flex;flex-direction:column;align-items:center;
+  padding:31px clamp(22px,4.2vw,57px) 52px;
+  box-shadow:0 36px 84px #110b2b27;
 }
-.banStudioVisual {
-  background:#0c0b13;
-  color:white;
-  position:relative;isolation:isolate;
-  overflow:hidden;min-height:575px;
-  display:flex;flex-direction:column;
-  justify-content:space-between;
-  padding:36px clamp(28px,4vw,52px) 48px;
+.banNightLight {
+  position:absolute;pointer-events:none;z-index:-1;
+  border-radius:50%;filter:blur(29px);
 }
-.banStudioVisual::before {
-  content:'';position:absolute;inset:-25%;z-index:-1;
-  background:
-   radial-gradient(ellipse at 57% 44%,#6950caaa,transparent 38%),
-   radial-gradient(ellipse at 74% 85%,#263f8f6c,transparent 48%),
-   radial-gradient(ellipse at 0% 0%,#241a3d66,transparent 50%);
+.banNightLightLeft {
+  width:48%;height:55%;left:-27%;top:-22%;
+  background:radial-gradient(ellipse,#b3a8ffcc,#6f62c795 28%,transparent 68%);
+  transform:rotate(-18deg);
 }
-.banStudioBrand {
-  display:flex;align-items:center;gap:7px;
-  z-index:4;font-weight:850;letter-spacing:-.075em;font-size:28px;
-  line-height:1;color:white;
+.banNightLightRight {
+  width:76%;height:88%;right:-37%;top:4%;
+  background:radial-gradient(ellipse,#3420dfcc,#18249555 45%,transparent 76%);
 }
-.banBrandRing {font-size:41px;font-weight:500;line-height:.8;}
-.banStudioArt {
-  position:absolute;pointer-events:none;z-index:1;
-  left:9%;right:9%;top:14%;height:53%;
+.banNightBrand {
+  align-self:flex-start;display:flex;align-items:center;gap:8px;
+  font-size:23px;font-weight:840;line-height:1;
+  color:#fff;letter-spacing:-.06em;z-index:2;
 }
-.banArtHalo {
-  position:absolute;inset:12% 2%;border-radius:50%;
-  background:radial-gradient(ellipse,#8153f178,transparent 67%);
-  filter:blur(11px);
+.banNightBrand span {font-size:31px;font-weight:400;line-height:.9;}
+.banNightHeading {position:relative;z-index:3;margin:72px 0 0;text-align:center;}
+.banNightPage .banNightHeading h1 {
+  color:#fff;
+  font-size:clamp(33px,4.2vw,55px);
+  font-weight:790;
+  line-height:1.06;
+  letter-spacing:-.057em;
+  max-width:650px;margin:0;
+  text-wrap:balance;
 }
-.banArtDisc {
-  position:absolute;width:46%;aspect-ratio:1;left:30%;top:9%;
-  background:linear-gradient(140deg,#a18afb,#4330a0 68%,#1d153f);
-  border-radius:50%;
-  box-shadow:0 23px 70px #05021270,inset 4px 6px 25px #e3d9fb46;
+.banNightWord {
+  position:absolute;pointer-events:none;z-index:0;
+  bottom:-0.24em;left:50%;transform:translateX(-50%);
+  color:#ffffffcc;
+  font-size:clamp(205px,32vw,450px);
+  font-weight:880;
+  letter-spacing:-.11em;
+  line-height:1;
+  white-space:nowrap;user-select:none;
+  text-shadow:0 12px 44px #040317;
 }
-.banArtOrbit {
-  position:absolute;border:1px solid rgba(224,211,255,.38);
-  border-radius:50%;transform:rotate(-28deg);
+.banNightPanel {
+  position:relative;z-index:3;
+  margin:47px 0 105px;width:min(100%,510px);
+  color:#f5f3ff;
+  background:linear-gradient(145deg,rgba(44,45,107,.88),rgba(13,13,40,.97) 59%,rgba(19,15,45,.98));
+  border:1px solid #a7a2e05c;border-radius:23px;
+  box-shadow:0 30px 90px #01010ac9,inset 0 1px 0 #ffffff25;
+  padding:29px clamp(22px,4vw,39px) 22px;
+  backdrop-filter:blur(15px);
 }
-.banArtOrbitOne {width:76%;height:65%;left:13%;top:20%;}
-.banArtOrbitTwo {width:47%;height:96%;left:28%;top:-5%;transform:rotate(51deg);}
-.banArtGlass {
-  position:absolute;left:33%;top:15%;
-  width:40%;height:62%;
-  border-radius:22px;transform:rotate(-11deg);
-  display:grid;place-items:center;
-  color:white;
-  background:linear-gradient(130deg,#ffffff48,#ffffff0b 63%);
-  border:1px solid #ffffff70;
-  box-shadow:0 19px 50px #07031560,inset 0 0 24px #ffffff20;
-  backdrop-filter:blur(12px);
-}
-.banStudioMessage {position:relative;z-index:3;margin-top:auto;}
-.banStatusBadge {
-  display:inline-flex;align-items:center;gap:9px;
-  border:1px solid #ded0ff4a;border-radius:999px;
-  background:#ddd0ff1f;color:#e2d4ff;
-  padding:9px 13px;font-size:11px;font-weight:710;
-  margin:0 0 15px;
-}
-.banStatusDot {width:7px;height:7px;border-radius:50%;background:#bea4ff;}
-.banStudioPage .banStudioMessage h1 {
-  color:#fff;margin:0;max-width:440px;
-  font-size:clamp(35px,4.2vw,55px);
-  line-height:1.05;letter-spacing:-.068em;
-  font-weight:810;overflow-wrap:break-word;
-}
-.banStudioContent {
-  min-width:0;padding:clamp(29px,5vw,64px);
-  display:flex;flex-direction:column;gap:28px;
-}
-.banStudioReason {
-  padding:0 0 27px;
-  border-bottom:1px solid #e9e6ed;
-}
-.banStudioLabel {
-  color:#817a8d;font-size:12px;
-  font-weight:710;letter-spacing:0;
-}
-.banStudioReasonText {
-  margin:12px 0 16px;line-height:1.35;
-  font-size:clamp(22px,2.2vw,31px);
-  color:#1e1925;
-  font-weight:745;letter-spacing:-.04em;
+.banNightReason {padding-bottom:25px;border-bottom:1px solid #d9d0ff2b;}
+.banNightLabel {color:#b9b0d0;font-size:12px;font-weight:660;letter-spacing:0;}
+.banNightReason h2 {
+  margin:11px 0 14px;
+  font-size:clamp(22px,2.4vw,31px);
+  letter-spacing:-.048em;line-height:1.2;
+  color:white;font-weight:750;
   overflow-wrap:anywhere;
 }
-.banStudioTime {
-  display:block;color:#817d88;
-  font-size:12px;font-variant-numeric:tabular-nums;
-  line-height:1.45;
+.banNightReason time,.banNightTime {
+  font-size:11px;line-height:1.6;color:#c1bdd4;display:block;
+  font-variant-numeric:tabular-nums;
 }
-.banStudioAppeal {flex:1;min-height:0;}
-.banStudioAppealHead {
+.banNightAppeal {padding:25px 0 0;}
+.banNightAppealTitle {
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:10px;margin-bottom:14px;
+}
+.banNightAppeal h3 {
+  margin:0;color:#fff;font-size:20px;letter-spacing:-.04em;
+  font-weight:730;line-height:1.25;
+}
+.banNightAppealBadge {
+  background:#a48cff1e;color:#e2d6ff;border-radius:999px;
+  padding:7px 11px;font-size:11px;font-weight:700;
+  border:1px solid #b6a0ff48;
+}
+.banNightAppealBadge-approved {color:#b6eace;border-color:#84e9b450;}
+.banNightAppealBadge-rejected {color:#ffcfce;border-color:#ffacaa50;}
+.banNightExplanation {
+  margin:0 0 12px;color:#e6e3f3;font-size:15px;line-height:1.65;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.banNightDecision {
+  margin:17px 0;padding:14px 17px;
+  background:#ffffff0f;border-left:2px solid #ac96ff;
+  color:#f7f4ff;line-height:1.5;font-size:13px;
+}
+.banNightDecision strong {display:block;margin-bottom:6px;font-size:12px;color:#cdb9ff;}
+.banNightForm {display:flex;flex-direction:column;gap:12px;}
+.banNightForm h3 {margin:0 0 8px;}
+.banNightForm label {font-size:12px;font-weight:680;color:#e4dafb;}
+.banNightForm textarea {
+  width:100%;min-height:145px;padding:13px 15px;
+  resize:vertical;border-radius:13px;
+  border:1px solid #a39bb86b;
+  background:#0608148c;color:white;
+  outline:0;font-size:13px;line-height:1.6;
+}
+.banNightForm textarea::placeholder {color:#aaa5bb;}
+.banNightForm textarea:focus {border-color:#c1a6ff;box-shadow:0 0 0 3px #a783ee26;}
+.banNightFormActions {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.banNightFormActions>span {font-size:11px;color:#aaa5bb;}
+.banNightPanel .banNightFormActions button.primary {
+  background:#faf9ff!important;color:#1e153b!important;
+  min-height:43px;border-radius:99px;border:0!important;
+  display:inline-flex;align-items:center;gap:13px;justify-content:center;
+  font-size:12px;font-weight:730;padding:11px 16px;
+}
+.banNightPanel .banNightFormActions button.primary:hover:not(:disabled) {background:#ded4ff!important;}
+.banNightPanel .banNightFormActions button:disabled {opacity:.55;cursor:not-allowed;}
+.banNightLoading {color:#c3b9dc;font-size:13px;}
+.banNightPanelFooter {
   display:flex;align-items:center;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;margin-bottom:18px;
+  gap:10px;border-top:1px solid #d9d0ff2b;margin-top:25px;padding-top:15px;
 }
-.banStudioPage .banStudioAppeal h2 {
-  font-size:clamp(21px,2.5vw,27px);
-  font-weight:780;letter-spacing:-.04em;
-  margin:0;color:#211c27;line-height:1.2;
+.banNightPanelFooter button {
+  background:transparent!important;color:#cac3dd!important;
+  border:0!important;
+  padding:7px 2px;display:inline-flex;align-items:center;
+  font-size:12px;gap:7px;font-weight:630;
 }
-.banAppealStatus {
-  display:inline-flex;gap:8px;align-items:center;
-  padding:8px 12px;background:#f5f0ff;
-  color:#6643bd;font-size:11px;font-weight:680;
-  border-radius:99px;
-}
-.banAppealStatusDot {
-  width:7px;height:7px;background:#8059d8;border-radius:50%;
-}
-.banAppealStatus-approved {background:#eaf6ef;color:#246c49;}
-.banAppealStatus-approved .banAppealStatusDot {background:#36a16e;}
-.banAppealStatus-rejected {background:#faf0ee;color:#9e4c43;}
-.banAppealStatus-rejected .banAppealStatusDot {background:#bb695e;}
-.banStudioExplanation {
-  font-size:15px;line-height:1.65;color:#3f3946;
-  margin:0 0 18px;white-space:pre-wrap;overflow-wrap:anywhere;
-}
-.banStudioReviewNote {
-  border-left:3px solid #bba6ee;
-  padding:2px 0 2px 15px;margin:20px 0;
-  display:grid;gap:7px;color:#514a5b;line-height:1.5;
-}
-.banStudioReviewNote strong {font-size:12px;color:#675383;}
-.banStudioPage .banStudioForm {
-  display:flex;flex-direction:column;gap:13px;
-}
-.banStudioPage .banStudioForm h2 {margin:0 0 9px;}
-.banStudioPage .banStudioForm label {
-  display:block;font-size:12px;font-weight:650;color:#595360;
-}
-.banStudioPage .banStudioForm textarea {
-  width:100%;min-height:151px;resize:vertical;
-  background:#fcfbfd;border:1px solid #e2dfeb;
-  border-radius:15px;padding:15px 16px;
-  color:#292434;font-size:14px;line-height:1.6;
-  transition:border-color .2s,box-shadow .2s;
-}
-.banStudioPage .banStudioForm textarea:focus {
-  outline:none;border-color:#8c6cd8;
-  box-shadow:0 0 0 4px #9a78ed20;
-}
-.banStudioPage .banStudioForm textarea::placeholder {color:#aaa5b0;}
-.banStudioSubmitRow {
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.banStudioSubmitRow>span {color:#9c97a2;font-size:11px;font-variant-numeric:tabular-nums;}
-.banStudioPage .banStudioSubmitRow .primary {
-  border:0;background:#201c27;color:#fff;
-  border-radius:999px;
-  min-height:44px;padding:12px 18px;
-  display:inline-flex;align-items:center;justify-content:center;gap:12px;
-  font-size:12px;font-weight:700;
-}
-.banStudioPage .banStudioSubmitRow .primary:hover:not(:disabled) {
-  background:#5f3eb4;color:white;
-}
-.banStudioPage .banStudioSubmitRow .primary:disabled {opacity:.5;cursor:not-allowed;}
-.banStudioNotice {font-size:12px;color:#694ba9;margin:0;}
-.banStudioLoading {color:#898391;font-size:12px;}
-.banStudioPage .banStudioActions {
-  display:flex;flex-wrap:wrap;gap:9px;
-  border-top:1px solid #efedf1;
-  margin:0;padding:20px 0 0;
-}
-.banStudioPage .banStudioActions button {
-  background:transparent;
-  border:1px solid #e8e5ec;
-  color:#6b6570;border-radius:999px;
-  padding:10px 15px;min-height:39px;
-  font-size:12px;
-  display:inline-flex;align-items:center;gap:7px;
-}
-.banStudioPage .banStudioActions button:hover {
-  border-color:#cdb8f8;
-  background:#f7f3ff;color:#6648aa;
-}
-/* Distinct labels and contrast in both themes. */
-html[data-theme=dark] #root .feedTopicScroller button.topicActive {
-  background:#c9afff!important;color:#21182d!important;
-}
-html[data-theme=dark] #root .mainNav button.navActive {
-  background:#352848!important;color:#d5c1ff!important;
-}
-html[data-theme=dark] #root .mainNav button.navActive svg {
-  stroke:#d5c1ff!important;fill:none!important;
-}
-html[data-theme=dark] .banStudioLayout {border-color:#3f354d;background:#1e1b25;}
-html[data-theme=dark] .banStudioContent {background:#1e1b25;}
-html[data-theme=dark] .banStudioReason {border-color:#484052;}
-html[data-theme=dark] .banStudioReasonText,
-html[data-theme=dark] .banStudioAppeal h2 {color:#f4f0fb;}
-html[data-theme=dark] .banStudioLabel,
-html[data-theme=dark] .banStudioTime {color:#b0a9bc;}
-html[data-theme=dark] .banStudioExplanation {color:#e2dce8;}
-html[data-theme=dark] .banStudioForm textarea {
-  color:#f3eef9;background:#282331;border-color:#4f465a;
-}
-html[data-theme=dark] .banStudioActions {border-color:#504657;}
-html[data-theme=dark] .banStudioActions button {color:#ddd2ee;border-color:#564b64;}
-html[data-theme=dark] .banStudioPage .banStudioForm label {color:#d4cde0;}
-html[data-theme=dark] .banAppealStatus-pending {background:#3b2a56;color:#ddc7ff;}
-@media(max-width:950px){
-  .banStudioLayout {grid-template-columns:42% 58%;}
-  .banStudioVisual {padding:31px 27px;min-height:570px;}
-  .banStudioContent {padding:34px;}
-  .banStudioPage .banStudioMessage h1 {font-size:clamp(32px,4vw,44px);}
-}
-@media(max-width:710px){
-  #root > main.banPage.banStudioPage {
-    width:calc(100% - 24px)!important;
-    margin:13px auto 92px!important;
-    padding:0!important;
+.banNightPanelFooter button:hover {color:#fff!important;}
+.banNightPanel .error {color:#ffd4d4;border-color:#bf81816b;}
+@media(max-width:720px){
+  #root > main.banPage.banNightPage {
+    grid-column:auto;
+    width:calc(100% - 22px)!important;
+    margin:10px auto 88px!important;
   }
-  .banStudioLayout {display:block;border-radius:22px;}
-  .banStudioVisual {
-    min-height:258px;padding:23px 26px 28px;
+  .banNightStage {
+    min-height:740px;
+    border-radius:17px;
+    padding:22px 15px 55px;
   }
-  .banStudioBrand {font-size:23px;}
-  .banBrandRing {font-size:33px;}
-  .banStudioArt {left:35%;right:0;top:3%;height:100%;opacity:.55;}
-  .banArtGlass {width:40%;height:51%;top:24%;}
-  .banArtGlass svg {width:39px;height:39px;}
-  .banArtDisc {width:57%;left:15%;}
-  .banStudioMessage {max-width:83%;}
-  .banStatusBadge {margin:0 0 9px;}
-  .banStudioPage .banStudioMessage h1 {font-size:clamp(31px,7.5vw,43px);max-width:360px;}
-  .banStudioContent {gap:23px;padding:27px 23px 29px;}
-  .banStudioReason {padding-bottom:22px;}
-  .banStudioPage .banStudioReasonText {font-size:24px;}
-  .authRefined .authVisualSide {min-height:155px!important;padding:22px 24px!important;}
-  .authRefined .authEditorialPhoto {display:none;}
-  .authRefined .authVisualSide .authEditorialStory h2 {font-size:22px;}
-  .authRefined .authPanel h1 {margin-bottom:22px;}
+  .banNightBrand {font-size:21px;align-self:flex-start;padding-left:5px;}
+  .banNightHeading {margin-top:62px;}
+  .banNightPage .banNightHeading h1 {
+    font-size:clamp(32px,7.7vw,47px);
+    padding-inline:5px;
+  }
+  .banNightWord {bottom:-.16em;font-size:clamp(150px,39vw,300px);}
+  .banNightPanel {margin:36px 0 90px;width:min(100%,480px);padding:24px 19px 18px;}
+  .banNightLightLeft {width:80%;left:-46%;top:-13%;}
+  .banNightLightRight {width:100%;right:-68%;top:5%;}
+}
+@media(max-width:390px){
+  .banNightAppeal h3 {font-size:18px;}
+  .banNightPage .banNightHeading h1 {font-size:32px;}
 }
 @media(prefers-reduced-motion:reduce){
-  .banStudioPage .banStudioForm textarea {transition:none;}
+  .banNightPanel {backdrop-filter:none;}
 }
