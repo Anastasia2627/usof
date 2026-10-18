@@ -188,8 +188,11 @@ try {
   await postMenu.waitFor({state:'visible'});
   assert.ok(await postMenu.getByRole('menuitem').count()>=3);
   assert.ok(await postMenu.getByRole('menuitem',{name:'Hide post'}).isVisible());
+  await mkdir('screenshots',{recursive:true});
+  await admin.screenshot({path:'screenshots/discussion-action-menu-desktop.png',fullPage:true});
   await admin.keyboard.press('Escape');
   await postMenu.waitFor({state:'detached'});
+  await admin.screenshot({path:'screenshots/discussion-clean-desktop.png',fullPage:true});
   const card=admin.locator('.commentCard').filter({hasText:rootReply}).first();
   try { await card.waitFor({ state:'visible', timeout:5000 }); }
   catch (error) {
