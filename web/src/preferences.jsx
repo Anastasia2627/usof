@@ -446,6 +446,16 @@ Object.assign(translations.uk,{
   'A member appealed an account restriction. An administrator will review it.':
     'Користувач подав оскарження блокування · Розглядає адміністратор'
 });
+Object.assign(translations.uk,{
+  'Comment options':'Дії з коментарем',
+  'Hide comment':'Приховати коментар',
+  'Show comment':'Показати коментар',
+  'Lock comment':'Заблокувати коментар',
+  'Unlock comment':'Розблокувати коментар',
+  'Delete this comment?':'Видалити цей коментар?',
+  'Open discussion':'Відкрити обговорення',
+  'No comments.':'Коментарів поки немає'
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {

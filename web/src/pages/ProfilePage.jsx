@@ -245,7 +245,7 @@ export default function ProfilePage({ userId = null }) {
           </div>}
       {!posts.length&&<ErrorBox error={postsError} onRetry={retryPosts}/>}
       <InfiniteScrollEnd records={posts} hasMore={hasMore} loading={postsLoading}
-        error={postsError} loadMore={loadMore} retry={retryPosts} language={language}/>
+        error={postsError} loadMore={loadMore} retry={retryPosts} language={language} showComplete={false}/>
     </section>
     {isSelf && <details className="profileSettings">
       <summary>{t('Account settings')} <Icon name="chevron" size={18}/></summary>

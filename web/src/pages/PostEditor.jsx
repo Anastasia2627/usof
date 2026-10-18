@@ -277,11 +277,9 @@ export default function PostEditor({ id }) {
           </div>
         </div>
       </details>
-      <div className="editorDraftNotice" role="status">
-        {!editing && hasDraft && <><Icon name="check" size={16}/>
-          <span>{t('Text draft saved in this tab. Photos must be selected again after reloading.')}</span>
-          <button type="button" onClick={clearDraft}>{t('Discard draft')}</button></>}
-      </div>
+      {!editing && hasDraft && <div className="editorDraftNotice">
+        <button type="button" onClick={clearDraft}>{t('Discard draft')}</button>
+      </div>}
       <div className="editorActions">
         <span className="editorSelectionHint">{form.categories.length
           ? `${form.categories.length} ${t(form.categories.length === 1 ? 'topic' : 'topics')} ${t('selected')}`

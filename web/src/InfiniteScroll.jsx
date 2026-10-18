@@ -87,7 +87,7 @@ export function useInfiniteRecords({ identity, request, enabled = true }) {
 }
 
 /** Auto-fetch near the bottom; no Next button or artificial end-of-page. */
-export function InfiniteScrollEnd({ records, hasMore, loading, loadMore, error, retry, language = 'en' }) {
+export function InfiniteScrollEnd({ records, hasMore, loading, loadMore, error, retry, language = 'en', showComplete = true }) {
   const endRef = useRef(null);
   const uk = language === 'uk';
   useEffect(() => {
@@ -106,7 +106,7 @@ export function InfiniteScrollEnd({ records, hasMore, loading, loadMore, error, 
       <button type="button" onClick={retry}>{uk ? 'Спробувати ще' : 'Try again'}</button>
     </div>;
   }
-  if (!hasMore && records.length > 0) {
+  if (!hasMore && records.length > 0 && showComplete) {
     return <div className="infiniteEnd infiniteComplete">
       <span className="infiniteEndDiamond" aria-hidden="true">✦</span>
       <span>{uk ? 'Поки що це всі дописи' : "You're all caught up"}</span>
