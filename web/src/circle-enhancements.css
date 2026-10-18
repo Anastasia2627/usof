@@ -1,0 +1,243 @@
+/* Small, deliberate violet accents. Circle remains monochrome. */
+:root { --circle-violet: #7550d8; --circle-violet-soft: #f4f0ff; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline-color: var(--circle-violet);
+}
+
+/* The navigation is a normal grid child, never absolutely positioned alongside
+   the viewport. In split-screen the content shrinks with its real grid column. */
+@media (min-width:721px) {
+  #root {
+    display:grid;
+    grid-template-columns:clamp(64px,6.2vw,90px) minmax(0,1fr);
+    grid-auto-rows:min-content;
+    align-items:start;
+  }
+  #root > .siteHeader {grid-column:1/-1;grid-row:1;}
+  #root > .mainNav {
+    position:sticky !important;
+    grid-column:1;
+    grid-row:2 / span 8;
+    align-self:start;
+    top:18px;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    width:100%;
+    min-width:0;
+    height:auto;
+    margin:0;
+    padding:12px 5px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:7px;
+    z-index:11;
+    background:transparent;
+    border:0;
+    box-shadow:none;
+  }
+  #root > .mainNav button {width:min(55px,100%);height:55px;min-width:0;flex:none;}
+  #root > main, #root > footer,
+  #root > .roleChangeBanner, #root > .sessionExpiredBanner {
+    grid-column:2;
+    min-width:0;
+    max-width:calc(100% - 16px);
+  }
+  #root > main { margin-left:auto;margin-right:auto; }
+  #root > main.adminPage {
+    width:min(1120px,calc(100% - 30px));
+    max-width:calc(100% - 16px);
+  }
+  #root > main.authRefined {width:min(1010px,calc(100% - 42px));max-width:calc(100% - 16px);}
+}
+@media (max-width:720px) {
+  #root {display:block;}
+  #root > .mainNav {position:fixed;top:auto;left:0;right:0;bottom:0;width:100%;z-index:40;}
+}
+
+/* Confirmation: the original quiet editorial split gets a personal finish. */
+.authRefined .verificationForm {gap:13px;max-width:460px;width:100%;}
+.verificationVisual {
+  height:126px;position:relative;display:grid;place-items:center;
+  margin:-10px 0 9px;isolation:isolate;
+}
+.verifyHalo {
+  position:absolute;width:122px;height:122px;border-radius:50%;
+  border:1px solid #e4deed;z-index:-1;
+}
+.verifyHaloOne {transform:translate(-18px,6px) rotate(-20deg) scaleX(1.4);}
+.verifyHaloTwo {transform:translate(19px,-4px) rotate(24deg) scaleX(.82);}
+.verificationLetter {
+  position:relative;width:86px;height:76px;display:grid;place-items:center;
+  background:#faf9fc;border:1px solid #eee9f4;
+  box-shadow:0 16px 36px rgba(66,49,93,.07);
+  border-radius:18px;transform:rotate(-7deg);font-size:43px;color:#212121;
+}
+.verificationLetter > span {
+  position:absolute;right:-12px;top:-18px;font-size:26px;
+  color:var(--circle-violet);transform:rotate(7deg);
+}
+.verifyStep {display:flex;gap:10px;align-items:center;letter-spacing:.16em;
+  font-size:10px;font-weight:800;color:#89848e;}
+.verifyStep span {width:39px;height:1px;background:#d7d1dc;}
+.authRefined .verificationForm h1 {font-size:clamp(29px,3vw,39px);line-height:1.07;letter-spacing:-.06em;max-width:350px;margin:7px 0 1px;}
+.authRefined .verificationForm > p {max-width:350px;font-size:13px;line-height:1.7;color:#858087;margin:0 0 15px;}
+.authRefined .verificationForm > p b {color:#252525;overflow-wrap:anywhere;}
+.authRefined .verificationForm .verifyCodeLabel {font-size:12px;font-weight:700;letter-spacing:.01em;}
+.authRefined .verificationForm input.verifyCodeInput {
+  width:min(100%,410px);height:66px;padding:10px 5px 10px 23px;margin-top:11px;
+  text-align:center;letter-spacing:.42em;font-weight:750;font-size:26px;font-variant-numeric:tabular-nums;
+  border:1px solid #e3e0e7;border-radius:17px;background:#fcfbfd;color:#202020;
+}
+.authRefined .verificationForm input.verifyCodeInput:focus {
+  border-color:var(--circle-violet);background:#fff;
+  box-shadow:0 0 0 4px rgba(117,80,216,.09);
+}
+.authRefined .verificationForm .verifyHint {margin:-2px 0 1px;font-size:11px;color:#98939c;}
+.authRefined .verificationForm .toolbar {gap:10px;margin:6px 0 0;flex-wrap:wrap;}
+.authRefined .verificationForm .toolbar button.authSubmit {
+  min-width:173px;min-height:46px;display:inline-flex;
+  align-items:center;justify-content:center;gap:18px;
+  background:#191919;border:0;border-radius:999px;
+}
+.authRefined .verificationForm .toolbar button.authSubmit:hover:not(:disabled){background:#333;}
+.authRefined .verificationForm .toolbar button.verifyResend {
+  padding:10px 8px;border:0;background:transparent;font-size:12px;
+  color:#747076;border-radius:10px;
+}
+.authRefined .verificationForm .toolbar button.verifyResend:hover {color:var(--circle-violet);}
+
+/* An editorial selection studio: layered energy, but mostly white and black. */
+main.interestStudio {
+  width:min(1100px,calc(100% - 40px)) !important;
+  max-width:1100px !important;
+  padding:20px 0 70px;
+  margin:15px auto 75px;
+}
+.interestCover {
+  min-height:330px;
+  display:grid;grid-template-columns:minmax(0,.83fr) minmax(0,1.17fr);
+  border:1px solid #ececef;border-radius:27px;overflow:hidden;
+  background:#fafafa;
+}
+.interestCopy {padding:clamp(30px,4vw,62px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;}
+.interestEyebrow {font-size:10px;font-weight:800;letter-spacing:.17em;color:#908a96;}
+.interestCopy h1 {font-size:clamp(40px,5vw,66px);line-height:1.02;letter-spacing:-.075em;margin:22px 0 17px;max-width:450px;font-weight:820;}
+.interestCopy h1 em {font-style:normal;color:var(--circle-violet);}
+.interestCopy p {font-size:14px;line-height:1.7;color:#77747b;max-width:300px;margin:0;}
+.interestIndex {margin-top:39px;color:#99959c;font-size:10px;letter-spacing:.12em;font-weight:750;}
+.interestScene {position:relative;overflow:hidden;min-height:330px;background:
+  radial-gradient(ellipse at 53% 48%,rgba(124,80,225,.55),transparent 50%),#15131d;}
+.interestBackdrop {position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(45px,8.7vw,133px);font-weight:900;letter-spacing:-.1em;color:rgba(161,131,241,.14);transform:rotate(-9deg);white-space:nowrap;}
+.sceneCard {position:absolute;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;
+  width:31%;height:58%;min-width:114px;padding:16px;border:1px solid rgba(255,255,255,.24);border-radius:19px;
+  font-size:10px;letter-spacing:.13em;font-weight:850;color:#fff;box-shadow:0 16px 55px rgba(0,0,0,.23);
+  backdrop-filter:blur(6px);}
+.sceneCard>span {font-size:clamp(38px,5vw,75px);line-height:1;}
+.sceneCardOne {top:23%;left:11%;background:linear-gradient(138deg,#e5dbfc,#906adb 95%);color:#191327;transform:rotate(-16deg);}
+.sceneCardTwo {top:10%;left:37%;background:linear-gradient(160deg,#a0d0ca,#165e71 110%);transform:rotate(5deg);height:63%;}
+.sceneCardThree {top:26%;right:7%;background:linear-gradient(140deg,#efb09e,#d35847 110%);transform:rotate(15deg);}
+.sceneOrb {position:absolute;right:5%;top:2%;border:4px solid rgba(255,255,255,.32);border-radius:50%;
+  width:75px;height:75px;box-shadow:inset 0 0 15px rgba(255,255,255,.25),0 6px 15px rgba(0,0,0,.23);}
+.interestPickerHeading {display:flex;gap:25px;align-items:end;justify-content:space-between;padding:40px 3px 24px;}
+.interestPickerHeading h2 {font-size:clamp(25px,3.2vw,37px);font-weight:790;letter-spacing:-.06em;margin:10px 0 0;}
+.interestPickerHeading p {max-width:245px;font-size:12px;color:#888;line-height:1.55;margin:0 0 3px;}
+.interestSelection.interestMosaic {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:0 0 30px;}
+.interestSelection.interestMosaic button.interestTile {
+  border:1px solid #ececef;background:#f8f8f8;color:#181818;
+  border-radius:18px;min-height:119px;padding:17px;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
+  text-align:left;gap:9px;position:relative;overflow:hidden;
+  transition:transform .18s,border-color .18s,background .18s;
+}
+.interestSelection.interestMosaic button.interestTile:hover {transform:translateY(-2px);background:#f5f3f9;border-color:#d9c9fb;}
+.interestTileNumber {font-size:10px;color:#a5a2a8;letter-spacing:.08em;font-weight:700;}
+.interestTileName {font-size:clamp(14px,1.8vw,19px);font-weight:760;letter-spacing:-.035em;overflow-wrap:anywhere;}
+.interestTileMark {position:absolute;top:14px;right:14px;display:grid;place-items:center;border:1px solid #dfdfe2;border-radius:50%;width:27px;height:27px;background:#fff;}
+.interestSelection.interestMosaic button.interestTile0 {background:#f4f1fa;}
+.interestSelection.interestMosaic button.interestTile3 {background:#f3f5f6;}
+.interestSelection.interestMosaic button.interestTile5 {background:#f7f3f0;}
+.interestSelection.interestMosaic button.interestTile.interestChosen {
+  color:#201829;background:#f2edff;border:1px solid var(--circle-violet);
+  box-shadow:inset 0 0 0 1px var(--circle-violet);
+}
+.interestSelection.interestMosaic button.interestChosen .interestTileMark {
+  color:#fff;background:var(--circle-violet);border-color:var(--circle-violet);
+}
+.interestStudioFooter {position:sticky;bottom:0;z-index:9;display:flex;gap:14px;align-items:center;
+  margin:12px 0 0;padding:15px 0;background:rgba(255,255,255,.97);
+  backdrop-filter:blur(9px);border-top:1px solid #e9e9e9;}
+.interestStudioFooter small {font-size:12px;color:#777;margin-right:auto;}
+.interestStudioFooter button {font-size:12px;border-radius:999px;}
+.interestStudioFooter button.primary {background:#161616;color:#fff;padding:13px 22px;}
+@media (max-width:850px) {
+  .interestCover {grid-template-columns:1fr 1fr;}
+  .interestSelection.interestMosaic {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .interestCopy {padding:30px;}
+}
+@media (max-width:600px) {
+  main.interestStudio {width:calc(100% - 26px)!important;padding-top:6px;}
+  .interestCover {display:block;border-radius:20px;}
+  .interestCopy {padding:29px 26px;}
+  .interestCopy h1 {font-size:43px;margin:13px 0;}
+  .interestIndex {margin-top:19px;}
+  .interestScene {min-height:200px;}
+  .sceneCard {height:73%;top:14%;padding:11px;border-radius:14px;}
+  .sceneCardTwo {top:5%;height:79%;}
+  .sceneCard>span {font-size:44px;}
+  .interestPickerHeading {display:block;padding:28px 2px 18px;}
+  .interestPickerHeading p {margin-top:10px;}
+  .interestSelection.interestMosaic {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .interestSelection.interestMosaic button.interestTile {min-height:105px;padding:13px;border-radius:14px;}
+  .interestTileMark {top:9px;right:9px;}
+  .interestStudioFooter {bottom:61px;padding:12px 0;gap:4px;}
+  .interestStudioFooter button {padding:9px 10px;}
+  .authRefined .verificationVisual {height:92px;margin:0;}
+  .verificationLetter {width:65px;height:62px;font-size:32px;}
+}
+
+/* Moderation: explain decisions, never expose internal notes to members. */
+.adminBanSummary {background:#f9f8fa;padding:14px 17px;border-radius:14px;margin:10px 0 0;
+  border:1px solid #efecf1;font-size:12px;color:#5e5664;}
+.adminBanSummary p {margin:6px 0 0;overflow-wrap:anywhere;}
+.adminBanSummary strong {color:#332a39;}
+.adminUserRow .banEditor {display:grid;gap:13px;}
+.banEditor h3 {font-size:16px;margin:0;}
+.banEditor p {color:#777;font-size:12px;margin:0;}
+.banEditor label,.banAppealActions label {display:grid;gap:7px;font-size:12px;font-weight:700;}
+.banEditor textarea,.banAppealActions textarea {
+  display:block;min-height:74px;width:100%;resize:vertical;
+  border:1px solid #e4e4e8;background:#fcfcfd;padding:11px;border-radius:12px;
+}
+.banAppealCard {display:flex;align-items:stretch;gap:20px;flex-wrap:wrap;}
+.banAppealCard .adminItemText {flex:1 1 330px;min-width:0;}
+.banAppealCard p {line-height:1.6;}
+.appealPrivate {background:#f4f0ff;border-radius:9px;padding:10px;}
+.banAppealActions {flex:0 1 250px;display:flex;flex-direction:column;gap:9px;}
+.banAppealActions button {padding:10px 12px;border-radius:999px;border:1px solid #e5e5e8;}
+.banAppealActions button.primary {background:#181818;color:white;}
+main.banPage {max-width:690px;width:min(690px,calc(100% - 34px));padding:38px 4px 72px;}
+.banSymbol {width:72px;height:72px;display:grid;place-items:center;background:var(--circle-violet-soft);
+  border-radius:22px;margin-bottom:28px;font-size:40px;color:var(--circle-violet);}
+.banPage h1 {font-size:clamp(29px,5vw,48px);max-width:570px;letter-spacing:-.065em;margin:15px 0;}
+.banLead {font-size:14px;max-width:490px;color:#838087;line-height:1.75;}
+.banReasonCard,.appealState {border:1px solid #e8e8e9;border-radius:20px;padding:22px;margin:28px 0;background:#fafafa;}
+.banReasonCard>span {font-size:11px;color:#89858d;font-weight:800;letter-spacing:.1em;text-transform:uppercase;}
+.banReasonCard p {font-size:17px;line-height:1.55;font-weight:650;margin:11px 0;}
+.banReasonCard small,.appealState small {font-size:11px;color:#888;}
+.banAppealForm {display:grid;gap:15px;}
+.banAppealForm h2 {font-size:20px;margin:3px 0;}
+.banAppealForm label {font-size:12px;font-weight:650;display:grid;gap:10px;}
+.banAppealForm textarea {min-height:155px;padding:14px;border:1px solid #e0dfe2;border-radius:15px;resize:vertical;}
+.banAppealForm .primary {justify-self:start;padding:13px 25px;}
+.banUtility {display:flex;gap:12px;border-top:1px solid #eee;margin-top:28px;padding-top:17px;}
+.banUtility button {background:#f5f5f6;border:0;padding:10px 17px;border-radius:999px;font-size:12px;}
+html[data-theme=dark] .interestCover, html[data-theme=dark] .interestStudioFooter,
+html[data-theme=dark] .banReasonCard,html[data-theme=dark] .appealState {background:#202026;color:#eee;border-color:#36333e;}
+html[data-theme=dark] .interestCopy p,html[data-theme=dark] .interestPickerHeading p {color:#b3aeb9;}
+html[data-theme=dark] .interestMosaic .interestTile {color:#eee!important;background:#292832!important;border-color:#3c3748!important;}
+html[data-theme=dark] .interestMosaic .interestTile.interestChosen {border-color:#a88bea!important;background:#3b3152!important;}
+html[data-theme=dark] .verificationLetter {background:#2e2935;color:#f5f5f5;}
+html[data-theme=dark] .authRefined .verificationForm input.verifyCodeInput {background:#29262f;color:#f4f4f4;border-color:#4a4453;}
+@media(prefers-reduced-motion:reduce){.interestSelection.interestMosaic button.interestTile{transition:none;}}
