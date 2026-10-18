@@ -13,6 +13,7 @@ import './interface-refresh.css';
 import './circle-enhancements.css';
 import './modern-polish.css';
 import './review-fixes.css';
+import './auth-editorial.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
