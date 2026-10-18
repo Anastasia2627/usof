@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, PostCard, go } from '../ui.jsx';
 import { usePreferences } from '../preferences.jsx';
 import DatePicker from '../DatePicker.jsx';
+import { useInfiniteRecords, InfiniteScrollEnd } from '../InfiniteScroll.jsx';
 
 const FILTERS = ['sort', 'order', 'category', 'from', 'to', 'status'];
 const readFilters = params => ({
@@ -17,7 +18,7 @@ const readFilters = params => ({
 
 export default function HomePage({ hash, basePath = '/' }) {
   const auth = useSelector(state => state.auth);
-  const {t} = usePreferences();
+  const {t,language} = usePreferences();
   const filterRef=useRef(null);
   useEffect(()=>{
     const outside=event=>{if(filterRef.current?.open && !filterRef.current.contains(event.target))filterRef.current.open=false;};
@@ -27,12 +28,22 @@ export default function HomePage({ hash, basePath = '/' }) {
   },[]);
   const params = useMemo(() => new URLSearchParams(hash.split('?')[1] || ''), [hash]);
   const [filters, setFilters] = useState(() => readFilters(params));
-  const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [pagination, setPagination] = useState(null);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [retry, setRetry] = useState(0);
+  const {records:posts,hasMore,loading,error:feedError,loadMore,retry:retryFeed} = useInfiniteRecords({
+    identity: basePath+'|'+hash+'|'+(auth?.token||'')+'|'+retry,
+    request: (page,signal) => {
+      const query=new URLSearchParams({
+        page:String(page),limit:'12',
+        sort:params.get('sort')||'likes',order:params.get('order')||'desc',
+      });
+      for(const name of ['category','from','to','status','search']){
+        if(params.get(name))query.set(name,params.get(name));
+      }
+      return api('/posts?'+query,{token:auth?.token,signal});
+    },
+  });
   useEffect(() => {
     const refresh = () => setRetry(value => value + 1);
     window.addEventListener('circle:posts-updated',refresh);
@@ -50,29 +61,7 @@ export default function HomePage({ hash, basePath = '/' }) {
 
   useEffect(() => {
     setFilters(readFilters(params));
-    const controller = new AbortController();
-    const query = new URLSearchParams({
-      page: params.get('page') || '1',
-      limit: '8',
-      sort: params.get('sort') || 'likes',
-      order: params.get('order') || 'desc',
-    });
-    for (const name of ['category', 'from', 'to', 'status', 'search']) {
-      if (params.get(name)) query.set(name, params.get(name));
-    }
-    setLoading(true);
-    setError(null);
-    api('/posts?' + query, { token: auth?.token, signal: controller.signal })
-      .then(result => {
-        if (!controller.signal.aborted) {
-          setPosts(result.data);
-          setPagination(result.pagination);
-        }
-      })
-      .catch(err => { if (err.name !== 'AbortError') setError(err); })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [hash, auth?.token, retry]);
+  }, [hash]);
 
   function apply(event) {
     event.preventDefault();
@@ -100,12 +89,6 @@ export default function HomePage({ hash, basePath = '/' }) {
     query.set('sort', sort);
     query.set('order', order);
     query.delete('page');
-    go(basePath + '?' + query);
-  }
-
-  function navigate(page) {
-    const query = new URLSearchParams(params);
-    query.set('page', String(page));
     go(basePath + '?' + query);
   }
 
@@ -210,23 +193,20 @@ export default function HomePage({ hash, basePath = '/' }) {
       </details>
     </div>
 
-    <ErrorBox error={error} onRetry={() => setRetry(value => value + 1)} />
+    <ErrorBox error={error || (!posts.length ? feedError : null)} onRetry={() => setRetry(value => value + 1)} />
     <section className="feedShell" aria-label="Posts">
-      {loading ? <p className="feedMessage">{t('Loading conversations…')}</p>
+      {loading && !posts.length ? <p className="feedMessage">{t('Loading conversations…')}</p>
         : posts.length
           ? <div className="threadGrid">{posts.map(post => <PostCard key={post.id} post={post} />)}</div>
-          : !error ? <div className="feedEmptyState" role="status">
+          : !(error || feedError) ? <div className="feedEmptyState" role="status">
               <span className="feedEmptyIcon"><Icon name="search" size={25}/></span>
               <h2>{t('No conversations found')}</h2>
               <p>{t('Try changing your filters or browse all discussions.')}</p>
               {canReset && <button className="feedEmptyReset" type="button"
                 onClick={()=>go(basePath)}><Icon name="refresh" size={18}/>{t('Clear filters')}</button>}
             </div> : null}
-      {pagination?.totalPages > 1 && <div className="pager">
-        <button disabled={pagination.page <= 1} onClick={() => navigate(pagination.page - 1)}>{t('Previous')}</button>
-        <span>{t('Page')} {pagination.page} {t('of')} {pagination.totalPages}</span>
-        <button disabled={pagination.page >= pagination.totalPages} onClick={() => navigate(pagination.page + 1)}>{t('Next')}</button>
-      </div>}
+      <InfiniteScrollEnd records={posts} loading={loading} hasMore={hasMore}
+        error={feedError} loadMore={loadMore} retry={retryFeed} language={language}/>
     </section>
   </main>;
 }
