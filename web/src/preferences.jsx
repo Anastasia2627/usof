@@ -473,6 +473,12 @@ Object.assign(translations.uk,{
   'No matching topics':'Нічого не знайдено',
   'Loading categories…':'Завантажуємо категорії…',
 });
+Object.assign(translations.uk,{
+  'Post report':'Скарга на допис',
+  'Comment report':'Скарга на коментар',
+  'Details':'Деталі',
+  'Content reports':'Скарги на матеріали',
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {
