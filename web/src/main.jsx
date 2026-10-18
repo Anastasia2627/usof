@@ -14,6 +14,7 @@ import './circle-enhancements.css';
 import './modern-polish.css';
 import './review-fixes.css';
 import './auth-editorial.css';
+import './product-refinement.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
