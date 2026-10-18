@@ -1,0 +1,362 @@
+/* Finishing pass: every visible element should have a purpose. */
+
+/* The active topic's label must stay white against its dark background. */
+#root .feedTopicScroller button.topicActive,
+#root .feedTopicScroller button[aria-pressed="true"] {
+  background:#242229!important;
+  color:#ffffff!important;
+  border:0!important;
+  box-shadow:0 1px 2px rgba(24,18,33,.12);
+}
+#root .feedTopicScroller button.topicActive:hover,
+#root .feedTopicScroller button[aria-pressed="true"]:hover {
+  background:#372b55!important;
+  color:white!important;
+}
+#root .mainNav button.navActive {
+  background:#f5f1fc!important;color:#7050bf!important;
+  border-color:transparent!important;
+}
+#root .mainNav button.navActive svg {
+  fill:none!important;
+  stroke:#7755c2!important;
+  stroke-width:1.9;
+}
+.editorRefined .editorTopbar {padding-bottom:19px;}
+.editorRefined .editorHeading .editorOverline,
+.editorRefined .editorLead,.editorRefined .editorIdentity small {
+  display:none!important;
+}
+.editorRefined .editorTopbar h1 {
+  font-size:clamp(28px,3vw,36px);
+  letter-spacing:-.06em;line-height:1.1;
+}
+.editorRefined .editorIdentity {padding-top:6px;}
+.editorRefined .editorBack:hover {
+  color:#6841b4;border-color:#d8c6f5;background:#f6f1ff;
+}
+/* Replace massive overlapping icons with one photographic composition. */
+.authRefined .authVisualSide {
+  background:#0a0910;
+  min-height:570px;
+  isolation:isolate;
+  padding:34px clamp(28px,3.6vw,48px);
+}
+.authRefined .authVisualSide::before {
+  background:radial-gradient(ellipse at 66% 45%,#7150d052,transparent 62%),
+  linear-gradient(158deg,#0a0910,#261944 77%,#120d20);
+}
+.authRefined .authEditorialPhoto {
+  position:absolute;
+  width:68%;height:55%;
+  left:17%;top:18%;
+  transform:rotate(-5deg);
+  border:1px solid rgba(255,255,255,.32);
+  border-radius:24px;
+  background:#2c2350;
+  box-shadow:0 28px 90px rgba(0,0,0,.45);
+  overflow:hidden;
+  z-index:1;
+}
+.authEditorialPhoto img {
+  width:100%;height:100%;display:block;object-fit:cover;
+  filter:saturate(.92) contrast(1.1);
+}
+.authEditorialPhoto::after {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg,rgba(52,28,113,.52),transparent 70%),
+    linear-gradient(0deg,rgba(10,8,28,.52),transparent 44%);
+  pointer-events:none;
+}
+.authPhotoGlow {
+  position:absolute;inset:-15%;
+  background:radial-gradient(circle at 62% 44%,#a88dff35,transparent 63%);
+  mix-blend-mode:screen;pointer-events:none;
+}
+.authPhotoRing {
+  position:absolute;z-index:2;right:8%;top:8%;
+  width:22%;aspect-ratio:1;border-radius:50%;
+  border:7px solid #ffffff6e;
+  box-shadow:inset 0 0 12px #1d153b,0 6px 25px #100a2970;
+  backdrop-filter:blur(1px);
+}
+.authRefined .authVisualSide .authEditorialStory {
+  margin:auto 0 0;max-width:360px;padding:30px 0 0;
+  position:relative;z-index:3;
+}
+.authRefined .authVisualSide .authEditorialStory h2 {
+  margin:0;color:#fff;max-width:350px;
+  font-size:clamp(29px,3vw,38px);line-height:1.12;
+  letter-spacing:-.055em;
+}
+.authRefined .authPanel h1 {
+  margin-bottom:27px;
+  font-size:clamp(31px,3.4vw,41px);
+}
+.authRefined .authPanel .authPanelCopy {display:none;}
+.authRefined .authPanel .authForm label {font-weight:660;}
+.authRefined .authForm input {
+  background:#fcfbfd;border:1px solid #e9e6ed;
+}
+.authRefined .authForm button.authSubmit {
+  margin-top:4px;background:#211d28;color:white;
+}
+.authRefined .authForm button.authSubmit:focus-visible {
+  outline:3px solid #b99afa;outline-offset:2px;
+}
+
+/* Ban screen: one editorial shell instead of multiple empty boxes. */
+#root > main.banPage.banStudioPage {
+  width:min(1130px,calc(100% - 40px))!important;
+  max-width:1130px!important;
+  padding:0!important;
+  margin:clamp(20px,4vw,54px) auto 72px!important;
+}
+.banStudioLayout {
+  display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);
+  border-radius:27px;overflow:hidden;
+  min-height:575px;
+  background:white;
+  border:1px solid #e8e5ed;
+  box-shadow:0 25px 65px rgba(43,29,70,.055);
+}
+.banStudioVisual {
+  background:#0c0b13;
+  color:white;
+  position:relative;isolation:isolate;
+  overflow:hidden;min-height:575px;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  padding:36px clamp(28px,4vw,52px) 48px;
+}
+.banStudioVisual::before {
+  content:'';position:absolute;inset:-25%;z-index:-1;
+  background:
+   radial-gradient(ellipse at 57% 44%,#6950caaa,transparent 38%),
+   radial-gradient(ellipse at 74% 85%,#263f8f6c,transparent 48%),
+   radial-gradient(ellipse at 0% 0%,#241a3d66,transparent 50%);
+}
+.banStudioBrand {
+  display:flex;align-items:center;gap:7px;
+  z-index:4;font-weight:850;letter-spacing:-.075em;font-size:28px;
+  line-height:1;color:white;
+}
+.banBrandRing {font-size:41px;font-weight:500;line-height:.8;}
+.banStudioArt {
+  position:absolute;pointer-events:none;z-index:1;
+  left:9%;right:9%;top:14%;height:53%;
+}
+.banArtHalo {
+  position:absolute;inset:12% 2%;border-radius:50%;
+  background:radial-gradient(ellipse,#8153f178,transparent 67%);
+  filter:blur(11px);
+}
+.banArtDisc {
+  position:absolute;width:46%;aspect-ratio:1;left:30%;top:9%;
+  background:linear-gradient(140deg,#a18afb,#4330a0 68%,#1d153f);
+  border-radius:50%;
+  box-shadow:0 23px 70px #05021270,inset 4px 6px 25px #e3d9fb46;
+}
+.banArtOrbit {
+  position:absolute;border:1px solid rgba(224,211,255,.38);
+  border-radius:50%;transform:rotate(-28deg);
+}
+.banArtOrbitOne {width:76%;height:65%;left:13%;top:20%;}
+.banArtOrbitTwo {width:47%;height:96%;left:28%;top:-5%;transform:rotate(51deg);}
+.banArtGlass {
+  position:absolute;left:33%;top:15%;
+  width:40%;height:62%;
+  border-radius:22px;transform:rotate(-11deg);
+  display:grid;place-items:center;
+  color:white;
+  background:linear-gradient(130deg,#ffffff48,#ffffff0b 63%);
+  border:1px solid #ffffff70;
+  box-shadow:0 19px 50px #07031560,inset 0 0 24px #ffffff20;
+  backdrop-filter:blur(12px);
+}
+.banStudioMessage {position:relative;z-index:3;margin-top:auto;}
+.banStatusBadge {
+  display:inline-flex;align-items:center;gap:9px;
+  border:1px solid #ded0ff4a;border-radius:999px;
+  background:#ddd0ff1f;color:#e2d4ff;
+  padding:9px 13px;font-size:11px;font-weight:710;
+  margin:0 0 15px;
+}
+.banStatusDot {width:7px;height:7px;border-radius:50%;background:#bea4ff;}
+.banStudioPage .banStudioMessage h1 {
+  color:#fff;margin:0;max-width:440px;
+  font-size:clamp(35px,4.2vw,55px);
+  line-height:1.05;letter-spacing:-.068em;
+  font-weight:810;overflow-wrap:break-word;
+}
+.banStudioContent {
+  min-width:0;padding:clamp(29px,5vw,64px);
+  display:flex;flex-direction:column;gap:28px;
+}
+.banStudioReason {
+  padding:0 0 27px;
+  border-bottom:1px solid #e9e6ed;
+}
+.banStudioLabel {
+  color:#817a8d;font-size:12px;
+  font-weight:710;letter-spacing:0;
+}
+.banStudioReasonText {
+  margin:12px 0 16px;line-height:1.35;
+  font-size:clamp(22px,2.2vw,31px);
+  color:#1e1925;
+  font-weight:745;letter-spacing:-.04em;
+  overflow-wrap:anywhere;
+}
+.banStudioTime {
+  display:block;color:#817d88;
+  font-size:12px;font-variant-numeric:tabular-nums;
+  line-height:1.45;
+}
+.banStudioAppeal {flex:1;min-height:0;}
+.banStudioAppealHead {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:18px;
+}
+.banStudioPage .banStudioAppeal h2 {
+  font-size:clamp(21px,2.5vw,27px);
+  font-weight:780;letter-spacing:-.04em;
+  margin:0;color:#211c27;line-height:1.2;
+}
+.banAppealStatus {
+  display:inline-flex;gap:8px;align-items:center;
+  padding:8px 12px;background:#f5f0ff;
+  color:#6643bd;font-size:11px;font-weight:680;
+  border-radius:99px;
+}
+.banAppealStatusDot {
+  width:7px;height:7px;background:#8059d8;border-radius:50%;
+}
+.banAppealStatus-approved {background:#eaf6ef;color:#246c49;}
+.banAppealStatus-approved .banAppealStatusDot {background:#36a16e;}
+.banAppealStatus-rejected {background:#faf0ee;color:#9e4c43;}
+.banAppealStatus-rejected .banAppealStatusDot {background:#bb695e;}
+.banStudioExplanation {
+  font-size:15px;line-height:1.65;color:#3f3946;
+  margin:0 0 18px;white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.banStudioReviewNote {
+  border-left:3px solid #bba6ee;
+  padding:2px 0 2px 15px;margin:20px 0;
+  display:grid;gap:7px;color:#514a5b;line-height:1.5;
+}
+.banStudioReviewNote strong {font-size:12px;color:#675383;}
+.banStudioPage .banStudioForm {
+  display:flex;flex-direction:column;gap:13px;
+}
+.banStudioPage .banStudioForm h2 {margin:0 0 9px;}
+.banStudioPage .banStudioForm label {
+  display:block;font-size:12px;font-weight:650;color:#595360;
+}
+.banStudioPage .banStudioForm textarea {
+  width:100%;min-height:151px;resize:vertical;
+  background:#fcfbfd;border:1px solid #e2dfeb;
+  border-radius:15px;padding:15px 16px;
+  color:#292434;font-size:14px;line-height:1.6;
+  transition:border-color .2s,box-shadow .2s;
+}
+.banStudioPage .banStudioForm textarea:focus {
+  outline:none;border-color:#8c6cd8;
+  box-shadow:0 0 0 4px #9a78ed20;
+}
+.banStudioPage .banStudioForm textarea::placeholder {color:#aaa5b0;}
+.banStudioSubmitRow {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.banStudioSubmitRow>span {color:#9c97a2;font-size:11px;font-variant-numeric:tabular-nums;}
+.banStudioPage .banStudioSubmitRow .primary {
+  border:0;background:#201c27;color:#fff;
+  border-radius:999px;
+  min-height:44px;padding:12px 18px;
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  font-size:12px;font-weight:700;
+}
+.banStudioPage .banStudioSubmitRow .primary:hover:not(:disabled) {
+  background:#5f3eb4;color:white;
+}
+.banStudioPage .banStudioSubmitRow .primary:disabled {opacity:.5;cursor:not-allowed;}
+.banStudioNotice {font-size:12px;color:#694ba9;margin:0;}
+.banStudioLoading {color:#898391;font-size:12px;}
+.banStudioPage .banStudioActions {
+  display:flex;flex-wrap:wrap;gap:9px;
+  border-top:1px solid #efedf1;
+  margin:0;padding:20px 0 0;
+}
+.banStudioPage .banStudioActions button {
+  background:transparent;
+  border:1px solid #e8e5ec;
+  color:#6b6570;border-radius:999px;
+  padding:10px 15px;min-height:39px;
+  font-size:12px;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.banStudioPage .banStudioActions button:hover {
+  border-color:#cdb8f8;
+  background:#f7f3ff;color:#6648aa;
+}
+/* Distinct labels and contrast in both themes. */
+html[data-theme=dark] #root .feedTopicScroller button.topicActive {
+  background:#c9afff!important;color:#21182d!important;
+}
+html[data-theme=dark] #root .mainNav button.navActive {
+  background:#352848!important;color:#d5c1ff!important;
+}
+html[data-theme=dark] #root .mainNav button.navActive svg {
+  stroke:#d5c1ff!important;fill:none!important;
+}
+html[data-theme=dark] .banStudioLayout {border-color:#3f354d;background:#1e1b25;}
+html[data-theme=dark] .banStudioContent {background:#1e1b25;}
+html[data-theme=dark] .banStudioReason {border-color:#484052;}
+html[data-theme=dark] .banStudioReasonText,
+html[data-theme=dark] .banStudioAppeal h2 {color:#f4f0fb;}
+html[data-theme=dark] .banStudioLabel,
+html[data-theme=dark] .banStudioTime {color:#b0a9bc;}
+html[data-theme=dark] .banStudioExplanation {color:#e2dce8;}
+html[data-theme=dark] .banStudioForm textarea {
+  color:#f3eef9;background:#282331;border-color:#4f465a;
+}
+html[data-theme=dark] .banStudioActions {border-color:#504657;}
+html[data-theme=dark] .banStudioActions button {color:#ddd2ee;border-color:#564b64;}
+html[data-theme=dark] .banStudioPage .banStudioForm label {color:#d4cde0;}
+html[data-theme=dark] .banAppealStatus-pending {background:#3b2a56;color:#ddc7ff;}
+@media(max-width:950px){
+  .banStudioLayout {grid-template-columns:42% 58%;}
+  .banStudioVisual {padding:31px 27px;min-height:570px;}
+  .banStudioContent {padding:34px;}
+  .banStudioPage .banStudioMessage h1 {font-size:clamp(32px,4vw,44px);}
+}
+@media(max-width:710px){
+  #root > main.banPage.banStudioPage {
+    width:calc(100% - 24px)!important;
+    margin:13px auto 92px!important;
+    padding:0!important;
+  }
+  .banStudioLayout {display:block;border-radius:22px;}
+  .banStudioVisual {
+    min-height:258px;padding:23px 26px 28px;
+  }
+  .banStudioBrand {font-size:23px;}
+  .banBrandRing {font-size:33px;}
+  .banStudioArt {left:35%;right:0;top:3%;height:100%;opacity:.55;}
+  .banArtGlass {width:40%;height:51%;top:24%;}
+  .banArtGlass svg {width:39px;height:39px;}
+  .banArtDisc {width:57%;left:15%;}
+  .banStudioMessage {max-width:83%;}
+  .banStatusBadge {margin:0 0 9px;}
+  .banStudioPage .banStudioMessage h1 {font-size:clamp(31px,7.5vw,43px);max-width:360px;}
+  .banStudioContent {gap:23px;padding:27px 23px 29px;}
+  .banStudioReason {padding-bottom:22px;}
+  .banStudioPage .banStudioReasonText {font-size:24px;}
+  .authRefined .authVisualSide {min-height:155px!important;padding:22px 24px!important;}
+  .authRefined .authEditorialPhoto {display:none;}
+  .authRefined .authVisualSide .authEditorialStory h2 {font-size:22px;}
+  .authRefined .authPanel h1 {margin-bottom:22px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .banStudioPage .banStudioForm textarea {transition:none;}
+}
