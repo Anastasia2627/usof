@@ -25,27 +25,43 @@ export default function CategoriesPage() {
 
   const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
     .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
-  return <main className="categoriesPage">
-    <p className="eyebrow">{t('Browse posts by topic')}</p>
-    <h1>{t('Categories')}</h1>
-    <div className="topicSearchField categorySearchField">
-      <Icon name="search" size={19}/>
-      <input type="search" aria-label={t('Search topics')} placeholder={t('Search topics')}
-        value={query} onChange={event=>setQuery(event.target.value)}/>
-      {query&&<button type="button" aria-label={t('Clear search')} title={t('Clear search')}
-        onClick={()=>setQuery('')}><Icon name="close" size={17}/></button>}
+  return <main className="categoriesPage categoryEditorialPage">
+    <header className="categoryEditorialHeader">
+      <h1>{t('Explore topics')}</h1>
+      <div className="topicSearchField categorySearchField">
+        <Icon name="search" size={19}/>
+        <input type="search" aria-label={t('Search topics')} placeholder={t('Search topics')}
+          value={query} onChange={event=>setQuery(event.target.value)}/>
+        {query&&<button type="button" aria-label={t('Clear search')}
+          onClick={()=>setQuery('')}><Icon name="close" size={17}/></button>}
+      </div>
+    </header>
+    <div className="categoryEditorialToolbar">
+      <span className="categoryResultsLabel">{t('All categories')}
+        <strong>{found.length}</strong>
+      </span>
+      <SuggestTopic/>
     </div>
-    <SuggestTopic/>
-    <ErrorBox error={error} />
-    {loading
-      ? <div className="card loading">{t('Loading categories…')}</div>
-      : found.length
-        ? <section className="categoryGrid">{found.map((category) => <button className="card categoryCard" key={category.id} onClick={() => go(`/category/${category.id}`)}><span className="categoryIndex">{String(category.id).padStart(2, '0')}</span><h2>{t(category.title)}</h2><p>{t(category.description)}</p></button>)}</section>
-        :
-          <div className="topicsEmpty">
-            <p>{t(query?'No matching topics':'No categories yet.')}</p>
-            {query&&<button type="button" onClick={()=>setQuery('')}>{t('Clear search')}</button>}
-          </div>}
+    <ErrorBox error={error}/>
+    {loading?<div className="categoryEditorialLoading">{t('Loading categories…')}</div>
+      :found.length?<section className="categoryGrid categoryEditorialGrid"
+        aria-label={t('Categories')}>
+        {found.map((category,index)=>{
+          const name=t(category.title);
+          return <button type="button" key={category.id}
+            className={'categoryCard categoryEditorialCard categoryTone'+(index%6)+(index===0?' categoryFeature':'')}
+            aria-label={name} onClick={()=>go('/category/'+category.id)}>
+            <span className="categoryCardArtwork" aria-hidden="true">
+              {Array.from(name)[0]?.toLocaleUpperCase()||'•'}
+            </span>
+            <span className="categoryCardArrow" aria-hidden="true"><Icon name="arrow" size={20}/></span>
+            <h2>{name}</h2>
+          </button>;
+        })}
+      </section>:<div className="topicsEmpty">
+        <p>{t(query?'No matching topics':'No categories yet.')}</p>
+        {query&&<button type="button" onClick={()=>setQuery('')}>{t('Clear search')}</button>}
+      </div>}
   </main>;
 }
 
@@ -75,15 +91,16 @@ export function CategoryDetailPage({id}){
     return()=>controller.abort();
   },[id]);
 
-  return <main className="categoryDetailPage">
-    <button className="linkButton" onClick={()=>go('/categories')}>
-      <Icon name="arrowBack" size={17}/> {t('All categories')}
-    </button>
-    <section className="hero categoryHero">
-      <p className="eyebrow">{t('Category')} {String(id).padStart(2,'0')}</p>
+  return <main className="categoryDetailPage categoryEditorialDetail">
+    <header className="categoryDetailHeader">
+      <button type="button" className="categoryBack" onClick={()=>go('/categories')}
+        aria-label={t('All categories')} title={t('All categories')}>
+        <Icon name="arrowBack" size={21}/>
+      </button>
       <h1>{t(category?.title||'Category')}</h1>
-      {category?.description&&<p>{t(category.description)}</p>}
-    </section>
+    </header>
+    {category?.description&&category.description.trim()!==category.title.trim()&&
+      <p className="categoryDetailDescription">{t(category.description)}</p>}
     <ErrorBox error={categoryError||(!posts.length?error:null)} onRetry={retry}/>
     {categoryLoading || (loading&&!posts.length)
       ? <div className="card loading">{t('Loading category…')}</div>
