@@ -120,6 +120,8 @@ jobs:
         run: npm run test:ui:regressions
       - name: Verify 20-step review scenarios
         run: npm run test:defense
+      - name: Verify blocked-account design and appeal notification delivery
+        run: node scripts/smoke-ban-ui.mjs
       - name: Capture desktop and mobile Basic screenshots
         run: |
           mkdir -p screenshots
