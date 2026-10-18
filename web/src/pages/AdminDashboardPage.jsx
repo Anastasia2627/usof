@@ -11,7 +11,7 @@ export default function AdminDashboardPage() {
 
   return <main className="adminPage">
     <header className="studioHeading">
-      <div><p className="eyebrow">CIRCLE / CONTROL ROOM</p><h1>Admin Studio<span className="heroGradientWord">.</span></h1><p>Understand the community. Keep the conversation healthy.</p></div>
+      <div><h1>Admin Studio</h1></div>
       <div className="studioHeadingActions"><button className="secondary" onClick={() => go('/admin')}>Manage content ↗</button></div>
     </header>
     <AdminDashboard auth={auth} />

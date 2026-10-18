@@ -38,6 +38,7 @@ async function authorize(middleware,token) {
 
 test('blocking prevents normal requests yet keeps private ban notes hidden from the member',async t=>{
   const admin=await fixture(t,'admin');
+  const moderator=await fixture(t,'moderator');
   const member=await fixture(t);
   const actor={sub:admin.id,role:'admin'};
   const token=signAuthToken({...member,token_version:0});
@@ -56,6 +57,15 @@ test('blocking prevents normal requests yet keeps private ban notes hidden from 
     [admin.id,member.id,'ban_appeal'],
   );
   assert.equal(adminNotice?.type,'ban_appeal','Admin must receive an appeal notification');
+  const [[moderatorNotice]]=await pool.execute(
+    'SELECT type,body FROM notifications WHERE user_id=? AND actor_id=? AND type=? ORDER BY id DESC LIMIT 1',
+    [moderator.id,member.id,'ban_appeal'],
+  );
+  assert.equal(moderatorNotice?.type,'ban_appeal','Moderators must receive an informational appeal notification');
+  assert.match(moderatorNotice.body,/administrator/i);
+  assert.ok(!moderatorNotice.body.includes('Internal investigation'));
+  assert.ok(!moderatorNotice.body.includes('Repeated community guideline violations'));
+  assert.ok(!moderatorNotice.body.includes('I would like the team'));
   await assert.rejects(appealRestriction(member.id,{explanation:'Repeat request'}),{code:'APPEAL_ALREADY_SUBMITTED'});
   const listed=await listRestrictionAppeals();
   const entry=listed.data.find(v=>v.id===submitted.data.id);
@@ -86,7 +96,9 @@ test('approval unblocks only the matching ban and administrators cannot be block
 
 test('HTTP /api/users/ban-appeals is never interpreted as /:user_id',async t=>{
   const admin=await fixture(t,'admin');
+  const moderator=await fixture(t,'moderator');
   const token=signAuthToken({...admin,token_version:0});
+  const moderatorToken=signAuthToken({...moderator,token_version:0});
   const server=app.listen(0,'127.0.0.1');
   try {
     await new Promise(resolve=>server.once('listening',resolve));
@@ -96,6 +108,10 @@ test('HTTP /api/users/ban-appeals is never interpreted as /:user_id',async t=>{
     const body=await response.json();
     assert.equal(response.status,200,JSON.stringify(body));
     assert.ok(Array.isArray(body.data));
+    const moderatorResponse=await fetch('http://127.0.0.1:'+server.address().port+'/api/users/ban-appeals',{
+      headers:{Authorization:'Bearer '+moderatorToken},
+    });
+    assert.equal(moderatorResponse.status,403,'Moderator cannot view confidential ban appeal details');
   }finally {
     await new Promise(resolve=>server.close(resolve));
   }

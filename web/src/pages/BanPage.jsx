@@ -83,7 +83,7 @@ export default function BanPage(){
         <div className="banStudioMessage">
           <span className="banStatusBadge"><span aria-hidden="true" className="banStatusDot"/>
             {t('Access restricted')}</span>
-          <h1 id="ban-page-title">{t('Your account has been restricted.')}</h1>
+          <h1 id="ban-page-title">{t('Account blocked')}</h1>
         </div>
       </section>
 

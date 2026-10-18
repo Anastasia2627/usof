@@ -441,6 +441,11 @@ Object.assign(translations.uk,{
     'Користувач оскаржив блокування · Рішення ухвалює адміністратор',
   'Back':'Назад'
 });
+Object.assign(translations.uk,{
+  'Account blocked':'Ваш акаунт заблоковано',
+  'A member appealed an account restriction. An administrator will review it.':
+    'Користувач подав оскарження блокування · Розглядає адміністратор'
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {

@@ -176,7 +176,11 @@ export default function NotificationsPage() {
             <button type="button" className="notificationMain"
               onClick={() => openItem(item)} aria-label={t(item.title)}>
               <strong className="notificationTitle">{t(item.title)}</strong>
-              <span className="notificationDescription">{notificationBodyText(item.body,t)}</span>
+              <span className="notificationDescription">
+                {item.type==='ban_appeal'&&item.actor_login&&
+                  <strong className="notificationActor">@{item.actor_login} · </strong>}
+                {notificationBodyText(item.body,t)}
+              </span>
               <time className="notificationTime" dateTime={item.created_at}>{fmt(item.created_at)}</time>
             </button>
             <span className="notificationRightHint" aria-hidden="true">···</span>
