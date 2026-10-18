@@ -139,13 +139,7 @@
   width:76%;height:88%;right:-37%;top:4%;
   background:radial-gradient(ellipse,#3420dfcc,#18249555 45%,transparent 76%);
 }
-.banNightBrand {
-  align-self:flex-start;display:flex;align-items:center;gap:8px;
-  font-size:23px;font-weight:840;line-height:1;
-  color:#fff;letter-spacing:-.06em;z-index:2;
-}
-.banNightBrand span {font-size:31px;font-weight:400;line-height:.9;}
-.banNightHeading {position:relative;z-index:3;margin:72px 0 0;text-align:center;}
+.banNightHeading {position:relative;z-index:3;margin:100px 0 0;text-align:center;}
 .banNightPage .banNightHeading h1 {
   color:#fff;
   font-size:clamp(33px,4.2vw,55px);
@@ -261,8 +255,7 @@
     border-radius:17px;
     padding:22px 15px 55px;
   }
-  .banNightBrand {font-size:21px;align-self:flex-start;padding-left:5px;}
-  .banNightHeading {margin-top:62px;}
+  .banNightHeading {margin-top:88px;}
   .banNightPage .banNightHeading h1 {
     font-size:clamp(32px,7.7vw,47px);
     padding-inline:5px;
