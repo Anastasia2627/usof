@@ -25,6 +25,12 @@ export default function CategoriesPage() {
 
   const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
     .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
+  const editorialAnchor=!query.trim()&&found.find(category=>
+    ['art','мистецтво','design','дизайн','crafts','рукоділля'].includes(
+      String(category.title).trim().toLocaleLowerCase()));
+  const visibleCategories=editorialAnchor
+    ?[editorialAnchor,...found.filter(category=>category.id!==editorialAnchor.id)]
+    :found;
   return <main className="categoriesPage categoryEditorialPage">
     <header className="categoryEditorialHeader">
       <h1>{t('Explore topics')}</h1>
@@ -46,7 +52,7 @@ export default function CategoriesPage() {
     {loading?<div className="categoryEditorialLoading">{t('Loading categories…')}</div>
       :found.length?<section className="categoryGrid categoryEditorialGrid"
         aria-label={t('Categories')}>
-        {found.map((category,index)=>{
+        {visibleCategories.map((category,index)=>{
           const name=t(category.title);
           return <button type="button" key={category.id}
             className={'categoryCard categoryEditorialCard categoryTone'+(index%6)+(index===0?' categoryFeature':'')}
