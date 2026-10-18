@@ -2,7 +2,7 @@ import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 import { User } from '../models/User.js';
 import { positiveInt } from '../utils/validation.js';
-import { createNotification, deliverNotifications } from './notificationService.js';
+
 
 function cleaned(value, limit, name, required = false) {
   const text = String(value ?? '').trim();
@@ -74,20 +74,22 @@ export async function appealRestriction(userId, body) {
       'INSERT INTO ban_appeals(user_id,ban_started_at,ban_reason,ban_internal_note,banned_by,explanation) VALUES(?,?,?,?,?,?)',
       [user.id, current.banned_at, current.ban_reason || '', current.ban_internal_note, current.banned_by, explanation],
     );
-    await db.commit();
-    // Administrators review appeals; moderators only receive a status notice.
-    // Never include the appeal's explanation, private ban note, or review controls
-    // in moderator notifications.
-    const [staff]=await pool.execute(
+    // Commit the appeal AND its notifications atomically.
+    // Previously delivery errors were swallowed after the appeal had committed,
+    // leaving an appeal that admins could not discover through notifications.
+    const [staff]=await db.execute(
       "SELECT id,role FROM users WHERE role IN ('admin','moderator') AND banned_at IS NULL",
     );
-    await deliverNotifications(staff.map(person=>()=>createNotification({
-      userId:person.id,actorId:user.id,type:'ban_appeal',
-      title:'New account ban appeal',
-      body:person.role==='admin'
-        ? 'A member appealed an account restriction. Review it in the admin center.'
-        : 'A member appealed an account restriction. An administrator will review it.',
-    })));
+    for (const recipient of staff) {
+      await db.execute(
+        'INSERT INTO notifications(user_id,actor_id,type,title,body) VALUES(?,?,?,?,?)',
+        [recipient.id,user.id,'ban_appeal','New account ban appeal',
+          recipient.role==='admin'
+            ? 'A member appealed an account restriction. Review it in the admin center.'
+            : 'A member appealed an account restriction. An administrator will review it.'],
+      );
+    }
+    await db.commit();
     return { data: { id: result.insertId, status: 'pending' } };
   } catch(error) { await db.rollback(); throw error; } finally { db.release(); }
 }
