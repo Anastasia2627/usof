@@ -73,7 +73,7 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
         <button type="button" className="adminName" onClick={() => go('/profile/' + user.id)}>{user.login}</button>
         <p>{user.full_name || user.email}</p>
       </div>
-      <span className="adminRoleChip">{user.banned_at ? 'Banned' : user.role}</span>
+      <span className="adminRoleChip">{t(user.banned_at ? 'Banned' : user.role)}</span>
       <span className="adminScore" title="User rating">{Number(user.rating || 0)} pts</span>
       <div className="adminRowTools">
         {user.role!=='admin' && (user.banned_at ?
@@ -99,23 +99,23 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
       </div>
     </div>
     {showBan && !user.banned_at && <form className="adminInlineForm banEditor" onSubmit={submitBan}>
-      <h3>Block @{user.login}</h3>
-      <p>They will lose site access, but can still appeal this restriction.</p>
-      <label>Official reason (shown to the user)
+      <h3>{t('Block')} @{user.login}</h3>
+      <p>{t('They will lose site access, but can still appeal this restriction.')}</p>
+      <label>{t('Official reason (shown to the user)')}
         <textarea minLength={5} maxLength={500} required value={banReason} onChange={e=>setBanReason(e.target.value)} />
       </label>
-      <label>Private admin note (never shown to the user)
+      <label>{t('Private admin note (never shown to the user)')}
         <textarea maxLength={2000} value={adminNote} onChange={e=>setAdminNote(e.target.value)} />
       </label>
       <div className="adminFormActions">
-        <button type="button" onClick={()=>setShowBan(false)}>Cancel</button>
-        <button className="primary" disabled={banBusy}>Confirm block</button>
+        <button type="button" onClick={()=>setShowBan(false)}>{t('Cancel')}</button>
+        <button className="primary" disabled={banBusy}>{t('Confirm block')}</button>
       </div>
     </form>}
     {user.banned_at && <div className="adminBanSummary">
-      <strong>Blocked {new Date(user.banned_at).toLocaleString()}</strong>
-      <p>Official reason: {user.ban_reason}</p>
-      {user.ban_internal_note && <p>Private note: {user.ban_internal_note}</p>}
+      <strong>{t('Blocked on')} {new Date(user.banned_at).toLocaleString()}</strong>
+      <p>{t('Official reason')}: {user.ban_reason}</p>
+      {user.ban_internal_note && <p>{t('Private admin note')}: {user.ban_internal_note}</p>}
     </div>}
     {editing && <form className="adminInlineForm" onSubmit={save}>
       <div className="adminFields">
@@ -275,6 +275,8 @@ export default function AdminPage({initialTab='users'}) {
   }
 
   useEffect(() => { load(); }, [auth?.token, auth?.user?.role,reportStatus,reportPage,suggestionStatus]);
+  useEffect(()=>{setTab(initialTab);},[initialTab]);
+  useEffect(()=>{if(tab==='reports'||tab==='appeals')load();},[tab]);
   useEffect(()=>{if(auth?.user?.role==='moderator')setTab('reports');},[auth?.user?.role]);
 
   if (!['admin','moderator'].includes(auth?.user?.role)) return <main><div className="error">Admin access required.</div></main>;
@@ -382,7 +384,6 @@ export default function AdminPage({initialTab='users'}) {
     <header className="adminTop">
       <div>
         <h1>{t('Admin')}</h1>
-        <p className="adminSubtitle">{t('Keep your community running smoothly.')}</p>
       </div>
       <button className="adminRefresh adminIconAction" type="button" onClick={load}
         aria-label={t('Refresh')} disabled={loading} title={t('Refresh')}>
@@ -468,28 +469,28 @@ export default function AdminPage({initialTab='users'}) {
         </nav>}
       </section>}
       {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
-        <div className="adminSectionHeader"><h2>{t('Ban appeals')}</h2><span>{counts.appeals} waiting</span></div>
+        <div className="adminSectionHeader"><h2>{t('Ban appeals')}</h2><span>{counts.appeals} {t('pending')}</span></div>
         {appealsWarning&&<p className="adminAppealsWarning" role="alert">{appealsWarning}</p>}
         <div className="adminSimpleList">
           {data.appeals.length ? data.appeals.map(item=><article className="adminListItem banAppealCard" key={item.id}>
             <div className="adminItemText">
-              <strong>@{item.login} · {item.status}</strong>
-              <p>Blocked: {new Date(item.ban_started_at).toLocaleString()}</p>
-              <p><b>Official reason:</b> {item.ban_reason}</p>
-              {item.ban_internal_note&&<p className="appealPrivate"><b>Private admin note:</b> {item.ban_internal_note}</p>}
-              <p><b>User's appeal:</b> {item.explanation}</p>
-              <small>Submitted {new Date(item.created_at).toLocaleString()}</small>
-              {item.status!=='pending'&&<p><b>Decision:</b> {item.status}{item.review_note?' · '+item.review_note:''}</p>}
+              <strong>@{item.login} · {t(item.status)}</strong>
+              <p>{t('Blocked on')}: {new Date(item.ban_started_at).toLocaleString()}</p>
+              <p><b>{t('Official reason')}:</b> {item.ban_reason}</p>
+              {item.ban_internal_note&&<p className="appealPrivate"><b>{t('Private admin note')}:</b> {item.ban_internal_note}</p>}
+              <p><b>{t('Your appeal')}:</b> {item.explanation}</p>
+              <small>{t('Submitted')} {new Date(item.created_at).toLocaleString()}</small>
+              {item.status!=='pending'&&<p><b>{t('Decision')}:</b> {t(item.status)}{item.review_note?' · '+item.review_note:''}</p>}
             </div>
             {item.status==='pending'&&<div className="banAppealActions">
-              <label>Review note (optional)
+              <label>{t('Review note (optional)')}
                 <textarea maxLength={1000} value={appealNotes[item.id]||''}
                   onChange={e=>setAppealNotes(v=>({...v,[item.id]:e.target.value}))}/>
               </label>
-              <button type="button" className="primary" onClick={()=>decideAppeal(item,'approved')}>Approve & unban</button>
-              <button type="button" onClick={()=>decideAppeal(item,'rejected')}>Reject appeal</button>
+              <button type="button" className="primary" onClick={()=>decideAppeal(item,'approved')}>{t('Approve & unban')}</button>
+              <button type="button" onClick={()=>decideAppeal(item,'rejected')}>{t('Reject appeal')}</button>
             </div>}
-          </article>) : <p className="adminEmpty">No appeals yet.</p>}
+          </article>) : <p className="adminEmpty">{t('No appeals yet.')}</p>}
         </div>
       </section>}
       {tab === 'users' && <section className="adminStack">
