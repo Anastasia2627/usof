@@ -79,13 +79,6 @@ export default function BanPage(){
       <div className="banNightWord" aria-hidden="true">circle</div>
 
       <section className="banNightPanel" aria-label={t('Account restriction details')}>
-        <div className="banNightPanelTop">
-          <span className="banNightPanelBrand">circle</span>
-          <span className="banNightPanelStatus">
-            <span aria-hidden="true" className="banNightStatusDot"/>
-            {t('Access restricted')}
-          </span>
-        </div>
         <div className="banNightReason">
           <span className="banNightLabel">{t('Official reason')}</span>
           <h2>{auth.user?.ban_reason||
