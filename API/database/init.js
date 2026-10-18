@@ -55,6 +55,11 @@ async function ensureCircleSchema(connection) {
   if (!known.has('google_sub')) {
     await connection.query('ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL UNIQUE AFTER role');
   }
+  // Non-destructive account restriction fields, also for databases created earlier.
+  if (!known.has('banned_at')) await connection.query("ALTER TABLE users ADD COLUMN banned_at DATETIME NULL");
+  if (!known.has('ban_reason')) await connection.query("ALTER TABLE users ADD COLUMN ban_reason VARCHAR(500) NULL");
+  if (!known.has('ban_internal_note')) await connection.query("ALTER TABLE users ADD COLUMN ban_internal_note TEXT NULL");
+  if (!known.has('banned_by')) await connection.query("ALTER TABLE users ADD COLUMN banned_by INT UNSIGNED NULL");
   // Additive, idempotent migration: never drop existing user data.
   await connection.query("ALTER TABLE users MODIFY COLUMN role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user'");
   // Existing databases need the new notification kind, without deleting old notifications.
@@ -133,6 +138,26 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB`);
+
+  await connection.query(`CREATE TABLE IF NOT EXISTS ban_appeals (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    ban_started_at DATETIME NOT NULL,
+    ban_reason VARCHAR(500) NOT NULL,
+    ban_internal_note TEXT NULL,
+    banned_by INT UNSIGNED NULL,
+    explanation TEXT NOT NULL,
+    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    review_note VARCHAR(1000) NULL,
+    reviewed_by INT UNSIGNED NULL,
+    reviewed_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_appeal_user_ban(user_id,ban_started_at),
+    INDEX idx_appeal_status(status,created_at),
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(banned_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE SET NULL
   ) ENGINE=InnoDB`);
 
   // A broad public conversation feed, without resetting the six existing
@@ -230,7 +255,7 @@ async function initializeDatabase() {
         );
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=0');
-      for (const table of ['category_suggestions','content_reports','post_images','direct_messages','user_interests','user_follows',...APP_TABLES]) {
+      for (const table of ['ban_appeals','category_suggestions','content_reports','post_images','direct_messages','user_interests','user_follows',...APP_TABLES]) {
         await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
       }
       await connection.query('SET FOREIGN_KEY_CHECKS=1');
@@ -252,6 +277,10 @@ async function initializeDatabase() {
         rating INT NOT NULL DEFAULT 0,
         role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user',
         google_sub VARCHAR(64) NULL UNIQUE,
+        banned_at DATETIME NULL,
+        ban_reason VARCHAR(500) NULL,
+        ban_internal_note TEXT NULL,
+        banned_by INT UNSIGNED NULL,
         token_version INT UNSIGNED NOT NULL DEFAULT 0,
         reset_token_hash CHAR(64) NULL,
         reset_token_expires DATETIME NULL,

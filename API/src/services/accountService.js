@@ -43,6 +43,8 @@ function publicUser(row) {
     avatar: row.avatar,
     rating: row.rating,
     role: row.role,
+    banned_at: row.banned_at,
+    ban_reason: row.ban_reason,
     created_at: row.created_at,
   };
 }
@@ -131,9 +133,9 @@ export async function updateAccount({ targetId, actor, body }) {
     protectLastAdmin(adminIds, current, role);
 
     const emailChanged = email !== current.email;
-    // Every authenticated request reads the current role from MySQL, so promotion
-    // and demotion take effect immediately, without leaving a stale JWT privilege.
-    invalidateSession = emailChanged || login !== current.login;
+    // Tokens carry immutable user id + token version, not login/email.
+    // Profile and admin edits therefore do not invalidate existing sessions.
+    invalidateSession = false;
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
     verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
