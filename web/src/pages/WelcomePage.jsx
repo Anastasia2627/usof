@@ -50,10 +50,5 @@ export default function WelcomePage(){
         </div>
       </div>
     </section>
-    <section className="welcomeHighlights" aria-label={uk?'Можливості Circle':'What you can do on Circle'}>
-      <div><Icon name="chat" size={23}/><h2>{uk?'Говори про своє':'Start a conversation'}</h2></div>
-      <div><Icon name="favorite" size={23}/><h2>{uk?'Знаходь своїх':'Find your people'}</h2></div>
-      <div><Icon name="group" size={23}/><h2>{uk?'Відкривай нове':'Discover new interests'}</h2></div>
-    </section>
   </main>;
 }

@@ -61,12 +61,6 @@ export default function InterestsPage(){
   return <main className="socialPage interestPage interestEditorialPage">
     <section className="interestFashionHero" aria-labelledby="interest-hero-title">
       <div className="interestFashionGlow" aria-hidden="true"/>
-      <div className="interestFashionMicro interestFashionLeft" aria-hidden="true">
-        <span>▰ CIRCLE</span><span>EXPLORE</span><span>DISCOVER</span>
-      </div>
-      <div className="interestFashionMicro interestFashionRight" aria-hidden="true">
-        <span>NEW CONNECTIONS</span><span>YOUR SPACE</span>
-      </div>
       <div className="interestFashionTypography" aria-hidden="true">
         <div className="interestFashionTypeTop">FIND YOUR</div>
         <div className="interestFashionTypeBottom">PEOPLE</div>
@@ -88,14 +82,12 @@ export default function InterestsPage(){
               <span className="interestPhotoSelect"><Icon name={chosen?'check':'plus'} size={17}/></span>
             </span>
             <span className="interestPhotoBottom">
-              <span className="interestPhotoCategoryMeta">CIRCLE / EDITION {photo.number}</span>
               <strong>{t(category.title)}</strong>
             </span>
           </button>;
         })}
       </div>
       <div className="interestFashionCaption">
-        <span className="interestFashionCaptionNumber">01 — 06</span>
         <span id="interest-hero-title">{uk?'Знайди людей зі спільними інтересами':'Find people who get you'}</span>
         <span className="interestFashionCaptionSecondary">{uk?'Обери теми прямо на фото':'Choose topics right on the photos'}</span>
       </div>
@@ -103,8 +95,7 @@ export default function InterestsPage(){
 
     <section className="interestEditorialPicker" aria-labelledby="interest-more-title">
       <div className="interestPickerHeading interestMagazineHeading">
-        <div><span className="interestEyebrow">02 / YOUR INTERESTS</span>
-          <h2 id="interest-more-title">{t('What are you into?')}</h2>
+        <div><h2 id="interest-more-title">{t('What are you into?')}</h2>
           <p>{uk?'Познач теми, які тобі цікаві. Їх можна буде змінити будь-коли.':
             'Pick what you love. You can always change it later.'}</p>
         </div>
