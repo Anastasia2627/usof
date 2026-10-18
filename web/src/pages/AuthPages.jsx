@@ -60,7 +60,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
       <span className="verificationLetter">✉<span>✦</span></span>
     </div>
     <h1>{t('Confirm your email')}</h1>
-    <p>{t('Enter the code sent to')} <b>{email}</b>.</p>
+    <p>{t('Enter the code sent to')} <b>{email}</b></p>
     {lastDelivery && lastDelivery !== 'sent' && <p className="error card">Your account was created, but no email was sent. Configure SMTP and request a new code. Avoid registering again with the same address.</p>}
     <label className="verifyCodeLabel">{t('Verification code')}
       <input aria-label="Six-digit verification code" className="verifyCodeInput" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
@@ -149,23 +149,19 @@ export function AuthPage({ mode }) {
   return <main className="authShell authRefined">
     <aside className="authEditorial authVisualSide" aria-label={t('About Circle')}>
       <div className="authEditorialBrand"><span aria-hidden="true">◎</span> circle</div>
-      <div className="authVisualBackdrop" aria-hidden="true">
-        <span className="authVisualHalo"/>
-        <span className="authVisualOrbit authOrbitOne"/>
-        <span className="authVisualOrbit authOrbitTwo"/>
-        <span className="authVisualTile authVisualTileOne">✳</span>
-        <span className="authVisualTile authVisualTileTwo">◎</span>
-        <span className="authVisualTile authVisualTileThree">↗</span>
+      <div className="authEditorialPhoto" aria-hidden="true">
+        <img src="https://images.pexels.com/photos/14886151/pexels-photo-14886151.jpeg?auto=compress&cs=tinysrgb&w=1300"
+          alt="" loading="lazy" decoding="async"/>
+        <span className="authPhotoGlow"/>
+        <span className="authPhotoRing"/>
       </div>
       <div className="authEditorialStory">
-        <h2>{language==='uk'?'Гарні розмови починаються тут.':'Good conversations start here.'}</h2>
-        <p>{language==='uk'?'Обговорюй цікаве, дізнавайся нове та знаходь однодумців.':'Share your ideas and meet people who see the world in their own way.'}</p>
+        <h2>{language==='uk'?'Тут починаються розмови':'Where conversations begin'}</h2>
       </div>
     </aside>
     <section className="authPanel">
       {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
         <h1>{t(register ? 'Create account' : 'Welcome back')}</h1>
-        <p className="authPanelCopy">{t(register ? 'A few details and you are ready to join the conversation.' : 'Log in to pick up where you left off.')}</p>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
           {register ? <>

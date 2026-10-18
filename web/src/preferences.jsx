@@ -432,6 +432,15 @@ Object.assign(translations.uk,{
   "Report pages":"Сторінки скарг",
   "New account ban appeal":"Нове оскарження блокування"
 });
+Object.assign(translations.uk,{
+  'Access restricted':'Доступ обмежено',
+  'Account restriction details':'Деталі блокування',
+  'Appeal this decision':'Оскаржити блокування',
+  'Admin response':'Відповідь адміністратора',
+  'A member appealed an account restriction. An administrator will review it.':
+    'Користувач оскаржив блокування · Рішення ухвалює адміністратор',
+  'Back':'Назад'
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {

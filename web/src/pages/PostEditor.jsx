@@ -145,19 +145,16 @@ export default function PostEditor({ id }) {
   return <main className="narrow editorPage editorRefined">
     <div className="editorTopbar">
       <button className="editorBack" type="button" onClick={() => go(editing ? `/post/${id}` : '/')}
-        aria-label="Back" title="Back"><Icon name="arrowBack" size={21}/></button>
+        aria-label={t('Back')} title={t('Back')}><Icon name="arrowBack" size={21}/></button>
       <div className="editorHeading">
-        <span className="editorOverline">CIRCLE / COMMUNITY</span>
         <h1>{t(editing ? 'Edit post' : 'New post')}</h1>
       </div>
     </div>
 
-    <p className="editorLead">{t('Share an idea, ask a question, or start a conversation.')}</p>
     <form className="postComposerForm" onSubmit={submit}>
       <div className="editorIdentity">
         <Avatar user={auth.user} size="md"/>
         <span>@{auth.user.login}</span>
-        <small>{t('Posting to Circle')}</small>
       </div>
       <div className="editorInputGroup">
         <label className="editorFieldLabel" htmlFor="post-title">{t("Post title")}</label>

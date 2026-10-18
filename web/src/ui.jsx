@@ -367,7 +367,7 @@ export function Header() {
       {nav.map(item => <button key={item.key} type="button" title={t(item.text)}
         className={current === item.destination ? 'navActive' : ''}
         aria-label={t(item.text)} onClick={() => go(item.destination)}>
-        <Icon name={item.icon} size={24} filled={current === item.destination}/><span className="navLabel">{t(item.text)}</span>
+        <Icon name={item.icon} size={24}/><span className="navLabel">{t(item.text)}</span>
       </button>)}
     </nav>}
     {roleNotice&&<div role="status" className="roleChangeBanner">
