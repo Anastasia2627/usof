@@ -163,15 +163,18 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE SET NULL
   ) ENGINE=InnoDB`);
 
-  // Backfill missing moderator notifications for appeals submitted before
-  // this feature was installed. Re-running db:init never duplicates notices.
+  // Repair notifications for pending appeals created before the delivery fix.
+  // This reaches admins as well as moderators; re-running db:init is idempotent.
   await connection.execute(`
     INSERT INTO notifications(user_id,actor_id,type,title,body)
     SELECT m.id, a.user_id, 'ban_appeal',
       'New account ban appeal',
-      'A member appealed an account restriction. An administrator will review it.'
+      CASE WHEN m.role='admin'
+        THEN 'A member appealed an account restriction. Review it in the admin center.'
+        ELSE 'A member appealed an account restriction. An administrator will review it.'
+      END
     FROM ban_appeals a
-    JOIN users m ON m.role='moderator' AND m.banned_at IS NULL
+    JOIN users m ON m.role IN ('admin','moderator') AND m.banned_at IS NULL
     WHERE a.status='pending'
       AND NOT EXISTS (
         SELECT 1 FROM notifications n
