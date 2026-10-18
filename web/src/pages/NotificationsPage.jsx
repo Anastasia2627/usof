@@ -103,7 +103,9 @@ export default function NotificationsPage() {
         await api(`/notifications/${item.id}/read`, { method: 'PATCH', token: auth.token });
         announceChange();
       }
-      if (item.type==='category_suggestion'&&auth.user.role==='admin') go('/admin?tab=suggestions');
+      if (['content_report','ban_recommendation'].includes(item.type)&&auth.user.role==='admin') go('/admin?tab=reports');
+      else if (item.type==='ban_appeal'&&auth.user.role==='admin') go('/admin?tab=appeals');
+      else if (item.type==='category_suggestion'&&auth.user.role==='admin') go('/admin?tab=suggestions');
       else if (item.type==='category_decision') go('/categories');
       else if (item.post_id) go(`/post/${item.post_id}`);
       else await load();
