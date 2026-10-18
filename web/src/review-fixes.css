@@ -408,3 +408,10 @@ html[data-theme=dark] .adminCommentMenu button.adminCommentMenuDanger {color:#ff
   .adminCommentsSection .adminCommentItem,
   .adminCommentsSection .adminCommentMore{transition:none;}
 }
+
+/* Banned accounts have no sidebar, so the hero spans both desktop columns. */
+@media(min-width:721px){
+  #root > main.banPage.banNightPage {
+    grid-column:1 / -1!important;
+  }
+}
