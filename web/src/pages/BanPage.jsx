@@ -13,18 +13,15 @@ export default function BanPage(){
   const [text,setText]=useState('');
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState(null);
-  const [notice,setNotice]=useState('');
 
-  const date=value=>value?new Date(value).toLocaleString(language==='uk'?'uk-UA':'en-US',{
-    dateStyle:'medium',timeStyle:'short',
-  }):'';
+  const formatDate=value=>value?new Date(value).toLocaleString(
+    language==='uk'?'uk-UA':'en-US',{dateStyle:'medium',timeStyle:'short'}):'';
 
   async function refresh(){
     if(!auth?.token)return;
     try{
       const result=await api('/auth/ban-status',{token:auth.token});
       setAppeal(result.data.appeal);
-      if(result.data.appeal)setNotice('');
       const fresh=result.data.user;
       if(!fresh.banned_at){
         dispatch({type:'AUTH_USER_SET',payload:fresh});
@@ -48,14 +45,15 @@ export default function BanPage(){
   async function submit(event){
     event.preventDefault();
     if(busy||initialLoading)return;
-    setBusy(true);setError(null);setNotice('');
+    setBusy(true);setError(null);
     try{
       await api('/auth/ban-appeal',{
         method:'POST',token:auth.token,body:{explanation:text},
       });
       setText('');
       await refresh();
-    }catch(err){setError(err);}finally{setBusy(false);}
+    }catch(err){setError(err);}
+    finally{setBusy(false);}
   }
 
   function logOut(){
@@ -63,83 +61,81 @@ export default function BanPage(){
     go('/login');
   }
 
-  if(!auth)return <main className="banPage">
+  if(!auth)return <main className="banPage banNightPage">
     <h1>{t('Sign in to view your account status.')}</h1>
     <button className="primary" onClick={()=>go('/login')}>{t('Log in')}</button>
   </main>;
 
-  const appealPending=appeal?.status==='pending';
-  return <main className="banPage banStudioPage">
-    <div className="banStudioLayout">
-      <section className="banStudioVisual" aria-labelledby="ban-page-title">
-        <div className="banStudioBrand" aria-hidden="true"><span className="banBrandRing">◎</span> circle</div>
-        <div className="banStudioArt" aria-hidden="true">
-          <span className="banArtHalo"/>
-          <span className="banArtDisc"/>
-          <span className="banArtOrbit banArtOrbitOne"/>
-          <span className="banArtOrbit banArtOrbitTwo"/>
-          <span className="banArtGlass"><Icon name="lock" size={60}/></span>
-        </div>
-        <div className="banStudioMessage">
-          <span className="banStatusBadge"><span aria-hidden="true" className="banStatusDot"/>
-            {t('Access restricted')}</span>
-          <h1 id="ban-page-title">{t('Account blocked')}</h1>
-        </div>
-      </section>
+  return <main className="banPage banNightPage">
+    <section className="banNightStage" aria-labelledby="banNightTitle">
+      <div className="banNightLight banNightLightLeft" aria-hidden="true"/>
+      <div className="banNightLight banNightLightRight" aria-hidden="true"/>
+      <div className="banNightBrand" aria-hidden="true"><span>◎</span> circle</div>
 
-      <section className="banStudioContent" aria-label={t('Account restriction details')}>
-        <div className="banStudioReason">
-          <span className="banStudioLabel">{t('Official reason')}</span>
-          <p className="banStudioReasonText">{auth.user?.ban_reason ||
-            t('Account access has been restricted by an administrator.')}</p>
-          {auth.user?.banned_at&&
-            <time className="banStudioTime" dateTime={auth.user.banned_at}>
-              {t('Blocked on')} · {date(auth.user.banned_at)}
-            </time>}
+      <div className="banNightHeading">
+        <h1 id="banNightTitle">{t('Account blocked')}</h1>
+      </div>
+
+      <div className="banNightWord" aria-hidden="true">circle</div>
+
+      <section className="banNightPanel" aria-label={t('Account restriction details')}>
+        <div className="banNightPanelTop">
+          <span className="banNightPanelBrand">circle</span>
+          <span className="banNightPanelStatus">
+            <span aria-hidden="true" className="banNightStatusDot"/>
+            {t('Access restricted')}
+          </span>
         </div>
-        <div className="banStudioAppeal">
+        <div className="banNightReason">
+          <span className="banNightLabel">{t('Official reason')}</span>
+          <h2>{auth.user?.ban_reason||
+            t('Account access has been restricted by an administrator.')}</h2>
+          {auth.user?.banned_at&&<time dateTime={auth.user.banned_at}>
+            {t('Blocked on')} · {formatDate(auth.user.banned_at)}
+          </time>}
+        </div>
+        <div className="banNightAppeal">
           {initialLoading
-            ? <p role="status" className="banStudioLoading">{t('Loading…')}</p>
+            ? <p role="status" className="banNightLoading">{t('Loading…')}</p>
             : appeal
               ? <>
-                <div className="banStudioAppealHead">
-                  <h2>{t('Your appeal')}</h2>
-                  <span className={'banAppealStatus banAppealStatus-'+appeal.status}>
-                    <span className="banAppealStatusDot" aria-hidden="true"/>{t(appeal.status)}
+                <div className="banNightAppealTitle">
+                  <h3>{t('Your appeal')}</h3>
+                  <span className={'banNightAppealBadge banNightAppealBadge-'+appeal.status}>
+                    {t(appeal.status)}
                   </span>
                 </div>
-                <p className="banStudioExplanation">{appeal.explanation}</p>
-                {appeal.review_note&&<p className="banStudioReviewNote">
-                  <strong>{t('Admin response')}</strong>{appeal.review_note}
+                <p className="banNightExplanation">{appeal.explanation}</p>
+                {appeal.review_note&&<p className="banNightDecision">
+                  <strong>{t('Admin response')}</strong> {appeal.review_note}
                 </p>}
-                <time className="banStudioTime" dateTime={appeal.created_at}>
-                  {t('Submitted')} · {date(appeal.created_at)}
+                <time className="banNightTime" dateTime={appeal.created_at}>
+                  {t('Submitted')} · {formatDate(appeal.created_at)}
                 </time>
               </>
-              : <form className="banAppealForm banStudioForm" onSubmit={submit}>
-                <h2>{t('Appeal this decision')}</h2>
-                <label htmlFor="ban-appeal-text">{t('Your appeal')}</label>
-                <textarea id="ban-appeal-text" value={text}
+              : <form onSubmit={submit} className="banNightForm">
+                <h3>{t('Appeal this decision')}</h3>
+                <label htmlFor="banNightAppealInput">{t('Your appeal')}</label>
+                <textarea id="banNightAppealInput" value={text}
                   onChange={event=>setText(event.target.value)}
                   minLength={5} maxLength={4000} required
                   placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
-                <div className="banStudioSubmitRow">
-                  <span>{text.length} / 4000</span>
-                  <button type="submit" className="primary" disabled={busy||text.trim().length<5}>
-                    {t(busy?'Sending…':'Submit appeal')} <Icon name="arrow" size={17}/>
+                <div className="banNightFormActions">
+                  <span>{text.length}/4000</span>
+                  <button className="primary" type="submit" disabled={busy||text.trim().length<5}>
+                    {t(busy?'Sending…':'Submit appeal')} <Icon name="arrow" size={16}/>
                   </button>
                 </div>
               </form>}
         </div>
-        {notice&&<p role="status" className="banStudioNotice">{notice}</p>}
         <ErrorBox error={error}/>
-        <div className="banUtility banStudioActions">
+        <div className="banNightPanelFooter">
           <button type="button" onClick={refresh} disabled={busy}>
-            <Icon name="refresh" size={17}/> {t('Refresh status')}
+            <Icon name="refresh" size={16}/>{t('Refresh status')}
           </button>
           <button type="button" onClick={logOut}>{t('Log out')}</button>
         </div>
       </section>
-    </div>
+    </section>
   </main>;
 }
