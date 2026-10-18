@@ -70,7 +70,6 @@ export default function BanPage(){
     <section className="banNightStage" aria-labelledby="banNightTitle">
       <div className="banNightLight banNightLightLeft" aria-hidden="true"/>
       <div className="banNightLight banNightLightRight" aria-hidden="true"/>
-      <div className="banNightBrand" aria-hidden="true"><span>◎</span> circle</div>
 
       <div className="banNightHeading">
         <h1 id="banNightTitle">{t('Account blocked')}</h1>
