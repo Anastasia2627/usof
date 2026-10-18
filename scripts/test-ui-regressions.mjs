@@ -182,6 +182,33 @@ try{
     .getByRole('button',{name:'Dashboard'}).waitFor({state:'detached'});
   await page.getByRole('button',{name:'Dashboard'}).click();
   await page.locator('.embeddedDashboard .dashStats').first().waitFor();
+
+  // Admin comment controls must be available via a compact context menu,
+  // both on right click and through the touch-friendly overflow button.
+  await page.goto(origin+'/#/admin?tab=comments',{waitUntil:'networkidle'});
+  const commentRow=page.locator('.adminCommentItem').first();
+  await commentRow.waitFor({state:'visible'});
+  assert.equal(await commentRow.locator('.adminRowTools button').count(),0,
+    'Comments should not show a row of moderation buttons');
+  await commentRow.click({button:'right'});
+  const commentMenu=page.getByRole('menu',{name:'Comment options'});
+  await commentMenu.waitFor({state:'visible'});
+  assert.ok(await commentMenu.getByRole('menuitem').count()>=3);
+  await page.keyboard.press('Escape');
+  await commentMenu.waitFor({state:'detached'});
+  await commentRow.getByRole('button',{name:'Comment options'}).click();
+  await commentMenu.waitFor({state:'visible'});
+  await page.keyboard.press('Escape');
+
+  // The left navigation is aligned to one stable grid column on resizing.
+  const rail=page.getByRole('navigation',{name:'Main navigation'});
+  await page.setViewportSize({width:1280,height:820});
+  const initialRail=await rail.boundingBox();
+  await page.setViewportSize({width:900,height:820});
+  const narrowRail=await rail.boundingBox();
+  assert.ok(initialRail&&narrowRail&&Math.abs(initialRail.x-narrowRail.x)<3,
+    'Sidebar horizontal position should not float with viewport changes');
+
   await admin.close();
 
   // Recreate an auth payload from a revoked/old session. The backend must
