@@ -5,6 +5,7 @@ import { ErrorBox, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 function VerificationForm({ email, delivery, initialCode, login, password, onLogin }) {
+  const {t}=usePreferences();
   const [code, setCode] = useState(initialCode || '');
   const [lastDelivery, setLastDelivery] = useState(delivery);
   const [error, setError] = useState(null);
@@ -58,19 +59,18 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
       <span className="verifyHalo verifyHaloOne"></span><span className="verifyHalo verifyHaloTwo"></span>
       <span className="verificationLetter">✉<span>✦</span></span>
     </div>
-    <span className="verifyStep">01 <span></span> 02 · ALMOST THERE</span>
-    <h1>One little step left.</h1>
-    <p>We sent a six-digit code to <b>{email}</b>. Let's make sure it's really you.</p>
+    <h1>{t('Confirm your email')}</h1>
+    <p>{t('Enter the code sent to')} <b>{email}</b>.</p>
     {lastDelivery && lastDelivery !== 'sent' && <p className="error card">Your account was created, but no email was sent. Configure SMTP and request a new code. Avoid registering again with the same address.</p>}
-    <label className="verifyCodeLabel">Your verification code
+    <label className="verifyCodeLabel">{t('Verification code')}
       <input aria-label="Six-digit verification code" className="verifyCodeInput" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
         placeholder="••••••" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
     </label>
-    <p className="verifyHint">Check your inbox and spam folder. The code expires in 20 minutes.</p>
+    <p className="verifyHint">{t('Check Inbox and Spam. Your code is valid for 20 minutes.')}</p>
     <div className="toolbar">
-      <button className="primary authSubmit" disabled={busy || code.length !== 6}>Confirm email <span aria-hidden="true">→</span></button>
-      <button className="verifyResend" type="button" onClick={resend} disabled={busy}>Send a new code</button>
-      <button className="verifyResend" type="button" onClick={() => go('/login')}>Back to login</button>
+      <button className="primary authSubmit" disabled={busy || code.length !== 6}>{t('Confirm email')} <span aria-hidden="true">→</span></button>
+      <button className="verifyResend" type="button" onClick={resend} disabled={busy}>{t('Resend code')}</button>
+      <button className="verifyResend" type="button" onClick={() => go('/login')}>{t('Back to login')}</button>
     </div>
     {message && <p role="status">{message}</p>}
     <ErrorBox error={error} />
@@ -78,7 +78,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
 }
 
 export function AuthPage({ mode }) {
-  const {t}=usePreferences();
+  const {t,language}=usePreferences();
   const dispatch = useDispatch();
   const register = mode === 'register';
   const [form, setForm] = useState({
@@ -147,19 +147,23 @@ export function AuthPage({ mode }) {
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
   return <main className="authShell authRefined">
-    <aside className="authEditorial" aria-label="About Circle">
+    <aside className="authEditorial authVisualSide" aria-label={t('About Circle')}>
       <div className="authEditorialBrand"><span aria-hidden="true">◎</span> circle</div>
-      <div className="authEditorialStory">
-        <span className="authEditorialEyebrow">A SPACE TO CONNECT</span>
-        <h2>{t('Good conversations start here.')}</h2>
-        <p>{t('Share what you love. Find people who get it. Discover a little something new every day.')}</p>
-        <div className="authEditorialTopics"><span>{t('Art & ideas')}</span><span>{t('Little discoveries')}</span><span>{t('Real people')}</span></div>
+      <div className="authVisualBackdrop" aria-hidden="true">
+        <span className="authVisualHalo"/>
+        <span className="authVisualOrbit authOrbitOne"/>
+        <span className="authVisualOrbit authOrbitTwo"/>
+        <span className="authVisualTile authVisualTileOne">✳</span>
+        <span className="authVisualTile authVisualTileTwo">◎</span>
+        <span className="authVisualTile authVisualTileThree">↗</span>
       </div>
-      <p className="authEditorialFootnote">{t('One community. Countless perspectives.')}</p>
+      <div className="authEditorialStory">
+        <h2>{language==='uk'?'Гарні розмови починаються тут.':'Good conversations start here.'}</h2>
+        <p>{language==='uk'?'Обговорюй цікаве, дізнавайся нове та знаходь однодумців.':'Share your ideas and meet people who see the world in their own way.'}</p>
+      </div>
     </aside>
     <section className="authPanel">
       {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
-        <span className="authPanelEyebrow">{t(register ? 'JOIN THE COMMUNITY' : 'NICE TO SEE YOU AGAIN')}</span>
         <h1>{t(register ? 'Create account' : 'Welcome back')}</h1>
         <p className="authPanelCopy">{t(register ? 'A few details and you are ready to join the conversation.' : 'Log in to pick up where you left off.')}</p>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
