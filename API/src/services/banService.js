@@ -2,6 +2,7 @@ import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 import { User } from '../models/User.js';
 import { positiveInt } from '../utils/validation.js';
+import { createNotification, deliverNotifications } from './notificationService.js';
 
 function cleaned(value, limit, name, required = false) {
   const text = String(value ?? '').trim();
@@ -74,6 +75,12 @@ export async function appealRestriction(userId, body) {
       [user.id, current.banned_at, current.ban_reason || '', current.ban_internal_note, current.banned_by, explanation],
     );
     await db.commit();
+    const [admins]=await pool.execute("SELECT id FROM users WHERE role='admin' AND banned_at IS NULL");
+    await deliverNotifications(admins.map(admin=>()=>createNotification({
+      userId:admin.id,actorId:user.id,type:'ban_appeal',
+      title:'New account ban appeal',
+      body:'A member appealed an account restriction. Review it in the admin center.',
+    })));
     return { data: { id: result.insertId, status: 'pending' } };
   } catch(error) { await db.rollback(); throw error; } finally { db.release(); }
 }

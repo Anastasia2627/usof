@@ -30,6 +30,6 @@ export async function removeImage(req,res) {
 export async function reportPost(req,res) {
   const post=await getVisiblePost(req.params.post_id,req.user);
   res.status(201).json({data:await createReport(req.user,{
-    postId:post.id,targetAuthorId:post.author_id,reason:req.body.reason,details:req.body.details,
+    postId:post.id,targetAuthorId:post.author_id,reason:req.body.reason,details:req.body.details,recommendBan:req.body.recommendBan,
   })});
 }

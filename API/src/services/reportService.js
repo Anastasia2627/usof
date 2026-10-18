@@ -1,21 +1,31 @@
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt } from '../utils/validation.js';
+import { createNotification, deliverNotifications } from './notificationService.js';
 
 const REASONS = new Set(['spam','abuse','off_topic','other']);
 
-export async function createReport(user, { postId=null, commentId=null, targetAuthorId, reason, details='' }) {
+export async function createReport(user, { postId=null, commentId=null, targetAuthorId, reason, details='', recommendBan=false }) {
   if (Number(targetAuthorId) === Number(user.sub))
     throw new AppError(422,'SELF_REPORT','You cannot report your own content');
   if (!REASONS.has(reason))
     throw new AppError(422,'INVALID_REASON','Choose spam, abuse, off_topic or other');
   if (typeof details !== 'string' || details.length > 500)
     throw new AppError(422,'INVALID_DETAILS','Details must be at most 500 characters');
+  if (recommendBan && user.role !== 'moderator') throw new AppError(403,'MODERATOR_REQUIRED','Only moderators may recommend an account ban');
   try {
     const [result] = await pool.execute(
-      'INSERT INTO content_reports(reporter_id,post_id,comment_id,reason,details) VALUES(?,?,?,?,?)',
-      [user.sub,postId,commentId,reason,details.trim()],
+      'INSERT INTO content_reports(reporter_id,post_id,comment_id,reason,details,recommend_ban) VALUES(?,?,?,?,?,?)',
+      [user.sub,postId,commentId,reason,details.trim(),recommendBan?1:0],
     );
+    const [admins]=await pool.query("SELECT id FROM users WHERE role='admin' AND banned_at IS NULL");
+    await deliverNotifications(admins.map(row=>()=>createNotification({
+      userId:row.id,actorId:user.sub,type:recommendBan?'ban_recommendation':'content_report',
+      postId:postId||null,commentId:commentId||null,
+      title:recommendBan?'Moderator recommends a ban':'New content report',
+      body:recommendBan?'A moderator requested an account ban. Open reports to review the evidence.':
+        'A user reported a post or comment. Open reports to review it.',
+    })));
     return {id:result.insertId,status:'open'};
   } catch(error) {
     if(error.code==='ER_DUP_ENTRY')
@@ -32,7 +42,7 @@ export async function listReports(query) {
   const args=status==='all'?[]:[status];
   const [[count]]=await pool.execute('SELECT COUNT(*) AS total FROM content_reports r '+where,args);
   const [rows]=await pool.query(`SELECT r.*, u.login AS reporter_login,
-      p.title AS post_title, c.content AS comment_content,
+      p.title AS post_title, p.author_id AS post_author_id, c.author_id AS comment_author_id, c.content AS comment_content,
       c.post_id AS comment_post_id
     FROM content_reports r
     JOIN users u ON u.id=r.reporter_id
