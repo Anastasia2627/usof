@@ -75,11 +75,18 @@ export async function appealRestriction(userId, body) {
       [user.id, current.banned_at, current.ban_reason || '', current.ban_internal_note, current.banned_by, explanation],
     );
     await db.commit();
-    const [admins]=await pool.execute("SELECT id FROM users WHERE role='admin' AND banned_at IS NULL");
-    await deliverNotifications(admins.map(admin=>()=>createNotification({
-      userId:admin.id,actorId:user.id,type:'ban_appeal',
+    // Administrators review appeals; moderators only receive a status notice.
+    // Never include the appeal's explanation, private ban note, or review controls
+    // in moderator notifications.
+    const [staff]=await pool.execute(
+      "SELECT id,role FROM users WHERE role IN ('admin','moderator') AND banned_at IS NULL",
+    );
+    await deliverNotifications(staff.map(person=>()=>createNotification({
+      userId:person.id,actorId:user.id,type:'ban_appeal',
       title:'New account ban appeal',
-      body:'A member appealed an account restriction. Review it in the admin center.',
+      body:person.role==='admin'
+        ? 'A member appealed an account restriction. Review it in the admin center.'
+        : 'A member appealed an account restriction. An administrator will review it.',
     })));
     return { data: { id: result.insertId, status: 'pending' } };
   } catch(error) { await db.rollback(); throw error; } finally { db.release(); }
