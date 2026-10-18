@@ -11,6 +11,7 @@ import './refined-pages.css';
 import './ux-polish.css';
 import './interface-refresh.css';
 import './circle-enhancements.css';
+import './modern-polish.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
