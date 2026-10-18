@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { pool } from '../API/src/config/db.js';
 import app from '../API/app.js';
+import {createReport} from '../API/src/services/reportService.js';
 import { User } from '../API/src/models/User.js';
 import { requireAuth, requireAppealAuth, signAuthToken } from '../API/src/middleware/auth.js';
 import {
@@ -50,6 +51,11 @@ test('blocking prevents normal requests yet keeps private ban notes hidden from 
   assert.ok(!JSON.stringify(status.data).includes('Internal investigation'));
   const submitted=await appealRestriction(member.id,{explanation:'I would like the team to reconsider the restriction.'});
   assert.equal(submitted.data.status,'pending');
+  const [[adminNotice]]=await pool.execute(
+    'SELECT type FROM notifications WHERE user_id=? AND actor_id=? AND type=? ORDER BY id DESC LIMIT 1',
+    [admin.id,member.id,'ban_appeal'],
+  );
+  assert.equal(adminNotice?.type,'ban_appeal','Admin must receive an appeal notification');
   await assert.rejects(appealRestriction(member.id,{explanation:'Repeat request'}),{code:'APPEAL_ALREADY_SUBMITTED'});
   const listed=await listRestrictionAppeals();
   const entry=listed.data.find(v=>v.id===submitted.data.id);
@@ -93,4 +99,47 @@ test('HTTP /api/users/ban-appeals is never interpreted as /:user_id',async t=>{
   }finally {
     await new Promise(resolve=>server.close(resolve));
   }
+});
+
+
+test('content reports notify administrators and only moderators can recommend a ban',async t=>{
+  const admin=await fixture(t,'admin');
+  const moderator=await fixture(t,'moderator');
+  const member=await fixture(t);
+  const ordinary=await fixture(t);
+  const [post]=await pool.execute(
+    'INSERT INTO posts(author_id,title,content) VALUES(?,?,?)',
+    [member.id,'Report notification fixture','A post requiring moderation'],
+  );
+  const [comment]=await pool.execute(
+    'INSERT INTO comments(post_id,author_id,content) VALUES(?,?,?)',
+    [post.insertId,member.id,'A comment with concerning content'],
+  );
+  const recommendation=await createReport({sub:moderator.id,role:'moderator'},{
+    commentId:comment.insertId,targetAuthorId:member.id,reason:'abuse',
+    details:'Specific evidence from comment',recommendBan:true,
+  });
+  const [[reported]]=await pool.execute(
+    'SELECT recommend_ban,comment_id FROM content_reports WHERE id=?',[recommendation.id],
+  );
+  assert.equal(Number(reported.recommend_ban),1);
+  assert.equal(Number(reported.comment_id),comment.insertId);
+  const [[notice]]=await pool.execute(
+    'SELECT type,comment_id FROM notifications WHERE user_id=? AND actor_id=? AND type=?',
+    [admin.id,moderator.id,'ban_recommendation'],
+  );
+  assert.equal(notice?.type,'ban_recommendation');
+  assert.equal(Number(notice.comment_id),comment.insertId);
+  await assert.rejects(createReport({sub:ordinary.id,role:'user'},{
+    postId:post.insertId,targetAuthorId:member.id,reason:'abuse',
+    recommendBan:true,
+  }),{code:'MODERATOR_REQUIRED'});
+  await createReport({sub:ordinary.id,role:'user'},{
+    postId:post.insertId,targetAuthorId:member.id,reason:'spam',
+  });
+  const [[ordinaryNotice]]=await pool.execute(
+    'SELECT type FROM notifications WHERE user_id=? AND actor_id=? AND type=?',
+    [admin.id,ordinary.id,'content_report'],
+  );
+  assert.equal(ordinaryNotice?.type,'content_report');
 });
