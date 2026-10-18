@@ -74,7 +74,7 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
         <p>{user.full_name || user.email}</p>
       </div>
       <span className="adminRoleChip">{t(user.banned_at ? 'Banned' : user.role)}</span>
-      <span className="adminScore" title="User rating">{Number(user.rating || 0)} pts</span>
+      <span className="adminScore" title={t('User rating')}>{Number(user.rating || 0)} {t('points')}</span>
       <div className="adminRowTools">
         {user.role!=='admin' && (user.banned_at ?
           <button type="button" className="adminIconAction" title="Unban user" aria-label={'Unban '+user.login}
@@ -119,14 +119,14 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
     </div>}
     {editing && <form className="adminInlineForm" onSubmit={save}>
       <div className="adminFields">
-        <label>Username<input aria-label={'Login for ' + user.login} required minLength="3" maxLength="50" value={form.login} onChange={event => setForm({ ...form, login: event.target.value })}/></label>
-        <label>Email<input aria-label={'Email for ' + user.login} type="email" required value={form.email} onChange={event => setForm({ ...form, email: event.target.value })}/></label>
-        <label>Full name<input aria-label={'Full name for ' + user.login} maxLength="100" value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })}/></label>
-        <label>Role<select aria-label={'Role for ' + user.login} value={form.role} onChange={event => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
+        <label>{t('Username')}<input aria-label={'Login for ' + user.login} required minLength="3" maxLength="50" value={form.login} onChange={event => setForm({ ...form, login: event.target.value })}/></label>
+        <label>{t('Email')}<input aria-label={'Email for ' + user.login} type="email" required value={form.email} onChange={event => setForm({ ...form, email: event.target.value })}/></label>
+        <label>{t('Full name')}<input aria-label={'Full name for ' + user.login} maxLength="100" value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })}/></label>
+        <label>{t('Role')}<select aria-label={'Role for ' + user.login} value={form.role} onChange={event => setForm({ ...form, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
       </div>
       <div className="adminFormActions">
         <button type="button" onClick={() => setEditing(false)}>Cancel</button>
-        <button className="primary" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save user'}</button>
+        <button className="primary" type="submit" disabled={saving}>{t(saving ? 'Saving…' : 'Save user')}</button>
       </div>
     </form>}
   </div>;
@@ -157,7 +157,7 @@ function PostCategoryEditor({ post, categories, auth, run }) {
       </label>)}
     </div>
     <button className="primary adminSaveTopics" type="button" disabled={!selected.length}
-      onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { categories: selected } }))}>Save topics</button>
+      onClick={() => run(() => api('/posts/' + post.id, { method: 'PATCH', token: auth.token, body: { categories: selected } }))}>{t('Save topics')}</button>
   </details>;
 }
 
@@ -186,7 +186,7 @@ function CategoryRow({ category, auth, run }) {
     <div className="adminItemLine">
       <div className="adminItemText">
         <h3>{t(category.title)}</h3>
-        <p>{t(category.description || 'No description')}</p>
+        {category.description&&<p>{t(category.description)}</p>}
       </div>
       <div className="adminRowTools">
         <button type="button" className="adminIconAction" title={t('Edit')} aria-label={'Edit category ' + category.title} onClick={() => setEditing(value => !value)}><Icon name="edit" size={18}/></button>
@@ -195,12 +195,12 @@ function CategoryRow({ category, auth, run }) {
     </div>
     {editing && <form className="adminInlineForm" onSubmit={save}>
       <div className="adminFields">
-        <label>Title<input value={title} maxLength="100" required onChange={event => setTitle(event.target.value)} /></label>
-        <label>Description<input value={description} onChange={event => setDescription(event.target.value)} /></label>
+        <label>{t('Title')}<input value={title} maxLength="100" required onChange={event => setTitle(event.target.value)} /></label>
+        <label>{t('Description')}<input value={description} onChange={event => setDescription(event.target.value)} /></label>
       </div>
       <div className="adminFormActions">
         <button type="button" onClick={() => setEditing(false)}>Cancel</button>
-        <button type="submit" className="primary">Save category</button>
+        <button type="submit" className="primary">{t('Save category')}</button>
       </div>
     </form>}
   </div>;
@@ -507,9 +507,9 @@ export default function AdminPage({initialTab='users'}) {
             <h3>Create user</h3>
             <div className="adminFields">
               <label>Login<input required minLength="3" maxLength="50" value={newUser.login} onChange={event => setNewUser({ ...newUser, login: event.target.value })}/></label>
-              <label>Email<input type="email" required value={newUser.email} onChange={event => setNewUser({ ...newUser, email: event.target.value })}/></label>
-              <label>Full name<input maxLength="100" value={newUser.fullName} onChange={event => setNewUser({ ...newUser, fullName: event.target.value })}/></label>
-              <label>Role<select value={newUser.role} onChange={event => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
+              <label>{t('Email')}<input type="email" required value={newUser.email} onChange={event => setNewUser({ ...newUser, email: event.target.value })}/></label>
+              <label>{t('Full name')}<input maxLength="100" value={newUser.fullName} onChange={event => setNewUser({ ...newUser, fullName: event.target.value })}/></label>
+              <label>{t('Role')}<select value={newUser.role} onChange={event => setNewUser({ ...newUser, role: event.target.value })}><option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option></select></label>
               <label>Password<input type="password" minLength="8" maxLength="128" required value={newUser.password} onChange={event => setNewUser({ ...newUser, password: event.target.value })}/></label>
               <label>Confirm<input type="password" minLength="8" maxLength="128" required value={newUser.passwordConfirmation} onChange={event => setNewUser({ ...newUser, passwordConfirmation: event.target.value })}/></label>
             </div>
