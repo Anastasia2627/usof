@@ -79,6 +79,27 @@ try{
   assert.ok(notifications.data.some(row=>
     row.type==='ban_appeal'&&Number(row.actor_id)===Number(accountId)&&!row.read_at),
     'New appeal must produce an unread administrator notification');
+  const reviewContext=await browser.newContext({viewport:{width:1280,height:840}});
+  await reviewContext.addInitScript(auth=>{
+    window.sessionStorage.setItem('usof-auth',JSON.stringify(auth));
+  },{token:admin.token,user:admin.user});
+  const review=await reviewContext.newPage();
+  await review.goto(web+'/#/admin?tab=appeals',{waitUntil:'networkidle'});
+  await review.locator('.appealWorkspace').waitFor({timeout:20000});
+  const reviewed=review.locator('.appealInboxItem').filter({hasText:credentials.login});
+  await reviewed.click();
+  await review.locator('.appealWorkspaceDetail').getByText('Please reconsider the account restriction.').waitFor();
+  assert.equal(await review.locator('.banAppealCard').count(),0);
+  await review.screenshot({path:'screenshots/appeals-refined-desktop.png',fullPage:true});
+  await review.setViewportSize({width:390,height:844});
+  await review.screenshot({path:'screenshots/appeals-refined-mobile.png',fullPage:true});
+  await review.goto(web+'/#/categories',{waitUntil:'networkidle'});
+  await review.locator('.categoryEditorialCard').first().waitFor();
+  await review.setViewportSize({width:1280,height:840});
+  await review.screenshot({path:'screenshots/categories-refined-desktop.png',fullPage:true});
+  await review.setViewportSize({width:390,height:844});
+  await review.screenshot({path:'screenshots/categories-refined-mobile.png',fullPage:true});
+  await reviewContext.close();
   console.log('Ban UI screenshots and administrator appeal delivery passed.');
 }finally{
   if(context)await context.close();
