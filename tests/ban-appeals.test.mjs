@@ -3,6 +3,7 @@ import { after, test } from 'node:test';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { pool } from '../API/src/config/db.js';
+import app from '../API/app.js';
 import { User } from '../API/src/models/User.js';
 import { requireAuth, requireAppealAuth, signAuthToken } from '../API/src/middleware/auth.js';
 import {
@@ -74,4 +75,22 @@ test('approval unblocks only the matching ban and administrators cannot be block
   const user=await User.findById(member.id);
   assert.equal(user.banned_at,null);
   await assert.rejects(appealRestriction(member.id,{explanation:'Not banned'}),{code:'NOT_BANNED'});
+});
+
+
+test('HTTP /api/users/ban-appeals is never interpreted as /:user_id',async t=>{
+  const admin=await fixture(t,'admin');
+  const token=signAuthToken({...admin,token_version:0});
+  const server=app.listen(0,'127.0.0.1');
+  try {
+    await new Promise(resolve=>server.once('listening',resolve));
+    const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/users/ban-appeals',{
+      headers:{Authorization:'Bearer '+token},
+    });
+    const body=await response.json();
+    assert.equal(response.status,200,JSON.stringify(body));
+    assert.ok(Array.isArray(body.data));
+  }finally {
+    await new Promise(resolve=>server.close(resolve));
+  }
 });
