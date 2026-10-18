@@ -220,6 +220,7 @@ export default function AdminPage({initialTab='users'}) {
   const [postPagination, setPostPagination] = useState({ page: 1, total: 0, totalPages: 1 });
   const [data, setData] = useState({ users: [], posts: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
+  const [appealsWarning,setAppealsWarning]=useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newUser, setNewUser] = useState({ login: '', email: '', fullName: '', role: 'user', password: '', passwordConfirmation: '' });
@@ -230,21 +231,42 @@ export default function AdminPage({initialTab='users'}) {
     setError(null);
     setLoading(true);
     try {
-      const [users, posts, categories, comments, reactions, reports,suggestions,appeals] = await Promise.all([
+      // A newer frontend can be loaded against a still-running older backend.
+      // One unavailable endpoint must not hide every admin section and show 0 members.
+      const endpoints = [
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/posts?limit=20&page=' + postPage + '&sort=date&order=desc', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
         api('/reactions?limit=100', { token: auth.token }),
         api('/reports?status='+reportStatus+'&page='+reportPage,{token:auth.token}),
-        moderator?Promise.resolve({data:[]}):api('/categories/suggestions?status='+suggestionStatus,{token:auth.token}),
-        moderator?Promise.resolve({data:[]}):api('/users/ban-appeals',{token:auth.token}),
-      ]);
-      setData({ users: users.data, posts: posts.data, categories: categories.data, comments: comments.data, reactions: reactions.data, reports: reports.data, suggestions:suggestions.data, appeals:appeals.data });
-      setReportPagination(reports.pagination);
-      const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
-      setPostPagination(pagination);
-      if (postPage > Math.max(1, pagination.totalPages)) setPostPage(Math.max(1, pagination.totalPages));
+        moderator ? Promise.resolve({data:[]}) : api('/categories/suggestions?status='+suggestionStatus,{token:auth.token}),
+        moderator ? Promise.resolve({data:[]}) : api('/users/ban-appeals',{token:auth.token}),
+      ];
+      const results = await Promise.allSettled(endpoints);
+      const values = results.map(item=>item.status==='fulfilled'?item.value:null);
+      const [users, posts, categories, comments, reactions, reports, suggestions, appeals] = values;
+      setData(previous=>({
+        users:users?.data??previous.users,
+        posts:posts?.data??previous.posts,
+        categories:categories?.data??previous.categories,
+        comments:comments?.data??previous.comments,
+        reactions:reactions?.data??previous.reactions,
+        reports:reports?.data??previous.reports,
+        suggestions:suggestions?.data??previous.suggestions,
+        appeals:appeals?.data??previous.appeals,
+      }));
+      setAppealsWarning(results[7].status==='rejected'
+        ? 'Ban appeals are unavailable in the running API. Stop the old server, run npm run db:init and restart npm start.'
+        : '');
+      if (reports) setReportPagination(reports.pagination);
+      if (posts) {
+        const pagination = posts.pagination || { page: postPage, total: posts.data.length, totalPages: 1 };
+        setPostPagination(pagination);
+        if (postPage > Math.max(1, pagination.totalPages)) setPostPage(Math.max(1, pagination.totalPages));
+      }
+      const baseError=results.slice(0,7).find(item=>item.status==='rejected');
+      if (baseError) setError(baseError.reason);
     } catch (err) { setError(err); }
     finally { setLoading(false); }
   }
@@ -389,6 +411,7 @@ export default function AdminPage({initialTab='users'}) {
       </section>}
       {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
         <div className="adminSectionHeader"><h2>Ban appeals</h2><span>{counts.appeals} waiting</span></div>
+        {appealsWarning&&<p className="adminAppealsWarning" role="alert">{appealsWarning}</p>}
         <div className="adminSimpleList">
           {data.appeals.length ? data.appeals.map(item=><article className="adminListItem banAppealCard" key={item.id}>
             <div className="adminItemText">
