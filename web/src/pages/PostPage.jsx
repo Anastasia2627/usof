@@ -6,7 +6,7 @@ import { usePreferences } from '../preferences.jsx';
 import FormattedContent from '../FormattedContent.jsx';
 import ReportButton from '../ReportButton.jsx';
 import PostPhotoGallery from '../PostPhotoGallery.jsx';
-import ModeratorControl from '../ModeratorControl.jsx';
+import {useContextActions,ContextActions} from '../ContextActions.jsx';
 
 function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hideCounts = false }) {
   const {t}=usePreferences();
@@ -26,6 +26,13 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   }
 
   useEffect(() => { load(); }, [path, auth?.token, visible]);
+  useEffect(()=>{
+    const refresh=event=>{
+      if(event.detail?.kind===kind&&String(event.detail.id)===String(id))load();
+    };
+    window.addEventListener('circle:reactions-updated',refresh);
+    return()=>window.removeEventListener('circle:reactions-updated',refresh);
+  },[kind,id,path,auth?.token,visible]);
 
   async function change(method, type) {
     setError(null);
@@ -48,27 +55,20 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
       {canVote && <>
         <button type="button" className="reactionIconButton voteReaction"
           aria-label={t('Like')} title={t('Like')} aria-pressed={own?.type==='like'}
-          onClick={() => change('POST','like')}>
+          onClick={() => change(own?.type==='like'?'DELETE':'POST','like')}>
           <Icon name={own?.type==='like'?'heartFilled':'heart'} size={19}/>
           {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='like').length}</span>}
         </button>
         <button type="button" className="reactionIconButton voteReaction"
           aria-label={t('Dislike')} title={t('Dislike')} aria-pressed={own?.type==='dislike'}
-          onClick={() => change('POST','dislike')}>
+          onClick={() => change(own?.type==='dislike'?'DELETE':'POST','dislike')}>
           <Icon name={own?.type==='dislike'?'dislikeFilled':'dislike'} size={19}/>
           {!hideCounts && <span className="reactionCount">{items.filter(x=>x.type==='dislike').length}</span>}
         </button>
-        {own && <button type="button" aria-label="Remove my vote" title="Remove my vote" className="reactionIconButton" onClick={() => change('DELETE')}><Icon name="close" size={19}/></button>}
       </>}
-      {!hideCounts && <button type="button" aria-label="View votes" title="View votes" onClick={() => setOpen(x => !x)}><Icon name="group" size={18}/></button>}
-      {auth?.user?.role === 'admin' && items.length > 0 &&
-        <button type="button" className="reactionIconButton" aria-label={t('Clear votes')}
-          title={t('Clear votes')} onClick={() => {
-          if (window.confirm(t('Remove all reactions?'))) {
-            api(path + '?all=1', { method: 'DELETE', token: auth.token })
-              .then(async () => { await load(); await onChange(); }).catch(setError);
-          }
-        }}><Icon name="trash" size={18}/></button>}
+      {!hideCounts && items.length>0 && <button type="button" className="reactionVoteDetails"
+        aria-label={t('View votes')} title={t('View votes')}
+        onClick={()=>setOpen(x=>!x)}>{t('Votes')} · {items.length}</button>}
     </div>
     {open && <ul>{items.map(x => <li key={x.id}>{x.author_login}: {x.type}</li>)}</ul>}
     <ErrorBox error={error} />
@@ -80,6 +80,8 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
   const [reply, setReply] = useState('');
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState(null);
+  const [reportOpen,setReportOpen]=useState(false);
+  const actionsMenu=useContextActions();
   const children = comments.filter(x => Number(x.parent_comment_id) === Number(item.id));
   const isAdmin = ['admin','moderator'].includes(auth?.user?.role);
   const canModerate = auth?.user?.role==='admin' ||
@@ -108,51 +110,70 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
     }
   }
 
+  const canReport=Boolean(auth&&Number(auth.user.id)!==Number(item.author_id));
+  const commentMenuItems=[
+    ...(canReply?[{label:t('Reply'),icon:'comment',action:()=>setReplying(true)}]:[]),
+    ...(canReport?[{label:t('Report'),icon:'shield',action:()=>setReportOpen(true)}]:[]),
+    ...(Number(auth?.user?.id)===Number(postAuthorId)&&active?[{
+      label:t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer'),
+      icon:'check',action:()=>run('/posts/'+postId+'/solution','PATCH',{
+        commentId:Number(acceptedId)===Number(item.id)?null:item.id,
+      }),
+    }]:[]),
+    ...(canChangeStatus?[{
+      label:t(active?'Hide comment':'Show comment'),icon:active?'eye':'check',
+      action:()=>run('/comments/'+item.id,'PATCH',{status:active?'inactive':'active'}),
+    }]:[]),
+    ...(canModerate?[{
+      label:t(item.locked?'Unlock':'Lock'),icon:item.locked?'unlock':'lock',
+      action:()=>run('/comments/'+item.id,'PATCH',{locked:!item.locked}),
+    },...(active?[{
+      label:t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator'),
+      icon:'shield',action:()=>run('/comments/'+item.id+'/review','PATCH',{reviewed:!item.reviewed_by}),
+    }]:[])]:[]),
+    ...(auth?.user?.role==='admin'?[{
+      label:t('Clear votes'),icon:'trash',action:async()=>{
+        if(!window.confirm(t('Remove all reactions?')))return;
+        if(await run('/comments/'+item.id+'/like?all=1','DELETE')){
+          window.dispatchEvent(new CustomEvent('circle:reactions-updated',{detail:{kind:'comment',id:item.id}}));
+        }
+      },
+    }]:[]),
+    ...((isOwner||canModerate)?[{
+      label:t('Delete comment'),icon:'trash',danger:true,
+      action:()=>{if(window.confirm(t('Delete this comment and replies?')))
+        run('/comments/'+item.id,'DELETE');},
+    }]:[]),
+  ];
   return <div className="commentBranch" style={{ '--depth': Math.min(depth, 5) }}>
-    <article className="card commentCard">
+    <article className="card commentCard" onContextMenu={commentMenuItems.length?actionsMenu.open:undefined}
+      onKeyDown={event=>{
+        if((event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10'))&&commentMenuItems.length){
+          actionsMenu.open(event);
+        }
+      }} tabIndex={commentMenuItems.length?0:undefined}>
       <div className="commentTop">
         <div className="authorLine">
           <Avatar user={{ login: item.author_login, avatar: item.author_avatar }} size="sm" />
           <button className="authorLink" onClick={() => go(`/profile/${item.author_id}`)}>{item.author_login}</button>
-          <ModeratorControl userId={item.author_id} login={item.author_login}/>
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
         {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
+        {commentMenuItems.length>0 && <button type="button" className="discussionMore"
+          aria-label={t('Comment actions')} title={t('Comment actions')}
+          aria-haspopup="menu" aria-expanded={Boolean(actionsMenu.position)} onClick={actionsMenu.open}>
+          <Icon name="more" size={20}/>
+        </button>}
       </div>
       <p className="commentContent">{item.content}</p>
       {Number(acceptedId)===Number(item.id) && <span className="solutionTag"><Icon name="check" size={16}/>{t('Best answer')}</span>}
       <Reactions kind="comment" id={item.id} auth={auth} authorId={item.author_id} visible={isAdmin || (active && item.post_status === 'active')}
         writable={isAdmin || (active && !item.locked && item.post_status === 'active' && !item.post_locked)}
         onChange={refresh} />
-      <div className="commentActions">
-        {Number(auth?.user?.id)===Number(postAuthorId)&&item.status==='active'&&
-          <button type="button" className="solutionButton" aria-label={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
-            title={t(Number(acceptedId)===Number(item.id)?'Remove best answer':'Mark best answer')}
-            aria-pressed={Number(acceptedId)===Number(item.id)}
-            onClick={()=>
-            run('/posts/'+postId+'/solution','PATCH',{
-              commentId:Number(acceptedId)===Number(item.id)?null:item.id
-            })}><Icon name="check" size={18}/></button>}
-        <ReportButton kind="comment" id={item.id} auth={auth} authorId={item.author_id}/>
-        {canReply && <button type="button" title={t('Reply')} aria-label={t('Reply')}
-          onClick={() => setReplying(x => !x)}><Icon name="comment" size={18}/></button>}
-        {canChangeStatus && <button type="button" title={t(active?'Deactivate':'Activate')}
-          aria-label={t(active?'Deactivate':'Activate')}
-          onClick={() => run(`/comments/${item.id}`, 'PATCH', { status: active ? 'inactive' : 'active' })}>
-          <Icon name={active?'close':'check'} size={18}/></button>}
-        {canModerate && <button type="button" title={t(item.locked?'Unlock':'Lock')} aria-label={t(item.locked?'Unlock':'Lock')}
-          onClick={() => run('/comments/' + item.id, 'PATCH', { locked: !item.locked })}>
-          <Icon name={item.locked?'unlock':'lock'} size={17}/></button>}
-        {canModerate && active && <button type="button" title={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
-          aria-label={t(item.reviewed_by?'Remove moderator review':'Mark reviewed by moderator')}
-          onClick={()=>run('/comments/' + item.id + '/review','PATCH',{reviewed:!item.reviewed_by})}>
-          <Icon name="check" size={17}/></button>}
-        {(isOwner || canModerate) && <button type="button" className="dangerText"
-          title={t('Delete')} aria-label={t('Delete')} onClick={() => {
-          if (window.confirm(t('Delete this comment and replies?'))) run(`/comments/${item.id}`, 'DELETE');
-        }}><Icon name="trash" size={18}/></button>}
-      </div>
+      {reportOpen&&<ReportButton panel kind="comment" id={item.id} auth={auth}
+        authorId={item.author_id} onClose={()=>setReportOpen(false)}/>}
+      <ContextActions menu={actionsMenu} items={commentMenuItems} label={t('Comment actions')}/>
       {replying && <form className="replyForm" onSubmit={sendReply}>
         <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
         <div className="toolbar"><button className="primary">{t('Post reply')}</button><button type="button" onClick={() => setReplying(false)}>{t('Cancel')}</button></div>
