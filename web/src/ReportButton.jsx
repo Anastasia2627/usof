@@ -3,7 +3,7 @@ import {api} from './api.js';
 import {ErrorBox,Icon} from './ui.jsx';
 import {usePreferences} from './preferences.jsx';
 
-export default function ReportButton({kind,id,auth,authorId}) {
+export default function ReportButton({kind,id,auth,authorId,panel=false,onClose}) {
   const {t}=usePreferences();
   const [open,setOpen]=useState(false),[reason,setReason]=useState('spam');
   const [details,setDetails]=useState(''),[busy,setBusy]=useState(false);
@@ -19,11 +19,11 @@ export default function ReportButton({kind,id,auth,authorId}) {
       setMessage(t(recommendBan?'Ban recommendation sent to admin':'Report submitted for review'));setOpen(false);setDetails('');setRecommendBan(false);
     }catch(err){setError(err);}finally{setBusy(false);}
   }
-  return <div className="reportControl">
-    {message?<small role="status">{t(message)}</small>:<button type="button" className="quietButton reportIconAction"
+  return <div className={'reportControl'+(panel?' discussionReportPanel':'')}>
+    {message?<small role="status">{t(message)} {panel&&<button type="button" onClick={onClose}>{t('Close')}</button>}</small>:!panel&&<button type="button" className="quietButton reportIconAction"
       title={t('Report')} aria-label={t('Report')} aria-expanded={open}
       onClick={()=>{setOpen(x=>!x);setError(null);}}><Icon name="shield" size={17}/></button>}
-    {open&&<form className="reportForm" onSubmit={submit}>
+    {(open||panel)&&!message&&<form className="reportForm" onSubmit={submit}>
       <label>{t('Reason')}<select value={reason} onChange={e=>setReason(e.target.value)}>
         <option value="spam">{t('Spam')}</option><option value="abuse">{t('Abuse or harassment')}</option>
         <option value="off_topic">{t('Off-topic')}</option><option value="other">{t('Other')}</option>
@@ -34,7 +34,7 @@ export default function ReportButton({kind,id,auth,authorId}) {
         <span>{t('Recommend banning this author to an administrator')}</span>
       </label>}
       <div className="toolbar"><button type="submit" disabled={busy}>{t(busy?'Sending…':recommendBan?'Send recommendation':'Send report')}</button>
-        <button type="button" onClick={()=>setOpen(false)}>{t('Cancel')}</button></div>
+        <button type="button" onClick={()=>{setOpen(false);onClose?.();}}>{t('Cancel')}</button></div>
       <ErrorBox error={error}/>
     </form>}
   </div>;
