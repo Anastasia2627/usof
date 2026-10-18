@@ -163,6 +163,23 @@ async function ensureCircleSchema(connection) {
     FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE SET NULL
   ) ENGINE=InnoDB`);
 
+  // Backfill missing moderator notifications for appeals submitted before
+  // this feature was installed. Re-running db:init never duplicates notices.
+  await connection.execute(`
+    INSERT INTO notifications(user_id,actor_id,type,title,body)
+    SELECT m.id, a.user_id, 'ban_appeal',
+      'New account ban appeal',
+      'A member appealed an account restriction. An administrator will review it.'
+    FROM ban_appeals a
+    JOIN users m ON m.role='moderator' AND m.banned_at IS NULL
+    WHERE a.status='pending'
+      AND NOT EXISTS (
+        SELECT 1 FROM notifications n
+        WHERE n.user_id=m.id AND n.actor_id=a.user_id
+          AND n.type='ban_appeal' AND n.created_at>=a.created_at
+      )
+  `);
+
   // A broad public conversation feed, without resetting the six existing
   // course/demo categories or touching existing posts.
   const topics = [
