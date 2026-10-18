@@ -194,6 +194,8 @@ export default function PostPage({ id }) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied,setCopied] = useState(false);
+  const [reportOpen,setReportOpen]=useState(false);
+  const postMenu=useContextActions();
   const {t} = usePreferences();
 
   async function load() {
@@ -294,18 +296,58 @@ export default function PostPage({ id }) {
     } catch (err) { setError(err); }
   }
 
+  const postMenuItems=[
+    {label:t('Copy link'),icon:'share',action:copyLink},
+    ...(auth&&Number(auth.user.id)!==Number(post.author_id)?[
+      {label:t('Report'),icon:'shield',action:()=>setReportOpen(true)},
+    ]:[]),
+    ...(isOwner?[
+      {separator:true},
+      ...(auth?.user?.role!=='admin'?[{label:t('Edit post'),icon:'edit',action:()=>go('/edit/'+id)}]:[]),
+      {label:t(post.closed?'Reopen discussion':'Close discussion'),
+        icon:post.closed?'unlock':'lock',action:()=>run('PATCH',{closed:!Boolean(post.closed)})},
+      {label:t(post.hide_likes?'Show likes':'Hide likes'),icon:'heart',
+        action:()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})},
+    ]:[]),
+    ...(canModeratePost?[
+      {separator:true},
+      {label:t(post.status==='active'?'Hide post':'Show post'),
+        icon:post.status==='active'?'eye':'check',
+        action:()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})},
+      {label:t(post.locked?'Unlock':'Lock'),icon:post.locked?'unlock':'lock',
+        action:()=>run('PATCH',{locked:!post.locked})},
+    ]:[]),
+    ...(auth?.user?.role==='admin'?[
+      {label:t('Clear votes'),icon:'trash',action:async()=>{
+        if(!window.confirm(t('Remove all reactions?')))return;
+        try{
+          await api('/posts/'+id+'/like?all=1',{method:'DELETE',token:auth.token});
+          window.dispatchEvent(new CustomEvent('circle:reactions-updated',
+            {detail:{kind:'post',id}}));
+          await load();
+        }catch(err){setError(err);}
+      }},
+    ]:[]),
+    ...(isOwner||canModeratePost?[
+      {separator:true},
+      {label:t('Delete post'),icon:'trash',danger:true,action:deletePost},
+    ]:[]),
+  ];
   return <main className="postPage naturalPostPage">
     <div className="postBackRow"><button className="editorBack" type="button" onClick={()=>go('/')}
       aria-label="Back to feed" title="Back to feed"><Icon name="arrowBack" size={21}/></button>
       <strong>{t('Discussion')}</strong>
     </div>
-    <article className="naturalPost">
+    <article className="naturalPost"
+      onContextMenu={postMenu.open}
+      onKeyDown={event=>{
+        if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10'))postMenu.open(event);
+      }} tabIndex={0}>
       <div className="naturalPostAuthor">
         <button type="button" className="avatarButton" onClick={()=>go('/profile/'+post.author_id)}>
           <Avatar user={{login:post.author_login,avatar:post.author_avatar}} size="md"/>
         </button>
         <div><button className="authorLink" onClick={()=>go('/profile/'+post.author_id)}>@{post.author_login}</button>
-          <ModeratorControl userId={post.author_id} login={post.author_login}/>
           <time dateTime={post.published_at||post.created_at}
             title={new Date(post.published_at||post.created_at).toLocaleString()}>{fmt(post.published_at||post.created_at)}</time>
         </div>
@@ -313,12 +355,15 @@ export default function PostPage({ id }) {
           <StatusBadges item={post}/>
           {post.accepted_comment_id && <span className="solutionTag"><Icon name="check" size={15}/>{t('Solved')}</span>}
         </div>
+        <button type="button" className="discussionMore discussionPostMore"
+          aria-label={t('Post actions')} title={t('Post actions')}
+          aria-haspopup="menu" aria-expanded={Boolean(postMenu.position)}
+          onClick={postMenu.open}><Icon name="more" size={21}/></button>
       </div>
       <h1>{post.title}</h1>
       <div className="naturalPostContent"><FormattedContent text={post.content}/></div>
       <PostPhotoGallery images={post.images||[]}/>
       <div className="tags">{(post.categories||[]).map(x=><span key={x.id}>{t(x.title)}</span>)}</div>
-      <ReportButton kind="post" id={post.id} auth={auth} authorId={post.author_id}/>
       <div className="naturalPostReactions">
         <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
           visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
@@ -333,31 +378,9 @@ export default function PostPage({ id }) {
           title={saved?t('Unsave post'):t('Save post')} onClick={toggleSave}>
           <Icon name={saved?'bookmark':'bookmarkBorder'} size={20}/></button>}
       </div>
-      {(isOwner||canModeratePost) && <div className="naturalPostManagement">
-        {isOwner && auth?.user?.role!=='admin' && <button type="button" title={t('Edit post')} aria-label={t('Edit post')}
-          onClick={()=>go('/edit/'+post.id)}><Icon name="edit" size={19}/></button>}
-        {isOwner && <button type="button" title={t(post.closed?'Reopen discussion':'Close discussion')}
-          aria-label={t(post.closed?'Reopen discussion':'Close discussion')} aria-pressed={Boolean(post.closed)}
-          onClick={()=>run('PATCH',{closed:!Boolean(post.closed)})}>
-          <Icon name={post.closed?'unlock':'lock'} size={19}/></button>}
-        {isOwner && <button type="button" title={t(post.hide_likes?'Show likes':'Hide likes')}
-          aria-label={t(post.hide_likes?'Show likes':'Hide likes')} aria-pressed={Boolean(post.hide_likes)}
-          onClick={()=>run('PATCH',{hideLikes:!Boolean(post.hide_likes)})}>
-          <Icon name="heart" size={19}/></button>}
-        {canModeratePost && <>
-          <button type="button" aria-label={t(post.status==='active'?'Deactivate':'Activate')}
-            title={t(post.status==='active'?'Deactivate':'Activate')}
-            onClick={()=>run('PATCH',{status:post.status==='active'?'inactive':'active'})}>
-            <Icon name={post.status==='active'?'close':'check'} size={19}/></button>
-          <button type="button" aria-label={t(post.locked?'Unlock':'Lock')}
-            title={t(post.locked?'Unlock':'Lock')} aria-pressed={Boolean(post.locked)}
-            onClick={()=>run('PATCH',{locked:!post.locked})}>
-            <Icon name={post.locked?'unlock':'shield'} size={19}/></button>
-        </>}
-        <button type="button" className="dangerText" aria-label={t('Delete post')}
-          title={t('Delete post')} onClick={deletePost}>
-          <Icon name="trash" size={19}/></button>
-      </div>}
+      {reportOpen&&<ReportButton panel kind="post" id={post.id} auth={auth}
+        authorId={post.author_id} onClose={()=>setReportOpen(false)}/>}
+      <ContextActions menu={postMenu} items={postMenuItems} label={t('Post actions')}/>
       {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
       {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
         <Icon name="settings" size={18}/>{t('Scheduled for')} {new Date(post.publish_at).toLocaleString()}</p>}
