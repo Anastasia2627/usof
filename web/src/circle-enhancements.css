@@ -108,93 +108,307 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 .authRefined .verificationForm .toolbar button.verifyResend:hover {color:var(--circle-violet);}
 
-/* An editorial selection studio: layered energy, but mostly white and black. */
-main.interestStudio {
-  width:min(1100px,calc(100% - 40px)) !important;
-  max-width:1100px !important;
-  padding:20px 0 70px;
-  margin:15px auto 75px;
+/* Editorial, photographic interest selector: match the reference's dark,
+   overlapping six-image stage rather than abstract colored rectangles. */
+main.interestEditorialPage {
+  width:min(1430px,calc(100% - 32px)) !important;
+  max-width:1430px !important;
+  min-height:0;
+  margin:24px auto 64px;
+  padding:0 0 36px;
 }
-.interestCover {
-  min-height:330px;
-  display:grid;grid-template-columns:minmax(0,.83fr) minmax(0,1.17fr);
-  border:1px solid #ececef;border-radius:27px;overflow:hidden;
-  background:#fafafa;
+.interestFashionHero {
+  position:relative;
+  background:#0c0a12;
+  color:#fff;
+  width:100%;
+  height:clamp(480px,44vw,590px);
+  border-radius:23px;
+  isolation:isolate;
+  overflow:hidden;
 }
-.interestCopy {padding:clamp(30px,4vw,62px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;}
-.interestEyebrow {font-size:10px;font-weight:800;letter-spacing:.17em;color:#908a96;}
-.interestCopy h1 {font-size:clamp(40px,5vw,66px);line-height:1.02;letter-spacing:-.075em;margin:22px 0 17px;max-width:450px;font-weight:820;}
-.interestCopy h1 em {font-style:normal;color:var(--circle-violet);}
-.interestCopy p {font-size:14px;line-height:1.7;color:#77747b;max-width:300px;margin:0;}
-.interestIndex {margin-top:39px;color:#99959c;font-size:10px;letter-spacing:.12em;font-weight:750;}
-.interestScene {position:relative;overflow:hidden;min-height:330px;background:
-  radial-gradient(ellipse at 53% 48%,rgba(124,80,225,.55),transparent 50%),#15131d;}
-.interestBackdrop {position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(45px,8.7vw,133px);font-weight:900;letter-spacing:-.1em;color:rgba(161,131,241,.14);transform:rotate(-9deg);white-space:nowrap;}
-.sceneCard {position:absolute;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;
-  width:31%;height:58%;min-width:114px;padding:16px;border:1px solid rgba(255,255,255,.24);border-radius:19px;
-  font-size:10px;letter-spacing:.13em;font-weight:850;color:#fff;box-shadow:0 16px 55px rgba(0,0,0,.23);
-  backdrop-filter:blur(6px);}
-.sceneCard>span {font-size:clamp(38px,5vw,75px);line-height:1;}
-.sceneCardOne {top:23%;left:11%;background:linear-gradient(138deg,#e5dbfc,#906adb 95%);color:#191327;transform:rotate(-16deg);}
-.sceneCardTwo {top:10%;left:37%;background:linear-gradient(160deg,#a0d0ca,#165e71 110%);transform:rotate(5deg);height:63%;}
-.sceneCardThree {top:26%;right:7%;background:linear-gradient(140deg,#efb09e,#d35847 110%);transform:rotate(15deg);}
-.sceneOrb {position:absolute;right:5%;top:2%;border:4px solid rgba(255,255,255,.32);border-radius:50%;
-  width:75px;height:75px;box-shadow:inset 0 0 15px rgba(255,255,255,.25),0 6px 15px rgba(0,0,0,.23);}
-.interestPickerHeading {display:flex;gap:25px;align-items:end;justify-content:space-between;padding:40px 3px 24px;}
-.interestPickerHeading h2 {font-size:clamp(25px,3.2vw,37px);font-weight:790;letter-spacing:-.06em;margin:10px 0 0;}
-.interestPickerHeading p {max-width:245px;font-size:12px;color:#888;line-height:1.55;margin:0 0 3px;}
-.interestSelection.interestMosaic {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:0 0 30px;}
-.interestSelection.interestMosaic button.interestTile {
-  border:1px solid #ececef;background:#f8f8f8;color:#181818;
-  border-radius:18px;min-height:119px;padding:17px;
-  display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
-  text-align:left;gap:9px;position:relative;overflow:hidden;
-  transition:transform .18s,border-color .18s,background .18s;
+.interestFashionGlow {
+  position:absolute;inset:-15%;pointer-events:none;z-index:-1;
+  background:radial-gradient(ellipse at 52% 45%, rgba(115,68,222,.8) 0%,
+    rgba(82,51,154,.55) 26%,rgba(29,19,46,.35) 44%,transparent 66%);
 }
-.interestSelection.interestMosaic button.interestTile:hover {transform:translateY(-2px);background:#f5f3f9;border-color:#d9c9fb;}
-.interestTileNumber {font-size:10px;color:#a5a2a8;letter-spacing:.08em;font-weight:700;}
-.interestTileName {font-size:clamp(14px,1.8vw,19px);font-weight:760;letter-spacing:-.035em;overflow-wrap:anywhere;}
-.interestTileMark {position:absolute;top:14px;right:14px;display:grid;place-items:center;border:1px solid #dfdfe2;border-radius:50%;width:27px;height:27px;background:#fff;}
-.interestSelection.interestMosaic button.interestTile0 {background:#f4f1fa;}
-.interestSelection.interestMosaic button.interestTile3 {background:#f3f5f6;}
-.interestSelection.interestMosaic button.interestTile5 {background:#f7f3f0;}
-.interestSelection.interestMosaic button.interestTile.interestChosen {
-  color:#201829;background:#f2edff;border:1px solid var(--circle-violet);
-  box-shadow:inset 0 0 0 1px var(--circle-violet);
+.interestFashionTypography {
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  font-family:Impact,'Arial Narrow','Helvetica Neue',Arial,sans-serif;
+  font-stretch:condensed;font-weight:900;letter-spacing:-.07em;
+  text-transform:uppercase;line-height:.86;white-space:nowrap;
 }
-.interestSelection.interestMosaic button.interestChosen .interestTileMark {
-  color:#fff;background:var(--circle-violet);border-color:var(--circle-violet);
+.interestFashionTypeTop {
+  font-size:clamp(94px,15vw,215px);padding:0 10px;
+  background:linear-gradient(90deg,#3b2b6e 2%,#b278fb 39%,#6944b6 75%,#2a204c 100%);
+  color:transparent;background-clip:text;-webkit-background-clip:text;
+  opacity:.88;transform:scaleX(.92) translateY(-16px);
 }
-.interestStudioFooter {position:sticky;bottom:0;z-index:9;display:flex;gap:14px;align-items:center;
-  margin:12px 0 0;padding:15px 0;background:rgba(255,255,255,.97);
-  backdrop-filter:blur(9px);border-top:1px solid #e9e9e9;}
-.interestStudioFooter small {font-size:12px;color:#777;margin-right:auto;}
-.interestStudioFooter button {font-size:12px;border-radius:999px;}
-.interestStudioFooter button.primary {background:#161616;color:#fff;padding:13px 22px;}
-@media (max-width:850px) {
-  .interestCover {grid-template-columns:1fr 1fr;}
-  .interestSelection.interestMosaic {grid-template-columns:repeat(3,minmax(0,1fr));}
-  .interestCopy {padding:30px;}
+.interestFashionTypeBottom {
+  font-size:clamp(116px,17vw,242px);
+  background:linear-gradient(90deg,#32245c 2%,#d4b0ff 47%,#5d419e 91%);
+  color:transparent;background-clip:text;-webkit-background-clip:text;
+  transform:scaleX(.94) translateY(9px);
 }
-@media (max-width:600px) {
-  main.interestStudio {width:calc(100% - 26px)!important;padding-top:6px;}
-  .interestCover {display:block;border-radius:20px;}
-  .interestCopy {padding:29px 26px;}
-  .interestCopy h1 {font-size:43px;margin:13px 0;}
-  .interestIndex {margin-top:19px;}
-  .interestScene {min-height:200px;}
-  .sceneCard {height:73%;top:14%;padding:11px;border-radius:14px;}
-  .sceneCardTwo {top:5%;height:79%;}
-  .sceneCard>span {font-size:44px;}
-  .interestPickerHeading {display:block;padding:28px 2px 18px;}
-  .interestPickerHeading p {margin-top:10px;}
-  .interestSelection.interestMosaic {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-  .interestSelection.interestMosaic button.interestTile {min-height:105px;padding:13px;border-radius:14px;}
-  .interestTileMark {top:9px;right:9px;}
-  .interestStudioFooter {bottom:61px;padding:12px 0;gap:4px;}
-  .interestStudioFooter button {padding:9px 10px;}
-  .authRefined .verificationVisual {height:92px;margin:0;}
-  .verificationLetter {width:65px;height:62px;font-size:32px;}
+.interestFashionMicro {
+  position:absolute;inset-block:0;top:0;height:100%;z-index:2;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:25px 0 27px;letter-spacing:.05em;font-family:Impact,'Arial Narrow',sans-serif;
+  font-size:12px;line-height:1;color:#eee;
+}
+.interestFashionMicro span {display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.interestFashionMicro span::before {
+  content:'';display:inline-block;width:19px;height:6px;
+  background:linear-gradient(90deg,rgba(255,255,255,.8),rgba(255,255,255,.08));
+}
+.interestFashionLeft {left:20px;}
+.interestFashionRight {right:17px;align-items:flex-end;opacity:.78;}
+.interestFashionPhotoDeck {
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+}
+.interestFashionPhoto {
+  position:absolute;
+  width:17%;height:49%;
+  min-width:0;min-height:0;max-width:none;
+  padding:0!important;border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:19px!important;overflow:hidden;
+  display:block!important;box-shadow:0 25px 55px rgba(0,0,0,.34);
+  cursor:pointer;pointer-events:auto;text-align:left;
+  transform:rotate(var(--tilt,0deg));
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+  background:linear-gradient(120deg,#25223a,#805d9c)!important;
+}
+.interestFashionPhoto:hover {
+  transform:rotate(var(--tilt,0deg)) translateY(-11px) scale(1.02);
+  box-shadow:0 35px 75px rgba(0,0,0,.55);
+  z-index:9;
+}
+.interestFashionPhoto img {
+  width:100%;height:100%;object-fit:cover;object-position:center;
+  display:block;filter:saturate(1.13) contrast(1.04);
+}
+.interestPhotoTone {
+  position:absolute;inset:0;display:block;pointer-events:none;
+  opacity:.3;mix-blend-mode:multiply;
+}
+.interestPhotoTone-cyan {background:linear-gradient(120deg,#114a71,#04a9dc);}
+.interestPhotoTone-blue {background:linear-gradient(120deg,#0a5984,#3025a3);}
+.interestPhotoTone-purple {background:linear-gradient(120deg,#591dc6,#15a6bd);}
+.interestPhotoTone-orange {background:linear-gradient(120deg,#ea6537,#ff9b28);}
+.interestPhotoTone-red {background:linear-gradient(120deg,#ba184a,#8f3a90);}
+.interestPhotoTone-violet {background:linear-gradient(120deg,#6435a6,#152e89);}
+.interestFashionPhoto::after {
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(0,0,0,.28),transparent 29%,transparent 45%,rgba(2,2,5,.76));
+}
+.interestFashionPhoto0 {--tilt:-4deg;left:-3.8%;top:32%;height:45%;z-index:3;}
+.interestFashionPhoto1 {--tilt:3deg;left:12.9%;top:42%;height:47%;z-index:5;}
+.interestFashionPhoto2 {--tilt:-2deg;left:29.8%;top:25%;height:52%;z-index:6;}
+.interestFashionPhoto3 {--tilt:2deg;left:46.5%;top:15%;height:54%;z-index:8;}
+.interestFashionPhoto4 {--tilt:-2deg;left:64%;top:31%;height:52%;z-index:7;}
+.interestFashionPhoto5 {--tilt:4deg;left:81.4%;top:40%;height:48%;z-index:5;}
+.interestPhotoTop {
+  display:flex;justify-content:space-between;align-items:center;
+  position:absolute;z-index:3;top:12px;left:11px;right:11px;
+  pointer-events:none;color:white;gap:6px;
+}
+.interestVideoMeta {display:flex;align-items:center;gap:5px;
+  color:white;font-family:Impact,'Arial Narrow',sans-serif;
+  font-size:11px;text-shadow:0 1px 3px #111;letter-spacing:.04em;}
+.interestPlayMark {display:inline-grid;place-items:center;width:19px;height:19px;
+  font-size:13px;border-radius:50%;border:1px solid rgba(255,255,255,.7);}
+.interestPhotoSelect {
+  display:grid;place-items:center;color:#222;
+  width:29px;height:29px;border-radius:50%;
+  background:rgba(255,255,255,.88);
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.interestFashionPhoto.isSelected {
+  border:2px solid #b38aff !important;
+  box-shadow:0 0 0 3px rgba(174,133,248,.38),0 25px 55px rgba(0,0,0,.4);
+}
+.interestFashionPhoto.isSelected .interestPhotoSelect {background:#8052dd;color:#fff;}
+.interestPhotoBottom {
+  position:absolute;z-index:4;bottom:0;left:0;right:0;
+  padding:28px 10px 13px;display:flex;flex-direction:column;gap:5px;
+  color:white;text-shadow:0 2px 5px rgba(0,0,0,.5);min-width:0;
+}
+.interestPhotoCategoryMeta {font-size:8px;letter-spacing:.16em;font-weight:720;opacity:.8;}
+.interestPhotoBottom strong {font-size:clamp(12px,1.75vw,21px);letter-spacing:-.045em;
+  font-weight:750;overflow-wrap:anywhere;line-height:1.1;}
+.interestFashionRings {
+  position:absolute;z-index:10;right:3%;top:1%;width:25%;height:35%;
+  pointer-events:none;transform:rotate(-14deg);
+}
+.interestFashionRings i {
+  position:absolute;width:33%;height:64%;
+  border-radius:50%;
+  border:8px solid rgba(219,218,230,.4);
+  background:radial-gradient(ellipse at 28% 8%,rgba(255,255,255,.3),rgba(255,255,255,.02) 48%,rgba(0,0,0,.3) 65%);
+  box-shadow:inset -7px -8px 16px rgba(1,1,5,.52),inset 3px 4px 9px rgba(255,255,255,.38),
+    6px 8px 15px rgba(0,0,0,.42);
+  backdrop-filter:blur(1.5px);
+}
+.interestFashionRings i:nth-child(1){top:-12%;left:38%;transform:rotate(29deg);}
+.interestFashionRings i:nth-child(2){top:18%;left:7%;transform:rotate(48deg);}
+.interestFashionRings i:nth-child(3){top:36%;left:56%;transform:rotate(20deg);}
+.interestFashionRings i:nth-child(4){top:2%;left:73%;transform:rotate(-12deg);}
+.interestFashionRings i:nth-child(5){top:53%;left:32%;transform:rotate(-25deg);}
+.interestFashionCaption {
+  position:absolute;bottom:25px;left:50%;z-index:12;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  width:max-content;max-width:40%;text-align:center;pointer-events:none;
+}
+.interestFashionCaption #interest-hero-title {
+  font-size:12px;font-family:Impact,'Arial Narrow',sans-serif;
+  letter-spacing:.09em;text-transform:uppercase;
+}
+.interestFashionCaptionNumber,.interestFashionCaptionSecondary {
+  font-size:9px;letter-spacing:.09em;opacity:.73;line-height:1.2;
+}
+
+/* The secondary choice list is intentionally light and compact, so the hero
+   retains the same visual weight as the user's photography reference. */
+.interestEditorialPicker {padding:38px clamp(0px,2.2vw,29px) 16px;}
+.interestEyebrow {font-size:10px;font-weight:800;letter-spacing:.16em;color:#87828e;}
+.interestMagazineHeading {display:flex;align-items:end;justify-content:space-between;gap:22px;
+  padding:0 0 27px;border-bottom:1px solid #ededed;}
+.interestMagazineHeading h2 {
+  font-size:clamp(27px,4vw,43px);letter-spacing:-.062em;
+  font-weight:790;margin:11px 0 6px;line-height:1.15;
+}
+.interestMagazineHeading p {font-size:13px;line-height:1.6;color:#848087;margin:0;}
+.interestTopicSearch {
+  display:flex;align-items:center;gap:10px;
+  flex:0 1 230px;max-width:230px;min-width:155px;
+  padding:10px 13px;border:1px solid #e7e4ea;border-radius:999px;background:#fafafa;
+  color:#817b85;
+}
+.interestTopicSearch input {border:0!important;outline:0!important;box-shadow:none!important;
+  width:100%;min-width:0;background:transparent!important;font-size:12px;padding:0;}
+.interestEditorialTopics {display:flex;flex-wrap:wrap;gap:9px;margin:24px 0 8px;}
+.interestEditorialTopics .interestEditorialChip {
+  display:inline-flex;align-items:center;gap:8px;min-height:43px;
+  border:1px solid #e9e7ea;background:#f7f7f8;color:#4d4b4f;
+  border-radius:999px;padding:7px 15px 7px 9px;
+  font-size:13px;font-weight:660;transition:background .18s,border-color .18s;
+}
+.interestEditorialTopics .interestEditorialChip:hover {
+  background:#efebfa;border-color:#d4cae4;
+}
+.interestEditorialChipIcon {width:25px;height:25px;display:grid;place-items:center;
+  border-radius:50%;background:white;border:1px solid #e8e6eb;flex:none;}
+.interestEditorialTopics .interestEditorialChip.chosen {
+  background:#f1edfa;border-color:#8a62d9;color:#50348a;
+}
+.interestEditorialTopics .interestEditorialChip.chosen .interestEditorialChipIcon {
+  color:white;background:#7952d4;border-color:#7952d4;
+}
+.interestEditorialEmpty {font-size:13px;color:#9b96a0;padding:18px 0;}
+.interestEditorialFooter {
+  border-top:1px solid #e9e7eb;
+  margin:19px clamp(0px,2.2vw,29px) 0;padding:23px 0;
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  background:#fff;position:static;z-index:auto;
+}
+.interestSelectionProgress {display:flex;align-items:baseline;gap:12px;}
+.interestSelectionProgress strong {font-size:34px;line-height:1;color:#202020;
+  font-weight:790;letter-spacing:-.05em;}
+.interestSelectionProgress span {font-size:12px;color:#827d85;}
+.interestEditorialFooterButtons {display:flex;align-items:center;gap:15px;}
+.interestEditorialFooterButtons button {border:0;padding:12px 18px;border-radius:999px;font-size:12px;font-weight:700;}
+.interestEditorialFooterButtons .interestSkip {background:transparent;color:#777;}
+.interestEditorialFooterButtons .primary {
+  background:#171717;color:white;min-width:145px;
+  display:inline-flex;align-items:center;justify-content:center;gap:15px;
+}
+.interestEditorialFooterButtons .primary:hover {background:#343434;}
+
+@media(max-width:1100px) {
+  .interestFashionHero {height:520px;}
+  .interestFashionTypeTop {font-size:clamp(87px,14vw,155px);}
+  .interestFashionTypeBottom {font-size:clamp(118px,18vw,184px);}
+  .interestFashionPhoto {width:19%;}
+  .interestFashionPhoto0 {left:-6%;}
+  .interestFashionPhoto1 {left:10%;}
+  .interestFashionPhoto2 {left:27%;}
+  .interestFashionPhoto3 {left:44%;}
+  .interestFashionPhoto4 {left:62%;}
+  .interestFashionPhoto5 {left:82%;}
+}
+@media(max-width:790px) {
+  main.interestEditorialPage {width:calc(100% - 22px)!important;}
+  .interestFashionHero {height:530px;border-radius:19px;}
+  .interestFashionMicro {padding-top:16px;font-size:10px;}
+  .interestFashionTypeTop {font-size:clamp(64px,16vw,130px);transform:translateY(-65px);}
+  .interestFashionTypeBottom {font-size:clamp(74px,20vw,158px);transform:translateY(-33px);}
+  .interestFashionPhotoDeck {
+    top:135px;bottom:55px;
+    display:flex;flex-direction:row;align-items:center;gap:12px;
+    overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;
+    scroll-padding-inline:20px;padding:10px 25px 28px;
+    pointer-events:auto;scrollbar-width:none;
+  }
+  .interestFashionPhotoDeck::-webkit-scrollbar {display:none;}
+  .interestFashionPhoto,
+  .interestFashionPhoto0,.interestFashionPhoto1,.interestFashionPhoto2,
+  .interestFashionPhoto3,.interestFashionPhoto4,.interestFashionPhoto5 {
+    position:relative;left:auto;top:auto;
+    flex:0 0 clamp(180px,38vw,235px);height:88%;
+    transform:none;scroll-snap-align:center;
+    border-radius:16px!important;
+  }
+  .interestFashionPhoto:hover {transform:translateY(-6px);}
+  .interestFashionRings {right:9px;top:5%;width:180px;height:160px;opacity:.5;}
+  .interestFashionCaption {bottom:14px;max-width:80%;}
+  .interestFashionCaption #interest-hero-title {font-size:11px;}
+}
+@media(max-width:540px) {
+  .interestFashionHero {height:440px;border-radius:14px;}
+  .interestFashionMicro {left:15px;right:15px;opacity:.5;}
+  .interestFashionRight {display:none;}
+  .interestFashionGlow {background:radial-gradient(ellipse at 50% 55%,rgba(108,68,224,.7),transparent 70%);}
+  .interestFashionTypography {justify-content:flex-start;padding-top:85px;}
+  .interestFashionTypeTop {font-size:clamp(47px,14vw,78px);transform:none;}
+  .interestFashionTypeBottom {font-size:clamp(68px,19vw,105px);transform:none;}
+  .interestFashionPhotoDeck {top:152px;bottom:48px;padding:0 18px 15px;gap:12px;}
+  .interestFashionPhoto,
+  .interestFashionPhoto0,.interestFashionPhoto1,.interestFashionPhoto2,
+  .interestFashionPhoto3,.interestFashionPhoto4,.interestFashionPhoto5 {
+    flex-basis:clamp(142px,47vw,200px);height:96%;
+  }
+  .interestPhotoBottom strong {font-size:17px;}
+  .interestPhotoCategoryMeta {font-size:7px;}
+  .interestFashionRings {top:9px;right:-25px;transform:scale(.7);opacity:.48;}
+  .interestFashionCaption {bottom:12px;}
+  .interestFashionCaptionSecondary {display:none;}
+  .interestEditorialPicker {padding:29px 2px 9px;}
+  .interestMagazineHeading {flex-direction:column;align-items:stretch;gap:13px;padding-bottom:20px;}
+  .interestMagazineHeading h2 {font-size:30px;}
+  .interestTopicSearch {max-width:none;flex:auto;width:100%;}
+  .interestEditorialTopics {margin-top:18px;gap:7px;}
+  .interestEditorialTopics .interestEditorialChip {font-size:12px;min-height:40px;padding:6px 12px 6px 7px;}
+  .interestEditorialFooter {padding:17px 0;margin:12px 2px 0;}
+  .interestSelectionProgress {gap:6px;flex-direction:column;align-items:flex-start;}
+  .interestSelectionProgress strong {font-size:27px;}
+  .interestEditorialFooterButtons {gap:4px;}
+  .interestEditorialFooterButtons button {padding:9px 12px;}
+  .interestEditorialFooterButtons .primary {min-width:115px;}
+}
+
+/* Dark theme can remain dark without losing the original photo treatments. */
+html[data-theme=dark] main.interestEditorialPage {color:#f6f3f8;}
+html[data-theme=dark] .interestEditorialFooter {background:#13171d;border-color:#34323b;}
+html[data-theme=dark] .interestEditorialPicker {color:#f5f5f7;}
+html[data-theme=dark] .interestMagazineHeading {border-color:#34323b;}
+html[data-theme=dark] .interestSelectionProgress strong {color:#fff;}
+html[data-theme=dark] .interestEditorialTopics .interestEditorialChip {background:#25242a;color:#eceaf0;border-color:#403b4a;}
+html[data-theme=dark] .interestEditorialTopics .interestEditorialChip.chosen {background:#3b3054;border-color:#a78adc;color:#fff;}
+html[data-theme=dark] .interestTopicSearch {background:#2b2931;border-color:#484353;}
+html[data-theme=dark] .interestEditorialFooterButtons .interestSkip {color:#bbb;}
+@media(prefers-reduced-motion:reduce) {
+  .interestFashionPhoto,.interestEditorialTopics .interestEditorialChip {transition:none;}
 }
 
 /* Moderation: explain decisions, never expose internal notes to members. */
