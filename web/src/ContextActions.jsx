@@ -24,11 +24,9 @@ export function useContextActions(){
     function keyboard(e){if(e.key==='Escape')close();}
     document.addEventListener('pointerdown',outside);
     document.addEventListener('keydown',keyboard);
-    window.addEventListener('scroll',close,true);
     return()=>{
       document.removeEventListener('pointerdown',outside);
       document.removeEventListener('keydown',keyboard);
-      window.removeEventListener('scroll',close,true);
     };
   },[position]);
   return {position,open,close,menuRef};
