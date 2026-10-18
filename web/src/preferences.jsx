@@ -456,6 +456,23 @@ Object.assign(translations.uk,{
   'Open discussion':'Відкрити обговорення',
   'No comments.':'Коментарів поки немає'
 });
+Object.assign(translations.uk,{
+  'Explore topics':'Знайди свою тему',
+  'Votes':'Реакції',
+  'Post actions':'Дії з дописом',
+  'Comment actions':'Дії з коментарем',
+  'Hide post':'Приховати допис',
+  'Show post':'Показати допис',
+  'Hide comment':'Приховати коментар',
+  'Show comment':'Показати коментар',
+  'Add response (optional)':'Додати відповідь',
+  'Clear votes':'Очистити реакції',
+  'Delete comment':'Видалити коментар',
+  'Close':'Закрити',
+  'No categories yet.':'Категорій поки немає',
+  'No matching topics':'Нічого не знайдено',
+  'Loading categories…':'Завантажуємо категорії…',
+});
 const PreferencesContext = createContext(null);
 function read() {
   try {
