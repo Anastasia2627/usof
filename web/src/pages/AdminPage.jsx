@@ -227,6 +227,8 @@ export default function AdminPage({initialTab='users'}) {
   });
   const [data, setData] = useState({ users: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
+  const [selectedAppealId,setSelectedAppealId]=useState(null);
+  const [appealNoteOpen,setAppealNoteOpen]=useState(false);
   const [commentMenu,setCommentMenu]=useState(null);
   const commentMenuRef=useRef(null);
   const [banFromReport,setBanFromReport]=useState(null);
@@ -381,8 +383,8 @@ export default function AdminPage({initialTab='users'}) {
     return run(()=>api('/users/'+user.id+'/ban',{method:'DELETE',token:auth.token}));
   }
   async function decideAppeal(item,status) {
-    const action=status==='approved'?'Approve and unblock':'Reject';
-    if(!window.confirm(action+' the appeal by @'+item.login+'?'))return;
+    const action=t(status==='approved'?'Approve & unban':'Reject appeal');
+    if(!window.confirm(action+' @'+item.login+'?'))return;
     return run(()=>api('/users/ban-appeals/'+item.id,{
       method:'PATCH',token:auth.token,body:{status,reviewNote:appealNotes[item.id]||''},
     }));
@@ -415,6 +417,12 @@ export default function AdminPage({initialTab='users'}) {
   }
 
   const moderator = auth?.user?.role === 'moderator';
+  const orderedAppeals=[...data.appeals].sort((a,b)=>{
+    if((a.status==='pending')!==(b.status==='pending'))return a.status==='pending'?-1:1;
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  const activeAppeal=orderedAppeals.find(item=>String(item.id)===String(selectedAppealId))
+    ||orderedAppeals[0]||null;
   const counts = {
     users: data.users.length,
     posts: postsFeed.total,
@@ -514,30 +522,85 @@ export default function AdminPage({initialTab='users'}) {
           <button type="button" disabled={reportPage>=reportPagination.totalPages} onClick={()=>setReportPage(p=>p+1)}>{t('Next')}</button>
         </nav>}
       </section>}
-      {tab === 'appeals' && !moderator && <section className="adminStack banAppeals">
-        <div className="adminSectionHeader"><h2>{t('Ban appeals')}</h2><span>{counts.appeals} {t('pending')}</span></div>
-        {appealsWarning&&<p className="adminAppealsWarning" role="alert">{appealsWarning}</p>}
-        <div className="adminSimpleList">
-          {data.appeals.length ? data.appeals.map(item=><article className="adminListItem banAppealCard" key={item.id}>
-            <div className="adminItemText">
-              <strong>@{item.login} · {t(item.status)}</strong>
-              <p>{t('Blocked on')}: {new Date(item.ban_started_at).toLocaleString()}</p>
-              <p><b>{t('Official reason')}:</b> {item.ban_reason}</p>
-              {item.ban_internal_note&&<p className="appealPrivate"><b>{t('Private admin note')}:</b> {item.ban_internal_note}</p>}
-              <p><b>{t('Your appeal')}:</b> {item.explanation}</p>
-              <small>{t('Submitted')} {new Date(item.created_at).toLocaleString()}</small>
-              {item.status!=='pending'&&<p><b>{t('Decision')}:</b> {t(item.status)}{item.review_note?' · '+item.review_note:''}</p>}
-            </div>
-            {item.status==='pending'&&<div className="banAppealActions">
-              <label>{t('Review note (optional)')}
-                <textarea maxLength={1000} value={appealNotes[item.id]||''}
-                  onChange={e=>setAppealNotes(v=>({...v,[item.id]:e.target.value}))}/>
-              </label>
-              <button type="button" className="primary" onClick={()=>decideAppeal(item,'approved')}>{t('Approve & unban')}</button>
-              <button type="button" onClick={()=>decideAppeal(item,'rejected')}>{t('Reject appeal')}</button>
-            </div>}
-          </article>) : <p className="adminEmpty">{t('No appeals yet.')}</p>}
+      {tab === 'appeals' && !moderator && <section className="adminStack banAppeals appealWorkbench">
+        <div className="adminSectionHeader appealWorkbenchHeading">
+          <h2>{t('Ban appeals')}</h2>
+          <span>{counts.appeals} {t('pending')}</span>
         </div>
+        {appealsWarning&&<p className="adminAppealsWarning" role="alert">{t(appealsWarning)}</p>}
+        {orderedAppeals.length?<div className="appealWorkspace">
+          <div className="appealWorkspaceList" role="group" aria-label={t('Ban appeals')}>
+            {orderedAppeals.map(item=><button key={item.id} type="button"
+              className={'appealInboxItem'+(activeAppeal?.id===item.id?' selected':'')}
+              aria-pressed={activeAppeal?.id===item.id}
+              onClick={()=>{setSelectedAppealId(item.id);setAppealNoteOpen(false);}}>
+              <span className="appealInboxHeading">
+                <strong>@{item.login}</strong>
+                {item.status==='pending'&&<span className="appealInboxUnread" aria-hidden="true"/>}
+              </span>
+              <span className="appealInboxPreview">{item.explanation}</span>
+              <span className="appealInboxFoot">
+                <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleDateString(language==='uk'?'uk-UA':'en-US')}</time>
+                <span className={'appealInboxStatus appealStatus-'+item.status}>{t(item.status)}</span>
+              </span>
+            </button>)}
+          </div>
+          {activeAppeal&&<article className="appealWorkspaceDetail">
+            <div className="appealWorkspaceTop">
+              <div>
+                <h3>@{activeAppeal.login}</h3>
+                <time dateTime={activeAppeal.created_at}>
+                  {new Date(activeAppeal.created_at).toLocaleString(language==='uk'?'uk-UA':'en-US')}
+                </time>
+              </div>
+              <span className={'appealInboxStatus appealStatus-'+activeAppeal.status}>
+                {t(activeAppeal.status)}
+              </span>
+            </div>
+            <div className="appealReviewFact">
+              <span>{t('Official reason')}</span>
+              <p>{activeAppeal.ban_reason}</p>
+              <small>{t('Blocked on')} · {new Date(activeAppeal.ban_started_at).toLocaleString(language==='uk'?'uk-UA':'en-US')}</small>
+            </div>
+            <div className="appealReviewMessage">
+              <h4>{t('Your appeal')}</h4>
+              <p>{activeAppeal.explanation}</p>
+            </div>
+            {activeAppeal.ban_internal_note&&<details className="appealPrivateDetails">
+              <summary><Icon name="lock" size={15}/>{t('Private admin note')}
+                <Icon name="chevron" size={15}/>
+              </summary>
+              <p>{activeAppeal.ban_internal_note}</p>
+            </details>}
+            {activeAppeal.status==='pending'
+              ? <div className="appealReviewDecision">
+                {appealNoteOpen?<label className="appealResponseField">
+                  {t('Review note (optional)')}
+                  <textarea rows="3" maxLength={1000}
+                    value={appealNotes[activeAppeal.id]||''}
+                    onChange={event=>setAppealNotes(value=>({
+                      ...value,[activeAppeal.id]:event.target.value
+                    }))}/>
+                </label>:<button type="button" className="appealAddNote"
+                  onClick={()=>setAppealNoteOpen(true)}>
+                    <Icon name="edit" size={17}/>{t('Add response (optional)')}
+                  </button>}
+                <div className="appealReviewButtons">
+                  <button type="button" className="appealApprove"
+                    onClick={()=>decideAppeal(activeAppeal,'approved')}>
+                    <Icon name="check" size={18}/>{t('Approve & unban')}
+                  </button>
+                  <button type="button" className="appealReject"
+                    onClick={()=>decideAppeal(activeAppeal,'rejected')}>
+                    {t('Reject appeal')}
+                  </button>
+                </div>
+              </div>:<div className="appealReviewOutcome">
+                <strong>{t('Decision')} · {t(activeAppeal.status)}</strong>
+                {activeAppeal.review_note&&<p>{activeAppeal.review_note}</p>}
+              </div>}
+          </article>}
+        </div>:<p className="adminEmpty">{t('No appeals yet.')}</p>}
       </section>}
       {tab === 'users' && <section className="adminStack">
         <div className="adminSectionHeader"><h2>{t('Members')}</h2>
