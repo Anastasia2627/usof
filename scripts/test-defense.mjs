@@ -181,14 +181,15 @@ try {
   await user.getByRole('button',{name:'Comment',exact:true}).click();
   await user.getByText(rootReply).waitFor();
   await open(admin,'/post/'+posts[0]);
-  const postActions=admin.locator('.naturalPostManagement button');
-  await postActions.first().waitFor({state:'visible'});
-  assert.ok(await postActions.count()>=3);
-  for(const button of await postActions.all()) {
-    assert.ok(await button.getAttribute('title'),'Post action needs hover tooltip');
-    assert.ok(await button.getAttribute('aria-label'),'Icon-only action needs accessible name');
-    assert.equal((await button.innerText()).trim(),'','Post actions should not show verbose labels');
-  }
+  assert.equal(await admin.locator('.naturalPostManagement button').count(),0,
+    'Discussion moderation is not an always-visible icon toolbar');
+  await admin.locator('.naturalPost').click({button:'right'});
+  const postMenu=admin.getByRole('menu',{name:'Post actions'});
+  await postMenu.waitFor({state:'visible'});
+  assert.ok(await postMenu.getByRole('menuitem').count()>=3);
+  assert.ok(await postMenu.getByRole('menuitem',{name:'Hide post'}).isVisible());
+  await admin.keyboard.press('Escape');
+  await postMenu.waitFor({state:'detached'});
   const card=admin.locator('.commentCard').filter({hasText:rootReply}).first();
   try { await card.waitFor({ state:'visible', timeout:5000 }); }
   catch (error) {
@@ -196,7 +197,8 @@ try {
     throw error;
   }
   await card.getByRole('button',{name:'Like',exact:true}).click();
-  await card.getByRole('button',{name:'Reply',exact:true}).click();
+  await card.click({button:'right'});
+  await admin.getByRole('menu',{name:'Comment actions'}).getByRole('menuitem',{name:'Reply'}).click();
   await card.getByRole('textbox',{name:'Reply'}).fill('Admin replied '+suffix);
   await card.getByRole('button',{name:'Post reply'}).click();
   await admin.getByText('Admin replied '+suffix).waitFor();
@@ -205,7 +207,7 @@ try {
   await user.getByText('Admin replied '+suffix).waitFor({timeout:18000});
   const answer=user.locator('.commentCard').filter({hasText:'Admin replied '+suffix}).first();
   await answer.getByRole('button',{name:'Dislike',exact:true}).click();
-  await answer.getByRole('button',{name:'Remove my vote'}).click();
+  await answer.getByRole('button',{name:'Dislike',exact:true}).click();
 
   // Notifications should read like messages rather than nested form buttons.
   await open(user,'/notifications');
@@ -241,8 +243,10 @@ try {
 
   await admin.reload();
   const adminCard=admin.locator('.commentCard').filter({hasText:rootReply}).first();
-  await adminCard.getByRole('button',{name:'Deactivate'}).click();
-  await adminCard.getByRole('button',{name:'Activate'}).click();
+  await adminCard.click({button:'right'});
+  await admin.getByRole('menu',{name:'Comment actions'}).getByRole('menuitem',{name:'Hide comment'}).click();
+  await adminCard.click({button:'right'});
+  await admin.getByRole('menu',{name:'Comment actions'}).getByRole('menuitem',{name:'Show comment'}).click();
 
   // 16: admin updates first user.
   await open(admin,'/admin');
@@ -277,8 +281,8 @@ try {
   await user.getByText(categoryName).waitFor();
   await open(admin,'/post/'+posts[0]);
   admin.once('dialog',dialog=>dialog.accept());
-  await admin.locator('.commentCard').filter({hasText:rootReply}).first()
-    .getByRole('button',{name:'Delete'}).click();
+  await admin.locator('.commentCard').filter({hasText:rootReply}).first().click({button:'right'});
+  await admin.getByRole('menu',{name:'Comment actions'}).getByRole('menuitem',{name:'Delete comment'}).click();
   await admin.getByText(rootReply).waitFor({state:'detached'});
 
   // Role updates must keep an already logged-in user on the same page.
