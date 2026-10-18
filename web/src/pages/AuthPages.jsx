@@ -78,7 +78,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
 }
 
 export function AuthPage({ mode }) {
-  const {t,language}=usePreferences();
+  const {t}=usePreferences();
   const dispatch = useDispatch();
   const register = mode === 'register';
   const [form, setForm] = useState({
@@ -147,17 +147,11 @@ export function AuthPage({ mode }) {
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
   return <main className="authShell authRefined">
-    <aside className="authEditorial authVisualSide" aria-label={t('About Circle')}>
-      <div className="authEditorialBrand"><span aria-hidden="true">◎</span> circle</div>
-      <div className="authEditorialPhoto" aria-hidden="true">
-        <img src="https://images.pexels.com/photos/14886151/pexels-photo-14886151.jpeg?auto=compress&cs=tinysrgb&w=1300"
-          alt="" loading="lazy" decoding="async"/>
-        <span className="authPhotoGlow"/>
-        <span className="authPhotoRing"/>
-      </div>
-      <div className="authEditorialStory">
-        <h2>{language==='uk'?'Тут починаються розмови':'Where conversations begin'}</h2>
-      </div>
+    <aside className="authEditorial authVisualSide authCosmicSide" aria-hidden="true">
+      {/* NASA / ESA / CSA / STScI — James Webb's Cosmic Cliffs. */}
+      <img className="authCosmicImage"
+        src="https://assets.science.nasa.gov/dynamicimage/assets/science/missions/webb/science/2022/07/STScI-01GA6KKWG229B16K4Q38CH3BXS.png?fit=clip&h=1158&w=2000"
+        alt="" fetchPriority="high" decoding="async"/>
     </aside>
     <section className="authPanel">
       {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
