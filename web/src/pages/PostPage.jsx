@@ -159,7 +159,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
           <small>{fmt(item.created_at)}</small>
         </div>
         <StatusBadges item={item} />
-        {item.reviewed_by && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
+        {Boolean(item.reviewed_by) && <span className="modReviewed"><Icon name="check" size={17}/> {t('Reviewed by moderator')}</span>}
         {commentMenuItems.length>0 && <button type="button" className="discussionMore"
           aria-label={t('Comment actions')} title={t('Comment actions')}
           aria-haspopup="menu" aria-expanded={Boolean(actionsMenu.position)} onClick={actionsMenu.open}>
@@ -353,7 +353,7 @@ export default function PostPage({ id }) {
         </div>
         <div className="naturalPostTopStatus">
           <StatusBadges item={post}/>
-          {post.accepted_comment_id && <span className="solutionTag"><Icon name="check" size={15}/>{t('Solved')}</span>}
+          {Boolean(post.accepted_comment_id) && <span className="solutionTag"><Icon name="check" size={15}/>{t('Solved')}</span>}
         </div>
         <button type="button" className="discussionMore discussionPostMore"
           aria-label={t('Post actions')} title={t('Post actions')}
@@ -381,7 +381,7 @@ export default function PostPage({ id }) {
       {reportOpen&&<ReportButton panel kind="post" id={post.id} auth={auth}
         authorId={post.author_id} onClose={()=>setReportOpen(false)}/>}
       <ContextActions menu={postMenu} items={postMenuItems} label={t('Post actions')}/>
-      {post.closed && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
+      {Boolean(post.closed) && <p className="naturalClosedNotice"><Icon name="lock" size={18}/>{t('The author has closed this discussion, replies are now read-only')}</p>}
       {post.publish_at && new Date(post.publish_at)>new Date() && <p className="naturalClosedNotice">
         <Icon name="settings" size={18}/>{t('Scheduled for')} {new Date(post.publish_at).toLocaleString()}</p>}
       <ErrorBox error={error}/>
