@@ -43,16 +43,16 @@ const authenticate = (token) => new Promise((resolve, reject) => {
   requireAuth({ headers: { authorization: `Bearer ${token}` } }, {}, (error) => error ? reject(error) : resolve());
 });
 
-test('email change revokes old credentials and requires confirmation of the new address', async (t) => {
+test('email change preserves current session but requires confirmation of the new address', async (t) => {
   const user = await fixture(t);
   const session = signAuthToken(user);
   const email = `new_${user.email}`;
   const changed = await update(user.id, { email });
-  assert.equal(changed.sessionInvalidated, true);
+  assert.equal(changed.sessionInvalidated, false);
   assert.equal(changed.data.email_verified, 0);
   assert.ok(changed.verificationToken);
   assert.equal(changed.emailDelivery, 'not-configured');
-  await assert.rejects(authenticate(session), { code: 'INVALID_TOKEN' });
+  await authenticate(session);
   await assert.rejects(confirmPasswordReset({ params: { confirm_token: user.token }, body: { newPassword: password } }, response), { code: 'INVALID_RESET_TOKEN' });
   await assert.rejects(verifyEmail({ params: { token: user.verification } }, response), { code: 'INVALID_TOKEN' });
   await assert.rejects(login({ body: { login: user.login, password } }, response), { code: 'EMAIL_NOT_VERIFIED' });
@@ -63,7 +63,7 @@ test('email change revokes old credentials and requires confirmation of the new 
   const signedIn = await invoke(login, { body: { email, password } });
   await authenticate(signedIn.token);
   const saved = await read(user.id);
-  assert.equal(saved.token_version, user.token_version + 1);
+  assert.equal(saved.token_version, user.token_version);
   assert.equal(saved.reset_token_hash, null);
   assert.equal(saved.reset_token_expires, null);
 });

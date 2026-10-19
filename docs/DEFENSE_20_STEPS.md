@@ -8,13 +8,13 @@ The reviewer examples are illustrative; the app is named Circle.
 
 | # | Reviewer action | Where / what to show |
 |---|---|---|
-| 1 | Open home with posts sorted by number of likes | Home `/#/`; highest likes appear first by default |
+| 1 | Open home with posts sorted by number of likes | Public home `/#/` for guests and members; highest likes first by default |
 | 2 | Sort by creation date ascending/descending | Home: Sort by `Publication date`, Direction `Ascending` / `Descending`, Apply |
 | 3 | Filter by category | Home: Category, Apply; only that topic's posts remain |
 | 4 | Open registration form | Sign up `/#/register` |
 | 5 | Register a new unique login | Register using a **real email**; confirm SMTP code or link to activate account |
 | 6 | Log in as first user | Verify header shows their login, role `user`, avatar |
-| 7 | Show header/menu at different widths | Site name, search, Home, Categories, avatar, login, role, Log out, New post |
+| 7 | Show header/menu at different widths | Site name, public search, Home, Categories; signed-in login, role, avatar and logout. Show desktop and mobile |
 | 8 | Click avatar | Opens `/#/profile` |
 | 9 | Change own profile | Edit username or full name and save. **Username changes log you out** to invalidate old session; re-login with the new name. Refresh and confirm the update persisted. |
 | 10 | Create two categorized posts | New post `/#/create`, title, body, check category, Publish |
@@ -32,6 +32,9 @@ The reviewer examples are illustrative; the app is named Circle.
 ## Demo preparation
 
 - Have **two independent browsers** open (normal and Incognito): one user and admin.
+- Main homepage is a real public feed; the optional promotional intro remains at `/#/welcome`.
+- Admin → Members → Edit → Role can appoint a moderator; moderator has Reports/content tools but no member/role or category management.
+- Demonstrate a post photo, live text preview, mark an answer as Best answer, and Report → Admin/Moderator Reports.
 - In a fresh DB, run `npm run db:init` only once; do not run `db:reset` on a DB containing useful data.
 - Prepare two different post titles, 2 categories, and a short question/reply.
 - For registration, configure SMTP before the review and register a user with

@@ -1,0 +1,626 @@
+/* Circle — intentional typography, visible user actions, quiet moderation.
+   No decorative labels, synthetic gradients or unnecessary bordered cards. */
+
+/* Discussion: only public reactions remain in view; right-click / ellipsis
+   reveals author and moderation tools, with a fully usable keyboard path. */
+.naturalPostAuthor {position:relative;gap:12px;}
+.naturalPostAuthor > .discussionPostMore {flex:none;margin-left:auto;}
+.naturalCommentTree .commentTop {position:relative;}
+.discussionMore {
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 37px;width:37px;height:37px;
+  border:0;border-radius:10px;padding:6px;
+  color:#77717e;background:transparent;cursor:pointer;
+}
+.discussionMore:hover,.discussionMore[aria-expanded='true']{
+  background:#f0edf6;color:#5f4599;
+}
+.discussionMore:focus-visible {outline:2px solid #7959c4;outline-offset:2px;}
+.naturalPost:focus-visible,.naturalCommentTree .commentCard:focus-visible{
+  outline:2px solid #c6b3ee;outline-offset:3px;
+}
+.discussionActionMenu {
+  position:fixed;z-index:1200;
+  width:230px;max-height:min(380px,75vh);
+  overflow:auto;
+  background:#fff;border:1px solid #eae6ee;
+  border-radius:15px;
+  padding:6px;
+  box-shadow:0 20px 48px rgba(25,19,35,.13),0 3px 10px rgba(25,19,35,.05);
+}
+.discussionActionMenu button[role='menuitem']{
+  display:flex;align-items:center;gap:12px;width:100%;
+  min-height:41px;border:0;border-radius:9px;
+  background:transparent;color:#25202b;
+  padding:9px 11px;text-align:left;
+  font-size:12px;font-weight:640;
+}
+.discussionActionMenu button[role='menuitem']:hover,
+.discussionActionMenu button[role='menuitem']:focus-visible {
+  background:#f4f0fa;color:#5a3e91;
+}
+.discussionActionMenu .circleIcon{flex:none;color:currentColor;}
+.discussionActionDivider{height:1px;background:#efebf2;margin:5px 9px;}
+.discussionActionMenu button.discussionActionDanger{color:#aa4148;}
+.discussionActionMenu button.discussionActionDanger:hover{background:#fdf0f1;}
+.naturalPostReactions .reactionVoteDetails,
+.naturalCommentTree .reactionVoteDetails{
+  font-size:11px;color:#88818d;
+  border:0;background:transparent;border-radius:8px;
+  padding:7px 6px;white-space:nowrap;
+}
+.naturalPostReactions .reactionVoteDetails:hover,
+.naturalCommentTree .reactionVoteDetails:hover {color:#6542a5;background:#f6f2fb;}
+.naturalCommentTree .commentCard {position:relative;}
+.naturalCommentTree .commentTop>.discussionMore {margin-left:auto;}
+.naturalCommentTree .commentTop .authorLine {flex:1;min-width:0;}
+.naturalCommentTree .reactionPanel {display:inline-flex;align-items:center;}
+.naturalCommentTree .reactionButtons {gap:5px;}
+.naturalCommentTree .reactionPanel .reactionButtons>button {border:0;}
+.discussionReportPanel{
+  padding:16px 0 13px;
+  width:min(100%,450px);
+}
+.discussionReportPanel .reportForm{
+  margin:0;padding:18px 0;
+  border:0;border-top:1px solid #e9e6ed;border-radius:0;
+  background:transparent;box-shadow:none;width:100%;
+  min-width:0;
+}
+.discussionReportPanel .reportForm label{font-size:12px;}
+.discussionReportPanel .reportForm select,.discussionReportPanel .reportForm textarea{
+  border:1px solid #e4e0e9;background:#faf9fc;
+  padding:9px 10px;min-height:42px;
+}
+.discussionReportPanel .reportForm textarea{min-height:90px;}
+/* Native accessibility for the action trigger without presenting
+   extra administrative buttons on the discussion itself. */
+
+/* Categories: editorial tile system; large type, solid colors, no repetitive
+   numbering or canned one-line descriptions. */
+main.categoryEditorialPage {
+  width:min(1100px,calc(100% - 52px));
+  max-width:1100px;
+  min-width:0;
+  padding:34px 0 85px;
+  margin:0 auto;
+}
+.categoryEditorialHeader{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:28px;padding:17px 2px 26px;
+}
+.categoryEditorialHeader h1{
+  margin:0;color:#1b1820;
+  font-size:clamp(35px,4.2vw,56px);
+  font-weight:810;letter-spacing:-.066em;line-height:1.04;
+}
+main.categoryEditorialPage .categorySearchField{
+  flex:0 1 340px;width:340px;max-width:100%;
+  margin:0;min-height:47px;
+  border:1px solid #e8e4ed;border-radius:999px;
+  background:#faf9fb;box-shadow:none;
+}
+.categoryEditorialToolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;min-height:57px;margin:0 2px 15px;
+  border-bottom:1px solid #ece9ef;
+}
+.categoryResultsLabel {display:inline-flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:680;color:#444049;}
+.categoryResultsLabel strong{font-size:11px;color:#8b8393;font-weight:620;}
+.categoryEditorialToolbar .suggestTopic{margin:0;flex:none;}
+.categoryEditorialToolbar .suggestTopicTrigger{
+  background:transparent;border:0;
+  color:#6650a1;
+  font-size:12px;font-weight:680;padding:7px 9px;
+}
+.categoryEditorialToolbar .suggestTopicTrigger:hover{background:#f4f0fb;}
+.categoryEditorialGrid {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-auto-flow:row dense;
+  gap:13px!important;
+  padding:0!important;
+}
+.categoryEditorialGrid .categoryEditorialCard {
+  position:relative;isolation:isolate;overflow:hidden;
+  min-height:192px;margin:0;
+  padding:27px 28px;
+  border:0!important;border-radius:17px;
+  display:flex;flex-direction:column;
+  align-items:flex-start;justify-content:flex-end;
+  text-align:left;outline-offset:3px;
+  box-shadow:none;
+  transition:transform .17s ease,background-color .17s ease;
+}
+.categoryEditorialCard:hover{transform:translateY(-3px);}
+.categoryEditorialCard h2{
+  position:relative;z-index:3;
+  margin:0;max-width:90%;
+  font-size:clamp(21px,2.45vw,29px);
+  line-height:1.18;
+  font-weight:790;letter-spacing:-.045em;
+  color:inherit;overflow-wrap:anywhere;
+}
+.categoryEditorialCard .categoryCardArtwork {
+  position:absolute;z-index:0;right:18px;top:-48px;
+  font-size:clamp(130px,14.5vw,205px);font-weight:810;
+  letter-spacing:-.13em;line-height:1.15;
+  opacity:.115;
+  transform:rotate(-13deg);
+  pointer-events:none;user-select:none;
+}
+.categoryEditorialCard .categoryCardArrow {
+  position:absolute;top:22px;right:22px;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  color:inherit;opacity:.74;
+  transition:transform .17s ease;
+}
+.categoryEditorialCard:hover .categoryCardArrow{transform:translate(3px,-3px);}
+.categoryEditorialGrid .categoryFeature{
+  grid-column:span 2;min-height:243px;
+}
+.categoryEditorialGrid .categoryFeature h2{
+  font-size:clamp(33px,4vw,50px);
+  max-width:65%;
+}
+.categoryTone0{background:#211a34!important;color:#fff!important;}
+.categoryTone1{background:#f1edf9!important;color:#3a284e!important;}
+.categoryTone2{background:#e7eef3!important;color:#273b4d!important;}
+.categoryTone3{background:#f2f0ea!important;color:#514939!important;}
+.categoryTone4{background:#e9e4f2!important;color:#483968!important;}
+.categoryTone5{background:#e8ede8!important;color:#354b39!important;}
+.categoryEditorialGrid .categoryEditorialCard:hover{filter:brightness(.976);}
+.categoryEditorialGrid .categoryTone0:hover{filter:brightness(1.13);}
+.categoryEditorialLoading{padding:34px 0;color:#827b86;font-size:13px;}
+main.categoryEditorialDetail{
+  width:min(780px,calc(100% - 46px));max-width:780px;
+  margin:0 auto 80px;padding-top:22px;
+}
+.categoryDetailHeader{
+  display:flex;align-items:center;gap:20px;
+  padding:8px 0 24px;border-bottom:1px solid #eeebf0;
+}
+.categoryDetailHeader h1 {
+  margin:0;font-size:clamp(28px,3.7vw,44px);
+  letter-spacing:-.055em;font-weight:800;line-height:1.13;
+}
+.categoryBack{
+  flex:none;width:41px;height:41px;display:grid;place-items:center;
+  border:0;border-radius:50%;background:#f4f2f6;color:#4e4658;
+}
+.categoryBack:hover{background:#e9e0f5;color:#583ca0;}
+.categoryDetailDescription{font-size:14px;line-height:1.7;color:#7d7584;margin:20px 0 23px;}
+.categoryEditorialDetail .postList{margin-top:16px;}
+
+/* Restriction screen: bold solid-dark editorial masthead and ONE uninterrupted
+   white content surface. No gradients, mock device, secondary cards or frames. */
+#root > main.banPage.banEditorialPage{
+  grid-column:1 / -1!important;
+  width:min(1100px,calc(100% - 48px))!important;
+  max-width:1100px!important;
+  padding:0!important;
+  margin:25px auto 80px!important;
+  min-height:0;
+  background:#fff;
+}
+.banEditorialHero.banNightStage{
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  min-height:330px;padding:45px 30px;
+  background:#13111a;
+  color:#fff;
+  border:0;border-radius:18px 18px 0 0;
+  box-shadow:none;position:relative;overflow:hidden;
+}
+.banEditorialHero h1{
+  margin:0!important;text-align:center;
+  font-size:clamp(42px,6vw,79px);
+  font-weight:790;line-height:1.06;
+  letter-spacing:-.071em;color:#fff!important;
+  max-width:820px;
+}
+.banEditorialUnderline{
+  margin-top:26px;width:73px;height:5px;
+  border-radius:999px;background:#8d72cc;
+}
+.banEditorialDetails.banNightPanel{
+  display:grid;grid-template-columns:.9fr 1.1fr;
+  gap:0;margin:0!important;
+  width:100%;max-width:none!important;
+  min-height:260px;
+  background:#fff;color:#25202c;
+  box-shadow:none!important;border:0!important;
+  border-radius:0;padding:0!important;
+  backdrop-filter:none!important;
+}
+.banEditorialReason,.banEditorialAppeal{padding:49px 46px 38px;min-width:0;}
+.banEditorialReason{border-right:1px solid #e9e6ec;}
+.banEditorialCaption{
+  font-size:12px;font-weight:680;
+  color:#847c89;
+}
+.banEditorialReason h2{
+  margin:16px 0 18px;
+  font-size:clamp(21px,2.5vw,29px);
+  letter-spacing:-.043em;line-height:1.2;
+  font-weight:780;color:#27212b;
+  overflow-wrap:anywhere;
+}
+.banEditorialReason time,
+.banEditorialAppeal time{display:block;color:#8e8793;font-size:11px;line-height:1.55;}
+.banEditorialStatusLine{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:15px;flex-wrap:wrap;margin:0 0 18px;
+}
+.banEditorialAppeal h2{
+  margin:0;
+  font-size:21px;font-weight:790;letter-spacing:-.035em;color:#29222e;
+}
+.banEditorialAppeal .banNightAppealBadge{
+  display:inline-flex;align-items:center;
+  padding:6px 11px;border:0;border-radius:999px;
+  background:#eee8f8;color:#6440a7;
+  font-size:11px;font-weight:730;
+}
+.banEditorialAppeal .banAppealStatus-approved{background:#e5f2e9;color:#2b6c42;}
+.banEditorialAppeal .banAppealStatus-rejected{background:#f7e9e8;color:#99504e;}
+.banEditorialAppeal .banNightExplanation{
+  margin:0 0 16px;white-space:pre-wrap;overflow-wrap:anywhere;
+  font-size:15px;color:#4b4452;line-height:1.65;
+}
+.banEditorialReview{margin:14px 0;padding-left:15px;border-left:2px solid #8c6fc5;
+  color:#51485b;line-height:1.5;}
+.banEditorialReview strong{display:block;margin-bottom:6px;font-size:12px;}
+.banEditorialForm.banNightForm{
+  display:flex;flex-direction:column;gap:14px;
+}
+.banEditorialForm h2{margin:0 0 6px;font-size:21px;}
+.banEditorialForm textarea {
+  display:block;width:100%;min-height:125px;
+  border:0;border-bottom:1px solid #ded9e4;
+  border-radius:0;background:transparent;
+  color:#302937;font-size:14px;
+  line-height:1.7;resize:vertical;padding:10px 0 14px;
+  outline:none;box-shadow:none;
+}
+.banEditorialForm textarea:focus{border-color:#795cbd;outline:0;box-shadow:none;}
+.banEditorialForm textarea::placeholder{color:#a29ba6;}
+.banEditorialSubmit{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.banEditorialSubmit span{color:#a69fa9;font-size:11px;}
+.banEditorialSubmit button.primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  min-height:42px;padding:11px 18px;border:0;border-radius:999px;
+  background:#211c28;color:white;font-size:12px;font-weight:700;
+}
+.banEditorialSubmit button.primary:hover:not(:disabled){background:#4c396d;}
+.banEditorialSubmit button.primary:disabled{opacity:.45;cursor:not-allowed;}
+.banEditorialFooter{
+  display:flex;gap:20px;align-items:center;justify-content:flex-end;
+  background:#fff;border-top:1px solid #eeebef;
+  padding:14px 43px 19px;
+}
+.banEditorialFooter button{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 0;background:transparent;border:0;
+  color:#6b6471;font-size:12px;font-weight:630;
+}
+.banEditorialFooter button:hover{color:#5d3f9a;}
+
+/* Appeals: inbox at left, one decision at right instead of big repeating forms. */
+.appealWorkbench .appealWorkbenchHeading{margin-bottom:14px;}
+.appealWorkspace {
+  display:grid;grid-template-columns:minmax(215px,.38fr) minmax(0,.62fr);
+  min-height:475px;max-width:100%;
+  border-top:1px solid #ece8ef;
+  border-bottom:1px solid #ece8ef;
+}
+.appealWorkspaceList{
+  min-width:0;max-height:650px;overflow-y:auto;
+  border-right:1px solid #ece8ef;
+}
+.appealInboxItem {
+  width:100%;display:flex;flex-direction:column;
+  gap:8px;text-align:left;background:transparent;
+  border:0;border-bottom:1px solid #f0edf2;
+  padding:20px 20px 20px 18px;
+  color:#322b3b;cursor:pointer;
+}
+.appealInboxItem.selected {
+  background:#f8f5fc;
+  box-shadow:inset 3px 0 #8465bf;
+}
+.appealInboxItem:hover:not(.selected){background:#fbfafc;}
+.appealInboxHeading{display:flex;align-items:center;gap:8px;}
+.appealInboxHeading strong{font-size:14px;font-weight:770;}
+.appealInboxUnread{width:6px;height:6px;flex:none;border-radius:50%;background:#7953b4;}
+.appealInboxPreview{
+  display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;color:#7a7380;font-size:12px;line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.appealInboxFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.appealInboxFoot time{font-size:11px;color:#a09aa5;}
+.appealInboxStatus{
+  display:inline-flex;align-items:center;max-width:100%;
+  font-size:11px;font-weight:700;line-height:1.2;
+  color:#7352aa;
+}
+.appealStatus-approved{color:#367348;}
+.appealStatus-rejected{color:#8a797a;}
+.appealWorkspaceDetail{
+  display:flex;flex-direction:column;
+  min-width:0;padding:29px clamp(24px,3.2vw,43px) 30px;
+}
+.appealWorkspaceTop{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:15px;
+  padding-bottom:26px;border-bottom:1px solid #efecf1;
+}
+.appealWorkspaceTop h3{
+  margin:0 0 7px;font-weight:790;font-size:23px;
+  letter-spacing:-.038em;color:#28212d;
+}
+.appealWorkspaceTop time{font-size:11px;color:#938b99;}
+.appealWorkspaceTop>.appealInboxStatus{
+  border-radius:999px;padding:7px 11px;
+  background:#f0eafa;color:#6746a1;
+}
+.appealReviewFact,.appealReviewMessage{padding:23px 0;border-bottom:1px solid #efecf1;}
+.appealReviewFact>span,.appealReviewMessage h4{
+  display:block;margin:0 0 9px;
+  font-size:11px;color:#827888;font-weight:750;
+}
+.appealReviewFact p,.appealReviewMessage p{
+  font-size:14px;line-height:1.65;color:#413b47;
+  overflow-wrap:anywhere;margin:0 0 10px;white-space:pre-wrap;
+}
+.appealReviewFact small{display:block;font-size:11px;color:#aaa1ac;}
+.appealPrivateDetails{padding:17px 0;border-bottom:1px solid #efecf1;}
+.appealPrivateDetails summary{
+  display:flex;align-items:center;gap:9px;cursor:pointer;
+  color:#797183;font-weight:660;font-size:12px;list-style:none;
+}
+.appealPrivateDetails summary::-webkit-details-marker{display:none;}
+.appealPrivateDetails summary .circleIcon:last-child{margin-left:auto;}
+.appealPrivateDetails p{margin:12px 0 0;font-size:13px;color:#574f60;line-height:1.6;}
+.appealReviewDecision{margin-top:auto;padding-top:25px;}
+.appealAddNote{
+  border:0;padding:9px 0;margin:0 0 17px;background:transparent;
+  display:flex;gap:9px;align-items:center;
+  color:#706680;font-size:12px;font-weight:650;
+}
+.appealAddNote:hover{color:#6341a7;}
+.appealResponseField{
+  display:grid;gap:10px;font-size:12px;font-weight:680;
+  color:#6e6576;margin:0 0 17px;
+}
+.appealResponseField textarea{
+  min-height:83px;resize:vertical;border:1px solid #e6e0ec;
+  border-radius:11px;background:#fcfbfd;padding:11px 12px;
+  color:#29222f;font-size:13px;
+}
+.appealReviewButtons{display:flex;flex-wrap:wrap;align-items:center;gap:14px;}
+.appealReviewButtons button{
+  border:0;min-height:44px;padding:12px 17px;
+  font-size:12px;font-weight:710;border-radius:999px;
+}
+.appealReviewButtons .appealApprove{display:flex;align-items:center;gap:9px;
+  background:#211c28;color:white;}
+.appealReviewButtons .appealApprove:hover{background:#4b3969;}
+.appealReviewButtons .appealReject{color:#8d666b;background:transparent;}
+.appealReviewButtons .appealReject:hover{background:#f9eff0;color:#99434b;}
+.appealReviewOutcome{margin-top:23px;font-size:13px;color:#685c70;}
+.appealReviewOutcome p{line-height:1.6;}
+@media(max-width:860px){
+  .categoryEditorialGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .appealWorkspace{grid-template-columns:minmax(188px,.37fr) minmax(0,.63fr);}
+}
+@media(max-width:640px){
+  main.categoryEditorialPage{width:calc(100% - 28px);padding:20px 0 75px;}
+  .categoryEditorialHeader{display:flex;flex-direction:column;align-items:stretch;gap:23px;}
+  .categoryEditorialHeader h1{font-size:40px;}
+  main.categoryEditorialPage .categorySearchField{width:100%;flex:auto;max-width:100%;}
+  .categoryEditorialGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;}
+  .categoryEditorialGrid .categoryEditorialCard{min-height:145px;padding:17px;border-radius:14px;}
+  .categoryEditorialCard h2{font-size:17px;max-width:100%;}
+  .categoryEditorialGrid .categoryFeature{min-height:180px;grid-column:span 2;}
+  .categoryEditorialGrid .categoryFeature h2{font-size:30px;}
+  .categoryEditorialCard .categoryCardArtwork{font-size:120px;right:15px;top:-28px;}
+  .categoryEditorialCard .categoryCardArrow{top:14px;right:13px;}
+  .categoryEditorialDetail{padding-top:13px;}
+  .categoryDetailHeader{gap:12px;}
+  .banEditorialHero.banNightStage{min-height:250px;padding:38px 18px;}
+  .banEditorialHero h1{font-size:clamp(38px,8.1vw,56px);}
+  #root > main.banPage.banEditorialPage{
+    width:calc(100% - 24px)!important;
+    margin:14px auto 75px!important;
+  }
+  .banEditorialDetails.banNightPanel{grid-template-columns:1fr;}
+  .banEditorialReason,.banEditorialAppeal{padding:30px 25px;}
+  .banEditorialReason{border-right:0;border-bottom:1px solid #e9e6ec;}
+  .banEditorialFooter{padding:15px 25px;justify-content:space-between;}
+  .appealWorkspace{grid-template-columns:1fr;}
+  .appealWorkspaceList{
+    max-height:225px;border-right:0;border-bottom:1px solid #ece8ef;
+  }
+  .appealInboxItem{padding:15px 18px;}
+  .appealWorkspaceDetail{padding:25px 18px;}
+}
+html[data-theme=dark] .discussionActionMenu{background:#25212d;border-color:#493d56;}
+html[data-theme=dark] .discussionActionMenu button[role='menuitem']{color:#efe9f4;}
+html[data-theme=dark] .discussionActionMenu button[role='menuitem']:hover{background:#3b3150;color:#e0d2fc;}
+html[data-theme=dark] .discussionActionDivider{background:#40364a;}
+html[data-theme=dark] .discussionActionMenu button.discussionActionDanger{color:#f0a0a5;}
+html[data-theme=dark] .discussionMore{color:#b9b0c2;}
+html[data-theme=dark] .discussionMore:hover{background:#322740;color:#d4bafa;}
+html[data-theme=dark] .categoryEditorialHeader h1,html[data-theme=dark] .categoryDetailHeader h1{color:#f4f0f6;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone0{background:#352951!important;color:#fff!important;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone1{background:#30293c!important;color:#eae1f4!important;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone2{background:#25313b!important;color:#d4e2e8!important;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone3{background:#36332e!important;color:#e8e1ce!important;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone4{background:#302a40!important;color:#e7dbfd!important;}
+html[data-theme=dark] .categoryEditorialCard.categoryTone5{background:#2a3530!important;color:#dce9dc!important;}
+html[data-theme=dark] .banEditorialDetails.banNightPanel,
+html[data-theme=dark] .banEditorialFooter{background:#1f1b25;color:#f1eaf7;}
+html[data-theme=dark] .banEditorialReason h2,
+html[data-theme=dark] .banEditorialAppeal h2{color:#f3eef7;}
+html[data-theme=dark] .banEditorialReason,
+html[data-theme=dark] .banEditorialFooter,
+html[data-theme=dark] .banEditorialAppeal{border-color:#403847;}
+html[data-theme=dark] .banEditorialCaption,
+html[data-theme=dark] .banEditorialAppeal time{color:#b1a7b9;}
+html[data-theme=dark] .banEditorialAppeal .banNightExplanation{color:#e7deee;}
+html[data-theme=dark] .banEditorialForm textarea{color:#f5effb;border-color:#564c5f;}
+html[data-theme=dark] .appealWorkspace,
+html[data-theme=dark] .appealWorkspaceList,
+html[data-theme=dark] .appealWorkspaceTop,
+html[data-theme=dark] .appealReviewFact,
+html[data-theme=dark] .appealReviewMessage,
+html[data-theme=dark] .appealPrivateDetails{border-color:#463c4d;}
+html[data-theme=dark] .appealInboxItem{color:#eee8f5;border-color:#42384b;}
+html[data-theme=dark] .appealInboxItem.selected{background:#342940;}
+html[data-theme=dark] .appealInboxItem:hover:not(.selected){background:#272230;}
+html[data-theme=dark] .appealWorkspaceTop h3{color:#f4edf9;}
+html[data-theme=dark] .appealReviewFact p,
+html[data-theme=dark] .appealReviewMessage p{color:#ded5e5;}
+@media(prefers-reduced-motion:reduce){
+  .categoryEditorialCard,
+  .categoryCardArrow{transition:none;}
+}
+
+
+/* Report moderation mirrors the appeal inbox: select a case, then act once. */
+.reportWorkbenchHeading{display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.reportWorkbenchHeading .reportsFilter{margin:0;}
+.reportWorkbenchHeading .reportsFilter select{
+  min-height:38px;padding:8px 32px 8px 14px;
+  border:1px solid #ebe7f0;
+  border-radius:999px;background:#faf9fc;
+  font-size:12px;font-weight:640;color:#51485b;
+}
+.reportWorkspace{
+  display:grid;grid-template-columns:minmax(215px,.38fr) minmax(0,.62fr);
+  min-height:400px;max-width:100%;
+  border-top:1px solid #ece8ef;border-bottom:1px solid #ece8ef;
+}
+.reportWorkspaceList{min-width:0;max-height:650px;overflow:auto;border-right:1px solid #ece8ef;}
+.reportInboxItem {
+  display:flex;flex-direction:column;align-items:stretch;gap:9px;
+  width:100%;min-height:115px;padding:19px 20px;
+  border:0;border-bottom:1px solid #eeeaf0;
+  background:transparent;text-align:left;color:#2f2938;
+}
+.reportInboxItem.selected {background:#f8f5fc;box-shadow:inset 3px 0 #8465bf;}
+.reportInboxItem:hover:not(.selected){background:#fbfafd;}
+.reportInboxHeading{display:flex;align-items:center;gap:9px;font-size:13px;}
+.reportInboxHeading strong{font-weight:760;overflow-wrap:anywhere;}
+.reportInboxContent{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;max-width:100%;
+  color:#6f6876;font-size:12px;line-height:1.5;
+  overflow-wrap:anywhere;
+}
+.reportInboxFoot {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;color:#99919f;font-size:11px;
+}
+.reportInboxFoot span:last-child{color:#6f50a2;font-weight:700;}
+.reportWorkspaceDetail{
+  display:flex;flex-direction:column;min-width:0;
+  padding:29px clamp(24px,3.2vw,43px) 33px;
+}
+.reportWorkspaceTop {
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:18px;padding-bottom:23px;border-bottom:1px solid #efebf2;
+}
+.reportWorkspaceTop h3{
+  margin:0 0 8px;font-size:22px;letter-spacing:-.04em;
+  font-weight:785;color:#28212e;
+}
+.reportWorkspaceTop span:not(.reportStatus){
+  display:block;font-size:12px;color:#8e8594;
+}
+.reportStatus{
+  color:#6645a0;background:#f1eafb;
+  border-radius:999px;padding:7px 11px;
+  font-size:11px;font-weight:700;
+}
+.reportReviewSection{padding:21px 0;border-bottom:1px solid #f0edf2;}
+.reportReviewSection>span{
+  display:block;margin:0 0 10px;
+  font-size:11px;font-weight:740;color:#847b8b;
+}
+.reportReviewSection>strong{display:block;font-size:14px;font-weight:740;color:#3c3444;}
+.reportReviewSection p{
+  margin:0;color:#4a4350;font-size:14px;line-height:1.65;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+}
+.reportRecommendation{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:16px 0;border-bottom:1px solid #ede9f0;
+  font-size:12px;font-weight:660;line-height:1.5;color:#6545a0;
+}
+.reportRecommendation .circleIcon{flex:none;}
+.reportReviewActions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+  padding:24px 0 6px;
+}
+.reportReviewActions button{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:38px;padding:9px 12px;
+  border:0;border-radius:10px;
+  background:#f5f3f6;color:#52495b;
+  font-size:12px;font-weight:685;
+}
+.reportReviewActions button:hover{background:#ebe3f4;color:#583b99;}
+.reportReviewActions button:first-child{background:#231d2c;color:#fff;}
+.reportReviewActions button:first-child:hover{background:#48355f;}
+.reportBanSection{margin-top:13px;border-top:1px solid #efeaf2;padding-top:16px;}
+.reportBanTrigger{
+  display:flex;align-items:center;gap:9px;
+  background:transparent;border:0;padding:7px 0;
+  color:#9a606c;font-size:12px;font-weight:680;
+}
+.reportBanTrigger:hover{color:#813c50;}
+.reportBanInline{display:grid;gap:15px;margin-top:13px;max-width:470px;}
+.reportBanInline label{display:grid;gap:8px;font-size:12px;font-weight:680;color:#716779;}
+.reportBanInline textarea{
+  width:100%;min-height:68px;resize:vertical;
+  border:1px solid #e8e3ea;border-radius:10px;
+  background:#fcfbfd;padding:11px;
+  color:#2b2533;font-size:13px;line-height:1.5;
+}
+.reportBanActions{display:flex;align-items:center;justify-content:flex-end;gap:12px;}
+.reportBanActions button{
+  border:0;background:transparent;border-radius:999px;
+  padding:10px 15px;font-size:12px;
+  font-weight:700;color:#756c7d;
+}
+.reportBanActions button.primary{background:#26202e;color:#fff;}
+@media(max-width:860px){
+  .reportWorkspace{grid-template-columns:minmax(185px,.38fr) minmax(0,.62fr);}
+}
+@media(max-width:640px){
+  .reportWorkspace{grid-template-columns:1fr;}
+  .reportWorkspaceList{max-height:210px;border-right:0;border-bottom:1px solid #ece8ef;}
+  .reportWorkspaceDetail{padding:24px 18px;}
+  .reportInboxItem{min-height:90px;padding:14px 18px;}
+  .reportReviewActions{gap:7px;}
+  .reportReviewActions button{padding:9px 11px;}
+}
+html[data-theme=dark] .reportWorkspace,
+html[data-theme=dark] .reportWorkspaceList,
+html[data-theme=dark] .reportInboxItem,
+html[data-theme=dark] .reportWorkspaceTop,
+html[data-theme=dark] .reportReviewSection,
+html[data-theme=dark] .reportBanSection{border-color:#463c4d;}
+html[data-theme=dark] .reportInboxItem{color:#f0ebf4;}
+html[data-theme=dark] .reportInboxItem.selected{background:#342940;}
+html[data-theme=dark] .reportInboxItem:hover:not(.selected){background:#282230;}
+html[data-theme=dark] .reportWorkspaceTop h3,
+html[data-theme=dark] .reportReviewSection strong{color:#f4edf8;}
+html[data-theme=dark] .reportReviewSection p{color:#d8d1e1;}
+html[data-theme=dark] .reportReviewActions button{background:#322a3d;color:#ded4e9;}
+html[data-theme=dark] .reportReviewActions button:first-child{background:#6b52a3;color:white;}
+html[data-theme=dark] .reportBanInline textarea{background:#2d2735;color:#f1ebf6;border-color:#4a3e54;}

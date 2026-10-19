@@ -36,7 +36,7 @@ async function resolveUserFromHeader(header, strict) {
   }
 
   const [rows] = await pool.execute(
-    'SELECT id, login, role, token_version FROM users WHERE id=? LIMIT 1',
+    'SELECT id, login, role, token_version, banned_at, ban_reason FROM users WHERE id=? LIMIT 1',
     [Number(payload.sub)],
   );
   const user = rows[0];
@@ -50,12 +50,15 @@ async function resolveUserFromHeader(header, strict) {
     login: user.login,
     role: user.role,
     ver: Number(user.token_version),
+    banned_at: user.banned_at,
+    ban_reason: user.ban_reason,
   };
 }
 
 export async function optionalAuth(req, res, next) {
   try {
     req.user = await resolveUserFromHeader(req.headers.authorization, false);
+    if (req.user?.banned_at) req.user = null;
     next();
   } catch (error) {
     next(error);
@@ -65,15 +68,34 @@ export async function optionalAuth(req, res, next) {
 export async function requireAuth(req, res, next) {
   try {
     req.user = await resolveUserFromHeader(req.headers.authorization, true);
+    if (req.user.banned_at) {
+      throw new AppError(403, 'ACCOUNT_BANNED', 'This account is blocked', {
+        banned_at: req.user.banned_at, ban_reason: req.user.ban_reason,
+      });
+    }
     next();
   } catch (error) {
     next(error);
   }
 }
 
+// Banned members may access only their ban status, appeal and logout.
+export async function requireAppealAuth(req, res, next) {
+  try {
+    req.user = await resolveUserFromHeader(req.headers.authorization, true);
+    next();
+  } catch (error) { next(error); }
+}
+
 export function requireAdmin(req, res, next) {
   if (req.user?.role !== 'admin') {
     return next(new AppError(403, 'ADMIN_REQUIRED', 'Admin access required'));
   }
+  next();
+}
+
+export function requireModerator(req,res,next) {
+  if (!['admin','moderator'].includes(req.user?.role))
+    return next(new AppError(403,'MODERATOR_REQUIRED','Moderator permission required'));
   next();
 }

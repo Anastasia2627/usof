@@ -1,0 +1,216 @@
+/* Registration and login share one deliberate split-screen composition.
+   The left panel is an authentic full-bleed space photograph, not a generated
+   collage; the right panel contains only the actual form and useful links. */
+main.authRefined {
+  display:grid;
+  grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);
+  align-items:stretch;
+  width:min(1100px,calc(100% - 44px));
+  max-width:1100px;
+  min-height:610px;
+  padding:9px;
+  margin:clamp(23px,4vw,54px) auto 76px;
+  border:1px solid #e8e6ec;
+  border-radius:33px;
+  background:#fff;
+  box-shadow:0 17px 54px rgba(25,19,42,.045);
+  overflow:hidden;
+}
+main.authRefined.authRegistration {min-height:700px;}
+main.authRefined.authLogin {min-height:615px;}
+
+.authRefined .authCosmicSide {
+  display:block;
+  position:relative;
+  isolation:isolate;
+  min-width:0;
+  min-height:100%;
+  padding:0;
+  overflow:hidden;
+  border-radius:25px;
+  background:#0b1021;
+}
+.authRefined .authCosmicImage {
+  position:absolute;
+  inset:0;
+  z-index:0;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:52% 50%;
+  filter:brightness(.82) saturate(.85) contrast(1.03);
+}
+.authRefined .authCosmicSide::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(8,9,23,.17) 0%,
+    rgba(8,9,23,0) 36%,
+    rgba(6,8,21,.52) 100%);
+}
+
+/* Keep the form easy to read: no decorative intro, helper paragraphs,
+   faux badges, extra bordered panels, or secondary headlines. */
+.authRefined .authPanel {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+  padding:clamp(32px,5.4vw,76px);
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  background:#fff;
+}
+.authRefined .authPanel h1 {
+  margin:0 0 31px;
+  font-size:clamp(31px,3.5vw,42px);
+  font-weight:790;
+  line-height:1.12;
+  letter-spacing:-.059em;
+}
+.authRefined .authForm {
+  display:grid;
+  gap:16px;
+  margin:0;
+}
+.authRefined .authForm label {
+  font-size:12px;
+  line-height:1.35;
+  font-weight:670;
+  color:#2e2933;
+}
+.authRefined .authForm input:not([type='checkbox']) {
+  display:block;
+  width:100%;
+  min-height:48px;
+  margin-top:8px;
+  padding:10px 14px;
+  font-size:14px;
+  color:#26222b;
+  background:#fbfafc;
+  border:1px solid #e5e2e9;
+  border-radius:11px;
+  outline:none;
+  box-shadow:none;
+}
+.authRefined .authForm input:focus {
+  border-color:#9b7ad8;
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(115,76,192,.08);
+}
+.authRefined .authForm button.authSubmit {
+  width:100%;
+  min-height:49px;
+  margin-top:7px;
+  border:0;
+  border-radius:999px;
+  background:#211c28;
+  color:#fff;
+  font-size:13px;
+  font-weight:730;
+}
+.authRefined .authForm button.authSubmit:hover:not(:disabled) {
+  background:#3a304c;
+}
+.authRefined .authSwitchLinks {
+  display:flex;
+  align-items:center;
+  gap:2px;
+  flex-wrap:wrap;
+  margin:0;
+  padding-top:19px;
+}
+.authRefined .authSwitchLinks p {
+  margin:0;
+  color:#8c8790;
+  font-size:12px;
+}
+.authRefined .authSwitchLinks button {
+  color:#6943ae;
+  font-size:12px;
+  font-weight:700;
+  border:0;
+  background:transparent;
+  padding:4px 6px;
+}
+.authRefined .authSwitchLinks button.authForgotLink {
+  margin-left:auto;
+  color:#77717d;
+  font-weight:550;
+}
+.authRefined .authRecovery {
+  padding-top:12px;
+}
+.authRefined .authRecovery .linkButton {
+  padding-left:0;
+  font-size:12px;
+  color:#8b8590;
+}
+/* Email verification retains its functioning form and accessibility. */
+.authRefined .verificationForm h1 {margin-bottom:13px;}
+.authRefined .verificationForm .toolbar {gap:6px;}
+.authRefined .verificationForm .toolbar button.authSubmit {
+  min-width:160px;
+  width:auto;
+}
+html[data-theme='dark'] main.authRefined {
+  background:#19161f;
+  border-color:#3c3544;
+}
+html[data-theme='dark'] .authRefined .authCosmicSide {background:#0b1021;}
+html[data-theme='dark'] .authRefined .authPanel {background:#19161f;}
+html[data-theme='dark'] .authRefined .authPanel h1,
+html[data-theme='dark'] .authRefined .authForm label {color:#f4f1f7;}
+html[data-theme='dark'] .authRefined .authForm input:not([type='checkbox']) {
+  background:#27232e;
+  color:#f2eff7;
+  border-color:#46404e;
+}
+html[data-theme='dark'] .authRefined .authForm input:focus {
+  border-color:#ab8adf;
+}
+html[data-theme='dark'] .authRefined .authSwitchLinks p {color:#bbb3c3;}
+html[data-theme='dark'] .authRefined .authSwitchLinks button {color:#c8a7ff;}
+html[data-theme='dark'] .authRefined .authSwitchLinks button.authForgotLink {color:#bcb4c1;}
+
+@media(max-width:840px) {
+  main.authRefined {grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);}
+  .authRefined .authPanel {padding:32px clamp(26px,4vw,42px);}
+}
+@media(max-width:720px) {
+  main.authRefined,
+  main.authRefined.authRegistration,
+  main.authRefined.authLogin {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    min-height:0;
+    width:min(530px,calc(100% - 26px));
+    max-width:530px;
+    margin:18px auto 76px;
+    padding:7px;
+    border-radius:24px;
+  }
+  .authRefined .authCosmicSide {
+    min-height:190px;
+    height:190px;
+    border-radius:17px;
+  }
+  .authRefined .authCosmicImage {object-position:center 45%;}
+  .authRefined .authPanel {padding:33px clamp(18px,4vw,32px) 36px;}
+  .authRefined .authPanel h1 {margin-bottom:27px;font-size:32px;}
+}
+@media(max-width:410px) {
+  .authRefined .authCosmicSide {height:153px;min-height:153px;}
+  .authRefined .authPanel {padding:29px 17px 31px;}
+  .authRefined .authSwitchLinks button.authForgotLink {
+    flex:1 0 100%;
+    margin-left:0;
+    text-align:left;
+    padding-left:0;
+  }
+}

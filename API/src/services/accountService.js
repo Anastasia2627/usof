@@ -43,6 +43,8 @@ function publicUser(row) {
     avatar: row.avatar,
     rating: row.rating,
     role: row.role,
+    banned_at: row.banned_at,
+    ban_reason: row.ban_reason,
     created_at: row.created_at,
   };
 }
@@ -131,7 +133,9 @@ export async function updateAccount({ targetId, actor, body }) {
     protectLastAdmin(adminIds, current, role);
 
     const emailChanged = email !== current.email;
-    invalidateSession = emailChanged || role !== current.role || login !== current.login;
+    // Tokens carry immutable user id + token version, not login/email.
+    // Profile and admin edits therefore do not invalidate existing sessions.
+    invalidateSession = false;
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
     verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
@@ -168,6 +172,19 @@ export async function updateAccount({ targetId, actor, body }) {
       ],
     );
 
+    if (role !== current.role && isAdmin) {
+      await connection.execute(
+        `INSERT INTO notifications(user_id,actor_id,type,title,body)
+         VALUES(?,?,'role_changed',?,?)`,
+        [id, Number(actor.sub),
+          role === 'moderator' ? 'You are now a moderator' : role === 'user' ? 'Your moderator role was removed' : 'Your role was updated',
+          role === 'moderator'
+            ? 'You can now review reports and moderate discussions. You cannot manage users.'
+            : role === 'user'
+              ? 'Your account now has standard member permissions.'
+              : 'Your Circle account permissions have been updated.'],
+      );
+    }
     const [[row]] = await connection.execute('SELECT * FROM users WHERE id=?', [id]);
     updated = publicUser(row);
     await connection.commit();
@@ -198,6 +215,65 @@ export async function updateAccount({ targetId, actor, body }) {
   return result;
 }
 
+// A moderator appointment/revocation is deliberately separate from profile
+// edits. It must never change token_version, credentials or email verification.
+// JWTs contain only user id + token_version, while requireAuth reloads the
+// *current* role from MySQL on every request.
+export async function changeAccountRole({ targetId, actor, body }) {
+  if (actor?.role !== 'admin') {
+    throw new AppError(403, 'ADMIN_REQUIRED', 'Only administrators may change roles');
+  }
+  const id=positiveInt(targetId,'INVALID_USER_ID','Invalid user id');
+  const role=validateRole(body?.role);
+  if (!['user','moderator'].includes(role)) {
+    throw new AppError(422,'INVALID_ROLE','This action only appoints or removes moderators');
+  }
+
+  const connection=await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [[current]]=await connection.execute(
+      'SELECT id, role FROM users WHERE id=? FOR UPDATE',[id],
+    );
+    if(!current) throw new AppError(404,'USER_NOT_FOUND','User not found');
+    // Administrator roles are managed through the existing protected account
+    // flow, so this quick action can never demote an administrator.
+    if(current.role==='admin')
+      throw new AppError(403,'ADMIN_ROLE_PROTECTED','Administrator role cannot be changed here');
+
+    const changed=current.role!==role;
+    if(changed) await connection.execute('UPDATE users SET role=? WHERE id=?',[role,id]);
+    const [[row]]=await connection.execute('SELECT * FROM users WHERE id=?',[id]);
+    await connection.commit();
+
+    // Older local databases may lack the new 'role_changed' notification
+    // enum value. A noncritical notification must never roll back the role.
+    // This occurs after commit so the user can always be promoted/demoted.
+    if(changed) {
+      try {
+        await pool.execute(
+          `INSERT INTO notifications(user_id,actor_id,type,title,body)
+           VALUES(?,?,'role_changed',?,?)`,
+          [id,Number(actor.sub),
+            role==='moderator' ? 'You are now a moderator' : 'Your moderator role was removed',
+            role==='moderator'
+              ? 'You can now review reports and moderate discussions. You cannot manage users.'
+              : 'Your account now has standard member permissions.'],
+        );
+      } catch(notificationError) {
+        console.warn('Role updated, but notification could not be saved. Run npm run db:init to migrate notifications:',
+          notificationError.message);
+      }
+    }
+    return {data:publicUser(row),sessionInvalidated:false};
+  } catch(error){
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 export async function deleteAccount({ targetId, actor }) {
   const id = positiveInt(targetId, 'INVALID_USER_ID', 'Invalid user id');
   if (actor.role !== 'admin' && Number(actor.sub) !== id) {
@@ -206,6 +282,7 @@ export async function deleteAccount({ targetId, actor }) {
 
   const connection = await pool.getConnection();
   let avatar = null;
+  let photoFiles=[];
   try {
     await connection.beginTransaction();
     const adminIds = actor.role === 'admin' ? await lockAdmins(connection) : [];
@@ -214,6 +291,8 @@ export async function deleteAccount({ targetId, actor }) {
 
     protectLastAdmin(adminIds, current, '__deleted__');
     avatar = current.avatar;
+    const [photos]=await connection.query('SELECT filename FROM post_images WHERE uploader_id=?',[id]);
+    photoFiles=photos.map(photo=>photo.filename);
     await connection.query('DELETE FROM users WHERE id=?', [id]);
     await recalculateAllRatings(connection);
     await connection.commit();
@@ -226,5 +305,8 @@ export async function deleteAccount({ targetId, actor }) {
 
   if (avatar?.startsWith('/uploads/avatars/')) {
     await fs.unlink(path.resolve('API/uploads/avatars', path.basename(avatar))).catch(() => {});
+  }
+  for(const filename of photoFiles){
+    await fs.unlink(path.resolve('API/uploads/posts',path.basename(filename))).catch(()=>{});
   }
 }

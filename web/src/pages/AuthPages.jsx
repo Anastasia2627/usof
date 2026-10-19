@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { api, isDemoMode } from '../api.js';
 import { ErrorBox, go } from '../ui.jsx';
+import {usePreferences} from '../preferences.jsx';
 
 function VerificationForm({ email, delivery, initialCode, login, password, onLogin }) {
+  const {t}=usePreferences();
   const [code, setCode] = useState(initialCode || '');
   const [lastDelivery, setLastDelivery] = useState(delivery);
   const [error, setError] = useState(null);
@@ -53,17 +55,22 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
   }
 
   return <form className="authForm verificationForm" onSubmit={verify}>
-    <h1>Confirm your email</h1>
-    <p>Enter the six-digit code sent to <b>{email}</b>.</p>
+    <div className="verificationVisual" aria-hidden="true">
+      <span className="verifyHalo verifyHaloOne"></span><span className="verifyHalo verifyHaloTwo"></span>
+      <span className="verificationLetter">✉<span>✦</span></span>
+    </div>
+    <h1>{t('Confirm your email')}</h1>
+    <p>{t('Enter the code sent to')} <b>{email}</b></p>
     {lastDelivery && lastDelivery !== 'sent' && <p className="error card">Your account was created, but no email was sent. Configure SMTP and request a new code. Avoid registering again with the same address.</p>}
-    <label>Verification code
-      <input inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
-        value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+    <label className="verifyCodeLabel">{t('Verification code')}
+      <input aria-label="Six-digit verification code" className="verifyCodeInput" inputMode="numeric" autoComplete="one-time-code" required pattern="[0-9]{6}" maxLength="6"
+        placeholder="••••••" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
     </label>
+    <p className="verifyHint">{t('Check Inbox and Spam. Your code is valid for 20 minutes.')}</p>
     <div className="toolbar">
-      <button className="primary authSubmit" disabled={busy}>Verify email</button>
-      <button type="button" onClick={resend} disabled={busy}>Resend code</button>
-      <button type="button" onClick={() => go('/login')}>Log in</button>
+      <button className="primary authSubmit" disabled={busy || code.length !== 6}>{t('Confirm email')} <span aria-hidden="true">→</span></button>
+      <button className="verifyResend" type="button" onClick={resend} disabled={busy}>{t('Resend code')}</button>
+      <button className="verifyResend" type="button" onClick={() => go('/login')}>{t('Back to login')}</button>
     </div>
     {message && <p role="status">{message}</p>}
     <ErrorBox error={error} />
@@ -71,6 +78,7 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
 }
 
 export function AuthPage({ mode }) {
+  const {t}=usePreferences();
   const dispatch = useDispatch();
   const register = mode === 'register';
   const [form, setForm] = useState({
@@ -83,9 +91,9 @@ export function AuthPage({ mode }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  function logIn(result) {
+  function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
-    go('/');
+    go(result.user?.banned_at ? '/ban' : firstRegistration ? '/interests' : '/');
   }
 
   async function submit(event) {
@@ -99,7 +107,7 @@ export function AuthPage({ mode }) {
           login: form.login, email: form.email, fullName: form.fullName,
           password: form.password, passwordConfirmation: form.passwordConfirmation,
         } });
-        if (isDemoMode()) logIn({ token: result.token, user: result.user });
+        if (isDemoMode()) logIn({ token: result.token, user: result.user },true);
         else setVerification({ email: form.email, delivery: result.emailDelivery, initialCode: result.verificationCode || '',
           login: form.login, password: form.password });
       } else {
@@ -138,40 +146,49 @@ export function AuthPage({ mode }) {
 
   const field = name => event => setForm(previous => ({ ...previous, [name]: event.target.value }));
 
-  return <main className="authShell">
+  return <main className={'authShell authRefined '+(register?'authRegistration':'authLogin')}>
+    <aside className="authEditorial authVisualSide authCosmicSide" aria-hidden="true">
+      {/* NASA / ESA / CSA / STScI — James Webb's Cosmic Cliffs. */}
+      <img className="authCosmicImage"
+        src="https://assets.science.nasa.gov/dynamicimage/assets/science/missions/webb/science/2022/07/STScI-01GA6KKWG229B16K4Q38CH3BXS.png?fit=clip&h=1158&w=2000"
+        alt="" fetchPriority="high" decoding="async"/>
+    </aside>
     <section className="authPanel">
-      {verification ? <VerificationForm {...verification} onLogin={logIn} /> : <>
-        <h1>{register ? 'Create account' : 'Log in'}</h1>
+      {verification ? <VerificationForm {...verification} onLogin={result => logIn(result,true)} /> : <>
+        <h1>{t(register ? 'Create account' : 'Welcome back')}</h1>
         {isDemoMode() && <p className="card alert" role="note">Preview mode: accounts and email are simulated. Use npm run web with the real API and SMTP to receive actual messages.</p>}
         <form className="authForm" onSubmit={submit}>
           {register ? <>
-            <label>Username<input autoComplete="username" required minLength="3" maxLength="50" value={form.login} onChange={field('login')} /></label>
-            <label>Full name<input maxLength="100" value={form.fullName} onChange={field('fullName')} /></label>
-            <label>Email<input type="email" autoComplete="email" required value={form.email} onChange={field('email')} /></label>
-          </> : <label>Username or email
+            <label>{t('Username')}<input autoComplete="username" required minLength="3" maxLength="50" value={form.login} onChange={field('login')} /></label>
+            <label>{t('Full name')}<input maxLength="100" value={form.fullName} onChange={field('fullName')} /></label>
+            <label>{t('Email')}<input type="email" autoComplete="email" required value={form.email} onChange={field('email')} /></label>
+          </> : <label>{t('Username or email')}
             <input autoComplete="username" required value={form.identifier} onChange={field('identifier')} />
           </label>}
-          <label>Password
+          <label>{t('Password')}
             <input type="password" autoComplete={register ? 'new-password' : 'current-password'}
               required minLength={register ? 8 : undefined} value={form.password} onChange={field('password')} />
           </label>
-          {register && <label>Confirm password
+          {register && <label>{t('Confirm password')}
             <input type="password" autoComplete="new-password" required minLength="8"
               value={form.passwordConfirmation} onChange={field('passwordConfirmation')} />
           </label>}
-          <button className="primary authSubmit" disabled={busy}>{busy ? 'Please wait…' : register ? 'Create account' : 'Log in'}</button>
+          <button className="primary authSubmit" disabled={busy}>{t(busy ? 'Please wait…' : register ? 'Create account' : 'Log in')}</button>
           <ErrorBox error={error} />
         </form>
-        <div className="toolbar">
-          <button onClick={() => go(register ? '/login' : '/register')}>{register ? 'Already registered? Log in' : 'Create an account'}</button>
-          {!register && <button onClick={() => go('/reset')}>Forgot password?</button>}
+        <div className="toolbar authSwitchLinks">
+          <p>{t(register ? 'Already part of Circle?' : 'New to Circle?')}</p>
+          <button type="button" onClick={() => go(register ? '/login' : '/register')}>
+            {t(register ? 'Log in' : 'Create an account')}
+          </button>
+          {!register && <button type="button" className="authForgotLink" onClick={() => go('/reset')}>{t('Forgot password?')}</button>}
         </div>
         {!register && <div className="authRecovery">
-          <button className="linkButton" onClick={() => setRecovery(value => !value)}>Need a new email verification code?</button>
+          <button className="linkButton" onClick={() => setRecovery(value => !value)}>{t('Need a new email verification code?')}</button>
           {recovery && <form className="form" onSubmit={resendAfterLeaving}>
-            <label>Registration email<input type="email" required value={recoveryEmail}
+            <label>{t('Registration email')}<input type="email" required value={recoveryEmail}
               onChange={e => setRecoveryEmail(e.target.value)} /></label>
-            <button className="secondary" disabled={busy}>Send new code</button>
+            <button className="secondary" disabled={busy}>{t('Send new code')}</button>
             {recoveryMessage && <p role="status">{recoveryMessage}</p>}
           </form>}
         </div>}
@@ -181,6 +198,7 @@ export function AuthPage({ mode }) {
 }
 
 export function VerifyPage({ token }) {
+  const {t}=usePreferences();
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(Boolean(token));
@@ -195,15 +213,16 @@ export function VerifyPage({ token }) {
 
   return <main className="authStandalone">
     <section className="verificationLinkPanel">
-      <h1>Email confirmation</h1>
-      {busy ? <p>Verifying…</p> : message && <p>{message}</p>}
+      <h1>{t('Email confirmation')}</h1>
+      {busy ? <p>{t('Verifying…')}</p> : message && <p>{t(message)}</p>}
       <ErrorBox error={error} />
-      <button className="primary" onClick={() => go('/login')}>Continue to login</button>
+      <button className="primary" onClick={() => go('/login')}>{t('Continue to login')}</button>
     </section>
   </main>;
 }
 
 export function ResetPage({ token }) {
+  const {t}=usePreferences();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -237,16 +256,16 @@ export function ResetPage({ token }) {
 
   return <main className="authStandalone">
     <form className="resetPanel authForm" onSubmit={submit}>
-      <h1>{token ? 'Choose new password' : 'Reset password'}</h1>
+      <h1>{t(token ? 'Choose new password' : 'Reset password')}</h1>
       {token ? <>
-        <label>New password<input type="password" required minLength="8" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
-        <label>Confirm password<input type="password" required minLength="8" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></label>
-      </> : <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
-      <button className="primary" disabled={busy}>{token ? 'Change password' : 'Send reset link'}</button>
+        <label>{t('New password')}<input type="password" required minLength="8" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
+        <label>{t('Confirm password')}<input type="password" required minLength="8" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></label>
+      </> : <label>{t('Email')}<input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>}
+      <button className="primary" disabled={busy}>{t(token ? 'Change password' : 'Send reset link')}</button>
       {message && <p role="status">{message}</p>}
       {devToken && <button type="button" onClick={() => go('/reset/' + devToken)}>Use local test token</button>}
       <ErrorBox error={error} />
-      <button type="button" onClick={() => go('/login')}>Back to login</button>
+      <button type="button" onClick={() => go('/login')}>{t('Back to login')}</button>
     </form>
   </main>;
 }

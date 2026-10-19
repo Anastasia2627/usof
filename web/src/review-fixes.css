@@ -1,0 +1,165 @@
+/* Finishing pass: every visible element should have a purpose. */
+
+/* The active topic's label must stay white against its dark background. */
+#root .feedTopicScroller button.topicActive,
+#root .feedTopicScroller button[aria-pressed="true"] {
+  background:#242229!important;
+  color:#ffffff!important;
+  border:0!important;
+  box-shadow:0 1px 2px rgba(24,18,33,.12);
+}
+#root .feedTopicScroller button.topicActive:hover,
+#root .feedTopicScroller button[aria-pressed="true"]:hover {
+  background:#372b55!important;
+  color:white!important;
+}
+#root .mainNav button.navActive {
+  background:#f5f1fc!important;color:#7050bf!important;
+  border-color:transparent!important;
+}
+#root .mainNav button.navActive svg {
+  fill:none!important;
+  stroke:#7755c2!important;
+  stroke-width:1.9;
+}
+.editorRefined .editorTopbar {padding-bottom:19px;}
+.editorRefined .editorHeading .editorOverline,
+.editorRefined .editorLead,.editorRefined .editorIdentity small {
+  display:none!important;
+}
+.editorRefined .editorTopbar h1 {
+  font-size:clamp(28px,3vw,36px);
+  letter-spacing:-.06em;line-height:1.1;
+}
+.editorRefined .editorIdentity {padding-top:6px;}
+.editorRefined .editorBack:hover {
+  color:#6841b4;border-color:#d8c6f5;background:#f6f1ff;
+}
+/* Fixed grid rail: a stable column tied to the content instead of viewport
+   calculations or an oversized implicit grid-row span. */
+@media(min-width:721px){
+  #root {
+    grid-template-columns:80px minmax(0,1fr)!important;
+    column-gap:0!important;
+  }
+  #root > .mainNav {
+    position:sticky!important;
+    grid-column:1!important;
+    grid-row:2 / span 2!important;
+    top:86px!important;
+    left:auto!important;right:auto!important;bottom:auto!important;
+    transform:none!important;
+    width:80px!important;
+    min-width:80px!important;
+    height:max-content!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:8px 12px!important;
+    align-self:start!important;
+    justify-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    gap:5px!important;
+  }
+  #root > .mainNav button {
+    width:52px!important;height:52px!important;
+    flex:none!important;min-width:0!important;
+    margin:0!important;
+  }
+  #root > main {min-width:0;grid-column:2!important;}
+  #root > .roleChangeBanner,#root > .sessionExpiredBanner {
+    grid-column:2!important;
+  }
+}
+@media(min-width:721px) and (max-width:1000px){
+  #root {grid-template-columns:70px minmax(0,1fr)!important;}
+  #root > .mainNav {width:70px!important;min-width:70px!important;padding:8px 8px!important;}
+}
+@media(max-width:720px){
+  #root > .mainNav {
+    position:fixed!important;
+    grid-row:auto!important;
+    transform:none!important;
+  }
+}
+
+/* The comments row is now a plain read surface with a single overflow action.
+   Right-click or Shift+F10 shows the same accessible context menu. */
+.adminCommentsSection .adminCommentItem {
+  position:relative;
+  cursor:context-menu;
+  transition:background-color .16s ease;
+}
+.adminCommentsSection .adminCommentItem:hover {
+  background:#fbf9ff;
+}
+.adminCommentsSection .adminCommentItem:focus-visible {
+  outline:2px solid #aa8ae9;outline-offset:1px;
+}
+.adminCommentsSection .adminItemLine {gap:18px;align-items:center;}
+.adminCommentsSection .adminItemText {min-width:0;flex:1;}
+.adminCommentsSection .adminCommentText {
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  margin-top:10px;
+}
+.adminCommentsSection .adminCommentMore {
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:none;min-width:37px;width:37px;height:37px;
+  border:0;border-radius:11px;
+  background:transparent;color:#8b8594;
+  transition:background-color .15s,color .15s;
+}
+.adminCommentsSection .adminCommentMore:hover,
+.adminCommentsSection .adminCommentMore[aria-expanded="true"] {
+  background:#f0ebf8;color:#6e4bb6;
+}
+.adminCommentMenu {
+  position:fixed;
+  z-index:200;
+  width:230px;max-height:min(320px,70vh);
+  overflow:auto;
+  background:rgba(255,255,255,.98);
+  border:1px solid #ebe7f1;
+  border-radius:15px;
+  box-shadow:0 15px 45px #21153027,0 4px 12px #21153012;
+  backdrop-filter:blur(14px);
+  padding:6px;
+}
+.adminCommentMenu button {
+  width:100%;min-height:42px;
+  padding:10px 12px;
+  border:0;border-radius:10px;
+  display:flex;align-items:center;
+  text-align:left;gap:11px;
+  background:transparent;color:#2d2834;
+  font-size:12px;font-weight:600;
+  line-height:1.3;
+}
+.adminCommentMenu button:hover,.adminCommentMenu button:focus-visible {
+  background:#f4f0fb;color:#583a97;
+}
+.adminCommentMenu .circleIcon {color:currentColor;flex:none;}
+.adminCommentMenuDivider {
+  height:1px;background:#eeeaf2;margin:5px 7px;
+}
+.adminCommentMenu button.adminCommentMenuDanger {color:#ae4448;}
+.adminCommentMenu button.adminCommentMenuDanger:hover {
+  background:#fff0ef;color:#a3353b;
+}
+html[data-theme=dark] .adminCommentsSection .adminCommentItem:hover {background:#25212e;}
+html[data-theme=dark] .adminCommentsSection .adminCommentMore {color:#c3b9cc;}
+html[data-theme=dark] .adminCommentsSection .adminCommentMore:hover {background:#3a2c54;color:#d2b5ff;}
+html[data-theme=dark] .adminCommentMenu {
+  background:#25212d;border-color:#493d56;
+  box-shadow:0 16px 50px #05040799;
+}
+html[data-theme=dark] .adminCommentMenu button {color:#eee8f7;}
+html[data-theme=dark] .adminCommentMenu button:hover {background:#3a2f4e;color:#e1d1ff;}
+html[data-theme=dark] .adminCommentMenuDivider {background:#44384f;}
+html[data-theme=dark] .adminCommentMenu button.adminCommentMenuDanger {color:#ffb2b2;}
+@media(prefers-reduced-motion:reduce){
+  .adminCommentsSection .adminCommentItem,
+  .adminCommentsSection .adminCommentMore{transition:none;}
+}
+

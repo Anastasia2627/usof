@@ -1,0 +1,643 @@
+/* Circle UI finishing pass — October 2026
+   Quiet, rounded, accessible. Small set of reusable surfaces/actions, not a new theme. */
+:root{
+  --circle-ink:#1b1b1c;
+  --circle-subtle:#787a7c;
+  --circle-border:#e9e9eb;
+  --circle-surface:#fff;
+  --circle-soft:#f6f6f7;
+  --circle-round:18px;
+}
+button{transition:background-color .14s ease,color .14s ease,border-color .14s ease;}
+button:disabled{cursor:not-allowed;}
+button:focus-visible,summary:focus-visible,a:focus-visible,
+input:focus-visible,textarea:focus-visible,select:focus-visible{
+  outline:2px solid #59595f;
+  outline-offset:3px;
+}
+main.homePage{border-left:0;border-right:0;background:transparent;}
+.feedPageTitle{
+  border:0;
+  font-size:20px;
+  font-weight:760;
+  letter-spacing:-.045em;
+  height:auto;
+  line-height:1.3;
+  text-align:left;
+  padding:24px 21px 12px;
+}
+.feedTabs{border-bottom:1px solid var(--circle-border);}
+.feedTabs button{border-radius:0;font-size:13px;}
+.feedComposer{margin:15px 9px 10px;width:calc(100% - 18px);
+  padding:15px 18px;border:1px solid var(--circle-border);
+  border-radius:var(--circle-round);background:var(--circle-surface);}
+.feedComposer:hover{background:#fbfbfb;border-color:#d9d9dc;}
+.feedComposer strong,.guestComposer button{border-radius:999px;padding:10px 18px;}
+.feedFilterStrip{border:0;border-bottom:1px solid var(--circle-border);padding:12px 12px 17px;background:transparent;}
+.feedTopicScroller{gap:7px;}
+.feedTopicScroller button,.profileTopicPills button{
+  min-height:36px;border:1px solid transparent;padding:8px 14px;font-size:12px;
+  border-radius:999px;background:var(--circle-soft);
+}
+.feedTopicScroller button.topicActive,.profileTopicPills button.profileTopicActive{border-color:#1e1e20;}
+.feedFilterStrip .filterDetails summary{border:1px solid var(--circle-border);background:white;
+  min-width:83px;min-height:36px;border-radius:999px;gap:6px;}
+.feedFilterStrip .filterDetails[open] summary{border-color:#d2d2d4;}
+.feedFilterStrip .filterBar{box-shadow:0 14px 38px rgba(0,0,0,.085);border-radius:var(--circle-round);}
+.feedFilterStrip .filterBar select,.feedFilterStrip .filterBar input[type=date]{
+  border:1px solid var(--circle-border);border-radius:10px;background:white;
+  padding:10px 11px;min-height:41px;
+}
+.threadGrid{display:grid;gap:12px;padding:12px 9px 18px;}
+.threadCard{
+  border:1px solid var(--circle-border);
+  border-radius:var(--circle-round);
+  padding:19px 18px 16px;
+  background:var(--circle-surface);
+  margin:0;
+  box-shadow:0 2px 6px rgba(0,0,0,.016);
+  transition:border-color .14s ease;
+}
+.threadCard:hover{background:var(--circle-surface);border-color:#dcdcdf;}
+.threadVerticalLine{background:#eeeeef;}
+.threadBody .postMeta time{color:#929292;}
+.threadBody .postTitleLink{font-size:16px;font-weight:710;letter-spacing:-.015em;}
+.threadExcerpt{line-height:1.66;color:#454545;font-size:13px;}
+.threadBody .tags{margin:12px 0;}
+.threadBody .tags span,.naturalPost .tags span{
+  background:#f6f6f7;border:1px solid #efeff0;color:#68696d;
+  border-radius:999px;padding:5px 10px;font-size:11px;
+}
+.threadActions{gap:5px;margin:12px 0 0 -4px;}
+.threadActions button{display:inline-flex;align-items:center;justify-content:center;
+  min-height:38px;min-width:38px;padding:8px;border:0;border-radius:12px;gap:6px;}
+.threadActions .postModerationTrigger{margin-left:auto;}
+.threadActions button[aria-pressed=true]{color:#111;background:#f3f3f4;}
+.threadActions button[aria-label='Copy link'],.threadActions button[aria-label='Link copied']{color:#777;}
+.threadActions button .circleIcon{pointer-events:none;}
+.threadPhoto{border-radius:13px;overflow:hidden;}
+.threadPhoto img{border-radius:12px;}
+.postContextMenu{border-radius:15px;padding:7px;box-shadow:0 12px 32px rgba(0,0,0,.11);}
+.postContextMenu button{min-height:39px;border-radius:9px;}
+/* Keep the navigation truly icon-only: sighted users see native tooltip; screen reader gets aria-label. */
+.mainNav{gap:8px;}
+.mainNav button{width:55px;height:53px;border:1px solid transparent;border-radius:16px;color:#858589;}
+.mainNav button:hover{background:#f5f5f6;color:#161616;border-color:#efefef;}
+.mainNav button.navActive{background:#f5f5f6;color:#111;border-color:#f0f0f0;}
+.mainNav button:focus-visible{outline-offset:2px;}
+.headerSearch{border-color:var(--circle-border);background:#f8f8f9;}
+.headerSearch:focus-within{border-color:#999;background:white;box-shadow:0 0 0 3px rgba(0,0,0,.035);}
+.headerSearch input:focus-visible{outline:0;}
+.headerSearch .searchSubmit{border-radius:50%;width:34px;height:34px;padding:5px;display:grid;place-items:center;}
+.headerNotify{border-radius:12px;}
+.accountArea .profileButton{border-radius:13px;}
+.accountMenu>summary{border-radius:12px;}
+.accountDropdown{border:1px solid var(--circle-border);box-shadow:0 15px 42px rgba(0,0,0,.1);}
+.pager{align-items:center;gap:11px;}
+.pager button{min-height:37px;border-radius:999px;border:1px solid var(--circle-border);background:var(--circle-surface);font-size:12px;font-weight:640;padding:8px 14px;}
+.pager button:hover:not(:disabled){background:var(--circle-soft);}
+.pager span{font-size:12px;color:var(--circle-subtle);}
+.feedEmptyState{
+  min-height:244px;padding:44px 22px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:10px;
+  color:var(--circle-subtle);
+}
+.feedEmptyIcon{width:53px;height:53px;display:grid;place-items:center;
+  border-radius:18px;background:var(--circle-soft);color:#777;}
+.feedEmptyState h2{font-size:17px;color:var(--circle-ink);font-weight:720;margin:5px 0 0;}
+.feedEmptyState p{font-size:13px;margin:0;max-width:315px;line-height:1.6;}
+.feedEmptyReset{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border-radius:999px;min-height:40px;padding:9px 16px;margin-top:9px;
+  font-size:12px;font-weight:700;background:#202022;color:#fff;border-color:#202022;}
+.feedEmptyReset:hover:not(:disabled){background:#353539;color:white;}
+/* Publication pages: rounded reading surfaces; actions are appropriately quieter than content. */
+main.naturalPostPage{max-width:730px;width:min(730px,calc(100% - 38px));}
+.postBackRow{padding:11px 2px 17px;}
+.naturalPost{
+  margin-top:17px;padding:25px 27px 24px;
+  border:1px solid var(--circle-border);border-radius:20px;background:white;
+}
+.naturalPost h1{font-weight:770;}
+.naturalPostContent{line-height:1.8;}
+.naturalPostReactions{gap:10px;flex-wrap:wrap;}
+.naturalPostReactions .naturalPostIconButton,
+.naturalPostReactions .reactionIconButton{min-width:38px;min-height:38px;border-radius:12px;}
+.naturalPostManagement{gap:6px;}
+.naturalPostManagement button{min-height:36px;border-radius:999px;padding:8px 12px;}
+.naturalPostManagement .dangerText{margin-left:auto;}
+.naturalComments{padding:27px 10px 42px;}
+.naturalCommentTree .commentCard{padding-top:19px;padding-bottom:19px;}
+.naturalCommentTree .commentActions button{min-height:36px;padding:8px 11px;border-radius:999px;}
+.naturalReplyComposer{margin-top:18px;padding:16px;border:1px solid var(--circle-border);border-radius:17px;align-items:center;}
+.naturalReplyComposer textarea{padding:12px 8px;line-height:1.55;resize:vertical;}
+.naturalReplyComposer button{width:43px;height:43px;}
+/* Shared cards — search/notifications/admin/preferences */
+.searchPage .searchPerson,.searchMember{border:1px solid var(--circle-border);border-radius:15px;padding:15px;}
+.searchPage .searchCards{gap:10px;}
+.searchPage .searchPerson:hover{border-color:#ddd;background:#fafafa;}
+.settingsChoices button{border-radius:16px;min-height:64px;padding:15px 17px;}
+.settingsChoices button.settingsSelected{border-color:#a7a7aa;background:#f8f8f9;}
+.settingsChoices button:focus-visible{outline-offset:3px;}
+.notificationList{gap:9px;}
+.notificationList .notification{display:flex;align-items:center;gap:14px;border:1px solid var(--circle-border);
+  border-radius:16px;padding:12px 14px;margin:0;}
+.notificationList .notification.unread{border-color:#d4d4d6;background:#fafafa;}
+.notificationList .notificationBody{flex:1;min-width:0;text-align:left;}
+.notificationList .notificationDeleteIcon{display:grid;place-items:center;
+  flex:none;min-width:39px;width:39px;height:39px;padding:0;border:0;
+  background:transparent;border-radius:12px;color:#a15a5a;}
+.notificationList .notificationDeleteIcon:hover{background:#fff0f0;color:#ac2929;}
+.markAllRead{display:inline-flex;gap:7px;align-items:center;justify-content:center;border-radius:999px;}
+.adminPage .adminListItem{border:1px solid var(--circle-border);border-radius:16px;background:white;padding:14px 17px;}
+.adminPage .adminRowTools{gap:5px;}
+.adminPage .adminRowTools button{display:inline-flex;align-items:center;gap:7px;min-height:37px;border-radius:12px;}
+.adminPage .adminRowTools button.roleQuickButton{background:#222;color:white;border-radius:999px;padding:8px 13px;}
+.adminPage .adminRowTools button.roleQuickButton.roleRevoke{background:transparent;color:#555;border:1px solid #ddd;}
+.adminPage .adminRowTools button.roleQuickButton:hover{background:#353535;color:#fff;}
+.profileEditToggle,.profileNewPost{min-height:40px;border-radius:999px;}
+.profileEditPanel{border:1px solid var(--circle-border);border-radius:18px;}
+.editorRefined .editorInputGroup,.editorRefined .editorCategories,.editorRefined .postComposerForm .editorOptions{border-radius:18px;}
+.editorRefined .editorPhotoLivePreview{border-top-color:var(--circle-border);}
+.editorRefined .editorPhotoPill{border-radius:11px;}
+/* Dark theme: same hierarchy, not light rectangles floating on charcoal. */
+html[data-theme=dark]{
+  --circle-ink:#f2f2f4;--circle-subtle:#aaabb0;--circle-border:#35363a;
+  --circle-surface:#1a1b1e;--circle-soft:#28292c;
+}
+html[data-theme=dark] .threadCard,
+html[data-theme=dark] .naturalPost,
+html[data-theme=dark] .feedComposer,
+html[data-theme=dark] .adminPage .adminListItem,
+html[data-theme=dark] .notificationList .notification,
+html[data-theme=dark] .searchPage .searchPerson{background:var(--circle-surface);border-color:var(--circle-border);color:#f1f1f3;}
+html[data-theme=dark] .threadCard:hover{background:#1f2023;border-color:#46464a;}
+html[data-theme=dark] .feedEmptyReset{background:#eee;color:#111;border-color:#eee;}
+html[data-theme=dark] .feedEmptyIcon{color:#d5d5d8;}
+html[data-theme=dark] .threadExcerpt{color:#cbcbce;}
+html[data-theme=dark] .feedFilterStrip{background:transparent;border-color:#35363a;}
+html[data-theme=dark] .feedFilterStrip .filterDetails summary{background:#222326;color:#eee;border-color:#434349;}
+html[data-theme=dark] .feedFilterStrip .filterBar select,
+html[data-theme=dark] .feedFilterStrip .filterBar input{background:#252629;color:#f5f5f5;border-color:#4a4b4f;}
+html[data-theme=dark] .mainNav button.navActive,
+html[data-theme=dark] .mainNav button:hover{color:#fafafa;background:#2b2c30;border-color:#444;}
+html[data-theme=dark] .headerSearch:focus-within{background:#252629;border-color:#707176;}
+html[data-theme=dark] .threadBody .tags span,
+html[data-theme=dark] .naturalPost .tags span{background:#292a2d;color:#c6c6c9;border-color:#424347;}
+html[data-theme=dark] .notificationList .notification.unread{background:#242528;border-color:#515155;}
+html[data-theme=dark] .settingsChoices button.settingsSelected{background:#28292d;border-color:#777;}
+html[data-theme=dark] .pager button{background:#252629;color:#efeff0;border-color:#424348;}
+html[data-theme=dark] .naturalReplyComposer{background:#1d1e20;border-color:#38393c;}
+@media(max-width:720px){
+  .mainNav{gap:2px;}
+  .mainNav button{width:auto;min-width:41px;height:47px;border-radius:13px;}
+  .feedPageTitle{padding:18px 16px 12px;font-size:18px;}
+  .threadGrid{padding:10px 10px 16px;gap:10px;}
+  .threadCard{padding:15px 14px;grid-template-columns:38px minmax(0,1fr);gap:10px;border-radius:16px;}
+  .feedComposer{margin:10px;width:calc(100% - 20px);padding:12px 13px;border-radius:16px;}
+  .feedFilterStrip{padding:9px 10px 13px;}
+  .naturalPost{margin-top:12px;padding:19px 17px;border-radius:17px;}
+  .naturalComments{padding:20px 2px 38px;}
+  .naturalReplyComposer{padding:10px;gap:8px;}
+  .searchPage .searchPerson{padding:12px;}
+  .adminPage .adminListItem{padding:12px;}
+}
+@media(max-width:390px){
+  .threadActions{gap:2px;}
+  .threadActions button{min-width:34px;padding:6px;}
+  .threadCard{padding:13px 11px;}
+  .mainNav button{min-width:38px;}
+}
+@media(prefers-reduced-motion:reduce){button,.threadCard{transition:none!important;}}
+
+.editorDraftNotice{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 12px;
+  color:#8a8b8e;font-size:11px;line-height:1.5;}
+.editorDraftNotice:empty{display:none;}
+.editorDraftNotice .circleIcon{color:#818388;}
+.editorDraftNotice button{border:0;background:transparent;color:#56575b;border-radius:8px;
+  font-weight:650;font-size:11px;padding:5px 7px;margin-left:auto;}
+.editorDraftNotice button:hover{background:#f3f3f3;}
+html[data-theme=dark] .editorDraftNotice{color:#bfc0c4;}
+html[data-theme=dark] .editorDraftNotice button{color:#efeff0;}
+
+/* Notifications: one quiet surface per notification, not a button inside
+   another bordered card. All content has its own line and breathing space. */
+main.notificationsPage{
+  max-width:730px;
+  width:min(730px,calc(100% - 42px));
+  margin:0 auto 75px;
+  padding:37px 0 54px;
+}
+.notificationsHeader{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:20px 24px;
+  margin:0 0 19px;
+  padding:0 0 22px;
+  border-bottom:1px solid var(--circle-border);
+}
+.notificationsHeading{min-width:0;}
+.notificationsHeading h1{
+  margin:0 0 6px;
+  font-size:clamp(23px,3vw,28px);
+  letter-spacing:-.045em;
+  line-height:1.22;
+  font-weight:760;
+  color:var(--circle-ink);
+}
+.notificationsHeading p{margin:0;color:var(--circle-subtle);font-size:12px;line-height:1.6;}
+.notificationsToolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.notificationsToolbar button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:38px;margin:0;padding:8px 14px;
+  border:1px solid var(--circle-border);
+  border-radius:999px;
+  background:var(--circle-surface);
+  color:#626368;
+  font-size:12px;font-weight:670;line-height:1.2;
+  white-space:nowrap;
+}
+.notificationsToolbar button:hover:not(:disabled){background:var(--circle-soft);color:var(--circle-ink);}
+.notificationsToolbar .notificationsUnreadToggle.isSelected{
+  background:#222225;border-color:#222225;color:#fff;
+}
+.notificationsToolbar .notificationsUnreadToggle.isSelected:hover{background:#333338;color:#fff;}
+.notificationsToolbar .notificationsMarkAll:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+.notificationsPage .notificationList{display:grid;gap:10px;margin:0;}
+.notificationsPage .notificationItem{
+  display:grid;
+  grid-template-columns:8px minmax(0,1fr) 40px;
+  align-items:center;
+  gap:14px;
+  padding:17px 15px 17px 19px;
+  border:1px solid var(--circle-border);
+  border-radius:17px;
+  background:var(--circle-surface);
+  min-width:0;
+  transition:background-color .14s ease,border-color .14s ease;
+}
+.notificationsPage .notificationItem:hover{border-color:#dadadd;}
+.notificationsPage .notificationItem.unread{background:#fbfbfc;border-color:#dedee0;}
+.notificationsPage .notificationDot{
+  width:7px;height:7px;border-radius:50%;
+  background:transparent;
+  align-self:start;margin-top:8px;display:block;
+}
+.notificationsPage .notificationItem.unread .notificationDot{background:#242428;}
+.notificationsPage .notificationMain{
+  all:unset;
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:5px;min-width:0;width:100%;
+  color:var(--circle-ink);cursor:pointer;box-sizing:border-box;
+}
+.notificationsPage .notificationMain:hover{background:transparent;}
+.notificationsPage .notificationMain:focus-visible{
+  border-radius:8px;outline:2px solid #5b5b61;outline-offset:4px;
+}
+.notificationsPage .notificationTitle{
+  display:block;font-size:14px;line-height:1.4;
+  font-weight:720;color:var(--circle-ink);
+  min-width:0;max-width:100%;overflow-wrap:anywhere;
+}
+.notificationsPage .notificationDescription{
+  display:block;font-size:12.5px;line-height:1.55;
+  color:#737478;min-width:0;max-width:100%;overflow-wrap:anywhere;
+}
+.notificationsPage .notificationTime{
+  display:block;font-size:11px;line-height:1.4;
+  color:#aaaab0;margin-top:3px;
+}
+.notificationsPage .notificationDeleteIcon{
+  border:0;box-shadow:none;background:transparent;
+  border-radius:12px;width:39px;height:39px;
+  display:grid;place-items:center;justify-self:end;
+  color:#a3a4a8;padding:0;
+}
+.notificationsPage .notificationDeleteIcon:hover:not(:disabled){
+  background:#fff0f1;color:#b63b4c;
+}
+.notificationsPage .notificationDeleteIcon:disabled{opacity:.35;cursor:wait;}
+.notificationsLoading{margin:28px 0;color:var(--circle-subtle);font-size:13px;}
+.notificationsEmpty{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:240px;text-align:center;gap:11px;padding:40px 16px;
+}
+.notificationsEmptyIcon{width:50px;height:50px;border-radius:17px;background:var(--circle-soft);
+  display:grid;place-items:center;color:var(--circle-subtle);}
+.notificationsEmpty h2{font-size:17px;font-weight:710;margin:2px 0 0;}
+.notificationsEmpty p{font-size:13px;line-height:1.6;color:var(--circle-subtle);margin:0;max-width:320px;}
+.notificationsEmpty button{font-size:12px;font-weight:700;margin-top:7px;min-height:38px;
+  padding:8px 16px;border-radius:999px;background:var(--circle-surface);border:1px solid var(--circle-border);}
+html[data-theme=dark] .notificationsPage .notificationItem{background:var(--circle-surface);border-color:var(--circle-border);}
+html[data-theme=dark] .notificationsPage .notificationItem.unread{background:#232427;border-color:#44454a;}
+html[data-theme=dark] .notificationsPage .notificationItem:hover{border-color:#535459;}
+html[data-theme=dark] .notificationsPage .notificationTitle,
+html[data-theme=dark] .notificationsPage .notificationMain{color:#f1f1f2;}
+html[data-theme=dark] .notificationsPage .notificationDescription{color:#bbbdc2;}
+html[data-theme=dark] .notificationsPage .notificationTime{color:#888b91;}
+html[data-theme=dark] .notificationsPage .notificationItem.unread .notificationDot{background:#e8e8ea;}
+html[data-theme=dark] .notificationsToolbar button{background:#202124;color:#ebebee;border-color:#44454a;}
+html[data-theme=dark] .notificationsToolbar .notificationsUnreadToggle.isSelected{background:#eeeeef;color:#111;border-color:#eeeeef;}
+html[data-theme=dark] .notificationsPage .notificationDeleteIcon{color:#92949a;background:transparent;}
+html[data-theme=dark] .notificationsPage .notificationDeleteIcon:hover:not(:disabled){color:#f4b3b9;background:#4b292d;}
+@media(max-width:650px){
+  main.notificationsPage{width:calc(100% - 32px);padding:24px 0 70px;}
+  .notificationsHeader{align-items:flex-start;gap:14px;padding-bottom:17px;margin-bottom:13px;}
+  .notificationsToolbar{width:100%;gap:7px;}
+  .notificationsToolbar button{min-height:39px;padding:9px 12px;}
+  .notificationsPage .notificationItem{grid-template-columns:7px minmax(0,1fr) 35px;gap:10px;
+    border-radius:15px;padding:15px 12px 15px 14px;}
+  .notificationsPage .notificationTitle{font-size:13.5px;}
+  .notificationsPage .notificationDescription{font-size:12px;}
+  .notificationsPage .notificationDeleteIcon{width:35px;height:35px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .notificationsPage .notificationItem{transition:none;}
+}
+
+/* Accessible, compact type-ahead topic finders throughout the product. */
+.topicSearchField{
+  display:flex;align-items:center;gap:9px;min-height:43px;padding:0 12px;
+  width:100%;min-width:0;border-radius:12px;background:#f5f5f6;border:0;
+  color:#8a8a8e;box-sizing:border-box;
+}
+.topicSearchField:focus-within{background:#efeff1;box-shadow:0 0 0 2px #dedee2;}
+.topicSearchField input[type="search"]{
+  box-sizing:border-box;flex:1;width:100%;min-width:0;min-height:41px;padding:7px 0;
+  border:0;outline:0;box-shadow:none;background:transparent;color:#222;
+  font-size:13px;
+}
+.topicSearchField input:focus-visible{outline:none;box-shadow:none;}
+.topicSearchField input::placeholder{color:#96979b;}
+.topicSearchField button{display:grid;place-items:center;flex:none;
+  min-width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#777;}
+.topicSearchField button:hover{background:#e3e3e6;}
+.editorRefined .editorCategories .topicSearchField{margin:12px 0 6px;}
+.topicSearchMeta{display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:7px;margin:2px 0 12px;font-size:11px;color:#a0a0a3;}
+.topicSearchMeta strong{font-size:11px;color:#68686c;font-weight:690;}
+.topicSearchEmpty{color:#999;font-size:12px;padding:14px 2px 8px;text-align:center;}
+.categoriesPage .categorySearchField{max-width:520px;margin:20px 0 24px;}
+.categoriesPage .categoryGrid{gap:12px;}
+.categoriesPage .categoryCard{border:0;border-radius:16px;background:#f7f7f8;
+  text-align:left;transition:background .16s;}
+.categoriesPage .categoryCard:hover{background:#efeff1;}
+.topicsEmpty{max-width:520px;margin:20px 0;display:flex;gap:9px;align-items:center;
+  flex-wrap:wrap;color:#888;font-size:13px;}
+.topicsEmpty button{border:0;border-radius:999px;padding:9px 14px;background:#f1f1f3;font-size:12px;font-weight:680;}
+.adminTopicSearch{margin:7px 0 16px;max-width:460px;}
+.adminPostTopicSearch{margin:12px 0;min-height:39px;}
+/* Filled controls do not need a visible outline as well. */
+.feedTopicScroller button,.profileTopicPills button,
+.feedComposer,.categoriesPage .categoryCard,
+.editorRefined .postComposerForm .editorTopic,
+.notificationsToolbar .notificationsUnreadToggle.isSelected,
+.adminPage .adminRowTools .roleQuickButton:not(.roleRevoke),
+.feedEmptyReset,.interestSelection button,.settingsChoices button.settingsSelected,
+.authRefined .authForm button.authSubmit{
+  border:0;
+}
+.feedTopicScroller button.topicActive{background:#222;color:#fff;border:0;}
+.editorRefined .postComposerForm .editorTopic:has(input:checked){border:0;}
+.adminPage .adminIconAction{
+  width:37px;min-width:37px;height:37px;min-height:37px;
+  padding:0!important;display:inline-grid;place-items:center;
+  border:0;border-radius:11px;background:transparent;color:#777;
+}
+.adminPage .adminIconAction:hover{background:#ededee;color:#222;}
+.adminPage .adminIconAction.dangerText{color:#a1a1a5;}
+.adminPage .adminIconAction.dangerText:hover{background:#fff0f0;color:#c43b4b;}
+.adminPage .adminRowTools .roleQuickButton:not(.roleRevoke){background:#252528;border:0;color:#fff;}
+.adminPage .adminRowTools .roleQuickButton.roleRevoke{background:#f3f3f4;border:0;color:#666;}
+.adminPage .adminRowTools .roleQuickButton.roleRevoke:hover{background:#e9e9eb;color:#222;}
+.adminPage .adminTabs button.active{border-color:transparent;}
+/* Right-click / keyboard / touch contextual notification menu. */
+.notificationsPage .notificationItem{grid-template-columns:8px minmax(0,1fr);cursor:context-menu;}
+.notificationsPage .notificationItem:focus-visible{outline:2px solid #777;outline-offset:2px;}
+.notificationsPage .notificationItem .notificationRightHint{display:none;}
+.notificationsPage .notificationItem.unread{background:#f6f6f7;border-color:transparent;}
+.notificationContextMenu{position:fixed;z-index:210;width:184px;max-width:calc(100vw - 20px);
+  padding:6px;background:#fff;border:1px solid #e6e6e7;
+  border-radius:13px;box-shadow:0 12px 38px rgba(0,0,0,.13);}
+.notificationContextMenu button{
+  display:flex;width:100%;align-items:center;gap:9px;text-align:left;
+  min-height:40px;padding:9px 10px;border:0;border-radius:8px;
+  background:transparent;color:#9d3541;font-size:12px;font-weight:650;
+}
+.notificationContextMenu button:hover{background:#fff1f2;}
+html[data-theme="dark"] .topicSearchField{background:#28292d;color:#b5b5b8;}
+html[data-theme="dark"] .topicSearchField:focus-within{background:#303136;box-shadow:0 0 0 2px #505157;}
+html[data-theme="dark"] .topicSearchField input[type=search]{color:#f2f2f3;}
+html[data-theme="dark"] .topicSearchField button{color:#ddd;}
+html[data-theme="dark"] .categoriesPage .categoryCard{background:#26272b;border:0;}
+html[data-theme="dark"] .categoriesPage .categoryCard:hover{background:#303137;}
+html[data-theme="dark"] .feedTopicScroller button.topicActive{background:#efeff0;color:#1c1c1e;}
+html[data-theme="dark"] .notificationsPage .notificationItem.unread{background:#242529;border-color:transparent;}
+html[data-theme="dark"] .notificationContextMenu{background:#252629;border-color:#424348;}
+html[data-theme="dark"] .notificationContextMenu button{color:#f0aeb6;}
+html[data-theme="dark"] .notificationContextMenu button:hover{background:#493039;}
+html[data-theme="dark"] .adminPage .adminIconAction:hover{background:#313237;color:#f3f3f4;}
+html[data-theme="dark"] .adminPage .adminRowTools .roleQuickButton.roleRevoke{background:#313238;color:#efeff0;border:0;}
+@media(max-width:650px){
+ .notificationsPage .notificationItem{grid-template-columns:7px minmax(0,1fr);}
+ .categoriesPage .categorySearchField{max-width:100%;}
+ .adminPage .adminIconAction{width:36px;min-width:36px;height:36px;}
+}
+
+/* Post detail: status belongs in the author row, not under the heading.
+   All compact actions have native title tooltips + aria-labels in JSX. */
+.naturalPostAuthor > .naturalPostTopStatus {
+  display:flex;
+  flex:0 1 auto;
+  align-self:flex-start;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+  max-width:55%;
+}
+.naturalPostTopStatus .badges{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.naturalPostTopStatus .solutionTag{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+  background:#eaf6ec;
+  border:0;
+  border-radius:999px;
+  padding:6px 10px;
+  margin:0;
+  color:#287344;
+  font-weight:680;
+  font-size:11px;
+  line-height:1.2;
+}
+.naturalPost .reactionTotals{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  color:#85858a;
+}
+.naturalPostReactions .reactionTotals>span{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  color:#85858a;
+  white-space:nowrap;
+}
+.naturalPostReactions .reactionTotals>span .circleIcon{color:#939397;}
+.naturalPostReactions{gap:8px;}
+.naturalPostReactions .reactionButtons{gap:4px;}
+.naturalPostReactions button,.naturalPostReactions .naturalPostIconButton,
+.naturalPostManagement button,.naturalCommentTree .commentActions button,
+.naturalPost .reportIconAction{
+  box-sizing:border-box;
+  width:38px;
+  min-width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  color:#7d7d81;
+  cursor:pointer;
+}
+.naturalPostManagement{gap:5px;border-top:1px solid var(--circle-border);padding:12px 0 0;}
+.naturalPostManagement button:hover,
+.naturalCommentTree .commentActions button:hover,
+.naturalPost .reportIconAction:hover{
+  background:#f1f1f2;color:#242427;
+}
+.naturalPostManagement button[aria-pressed="true"],
+.naturalCommentTree .commentActions button[aria-pressed="true"]{background:#f1f1f2;color:#212126;}
+.naturalPostManagement .dangerText{margin-left:auto;color:#999;}
+.naturalPostManagement .dangerText:hover,
+.naturalCommentTree .commentActions button.dangerText:hover{background:#fff0f0;color:#bf3e46;}
+.naturalCommentTree .commentActions{gap:3px;align-items:center;}
+.naturalCommentTree .commentActions button{padding:0;border:0;border-radius:11px;}
+.naturalPost .reportControl{display:inline-flex;align-items:center;max-width:100%;}
+.naturalPost .reportIconAction{width:36px;min-width:36px;height:36px;}
+.naturalPost .reportForm{max-width:100%;}
+html[data-theme="dark"] .naturalPostTopStatus .solutionTag{color:#a1e2b0;background:#214330;}
+html[data-theme="dark"] .naturalPostManagement button:hover,
+html[data-theme="dark"] .naturalPostReactions button:hover,
+html[data-theme="dark"] .naturalCommentTree .commentActions button:hover,
+html[data-theme="dark"] .naturalPost .reportIconAction:hover{background:#303136;color:#f2f2f3;}
+html[data-theme="dark"] .naturalPostManagement button[aria-pressed="true"]{background:#36383b;color:#f2f2f3;}
+@media(max-width:560px){
+  .naturalPostAuthor > .naturalPostTopStatus{max-width:47%;gap:4px;}
+  .naturalPostTopStatus .solutionTag{padding:5px 8px;font-size:10px;}
+  .naturalPostManagement{gap:2px;justify-content:flex-start;}
+  .naturalPostManagement button,
+  .naturalCommentTree .commentActions button{min-width:36px;width:36px;height:36px;min-height:36px;}
+  .naturalPostManagement .dangerText{margin-left:auto;}
+  .naturalPostReactions{flex-wrap:wrap;gap:6px;}
+}
+
+/* Tabler Icons — one pack, one 24px grid, consistent 1.8 stroke.
+   Historic Google Material SVG rules remain in earlier stylesheets only as
+   dead styling; never force fill on outline Tabler icons. */
+.circleIcon.tablerSvgIcon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:var(--icon-size,auto);
+  height:var(--icon-size,auto);
+  line-height:1;
+  flex:none;
+  color:inherit;
+  font:inherit;
+  vertical-align:middle;
+  pointer-events:none;
+  user-select:none;
+  font-variation-settings:normal;
+}
+.circleIcon.tablerSvgIcon>svg {
+  display:block;
+  flex:none;
+  width:100%;
+  height:100%;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+  pointer-events:none;
+}
+.mainNav .tablerSvgIcon, .threadActions .tablerSvgIcon,
+.postContextMenu .tablerSvgIcon {pointer-events:none;}
+.threadActions .activeSave .tablerSvgIcon>svg {fill:currentColor;}
+.threadActions button.activeVote .tablerSvgIcon,
+.mainNav button.navActive .tablerSvgIcon{font-variation-settings:normal;}
+.threadActions button,.naturalPostReactions button,.naturalPostManagement button,
+.naturalCommentTree .commentActions button{
+  align-items:center;
+  justify-content:center;
+  column-gap:5px;
+}
+.threadActions .circleIcon.tablerSvgIcon,
+.naturalPostReactions .circleIcon.tablerSvgIcon{color:inherit;}
+.threadActions button.activeVote,.threadActions button.activeSave{
+  color:#171719;
+  background:#f2f2f3;
+}
+.threadActions button.activeVote .circleIcon.tablerSvgIcon>svg {
+  fill:currentColor;
+}
+/* Tabler's outlined shapes remain clear when the button isn't selected. */
+.threadActions button:not(.activeVote):not(.activeSave) .circleIcon.tablerSvgIcon>svg,
+.naturalPostManagement .circleIcon.tablerSvgIcon>svg,
+.naturalCommentTree .circleIcon.tablerSvgIcon>svg {
+  fill:none;
+}
+.moderatorControlTrigger{display:inline-grid;place-items:center;min-width:30px;min-height:30px;}
+.moderatorControlTrigger .circleIcon.tablerSvgIcon{width:20px;height:20px;}
+.photoLightbox button[aria-label="Close photo"]{display:grid;place-items:center;}
+.solutionTag .circleIcon.tablerSvgIcon,
+.modReviewed .circleIcon.tablerSvgIcon{color:inherit;margin-right:3px;}
+.roleChangeMessage{display:inline-flex;align-items:center;gap:7px;}
+.roleChangeBanner button .tablerSvgIcon{width:18px;height:18px;}
+html[data-theme=dark] .threadActions button.activeVote,
+html[data-theme=dark] .threadActions button.activeSave{
+  color:#f4f4f5;
+  background:#303136;
+}
+@media(max-width:650px){
+  .threadActions .circleIcon.tablerSvgIcon{width:19px!important;height:19px!important;}
+  .mainNav .circleIcon.tablerSvgIcon{width:23px!important;height:23px!important;}
+}
+
+/* A single Tabler heart/thumb per reaction, with its count alongside. */
+.naturalPostReactions .reactionPanel .reactionButtons .voteReaction{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:44px;
+  padding:0 9px;
+  gap:5px;
+  height:38px;
+  border-radius:11px;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .voteReaction[aria-pressed="true"]{
+  color:#1b1b1e;
+  background:#f0f0f1;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .reactionCount{
+  font-size:12px;
+  line-height:1;
+  font-weight:630;
+  color:inherit;
+}
+html[data-theme=dark] .naturalPostReactions .reactionPanel .reactionButtons .voteReaction[aria-pressed="true"]{
+  color:#f5f5f5;
+  background:#323339;
+}

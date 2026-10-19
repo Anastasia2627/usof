@@ -1,10 +1,14 @@
 import { mockApi } from './mockApi.js';
+import { store } from './store.js';
 
-const ORIGIN = (import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000').replace(/\/$/, '');
+// In local Vite development, the browser calls its own origin. Vite proxies
+// /api and /uploads to Node on the APP_PORT configured in the root .env. Production still uses the
+// configured API origin, so the app can be deployed separately.
+const ORIGIN = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_ORIGIN || window.location.origin).replace(/\/$/, '');
 const BASE = ORIGIN + '/api';
 
-// Deliberate separation: only web:demo uses the local mock.
-// Ordinary "web" must never silently simulate a working database.
 const demoMode = import.meta.env.DEV && import.meta.env.MODE === 'demo';
 
 export class ApiError extends Error {
@@ -22,14 +26,8 @@ export function assetUrl(path) {
   if (/^https?:\/\//i.test(path)) return path;
   return ORIGIN + (path.startsWith('/') ? '' : '/') + path;
 }
-
-export function isDemoMode() {
-  return demoMode;
-}
-
-export function isPreviewMode() {
-  return demoMode;
-}
+export function isDemoMode() { return demoMode; }
+export function isPreviewMode() { return demoMode; }
 
 export async function api(path, { method = 'GET', body, token, formData, signal } = {}) {
   if (demoMode) return mockApi(path, { method, body, token, formData, signal });
@@ -48,14 +46,44 @@ export async function api(path, { method = 'GET', body, token, formData, signal 
     });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
-    throw new ApiError('Cannot reach the Circle API. Start the backend and MySQL.', {
-      code: 'NETWORK_ERROR',
-    });
+    throw new ApiError(
+      'Cannot connect to Circle right now. Check that npm start is running, then retry.',
+      { code: 'NETWORK_ERROR' },
+    );
   }
 
   if (response.status === 204) return null;
-  const data = await response.json().catch(() => ({}));
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new ApiError('Circle API did not return JSON. Check APP_PORT in .env and restart both npm start and npm run web.', {
+        status: response.status, code: 'API_UNAVAILABLE',
+      });
+    }
+    throw new ApiError('Unexpected response from Circle API.', {
+      status: response.status, code: 'INVALID_API_RESPONSE',
+    });
+  }
   if (!response.ok) {
+    if (token && response.status === 403 && data?.error?.code === 'ACCOUNT_BANNED' &&
+        store.getState().auth?.token === token) {
+      store.dispatch({ type: 'AUTH_USER_SET', payload: {
+        ...store.getState().auth.user,
+        banned_at: data.error.details?.banned_at || new Date().toISOString(),
+        ban_reason: data.error.details?.ban_reason || '',
+      } });
+    }
+    // Invalid tokens (including sessions revoked on an older build) must not
+    // leave the feed showing the same 401 error below every single post.
+    // Only clear the exact session used by this request: old in-flight requests
+    // must never sign out a user who has already logged in again.
+    if (token && response.status === 401 && data?.error?.code === 'INVALID_TOKEN' &&
+        store.getState().auth?.token === token) {
+      store.dispatch({type:'AUTH_CLEAR'});
+      window.dispatchEvent(new Event('circle:session-expired'));
+    }
     throw new ApiError(data?.error?.message || 'Request failed with status ' + response.status, {
       status: response.status,
       code: data?.error?.code || 'REQUEST_FAILED',

@@ -39,8 +39,8 @@ export function validateFullName(value = '') {
 }
 
 export function validateRole(role) {
-  if (!['user', 'admin'].includes(role)) {
-    throw new AppError(422, 'INVALID_ROLE', 'Role must be user or admin');
+  if (!['user', 'moderator', 'admin'].includes(role)) {
+    throw new AppError(422, 'INVALID_ROLE', 'Role must be user, moderator or admin');
   }
   return role;
 }

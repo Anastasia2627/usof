@@ -1,0 +1,1895 @@
+/* Circle: Threads-inspired editorial design. No visual framework or animation. */
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+  color: #161616;
+  background: #fff;
+  color-scheme: light;
+  font-size: 15px;
+}
+body { background: #fff; color: #161616; }
+a { color: inherit; }
+button { color: #161616; }
+button, input, textarea, select { font-family: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #303030; outline-offset: 2px;
+}
+button:hover:not(:disabled) { background: #f7f7f7; }
+.primary, button.primary {
+  color: white;
+  background: #111;
+  border-color: #111;
+  border-radius: 999px;
+  font-weight: 650;
+}
+.primary:hover:not(:disabled), button.primary:hover:not(:disabled) { background: #333; }
+input, textarea, select {
+  color: #171717;
+  background: #fff;
+  border-color: #dedede;
+  border-radius: 10px;
+}
+input:focus, textarea:focus, select:focus { border-color: #333; }
+small, .muted, .postMeta, .eyebrow { color: #777; }
+h1, h2, h3 { letter-spacing: -.025em; }
+h1 { font-size: 24px; line-height: 1.25; }
+h2 { font-size: 18px; }
+.card {
+  border-color: #e9e9e9;
+  border-radius: 13px;
+  background: white;
+}
+.card + .card { margin-top: 12px; }
+button.dangerText { color: #c72727; }
+.siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid #ededed;
+  height: 71px;
+}
+.headerInner {
+  height: 70px;
+  max-width: 1320px;
+  padding: 0 28px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 22px;
+}
+.brand {
+  border: 0;
+  color: #111;
+  background: transparent;
+  padding: 5px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.065em;
+}
+.brand:hover { background: transparent; }
+.circleLogo { font-size: 35px; line-height: .8; font-weight: 600; }
+.headerSearch {
+  flex: 1 1 300px;
+  max-width: 430px;
+  margin: 0 auto;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid #e9e9e9;
+  border-radius: 999px;
+  background: #f8f8f8;
+  padding: 0 9px 0 16px;
+  height: 44px;
+  color: #777;
+}
+.headerSearch input {
+  height: 40px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  min-width: 30px;
+  padding: 0;
+  color: #171717;
+}
+.headerSearch input:focus { outline: 0; }
+.headerSearch .searchSubmit {
+  background: transparent;
+  border: 0;
+  color: #333;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 5px 9px;
+}
+.headerSearch .searchSubmit:hover { background: #efefef; }
+.mainNav {
+  position: fixed;
+  top: 110px;
+  left: max(18px, calc((100vw - 1210px) / 2));
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  align-items: stretch;
+  background: transparent;
+  border: 0;
+}
+.mainNav button {
+  width: 66px;
+  height: 60px;
+  padding: 10px;
+  border-radius: 12px;
+  color: #858585;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mainNav button:hover { color: #111; background: #f3f3f3; }
+.mainNav button.navActive { color: #111; }
+.mainNav button.navActive svg { stroke-width: 2.7; }
+.mainNav .navLabel { display: none; }
+.accountArea {
+  flex: none;
+  gap: 8px;
+  margin: 0 0 0 auto;
+}
+.accountArea button { border-radius: 999px; }
+.accountArea .signupButton { padding: 9px 18px; }
+.accountArea .loginButton { border: 0; font-weight: 600; }
+.profileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  padding: 5px;
+  border: 0;
+}
+.accountIdentity {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.3;
+}
+.accountIdentity small { color: #171717; font-size: 12px; font-weight: 700; }
+.accountRole { font-size: 11px; color: #888; }
+.headerLogout {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border-color: #ececec;
+  padding: 7px 11px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.avatar {
+  color: #222;
+  background: #ededed;
+  border-color: #e5e5e5;
+  font-weight: 600;
+  overflow: hidden;
+}
+.avatar-sm { width: 32px; height: 32px; }
+.avatar-md { width: 42px; height: 42px; }
+.avatar-xl { width: 78px; height: 78px; }
+
+main {
+  max-width: 670px;
+  width: min(670px, calc(100% - 40px));
+  margin: 0 auto 64px;
+  padding: 0 0 35px;
+  min-height: calc(100vh - 155px);
+}
+main.narrow, main.authShell, main.authStandalone { max-width: 520px; padding-top: 32px; }
+main.adminPage { max-width: 1120px; width: min(1120px, calc(100% - 160px)); padding-top: 30px; }
+main.searchPage, main.postPage { padding-top: 20px; }
+main.homePage {
+  border-left: 1px solid #efefef;
+  border-right: 1px solid #efefef;
+  min-height: calc(100vh - 71px);
+  padding: 0;
+}
+.feedPageTitle {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 750;
+  height: 50px;
+  line-height: 50px;
+  margin: 0;
+  border-bottom: 1px solid #f1f1f1;
+  letter-spacing: 0;
+}
+.feedTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #ececec;
+}
+.feedTabs button {
+  font-weight: 600;
+  font-size: 14px;
+  color: #8c8c8c;
+  padding: 17px 10px 15px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+}
+.feedTabs button.selectedTab { color: #171717; }
+.feedTabs button.selectedTab::after {
+  content: "";
+  height: 2px;
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  background: #161616;
+}
+.feedComposer {
+  border: 0;
+  border-bottom: 1px solid #eee;
+  border-radius: 0;
+  width: 100%;
+  padding: 19px 22px;
+  background: #fff;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  text-align: left;
+  color: #999;
+}
+.feedComposer:hover { background: #fafafa; }
+.feedComposer > span:nth-child(2) { flex: 1; }
+.feedComposer strong,
+.guestComposer button {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 18px;
+  color: #fff;
+  background: #111;
+  font-size: 13px;
+  font-weight: 700;
+}
+.guestComposer { cursor: default; }
+.guestComposer:hover { background: #fff; }
+.guestComposer button:hover { background: #333; color: #fff; }
+.guestAvatar {
+  display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: #f3f3f3; border: 1px solid #ededed;
+  color: #aaa; flex: none;
+}
+.filterDetails {
+  border-bottom: 1px solid #eee;
+  background: white;
+}
+.filterDetails summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 22px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #686868;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.filterDetails summary::-webkit-details-marker { display: none; }
+.filterDetails summary::after { content: "⌄"; font-size: 16px; line-height: 1; color: #777; }
+.filterDetails[open] summary::after { transform: rotate(180deg); }
+.filterDetails summary:hover { background: #fafafa; }
+.filterDetails .filterBar {
+  margin: 0;
+  padding: 10px 21px 18px;
+  border: 0;
+  border-radius: 0;
+  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  font-size: 12px;
+}
+.filterDetails .filterBar label { font-weight: 600; }
+.filterDetails .filterBar select,
+.filterDetails .filterBar input { margin-top: 4px; font-weight: 400; font-size: 13px; }
+.filterDetails .filterBar button { align-self: end; min-height: 38px; }
+.filterDetails .filterBar .applyFilters { background: #111; color: #fff; }
+.feedShell, .threadGrid { display: block; }
+.threadCard {
+  display: grid;
+  grid-template-columns: 43px minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 21px 22px 18px;
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+.threadAvatarColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.avatarButton { padding: 0; background: none; border: 0; border-radius: 50%; }
+.avatarButton:hover { background: none; }
+.threadVerticalLine { width: 2px; flex: 1; min-height: 22px; background: #f1f1f1; border-radius: 2px; }
+.threadBody { min-width: 0; }
+.threadBody .postMeta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  line-height: 1.3;
+  margin: 2px 0 8px;
+  color: #9a9a9a;
+  font-size: 13px;
+}
+.threadBody .postMeta .authorLink {
+  font-weight: 750;
+  color: #181818;
+  font-size: 14px;
+}
+.threadBody .postMeta time { margin-left: auto; white-space: nowrap; }
+.threadBody h2 { margin: 0 0 7px; line-height: 1.35; }
+.threadBody .postTitleLink {
+  border: 0; background: transparent; text-align: left;
+  padding: 0; color: #151515; font-size: 16px;
+  font-weight: 650; line-height: 1.4; letter-spacing: -.01em;
+}
+.threadBody .postTitleLink:hover,
+.threadBody .authorLink:hover { text-decoration: underline; background: transparent; }
+.threadExcerpt { color: #252525; margin: 0 0 12px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+.threadBody .tags { gap: 6px; margin: 8px 0; }
+.threadBody .tags span { color: #888; background: #f7f7f7; border: 1px solid #ededed; border-radius: 999px; padding: 3px 9px; font-size: 11px; }
+.threadActions { display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin: 10px 0 0 -5px; }
+.threadActions button {
+  border: 0;
+  background: transparent;
+  padding: 4px 7px;
+  border-radius: 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #555;
+  font-size: 12px;
+}
+.threadActions button:hover { background: #f7f7f7; color: #111; }
+.threadActions button:disabled { opacity: .4; }
+.threadActions button.activeVote { color: #111; font-weight: 700; }
+.threadActions button.activeVote svg { stroke-width: 2.6; }
+.feedMessage { padding: 35px 22px; text-align: center; color: #777; }
+.feedShell .pager { padding: 18px 15px; margin: 0; }
+.inlineError {
+  border-radius: 10px;
+  border: 1px solid #f1d2d2;
+  background: #fff6f6;
+  color: #8c2323;
+  font-size: 13px;
+  margin: 12px 20px;
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.inlineError button { border-color: #e4b9b9; background: white; color: #8c2323; }
+.threadBody .inlineError { margin: 8px 0; }
+.categoryGrid { grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); }
+.postPage .questionCard { margin-top: 10px; }
+.postPage .questionHeading h1 { font-size: 24px; }
+.postPage .commentsSection { border-top: 1px solid #ededed; padding-top: 18px; }
+.postPage .commentCard { border-color: #ededed; }
+.searchPage h1 { margin: 12px 0; }
+footer { margin-top: 0; border-top: 1px solid #f2f2f2; font-size: 12px; color: #a0a0a0; }
+@media (min-width: 1300px) {
+  .mainNav { left: calc((100vw - 1310px) / 2 + 70px); }
+}
+@media (max-width: 1020px) {
+  main.adminPage { width: min(850px, calc(100% - 100px)); }
+  .mainNav { left: 6px; }
+}
+@media (max-width: 720px) {
+  .siteHeader { height: 63px; }
+  .headerInner { height: 62px; padding: 0 11px; gap: 9px; }
+  .brand { font-size: 19px; gap: 2px; }
+  .circleLogo { font-size: 25px; }
+  .headerSearch { order: initial; height: 39px; flex: 1 1 70px; width: 100px; margin: 0; padding-left: 10px; gap: 5px; }
+  .headerSearch input { min-width: 25px; font-size: 13px; height: 37px; }
+  .headerSearch svg { width: 15px; height: 15px; flex: none; }
+  .headerSearch .searchSubmit { display: none; }
+  .accountArea { gap: 4px; margin-left: 0; }
+  .accountArea .loginButton { padding: 6px; font-size: 12px; }
+  .accountArea .signupButton { padding: 8px 10px; font-size: 12px; }
+  .accountIdentity { display: flex; }
+  .accountIdentity small { max-width: 65px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .accountRole { display: block; }
+  .headerLogout { display: flex; border: 0; padding: 4px 3px; }
+  .headerLogout span { display: none; }
+  .mainNav {
+    position: fixed;
+    z-index: 30;
+    top: auto; left: 0; bottom: 0;
+    width: 100%; height: 59px;
+    padding: 4px 10px max(4px, env(safe-area-inset-bottom));
+    border-top: 1px solid #ededed;
+    background: #fff;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.02);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    gap: 2px;
+  }
+  .mainNav button { width: auto; min-width: 46px; flex: 1; max-width: 85px; height: 50px; padding: 8px 5px; }
+  main { width: 100%; max-width: 670px; padding-left: 15px; padding-right: 15px; margin-bottom: 68px; }
+  main.homePage { width: 100%; max-width: 670px; padding: 0 0 30px; border: 0; }
+  main.adminPage { max-width: 100%; width: 100%; padding: 15px 15px 40px; }
+  .threadCard { padding: 16px 15px; }
+  .feedComposer { padding: 16px 15px; }
+  .filterDetails .filterBar { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 10px 14px 15px; }
+  .feedPageTitle { height: 47px; line-height: 47px; }
+  .feedTabs button { padding: 13px 10px; }
+  .threadBody .postMeta time { font-size: 12px; }
+  footer { padding-bottom: 76px; }
+}
+@media (max-width: 380px) {
+  .brand span:last-child { display: none; }
+  .brand .circleLogo { font-size: 32px; }
+  .accountIdentity small { max-width: 49px; }
+  .headerSearch { flex-basis: 40px; }
+  .threadCard { gap: 9px; grid-template-columns: 38px minmax(0,1fr); }
+  .avatar-md { width: 38px; height: 38px; }
+}
+
+/* Conversation details use the same uninterrupted editorial feed rhythm. */
+.postPage .questionCard,
+.postPage .commentCard,
+.postPage .commentComposer {
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  box-shadow: none;
+}
+.postPage .questionCard { padding: 19px 7px 22px; }
+.postPage .commentsSection { padding-top: 0; border-top: 0; margin-top: 18px; }
+.postPage .commentsSection h2 { margin: 0 0 10px; }
+.postPage .commentCard { padding: 16px 8px; }
+.postPage .commentBranch { border-left: 2px solid #f4f4f4; padding-left: 9px; }
+.postPage .commentBranch .commentBranch { border-left-color: #ececec; }
+.postPage .commentActions button,
+.postPage .reactionButtons button {
+  border: 0;
+  background: transparent;
+  color: #555;
+  font-size: 13px;
+  border-radius: 9px;
+}
+.postPage .commentActions button:hover,
+.postPage .reactionButtons button:hover { background: #f3f3f3; color: #111; }
+.postPage .commentComposer { padding: 18px 8px; }
+.postPage .commentComposer button.primary { border-radius: 999px; }
+.postPage .authorLine .authorLink { font-weight: 700; }
+.searchPage .searchSection h2 { padding-bottom: 9px; border-bottom: 1px solid #eee; }
+.searchPage .searchPerson { border: 0; border-bottom: 1px solid #eee; border-radius: 0; }
+.searchPage .searchPerson:hover { background: #fafafa; }
+.profileHero { border-color: #eee; }
+.profileHero h1 { font-size: 24px; }
+.editorPage form.card { border: 1px solid #eee; }
+@media (max-width:720px) {
+  .postPage .commentBranch { padding-left: 5px; margin-left: calc(min(var(--depth), 3) * 7px); }
+  .postPage .questionCard { padding-left: 0; padding-right: 0; }
+}
+
+
+/* Google Material Symbols Rounded: consistent soft, slightly heavier strokes. */
+.circleIcon {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+  font-variation-settings: 'FILL' 0, 'wght' 370, 'GRAD' 0, 'opsz' 24;
+  flex: none;
+  user-select: none;
+}
+.mainNav button.navActive .circleIcon,
+.threadActions button.activeVote .circleIcon {
+  font-variation-settings: 'FILL' 1, 'wght' 520, 'GRAD' 0, 'opsz' 24;
+}
+.headerSearch .circleIcon { flex: none; }
+.threadActions .circleIcon { font-variation-settings: 'FILL' 0, 'wght' 390, 'GRAD' 0, 'opsz' 24; }
+.threadActions .activeVote .circleIcon { font-variation-settings: 'FILL' 1, 'wght' 510, 'GRAD' 0, 'opsz' 24; }
+
+/* Unauthenticated home is intentionally a welcome screen, not a timeline.
+   Public read-only conversations are available only after choosing Explore. */
+main.welcomePage {
+  max-width: 990px;
+  width: min(990px, calc(100% - 56px));
+  margin: 0 auto 70px;
+  min-height: calc(100vh - 147px);
+  padding: 65px 30px 44px;
+}
+.welcomeHero {
+  max-width: 635px;
+  margin: 0 auto;
+  text-align: center;
+}
+.welcomeSymbol {
+  width: 65px;
+  height: 65px;
+  border: 1px solid #ece9ee;
+  border-radius: 23px;
+  background: #f7f5f9;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 28px;
+  color: #343038;
+}
+.welcomeEyebrow {
+  margin-bottom: 13px;
+  color: #8c7a91;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+}
+.welcomeHero h1 {
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1.06;
+  font-weight: 790;
+  letter-spacing: -.065em;
+  margin: 0 auto 21px;
+  max-width: 570px;
+}
+.welcomeLead {
+  font-size: 17px;
+  line-height: 1.65;
+  color: #777;
+  max-width: 480px;
+  margin: 0 auto 27px;
+}
+.welcomeButtons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.welcomeButtons button {
+  min-height: 49px;
+  font-size: 14px;
+  font-weight: 680;
+  border-radius: 999px;
+  padding: 11px 20px;
+}
+.welcomePrimary { display: inline-flex; align-items: center; gap: 10px; }
+.welcomeSecondary { background: #fff; border: 1px solid #ddd; color: #222; }
+.welcomeBrowse { margin-top: 21px; font-size: 13px; color: #888; }
+.welcomeBrowse button {
+  border: none;
+  background: transparent;
+  padding: 3px 4px;
+  color: #343034;
+  font-weight: 680;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.welcomeBrowse button:hover { background: transparent; text-decoration: underline; }
+.welcomeHighlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 84px;
+}
+.welcomeHighlights > div {
+  border: 1px solid #ededed;
+  border-radius: 18px;
+  padding: 22px 19px;
+  background: #fff;
+}
+.welcomeHighlights .circleIcon { color: #777; }
+.welcomeHighlights h2 { margin: 13px 0 5px; font-size: 15px; }
+.welcomeHighlights p { font-size: 13px; line-height: 1.6; color: #888; margin: 0; }
+@media (max-width: 720px) {
+  .mainNav button.navActive .circleIcon { font-size: 26px !important; }
+  main.welcomePage {
+    width: 100%;
+    padding: 64px 19px 54px;
+    min-height: calc(100vh - 180px);
+  }
+  .welcomeHero h1 { font-size: clamp(35px, 9vw, 48px); }
+  .welcomeLead { font-size: 15px; }
+  .welcomeHighlights { grid-template-columns: 1fr; margin-top: 48px; gap: 9px; }
+  .welcomeHighlights > div { padding: 15px 18px; }
+  .welcomeHighlights h2 { margin-top: 7px; }
+  .welcomeHighlights p { line-height: 1.5; }
+}
+
+/* UX polish: compact tools, calmer spacing, actions on demand. */
+.siteHeader { overflow: visible; }
+.headerInner { gap: 18px; }
+.headerSearch { max-width: 380px; border-color: #eeeeef; background: #fafafa; }
+.headerSearch:focus-within { border-color: #b9b9bb; background: white; }
+.headerSearch .searchSubmit {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  flex: none;
+}
+.accountArea { position: relative; gap: 3px; }
+.accountMenu { position: relative; }
+.accountMenu > summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  color: #686868;
+}
+.accountMenu > summary::-webkit-details-marker { display: none; }
+.accountMenu > summary:hover, .accountMenu[open] > summary {
+  color: #111;
+  background: #f3f3f4;
+}
+.accountMenu > summary:focus-visible {
+  outline: 2px solid #292929;
+  outline-offset: 2px;
+}
+.accountDropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 210px;
+  padding: 7px;
+  border: 1px solid #ececee;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 12px 40px rgba(20, 20, 20, .12);
+  z-index: 90;
+  text-align: left;
+}
+.accountDropdownTitle {
+  margin: 4px 8px 8px;
+  padding: 4px 3px 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.accountDropdownTitle small {
+  font-size: 11px;
+  text-transform: capitalize;
+  font-weight: 400;
+  color: #929292;
+}
+.accountDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 550;
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+.accountDropdown button:hover { background: #f5f5f5; }
+.accountDropdown .accountLogout { color: #7b3636; }
+.accountDropdown .accountLogout:hover { color: #a42121; background: #fff5f5; }
+.accountArea .profileButton { padding: 5px 4px; border-radius: 12px; }
+.accountArea .profileButton:hover { background: #f6f6f6; }
+.mainNav button, .threadActions button,
+.filterDetails summary, .accountMenu > summary, .accountDropdown button {
+  transition: background-color .13s ease, color .13s ease;
+}
+.mainNav button.navActive { background: #f8f8f8; }
+.feedTabs button.selectedTab { font-weight: 750; }
+.feedComposer { padding-top: 16px; padding-bottom: 16px; }
+.feedComposer strong { min-width: 67px; text-align: center; }
+.filterDetails summary {
+  justify-content: center;
+  gap: 7px;
+  font-weight: 640;
+  font-size: 13px;
+  padding: 12px 18px;
+}
+.filterDetails summary::after { content: none; }
+.filterDetails summary > .circleIcon:last-child {
+  color: #909090;
+  transition: transform .15s ease;
+}
+.filterDetails[open] summary > .circleIcon:last-child { transform: rotate(180deg); }
+.activeFilterCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 50%;
+  background: #151515;
+  color: white;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 750;
+}
+.filterDetails .filterBar {
+  padding-top: 8px;
+  padding-bottom: 19px;
+  row-gap: 13px;
+}
+.filterDetails .filterBar button.applyFilters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.filterDetails .filterBar button.resetFilters {
+  background: transparent;
+  color: #747474;
+  border-color: #ebebeb;
+}
+.filterDetails .filterBar button.resetFilters:hover {
+  color: #111;
+  background: #f7f7f7;
+}
+.threadCard:hover { background: #fefefe; }
+.threadActions { gap: 9px; }
+.threadActions button {
+  min-width: 37px;
+  height: 34px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+.threadActions button .circleIcon { line-height: 1; }
+@media (max-width: 720px) {
+  .headerInner { gap: 7px; }
+  .headerSearch { min-width: 50px; }
+  .headerSearch .searchSubmit { display: none; }
+  .accountArea .profileButton { gap: 4px; }
+  .accountMenu > summary { width: 32px; height: 35px; }
+  .accountDropdown { right: -4px; top: calc(100% + 10px); }
+  .filterDetails summary { padding: 11px 14px; }
+  .filterDetails .filterBar { row-gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mainNav button, .threadActions button, .filterDetails summary,
+  .accountMenu > summary, .accountDropdown button { transition: none; }
+}
+
+.postPage .reactionButtons .reactionIconButton {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  color: #454545;
+}
+.postPage .reactionButtons .reactionIconButton:hover { background: #f1f1f1; color: #141414; }
+.postPage .commentActions button, .postPage .questionCard .toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Editor: an open writing canvas, not a stack of bordered form cards. */
+main.editorPage {
+  max-width: 640px;
+  width: min(640px, calc(100% - 46px));
+  padding: 34px 0 72px;
+  margin: 0 auto 30px;
+  min-height: calc(100vh - 185px);
+}
+.editorTopbar {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.editorTopbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 740;
+  letter-spacing: -.03em;
+}
+.editorBack {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #666;
+  background: transparent;
+}
+.editorBack:hover { background: #f4f4f4; color: #171717; }
+.postComposerForm { display: block; padding: 0; background: #fff; }
+.editorIdentity {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 27px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 680;
+}
+.editorIdentity small {
+  margin-left: auto;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 400;
+}
+.editorInputGroup {
+  padding-left: 54px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ededed;
+}
+.postComposerForm .editorTitleInput,
+.postComposerForm .editorContentInput {
+  display: block;
+  width: 100%;
+  padding: 5px 0;
+  margin: 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  color: #181818;
+  background: transparent;
+  box-shadow: none;
+  line-height: 1.45;
+  outline: 0;
+}
+.postComposerForm .editorTitleInput {
+  font-size: 18px;
+  font-weight: 620;
+  letter-spacing: -.025em;
+  margin-top: 0;
+  margin-bottom: 9px;
+  height: 43px;
+}
+.postComposerForm .editorContentInput {
+  font-size: 15px;
+  min-height: 190px;
+  line-height: 1.7;
+  resize: vertical;
+}
+.postComposerForm .editorTitleInput::placeholder { color: #aaa; opacity: 1; }
+.postComposerForm .editorContentInput::placeholder { color: #a1a1a1; opacity: 1; }
+.postComposerForm .editorTitleInput:focus,
+.postComposerForm .editorContentInput:focus { outline: 0; border: 0; }
+.editorInputGroup:focus-within { border-bottom-color: #c9c9c9; }
+.postComposerForm .editorTitleInput:focus-visible,
+.postComposerForm .editorContentInput:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+.postComposerForm .editorCategories {
+  margin: 23px 0 24px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  border-radius: 0;
+}
+.editorCategories legend {
+  padding: 0;
+  margin: 0 0 14px;
+  font-weight: 670;
+  font-size: 14px;
+  color: #292929;
+}
+.editorCategories legend span {
+  margin-left: 9px;
+  color: #999;
+  font-weight: 400;
+  font-size: 12px;
+}
+.editorTopicList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.postComposerForm .editorTopic {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-height: 36px;
+  border: 0;
+  background: #f5f5f5;
+  border-radius: 999px;
+  color: #656565;
+  padding: 7px 15px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 560;
+  line-height: 1.25;
+  transition: background-color .12s ease, color .12s ease;
+}
+.postComposerForm .editorTopic:hover { background: #ebebeb; color: #111; }
+.postComposerForm .editorTopic:has(input:checked) {
+  background: #191919;
+  color: #fff;
+}
+.postComposerForm .editorTopic:has(input:checked):hover { background: #353535; }
+.postComposerForm .editorTopic:has(input:focus-visible) {
+  outline: 2px solid #444;
+  outline-offset: 3px;
+}
+.postComposerForm .editorTopic input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  opacity: 0;
+}
+.postComposerForm .editorTopic span { pointer-events: none; }
+.editorActions {
+  padding-top: 17px;
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.editorSelectionHint { color: #989898; font-size: 12px; }
+.postComposerForm button.editorPublish {
+  width: auto;
+  min-height: 42px;
+  padding: 10px 20px;
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+.postComposerForm .inlineError { margin: 17px 0; }
+
+/* Feed filters: lighter text-first controls without individual raised boxes. */
+.filterDetails .filterBar { column-gap: 17px; row-gap: 18px; padding: 10px 23px 24px; }
+.filterDetails .filterBar label {
+  color: #898989;
+  font-size: 12px;
+  font-weight: 530;
+  gap: 4px;
+}
+.filterDetails .filterBar select,
+.filterDetails .filterBar input[type="date"] {
+  display: block;
+  margin-top: 0;
+  min-height: 41px;
+  padding: 7px 2px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e6e6e6;
+  border-radius: 0;
+  box-shadow: none;
+  font-weight: 580;
+  color: #252525;
+  font-size: 13px;
+}
+.filterDetails .filterBar select:focus-visible,
+.filterDetails .filterBar input[type="date"]:focus-visible {
+  outline: 0;
+  border-bottom: 2px solid #171717;
+}
+.filterDetails .filterBar button.applyFilters {
+  border-radius: 999px;
+  min-height: 38px;
+}
+.filterDetails .filterBar button.resetFilters {
+  border: 0;
+  min-height: 38px;
+  justify-self: start;
+  border-radius: 999px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+@media (max-width:720px) {
+  main.editorPage { width: min(640px, calc(100% - 34px)); padding-top: 17px; }
+  .editorTopbar { gap: 9px; padding-bottom: 16px; }
+  .editorTopbar h1 { font-size: 19px; }
+  .editorIdentity { margin-top: 20px; }
+  .editorIdentity small { font-size: 11px; }
+  .editorInputGroup { padding-left: 0; }
+  .postComposerForm .editorContentInput { min-height: 200px; }
+  .editorCategories legend span { display: inline; }
+  .editorActions { gap: 10px; }
+  .filterDetails .filterBar { padding: 10px 17px 19px; column-gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .postComposerForm .editorTopic { transition: none; }
+}
+
+/* The actual feed filter: instantly switch topics; advanced choices stay offstage. */
+.feedFilterStrip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 17px;
+  border-bottom: 1px solid #efefef;
+  background: #fff;
+  position: relative;
+}
+.feedTopicScroller {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  overflow-x: auto;
+  min-width: 0;
+  flex: 1 1 auto;
+  scrollbar-width: none;
+}
+.feedTopicScroller::-webkit-scrollbar { display: none; }
+.feedTopicScroller button,
+.profileTopicPills button {
+  flex: none;
+  padding: 8px 13px;
+  line-height: 1.15;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 620;
+  color: #696969;
+  background: #f5f5f5;
+  white-space: nowrap;
+}
+.feedTopicScroller button:hover,
+.profileTopicPills button:hover { color: #121212; background: #e9e9e9; }
+.feedTopicScroller button.topicActive,
+.profileTopicPills button.profileTopicActive {
+  background: #191919;
+  color: #fff;
+}
+.feedTopicScroller button.topicActive:hover,
+.profileTopicPills button.profileTopicActive:hover { color: white; background: #333; }
+.feedFilterStrip .filterDetails { flex: none; position: static; border: 0; }
+.feedFilterStrip .filterDetails summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 12px;
+  min-height: 35px;
+  font-weight: 620;
+  color: #5b5b5b;
+}
+.feedFilterStrip .filterDetails[open] summary,
+.feedFilterStrip .filterDetails summary:hover { background: #f4f4f4; color: #171717; }
+.feedFilterStrip .filterBar {
+  position: absolute;
+  z-index: 14;
+  top: calc(100% + 9px);
+  right: 13px;
+  width: min(425px, calc(100% - 26px));
+  margin: 0;
+  display: block;
+  padding: 22px;
+  background: white;
+  border: 1px solid #ededed;
+  border-radius: 19px;
+  box-shadow: 0 15px 50px rgba(0,0,0,.11);
+}
+.filterPanelHeading {
+  font-weight: 750;
+  color: #252525;
+  font-size: 14px;
+  padding-bottom: 12px;
+}
+.filterPanelHeading small { font-weight: 400; font-size: 11px; margin-left: 5px; }
+.feedFilterStrip .filterPanelGrid,
+.feedFilterStrip .filterPanelDates { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px 15px; }
+.feedFilterStrip .filterBar label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #868686;
+  display: grid;
+  gap: 4px;
+}
+.feedFilterStrip .filterBar select,
+.feedFilterStrip .filterBar input[type="date"] {
+  width: 100%;
+  min-height: 38px;
+  display: block;
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  padding: 5px 0;
+  margin: 0;
+  color: #242424;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 580;
+}
+.feedFilterStrip .filterBar select:focus-visible,
+.feedFilterStrip .filterBar input[type="date"]:focus-visible {
+  outline: 0;
+  border-bottom: 2px solid #222;
+}
+.filterDateHeading { margin-top: 15px; padding: 13px 0 9px; border-top: 1px solid #f0f0f0; }
+.feedFilterStrip .filterPanelActions {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 14px;
+  margin-top: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.feedFilterStrip .filterPanelActions button {
+  border-radius: 999px;
+  padding: 9px 17px;
+  min-height: 37px;
+  font-size: 12px;
+}
+.feedFilterStrip .filterPanelActions .resetFilters {
+  background: transparent;
+  color: #777;
+  border: none;
+}
+.feedFilterStrip .filterPanelActions .applyFilters {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: #161616;
+  color: #fff;
+  border: 0;
+}
+.feedFilterStrip .filterPanelActions .applyFilters:hover { background: #333; color: white; }
+
+/* Threads-like profile: identity, light controls, content — no form-card columns. */
+main.profilePage {
+  width: min(670px,calc(100% - 48px));
+  max-width: 670px;
+  margin: 0 auto 70px;
+  padding: 40px 0 60px;
+}
+.profileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 8px 12px;
+}
+.profileMicroLabel {
+  color: #9b9b9b;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 690;
+  letter-spacing: .09em;
+}
+.profileNames { min-width: 0; }
+.profileNames h1 {
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -.055em;
+  font-weight: 780;
+  margin: 7px 0 5px;
+  overflow-wrap: anywhere;
+}
+.profileFullName { font-size: 15px; font-weight: 510; color: #363636; margin: 2px 0 5px; }
+.profilePrivateEmail { font-size: 13px; color: #898989; margin: 0; overflow-wrap: anywhere; }
+.profilePhoto { flex: none; }
+.profilePhoto .avatar-xl {
+  width: 94px;
+  height: 94px;
+  font-size: 34px;
+  background: #f2f2f2;
+  border-color: #eeeeee;
+}
+.profileInfoRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 8px 25px;
+  border-bottom: 1px solid #ededed;
+}
+.profileRating { display: flex; gap: 6px; align-items: center; font-size: 12px; color: #999; }
+.profileRating strong { color: #252525; font-weight: 700; font-size: 13px; }
+.profileEditToggle,
+.profileNewPost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e5e5e5;
+  border-radius: 999px;
+  background: #fff;
+  color: #333;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 660;
+  min-height: 36px;
+}
+.profileEditToggle:hover, .profileNewPost:hover { background: #f6f6f6; }
+.profileEditPanel {
+  padding: 24px 8px;
+  border-bottom: 1px solid #ededed;
+}
+.profileEditPanel h2 { font-size: 18px; margin: 0 0 19px; }
+.profileEditFields {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 17px;
+}
+.profileEditFields label {
+  color: #787878;
+  font-size: 12px;
+  font-weight: 550;
+}
+.profileEditFields input {
+  margin-top: 5px;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid #e1e1e1;
+  border-radius: 0;
+  padding: 9px 0;
+  color: #181818;
+  font-size: 14px;
+}
+.profileEditFields input:focus-visible { outline: 0; border-bottom: 2px solid #252525; }
+.profilePhotoPicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: auto;
+  padding: 8px 0;
+  margin: 15px 0 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 620;
+  color: #333;
+}
+.profilePhotoPicker:hover { color: #000; }
+.profilePhotoPicker:has(input:focus-visible) { outline: 2px solid #333; outline-offset: 2px; }
+.profilePhotoPicker input {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.profileEditNote { color: #9a9a9a; font-size: 12px; line-height: 1.5; max-width: 430px; }
+.profileEditActions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 16px; }
+.profileEditActions button { min-height: 38px; border-radius: 999px; padding: 8px 19px; font-size: 13px; font-weight: 640; }
+.profileCancelEdit { border: 0; background: transparent; color: #777; }
+.profileEditActions .primary { color: white; background: #151515; }
+.profileSaved {
+  color: #386a49;
+  display: flex; align-items: center; gap: 6px;
+  padding: 12px 8px; font-size: 12px;
+}
+.profileActivity { padding-top: 17px; }
+.profileActivityHeader { display: flex; justify-content: space-between; align-items: center; margin: 0 7px 9px; gap: 10px; }
+.profileActivityHeader h2 { font-size: 17px; margin: 0; font-weight: 750; }
+.profileActivitySort { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #ededed; margin-top: 11px; }
+.profileActivitySort button { position: relative; border: 0; border-radius: 0; padding: 14px; font-size: 13px; font-weight: 590; color: #949494; background: transparent; }
+.profileActivitySort button.profileSelected { color: #1c1c1c; font-weight: 740; }
+.profileActivitySort button.profileSelected::after { content: ""; height: 2px; bottom: 0; left: 16%; right: 16%; position: absolute; background: #222; }
+.profileTopicBar { display: flex; align-items: center; gap: 10px; padding: 13px 6px; border-bottom: 1px solid #f1f1f1; }
+.profileTopicPills { display: flex; align-items: center; gap: 6px; overflow-x: auto; min-width: 0; flex: 1; scrollbar-width: none; }
+.profileTopicPills::-webkit-scrollbar { display: none; }
+.profileStatusSelect { flex: none; }
+.profileStatusSelect select {
+  width: auto;
+  max-width: 115px;
+  min-height: 33px;
+  padding: 4px 3px;
+  font-size: 12px;
+  font-weight: 580;
+  background: transparent;
+  border: 0;
+  color: #616161;
+  border-radius: 0;
+}
+.profilePostList { display: block; }
+.profilePostList .threadCard { padding-left: 9px; padding-right: 9px; }
+.profilePostMessage { padding: 25px 9px; color: #909090; text-align: center; }
+.profileEmpty { text-align: center; padding: 45px 15px; color: #999; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.profileEmpty strong { color: #555; font-size: 15px; }
+.profileEmpty p { max-width: 280px; font-size: 13px; line-height: 1.5; margin: 0; }
+.profileEmpty button { display: inline-flex; align-items: center; gap: 6px; background: #fafafa; border: 0; color: #444; border-radius: 999px; padding: 9px 15px; margin-top: 8px; font-size: 12px; }
+.profileSettings { border-top: 1px solid #ededed; margin: 32px 0 0; padding: 12px 5px 0; }
+.profileSettings summary { cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #929292; font-size: 12px; padding: 7px; list-style: none; }
+.profileSettings summary::-webkit-details-marker { display: none; }
+.profileSettings[open] summary .circleIcon { transform: rotate(180deg); }
+.profileDangerZone { padding: 13px 7px; }
+.profileDangerZone p { color: #999; font-size: 12px; }
+.profileDangerZone .dangerText { border: 0; background: #fff6f6; color: #a43232; border-radius: 999px; padding: 9px 15px; font-size: 12px; }
+@media (max-width:720px) {
+  .feedFilterStrip { padding: 10px 9px; gap: 4px; }
+  .feedTopicScroller { gap: 5px; }
+  .feedTopicScroller button { padding: 8px 11px; }
+  .feedFilterStrip .filterDetails summary { padding: 8px; font-size: 12px; gap: 5px; }
+  .feedFilterStrip .filterBar { top: calc(100% + 6px); left: 9px; right: 9px; width: auto; padding: 17px; }
+  main.profilePage { width: calc(100% - 32px); margin-bottom: 75px; padding-top: 25px; }
+  .profileHeader { padding: 0 1px 13px; }
+  .profilePhoto .avatar-xl { width: 76px; height: 76px; }
+  .profileEditFields { grid-template-columns: 1fr; gap: 14px; }
+  .profileInfoRow { padding-left: 0; padding-right: 0; }
+  .profileActivityHeader { margin-left: 0; margin-right: 0; }
+  .profileTopicBar { padding-left: 0; padding-right: 0; }
+  .profilePostList .threadCard { padding-left: 0; padding-right: 0; }
+}
+
+/* Admin is a restrained moderation workspace, not a dashboard full of cards. */
+main.adminPage {
+  width: min(940px, calc(100% - 125px));
+  max-width: 940px;
+  margin: 0 auto 80px;
+  padding: 39px 0 70px;
+}
+.adminTop { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 30px; }
+.adminEyebrow { margin: 0 0 7px; text-transform: uppercase; font-size: 11px; letter-spacing: .1em; color: #9b9b9b; font-weight: 730; }
+.adminTop h1 { font-size: 31px; margin: 0 0 4px; font-weight: 800; letter-spacing: -.055em; }
+.adminSubtitle { color: #929292; font-size: 13px; margin: 0; }
+.adminRefresh { border: 0; border-radius: 999px; background: #f6f6f6; color: #686868; display: inline-flex; gap: 6px; align-items: center; justify-content: center; font-weight: 640; font-size: 12px; min-height: 39px; padding: 9px 14px; }
+.adminRefresh:hover { color: #111; background: #eeeeee; }
+.adminPage .adminTabs {
+  overflow-x: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  scrollbar-width: none;
+  border-bottom: 1px solid #ededed;
+  margin: 0 0 22px;
+  padding: 0;
+  align-items: stretch;
+}
+.adminTabs::-webkit-scrollbar { display: none; }
+.adminPage .adminTabs button {
+  flex: 0 0 auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #929292;
+  padding: 13px 17px;
+  font-size: 13px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+.adminPage .adminTabs button:hover { color: #222; background: #fafafa; }
+.adminPage .adminTabs button.active { color: #171717; background: #fff; }
+.adminPage .adminTabs button.active::after { content: ""; position: absolute; bottom: 0; left: 14px; right: 14px; height: 2px; background: #111; }
+.adminTabCount { font-size: 11px; font-weight: 650; color: #999; }
+.adminTabs button.active .adminTabCount { color: #333; }
+.adminPage .adminStack { gap: 0; display: block; }
+.adminSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 1px 6px 13px;
+}
+.adminSectionHeader h2 { margin: 0; font-size: 18px; letter-spacing: -.03em; font-weight: 770; }
+.adminSectionHeader span { color: #999; font-size: 12px; }
+.adminCreate { border-top: 1px solid #eee; }
+.adminCreate > summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 680;
+  padding: 14px 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #484848;
+}
+.adminCreate > summary::-webkit-details-marker { display: none; }
+.adminCreate > summary:hover { background: #fafafa; color: #111; }
+.adminCreate > summary > .circleIcon:last-child { margin-left: auto; color: #999; }
+.adminCreate[open] > summary > .circleIcon:last-child { transform: rotate(180deg); }
+.adminCreateForm, .adminInlineForm { padding: 20px 13px 23px; background: #fafafa; border-radius: 12px; margin: 0 0 14px; }
+.adminCreateForm h3 { font-size: 15px; font-weight: 750; margin: 0 0 16px; }
+.adminFields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px 20px; }
+.adminFields label { display: grid; font-size: 12px; color: #777; font-weight: 540; gap: 5px; }
+.adminFields input, .adminFields select {
+  margin: 0;
+  width: 100%;
+  min-height: 38px;
+  color: #222;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #e2e2e2;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 590;
+  padding: 7px 2px;
+}
+.adminFields input:focus-visible,.adminFields select:focus-visible { outline: 0; border-bottom: 2px solid #222; }
+.adminFormActions { display: flex; align-items: center; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+.adminFormActions button { padding: 9px 17px; border: 0; background: transparent; font-size: 12px; font-weight: 680; border-radius: 999px; }
+.adminFormActions button.primary { background: #151515; color: #fff; }
+.adminFormActions button.primary:hover { background: #333; }
+.adminSimpleList { border-top: 1px solid #ededed; }
+.adminListItem {
+  display: block;
+  border: 0;
+  border-bottom: 1px solid #ededed;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: white;
+}
+.adminListItem:hover { background: #fdfdfd; }
+.adminItemLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+  min-width: 0;
+  padding: 15px 8px;
+}
+.adminItemText { flex: 1 1 auto; min-width: 0; }
+.adminItemText .adminName, .adminItemText h3 {
+  border: 0;
+  background: none;
+  text-align: left;
+  margin: 0 0 5px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 740;
+  color: #222;
+  overflow-wrap: anywhere;
+}
+.adminItemText .adminName:hover { background: transparent; text-decoration: underline; }
+.adminItemText p { color: #888; font-size: 12px; line-height: 1.55; margin: 0; overflow-wrap: anywhere; }
+.adminItemText p.adminCommentText { margin-top: 7px; color: #4a4a4a; font-size: 13px; }
+.adminRoleChip {
+  display: inline-block;
+  flex: none;
+  background: #f4f4f4;
+  color: #626262;
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 5px 10px;
+  font-weight: 620;
+  text-transform: capitalize;
+}
+.adminScore { color: #929292; flex: none; font-size: 12px; min-width: 41px; }
+.adminRowTools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: none;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.adminPage .adminRowTools button {
+  min-height: 35px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.adminPage .adminRowTools button:hover { color: #151515; background: #f1f1f1; }
+.adminPage .adminRowTools button.dangerText { color: #a74747; }
+.adminPage .adminRowTools button.dangerText:hover { background: #fff2f2; color: #a92323; }
+.adminPage .adminRowTools button:disabled { opacity: .35; cursor: default; }
+.adminPostMeta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 6px; color: #aaa; font-size: 12px; }
+.adminPostMeta .adminName { font-size: 12px; color: #666; font-weight: 720; margin: 0; }
+.adminPostMeta strong { color: #666; }
+.adminPostTopics { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.adminPostTopics span { border-radius: 999px; background: #f6f6f6; color: #838383; padding: 4px 9px; font-size: 11px; }
+.adminPage .adminPostTools { max-width: 380px; }
+.adminInnerDetails { margin-top: 11px; }
+.adminInnerDetails summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #777;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.adminInnerDetails summary::-webkit-details-marker { display:none; }
+.adminInnerDetails[open] summary .circleIcon { transform: rotate(180deg); }
+.adminTopicChoices { padding: 11px 0 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+.adminTopicChoice { position: relative; cursor: pointer; font-size: 11px; }
+.adminTopicChoice input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; width: 100%; height: 100%; }
+.adminTopicChoice span { display: block; padding: 7px 12px; border-radius: 999px; background: #f4f4f4; color: #666; }
+.adminTopicChoice:hover span { background: #ececec; color: #111; }
+.adminTopicChoice:has(input:checked) span { background: #222; color: white; }
+.adminTopicChoice:has(input:focus-visible) span { outline: 2px solid #111; outline-offset: 2px; }
+.adminPage .adminSaveTopics {
+  padding: 8px 15px;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 660;
+  border: 0;
+  border-radius: 999px;
+  background: #171717;
+  color: white;
+}
+.adminSectionNote { color: #999; padding: 0 6px 13px; font-size: 12px; margin: 0; }
+.adminEmpty, .adminLoading { padding: 38px 10px; text-align: center; color: #aaa; font-size: 13px; }
+.adminPage .pager { margin-top: 19px; }
+@media (max-width: 1020px) {
+  main.adminPage { width: min(790px, calc(100% - 100px)); max-width: 790px; }
+  .adminPage .adminPostTools { max-width: 270px; }
+}
+@media (max-width: 720px) {
+  main.adminPage { width: calc(100% - 32px); max-width: 660px; padding: 24px 0 70px; margin-bottom: 65px; }
+  .adminTop { margin-bottom: 19px; }
+  .adminTop h1 { font-size: 26px; }
+  .adminSubtitle { font-size: 12px; }
+  .adminRefresh { padding: 8px; min-height: 34px; }
+  .adminRefresh span { display: none; }
+  .adminPage .adminTabs button { padding: 12px 11px; font-size: 12px; gap: 5px; }
+  .adminItemLine { gap: 8px; flex-wrap: wrap; padding: 13px 3px; }
+  .adminItemLine .avatar-md { width: 38px; height: 38px; }
+  .adminRoleChip { padding: 4px 8px; font-size: 10px; }
+  .adminScore { display: none; }
+  .adminRowTools { width: 100%; justify-content: flex-start; margin-left: 46px; gap: 4px; }
+  .adminPostTools { margin-left: 0; }
+  .adminPage .adminPostTools { max-width: unset; }
+  .adminPage .adminRowTools button { padding: 6px 9px; }
+  .adminFields { grid-template-columns: 1fr; gap: 11px; }
+  .adminCreateForm, .adminInlineForm { padding: 16px 13px; }
+}
+
+
+/* Official Google Material round icons are bundled SVG, not font ligatures. */
+.googleSvgIcon {
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;flex:none;user-select:none;vertical-align:middle;
+  font-family:inherit;font-size:inherit;letter-spacing:normal;
+}
+.googleSvgIcon svg {width:100%;height:100%;display:block;fill:currentColor;}
+.threadActions .activeSave {color:#151515;font-weight:750;}
+.threadActions .activeSave svg {fill:currentColor;}
+.threadCard {position:relative;}
+.postContextMenu {
+  position:fixed;z-index:150;
+  background:#fff;border:1px solid #e8e8e8;
+  box-shadow:0 15px 45px rgba(0,0,0,.14);
+  padding:6px;border-radius:14px;
+  width:207px;display:grid;gap:1px;
+}
+.postContextMenu button {
+  border:0;background:transparent;color:#242424;
+  border-radius:8px;padding:11px 10px;
+  display:flex;align-items:center;gap:10px;text-align:left;
+  font-size:13px;font-weight:560;width:100%;
+}
+.postContextMenu button:hover {background:#f5f5f5;}
+.postContextMenu button.dangerText {color:#bb3737;}
+.postContextMenu button.dangerText:hover {background:#fff0f0;}
+.postModerationTrigger {opacity:.65;}
+.postModerationTrigger:hover {opacity:1;}
+.mainNav .googleSvgIcon,.threadActions .googleSvgIcon,.postContextMenu .googleSvgIcon {pointer-events:none;}
+@media(max-width:720px) {
+  .mainNav {padding-left:6px;padding-right:6px;gap:0;}
+  .mainNav button {min-width:36px;padding-left:3px;padding-right:3px;}
+  .postContextMenu {width:190px;}
+}
+/* Sections accessed from left rail. */
+main.simpleFeaturePage {width:min(670px,calc(100% - 48px));max-width:670px;padding:38px 0 72px;}
+.featureHeading {display:flex;gap:13px;align-items:center;margin-bottom:5px;}
+.featureHeading h1 {margin:0;font-size:26px;letter-spacing:-.04em;}
+.featureSubheading {margin:7px 0 26px 40px;color:#888;font-size:13px;}
+.featureTabs {display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #eaeaea;}
+.featureTabs button {border:0;border-radius:0;background:transparent;color:#8e8e8e;
+  font-size:13px;font-weight:650;padding:14px;position:relative;}
+.featureTabs button.selectedTab {color:#171717;font-weight:760;}
+.featureTabs button.selectedTab::after {content:"";position:absolute;bottom:0;height:2px;
+ left:17%;right:17%;background:#202020;}
+.savedPostsList .threadCard {padding-left:2px;padding-right:2px;}
+.featureEmpty {display:flex;flex-direction:column;align-items:center;gap:12px;
+  color:#9b9b9b;text-align:center;padding:60px 14px;}
+.featureEmpty h2 {margin:0;color:#313131;font-size:18px;}
+.featureEmpty p {max-width:310px;font-size:13px;line-height:1.6;margin:0;}
+.featureTextLink {display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;
+ padding:7px 0;font-size:13px;color:#333;font-weight:670;}
+.featureTextLink:hover {text-decoration:underline;background:transparent;}
+.dashStats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+ border-block:1px solid #ececec;margin:18px 0 26px;}
+.dashStat {display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:20px 9px;}
+.dashStat+ .dashStat {border-left:1px solid #eee;}
+.dashStat span {color:#929292;font-size:12px;}
+.dashStat strong {font-size:27px;letter-spacing:-.035em;font-weight:750;}
+.dashSection {padding:24px 9px;border-bottom:1px solid #ececec;}
+.dashSection h2 {font-size:17px;margin:0 0 16px;font-weight:740;}
+.dashSection h2 small {font-size:11px;font-weight:460;color:#888;margin-left:9px;}
+.dashInline {display:flex;align-items:center;justify-content:space-between;gap:14px;
+ padding:11px 0;font-size:13px;color:#696969;}
+.dashInline strong {color:#222;font-weight:740;font-size:14px;}
+.dashSpark {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;
+ align-items:end;height:120px;}
+.dashSparkItem {height:100%;display:flex;align-items:flex-end;}
+.dashSparkItem span {width:100%;background:#222;border-radius:4px 4px 0 0;min-height:4px;}
+.dashLegend {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;
+ text-align:center;color:#a2a2a2;font-size:10px;padding-top:9px;}
+.dashProgress {height:7px;background:#ededed;border-radius:10px;overflow:hidden;}
+.dashProgress span {display:block;height:100%;background:#242424;border-radius:10px;}
+.dashHint {font-size:12px;color:#999;margin:12px 0 0;}
+.dashAchievement {display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f3f3;}
+.dashAchievement:last-child {border:0;}
+.dashAchievement .googleSvgIcon {color:#888;}
+.dashAchievement>div {flex:1;}
+.dashAchievement strong {font-size:13px;}
+.dashAchievement p {font-size:12px;color:#999;margin:4px 0 0;}
+.dashAchievement small {font-size:11px;color:#999;}
+.settingsSection {padding:22px 0;border-top:1px solid #eee;}
+.settingsSection h2 {font-size:17px;margin:0 0 10px;}
+.settingsSection>p {margin:5px 0 14px;color:#888;font-size:13px;}
+.settingsChoices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.settingsChoices.settingsLanguages {grid-template-columns:1fr;}
+.settingsChoices button {border:1px solid #eee;border-radius:14px;background:transparent;
+ display:flex;gap:10px;align-items:center;padding:15px;color:#4d4d4d;
+ font-size:14px;font-weight:620;text-align:left;}
+.settingsChoices button span:nth-child(2) {flex:1;}
+.settingsChoices button.settingsSelected {border-color:#353535;color:#111;background:#fafafa;}
+.settingsChoices button:hover {background:#f7f7f7;}
+.settingsHint {color:#999;font-size:12px;margin-top:24px;}
+@media(max-width:720px) {
+  main.simpleFeaturePage {width:calc(100% - 34px);padding-top:25px;margin-bottom:64px;}
+  .dashStats {grid-template-columns:repeat(2,1fr);}
+  .dashStat:nth-child(3) {border-left:0;border-top:1px solid #eee;}
+  .dashStat:nth-child(4) {border-top:1px solid #eee;}
+  .featureHeading h1 {font-size:23px;}
+}
+
+/* Dark: override legacy fixed light surface literals consistently. */
+html[data-theme="dark"] {background:#101113;color-scheme:dark;}
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root {background:#101113;color:#eeeff0;}
+html[data-theme="dark"] .siteHeader,
+html[data-theme="dark"] .mainNav,
+html[data-theme="dark"] .homePage,
+html[data-theme="dark"] .feedShell,
+html[data-theme="dark"] .threadCard,
+html[data-theme="dark"] .feedComposer,
+html[data-theme="dark"] .filterDetails,
+html[data-theme="dark"] .adminListItem,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .postComposerForm,
+html[data-theme="dark"] .accountDropdown,
+html[data-theme="dark"] .postContextMenu,
+html[data-theme="dark"] .welcomeHighlights>div,
+html[data-theme="dark"] .commentCard,
+html[data-theme="dark"] .commentComposer,
+html[data-theme="dark"] .adminPage .adminTabs button,
+html[data-theme="dark"] .adminPage .adminTabs button.active,
+html[data-theme="dark"] .settingsChoices button,
+html[data-theme="dark"] .feedFilterStrip,
+html[data-theme="dark"] .feedFilterStrip .filterBar
+ {background:#161719!important;color:#eee!important;}
+html[data-theme="dark"] .mainNav {box-shadow:none;}
+html[data-theme="dark"] main,html[data-theme="dark"] section,
+html[data-theme="dark"] footer {color:#e9e9e9;}
+html[data-theme="dark"] .headerSearch,
+html[data-theme="dark"] .guestAvatar,
+html[data-theme="dark"] .profilePhoto .avatar-xl,
+html[data-theme="dark"] .avatar,
+html[data-theme="dark"] .welcomeSymbol
+ {background:#282a2e!important;color:#e5e5e5!important;border-color:#37383b!important;}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {background:#161719;color:#e9e9e9;border-color:#383a3c;}
+html[data-theme="dark"] button {color:#ececec;}
+html[data-theme="dark"] button:hover:not(:disabled) {background:#292b2d;}
+html[data-theme="dark"] .primary,
+html[data-theme="dark"] button.primary,
+html[data-theme="dark"] .feedComposer strong,
+html[data-theme="dark"] .feedTopicScroller .topicActive,
+html[data-theme="dark"] .profileTopicPills .profileTopicActive,
+html[data-theme="dark"] .settingsChoices .settingsSelected
+ {background:#e9e9ea!important;color:#141516!important;border-color:#e9e9ea!important;}
+html[data-theme="dark"] .primary:hover:not(:disabled) {background:#d5d5d5!important;}
+html[data-theme="dark"] .navActive {background:#2b2d30!important;color:#fff!important;}
+html[data-theme="dark"] .postTitleLink,
+html[data-theme="dark"] .threadBody .postTitleLink,
+html[data-theme="dark"] .authorLink,
+html[data-theme="dark"] .threadBody .postMeta .authorLink,
+html[data-theme="dark"] .profileNames h1,
+html[data-theme="dark"] .adminItemText .adminName,
+html[data-theme="dark"] .adminItemText h3,
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .dashInline strong,
+html[data-theme="dark"] .featureEmpty h2,
+html[data-theme="dark"] .welcomeHero h1
+ {color:#f1f1f1!important;}
+html[data-theme="dark"] .threadExcerpt,html[data-theme="dark"] .content,
+html[data-theme="dark"] .commentContent {color:#d2d2d2;}
+html[data-theme="dark"] .threadBody .tags span,
+html[data-theme="dark"] .adminPostTopics span,
+html[data-theme="dark"] .profileTopicPills button,
+html[data-theme="dark"] .feedTopicScroller button,
+html[data-theme="dark"] .adminRoleChip
+ {background:#2a2c2f;color:#bfc0c3;border-color:#2a2c2f;}
+html[data-theme="dark"] .postContextMenu button {background:transparent;color:#e9e9e9;}
+html[data-theme="dark"] .postContextMenu button.dangerText {color:#ff9999;}
+html[data-theme="dark"] .postContextMenu button:hover {background:#303236;}
+html[data-theme="dark"] .adminCreateForm,
+html[data-theme="dark"] .adminInlineForm,
+html[data-theme="dark"] .profileEditPanel
+ {background:#1c1e20;}
+html[data-theme="dark"] .settingsChoices button.settingsSelected {background:#272b2f!important;color:#fff!important;border-color:#808084!important;}
+html[data-theme="dark"] .dashSparkItem span,
+html[data-theme="dark"] .dashProgress span {background:#dadada;}
+html[data-theme="dark"] .dashProgress {background:#333;}
+html[data-theme="dark"] .threadVerticalLine {background:#333;}
+html[data-theme="dark"] .feedTabs button.selectedTab::after,
+html[data-theme="dark"] .profileActivitySort button.profileSelected::after,
+html[data-theme="dark"] .featureTabs button.selectedTab::after,
+html[data-theme="dark"] .adminPage .adminTabs button.active::after {background:#eee;}
+html[data-theme="dark"] .feedPageTitle,
+html[data-theme="dark"] .threadCard,
+html[data-theme="dark"] .filterDetails,
+html[data-theme="dark"] .feedFilterStrip,
+html[data-theme="dark"] .feedTabs,
+html[data-theme="dark"] .profileHeader,
+html[data-theme="dark"] .profileInfoRow,
+html[data-theme="dark"] .profileActivitySort,
+html[data-theme="dark"] .adminSimpleList,
+html[data-theme="dark"] .adminListItem,
+html[data-theme="dark"] .dashSection,
+html[data-theme="dark"] .dashStats,
+html[data-theme="dark"] .settingsSection {border-color:#303236!important;}
+
+/* Social experience: open typography and unobtrusive tools */
+main.naturalPostPage{width:min(690px,calc(100% - 45px));max-width:690px;margin:0 auto 70px;padding:24px 0 50px}
+.postBackRow{display:flex;gap:12px;align-items:center;border-bottom:1px solid #eee;padding:0 0 14px}
+.postBackRow strong{font-size:15px}
+.naturalPost{padding:25px 3px 28px;border-bottom:1px solid #eaeaea}
+.naturalPostAuthor{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+.naturalPostAuthor>div{display:grid;gap:4px;flex:1;min-width:0}
+.naturalPostAuthor .authorLink{padding:0;text-align:left;font-size:14px;font-weight:760;border:0;background:transparent;color:inherit}
+.naturalPostAuthor time{font-size:12px;color:#999}
+.naturalPost h1{font-size:clamp(22px,3vw,29px);line-height:1.28;letter-spacing:-.035em;margin:0 0 14px;color:inherit}
+.naturalPostContent{font-size:15px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 16px}
+.naturalPost .tags{margin-bottom:18px}
+.naturalPostReactions{display:flex;gap:12px;align-items:center;border-top:1px solid #f1f1f1;padding:13px 0 9px}
+.naturalPostReactions .reactionPanel{border:0;box-shadow:none;background:transparent;padding:0;margin:0}
+.naturalPostReactions .reactionButtons{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.naturalPostReactions .reactionButtons span{font-size:12px;color:#999}
+.naturalPostReactions button,.naturalPostIconButton{border:0;background:transparent;padding:7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center}
+.naturalPostReactions button:hover{background:#f2f2f2}
+.naturalPostCommentCount{display:flex;align-items:center;gap:5px;font-size:12px;color:#8a8a8a}
+.naturalPostManagement{display:flex;align-items:center;flex-wrap:wrap;gap:5px;border-top:1px solid #f1f1f1;padding:12px 0 0}
+.naturalPostManagement button{display:inline-flex;gap:6px;align-items:center;border:0;border-radius:999px;padding:8px 10px;font-size:12px;background:transparent;color:#676767}
+.naturalPostManagement button:hover{background:#f6f6f6;color:#151515}
+.naturalPostManagement .dangerText{color:#a34747;margin-left:auto}
+.naturalClosedNotice,.naturalReplyLocked{display:flex;gap:10px;align-items:center;padding:13px 15px;border-radius:12px;background:#f8f8f8;color:#777;font-size:12px;margin:16px 0 0}
+.naturalComments{padding:24px 3px 50px}
+.naturalComments h2{font-size:18px;font-weight:760;margin:0 0 16px;display:flex;gap:8px;align-items:center}
+.naturalComments h2 span{font-size:13px;color:#999;font-weight:540}
+.naturalCommentTree .commentBranch{margin:0 0 6px}
+.naturalCommentTree .commentCard{border:0;border-bottom:1px solid #efefef;border-radius:0;padding:15px 0 16px;margin:0;background:transparent;box-shadow:none}
+.naturalCommentTree .commentCard:hover{background:transparent}
+.naturalCommentTree .commentTop{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.naturalCommentTree .commentContent{margin:11px 0;white-space:pre-wrap;line-height:1.65;font-size:14px}
+.naturalCommentTree .commentActions{display:flex;gap:5px;flex-wrap:wrap}
+.naturalCommentTree .commentActions button{border:0;border-radius:999px;padding:7px 8px;background:transparent;color:#777;font-size:12px}
+.naturalCommentTree .commentActions button:hover{background:#f5f5f5;color:#222}
+.modReviewed{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:#e9f5eb;color:#356a40;font-size:10px;padding:5px 8px;font-weight:650}
+.naturalEmptyReplies{display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 10px;color:#aaa;gap:8px}
+.naturalEmptyReplies p{margin:0;color:#555;font-weight:680;font-size:14px}
+.naturalEmptyReplies small{font-size:12px}
+.naturalReplyComposer{display:flex;align-items:center;gap:12px;border-top:1px solid #efefef;padding:23px 0}
+.naturalReplyComposer textarea{flex:1;min-width:0;border:0;resize:vertical;min-height:46px;max-height:200px;box-shadow:none;outline:0;background:transparent;font-size:14px;padding:12px 3px}
+.naturalReplyComposer button{width:39px;height:39px;border-radius:50%;padding:0;display:grid;place-items:center;flex:none}
+.socialPage{width:min(760px,calc(100% - 48px));margin:0 auto 65px;padding:38px 0}
+.socialHeading{display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;margin-bottom:21px}
+.socialHeading h1{margin:0 0 14px;font-size:24px;letter-spacing:-.035em}
+.socialIntro{text-align:center;margin:15px 0 35px}
+.socialIntro h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.06em;margin:12px 0}
+.socialIntro p{color:#999;font-size:14px}
+.socialCircle{width:62px;height:62px;margin:0 auto 18px;display:grid;place-items:center;border-radius:18px;background:#f4f1f6}
+.interestSelection{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:15px 0 32px}
+.interestSelection button{border:0;background:#f5f5f5;color:#666;padding:12px 16px;display:flex;gap:8px;align-items:center;border-radius:999px;font-size:13px;font-weight:650}
+.interestSelection button:hover{background:#eee;color:#111}
+.interestSelection button.interestChosen{background:#1c1c1c;color:white}
+.interestFooter{display:flex;align-items:center;gap:12px;border-top:1px solid #eee;padding:21px 0}
+.interestFooter small{margin-right:auto;color:#999}
+.interestFooter button{border:0;border-radius:999px;background:transparent;padding:9px 17px;font-size:13px}
+.interestFooter button.primary{display:flex;align-items:center;gap:8px;background:#111;color:#fff}
+.messageLayout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:480px;border:1px solid #eaeaea;border-radius:16px;overflow:hidden}
+.messageContacts{border-right:1px solid #eaeaea;padding:17px 10px}
+.messageContacts h2{margin:0 9px 15px;font-size:13px;color:#999;font-weight:600}
+.messageContacts button{display:flex;gap:9px;align-items:center;border:0;border-radius:11px;background:transparent;text-align:left;padding:10px;width:100%}
+.messageContacts button.selectedContact,.messageContacts button:hover{background:#f4f4f4}
+.messageContacts button span:not(.avatar){min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.messageContacts button strong{font-size:13px}
+.messageContacts button small{font-size:11px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.messageContacts p{padding:10px;font-size:12px;color:#999}
+.unreadCount{border-radius:50%;background:#161616;color:#fff;font-size:10px;padding:2px 6px}
+.messageThread{display:flex;flex-direction:column;min-width:0}
+.messageThreadHeading{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid #eee;cursor:pointer}
+.messageThreadHeading strong{font-size:14px}
+.messageStream{padding:23px 16px;display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto;max-height:560px}
+.messageBubble{max-width:85%;min-width:60px;border-radius:16px;padding:10px 13px;background:#f4f4f4;align-self:flex-start;overflow-wrap:anywhere}
+.messageBubble.mine{align-self:flex-end;background:#161616;color:#fff}
+.messageBubble p{font-size:13px;margin:0 0 5px;line-height:1.6;white-space:pre-wrap}
+.messageBubble time{font-size:10px;opacity:.5}
+.messageCompose{display:flex;gap:8px;padding:10px;border-top:1px solid #eee;align-items:center}
+.messageCompose input{flex:1;min-width:0;background:transparent;border:0;box-shadow:none;font-size:13px}
+.messageCompose button{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;padding:0}
+.messageIntro{margin:auto;text-align:center;color:#999;font-size:13px;max-width:230px}
+.profileSocialActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.profileFollowers{font-size:11px;color:#999;margin-right:7px}
+.editorOptions{margin:6px 0 15px;border-top:1px solid #eee}
+.editorOptions>summary{list-style:none;cursor:pointer;color:#767676;display:flex;gap:9px;align-items:center;padding:15px 0;font-size:13px}
+.editorOptions>summary::-webkit-details-marker{display:none}
+.editorOptions>summary .circleIcon:last-child{margin-left:auto}
+.editorOptions[open]>summary .circleIcon:last-child{transform:rotate(180deg)}
+.editorOptionRow,.editorSchedule{display:flex;align-items:center;gap:12px;padding:13px 0;font-size:13px}
+.editorOptionRow span,.editorSchedule span{flex:1}
+.editorOptionRow small,.editorSchedule small{display:block;font-size:11px;color:#999;margin-top:4px}
+.editorSchedule input{max-width:180px;font-size:12px;border:0;border-bottom:1px solid #ddd;border-radius:0}
+html[data-theme="dark"] .naturalPost,html[data-theme="dark"] .naturalComments,
+html[data-theme="dark"] .naturalCommentTree .commentCard,
+html[data-theme="dark"] .messageThread,html[data-theme="dark"] .messageContacts,
+html[data-theme="dark"] .messageLayout{background:#161719!important;color:#eaeaea;border-color:#353538}
+html[data-theme="dark"] .messageBubble.mine,html[data-theme="dark"] .interestSelection .interestChosen{background:#e5e5e5;color:#121212}
+html[data-theme="dark"] .messageBubble.theirs,html[data-theme="dark"] .interestSelection button{background:#282a2e;color:#eee}
+html[data-theme="dark"] .naturalClosedNotice,html[data-theme="dark"] .naturalReplyLocked{background:#25272a;color:#ddd}
+html[data-theme="dark"] .modReviewed{background:#183e25;color:#b7e3bf}
+@media(max-width:720px){
+ main.naturalPostPage,.socialPage{width:calc(100% - 32px);padding-top:17px}
+ .naturalPostManagement button span{display:none}
+ .messageLayout{grid-template-columns:1fr;min-height:400px}
+ .messageContacts{border-right:0;border-bottom:1px solid #eee;max-height:200px;overflow-y:auto}
+ .messageStream{max-height:450px}
+ .editorSchedule{flex-wrap:wrap}.editorSchedule input{max-width:unset;width:100%}
+}

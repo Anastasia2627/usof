@@ -80,7 +80,7 @@ async function getTarget(connection, { postId, commentId }) {
   }
   if (postId) {
     const [[post]] = await connection.query(
-      'SELECT id, author_id, status, locked FROM posts WHERE id=? FOR UPDATE',
+      'SELECT id, author_id, status, locked, publish_at FROM posts WHERE id=? FOR UPDATE',
       [postId],
     );
     if (!post) throw new AppError(404, 'TARGET_NOT_FOUND', 'Post not found');
@@ -88,7 +88,7 @@ async function getTarget(connection, { postId, commentId }) {
   }
   const [[comment]] = await connection.query(
     `SELECT c.id, c.author_id, c.status, c.locked, c.post_id,
-            p.status AS post_status, p.locked AS post_locked
+            p.status AS post_status, p.locked AS post_locked, p.publish_at AS post_publish_at
      FROM comments c
      JOIN posts p ON p.id = c.post_id
      WHERE c.id=?
@@ -101,7 +101,7 @@ async function getTarget(connection, { postId, commentId }) {
 
 function ensureReactable(target, isAdmin) {
   if (isAdmin) return;
-  if (target.status !== 'active' || target.post_status === 'inactive') {
+  if (target.status !== 'active' || target.post_status === 'inactive' || (target.publish_at && new Date(target.publish_at) > new Date()) || (target.post_publish_at && new Date(target.post_publish_at) > new Date())) {
     throw new AppError(404, 'TARGET_NOT_AVAILABLE', 'Active reaction target not found');
   }
   if (target.locked || target.post_locked) {

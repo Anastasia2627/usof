@@ -1,0 +1,37 @@
+/* Additive styles for the assessment and community features. */
+.formattedContent{overflow-wrap:anywhere;line-height:1.6}
+.formattedContent p{margin:0 0 .65rem;white-space:pre-wrap}
+.formattedContent h2,.formattedContent h3{margin:1rem 0 .55rem;font-size:1.17rem;line-height:1.35}
+.formattedContent h3{font-size:1.05rem}
+.formattedContent .mdListLine{display:flex;align-items:flex-start;gap:.7rem;margin:.25rem 0 .25rem 1rem}
+.formattedContent .mdListLine>span:first-child{flex:0 0 1.4rem;font-weight:600}
+.markdownToolbar{display:flex;gap:.4rem;flex-wrap:wrap;margin:.65rem 0}
+.markdownToolbar button{border:1px solid var(--border,#ddd);padding:.38rem .7rem;border-radius:9px;background:transparent;font:inherit;cursor:pointer}
+.markdownToolbar button:hover{background:var(--surface,#eee)}
+.markdownPreview{border:1px solid var(--border,#ddd);padding:1rem;border-radius:12px;margin:1rem 0}
+.markdownPreview h2{font-size:1.3rem}
+.postPhotoEditor{margin-top:1rem}
+.postPhotoEditor input[type=file]{display:block;max-width:100%;margin:.6rem 0}
+.postPhotoEditor p{font-size:.86rem;overflow-wrap:anywhere}
+.photoThumbs,.postPhotoGallery{display:flex;flex-wrap:wrap;gap:.6rem;margin:.7rem 0}
+.photoThumbs>div{position:relative}
+.photoThumbs img{width:106px;height:106px;object-fit:cover;border-radius:10px}
+.photoThumbs button{display:block;margin-top:.25rem;font-size:.85rem}
+.postPhotoGallery button{padding:0;border:0;border-radius:12px;overflow:hidden;background:transparent;cursor:zoom-in}
+.postPhotoGallery img{display:block;width:clamp(140px,25vw,250px);max-width:100%;aspect-ratio:1/1;object-fit:cover}
+.threadPhoto{display:block;border:0;background:transparent;padding:0;margin:.8rem 0;cursor:pointer;text-align:left}
+.threadPhoto img{display:block;max-width:min(100%,380px);max-height:270px;border-radius:12px;object-fit:cover}
+.photoLightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:2rem}
+.photoLightbox img{max-width:100%;max-height:92vh;object-fit:contain}
+.photoLightbox>button{position:absolute;top:1rem;right:1rem;border:1px solid #aaa;border-radius:50%;color:white;font-size:2rem;width:44px;height:44px;background:#333;cursor:pointer}
+.solutionTag{display:inline-flex;align-items:center;gap:.3rem;border:1px solid #68a277;color:#337b4a;border-radius:999px;padding:.15rem .55rem;font-size:.78rem;font-weight:700;margin:.4rem .4rem .4rem 0}
+.solutionButton{font-weight:600}
+.reportControl{position:relative;display:inline-block}
+.reportControl>.quietButton{opacity:.7;font-size:.82rem}
+.reportForm{position:relative;z-index:3;border:1px solid var(--border,#ddd);border-radius:12px;padding:1rem;margin:.6rem 0;background:var(--bg,#fff);min-width:min(320px,80vw)}
+.reportForm label{display:block;margin-bottom:.65rem}
+.reportForm select,.reportForm textarea{display:block;width:100%;margin-top:.2rem;border:1px solid #999;border-radius:8px;padding:.35rem;box-sizing:border-box;color:inherit;background:transparent}
+.reportForm textarea{min-height:70px}
+.reportsFilter{display:flex;align-items:center;gap:.6rem;margin:.65rem 0}
+.reportsFilter select{padding:.45rem .7rem;border-radius:8px;background:transparent;color:inherit}
+@media(max-width:600px){.postPhotoGallery img{width:calc(50vw - 35px)}.markdownToolbar button{font-size:.82rem}.reportForm{min-width:0;width:100%}}

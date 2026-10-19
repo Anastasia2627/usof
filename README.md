@@ -15,7 +15,7 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
 - Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
-The `web/src/basic.css` file is the only stylesheet loaded. It deliberately uses plain system fonts, one accent color and **no animations or decorative effects**. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
+The frontend loads `web/src/basic.css` plus `web/src/threads.css`: a responsive, monochrome Threads-inspired style with a centered conversation column and bottom mobile navigation. There are no decorative animations. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
 
 ## Run locally on macOS (Docker Desktop)
 
@@ -26,11 +26,11 @@ switching branches.
 
 ```bash
 git fetch origin
-git switch --track origin/circle-full-requirements
+git switch circle-threads-feed
 npm install
 ```
 
-If that branch already exists locally, use `git switch circle-full-requirements`
+If that branch already exists locally, use `git switch circle-threads-feed`
 followed by `git pull --ff-only`.
 
 In your **existing local** `.env`, set:
@@ -63,7 +63,7 @@ npm run web
 ```
 
 Visit `http://localhost:5173`. The API is at
-`http://localhost:5000/api/health`. Test users and seeded content are stored
+`http://127.0.0.1:5050/api/health`. Test users and seeded content are stored
 in a **real, persistent MySQL 8.4 Docker volume**, not in React state.
 This volume is completely separate from the old Homebrew
 `/opt/homebrew/var/mysql` data directory, so it neither upgrades nor
@@ -82,6 +82,133 @@ MySQL; do not delete the volume.
 
 The browser-only `npm run web:demo` preview is optional, and not suitable
 for defense because it does not store shared records or send email.
+
+## Public home and assessment compliance
+
+The homepage `/#/` shows a public feed sorted by positive likes (descending) for both guests and signed-in members, with visible search, menu, category filters, date ascending/descending and pagination. Guests can read posts; writing, replying, voting and reporting require authentication. The original welcome design remains at `/#/welcome`.
+
+## Refined interface and moderator assignment
+
+The login and sign-up screens use a calm, two-column editorial layout on desktop
+and a compact stacked layout on mobile. The post composer keeps the original title,
+body, category selection, preview, photos, and publication options, now arranged in
+smaller visual sections. Every category remains selectable within a compact,
+scrollable list, including categories added after initialization.
+
+**Give a user moderator rights:** sign in as an admin, open **Admin → Users**,
+find the user's row and click **Make moderator**. Confirm the action; the
+user's role changes to `moderator` instantly in the admin list and in their existing session.
+A persistent notification is created and the open site displays a role-change banner. **Remove moderator** restores
+the standard `user` role. Only administrators can appoint or revoke moderators.
+The older Edit → Role selector is also available.
+
+Private direct messages have been retired. There is no Messages button, profile
+message action, messages page or messaging API. An existing `direct_messages`
+table (if present) is left intact for data safety, but fresh databases do not
+create it and the application never accesses it.
+
+## Server-side moderator permissions
+
+Role changes happen through the administrator-only `PATCH /api/users/:id`
+with `{"role":"moderator"}` or `{"role":"user"}`. The server reloads
+roles from MySQL on every authenticated request (rather than trusting a JWT
+role), so new permissions and revocations take effect even in open sessions.
+A notification records each actual role change. Only admins can create users,
+change another account's identity/role, manage categories or see the admin dashboard.
+The last remaining administrator cannot be demoted or deleted.
+
+**Moderators may:** review/dismiss reports; deactivate/reactivate, lock/unlock
+or delete community posts; moderate comments and reactions; edit their own
+post title/body, photos and categories. Ordinary users keep the status-only
+comment workflow required by the coursework.
+
+**Moderators may not:** grant roles or edit accounts; change another author's
+post text, categories or hidden-like setting; moderate administrator posts,
+administrator replies, or delete administrator reactions (including bulk
+clearing of votes); view other people's unpublished scheduled posts through
+the feed, search, a direct post URL or the moderation queues. Posts that are
+inactive *after publishing* remain available for moderation.
+
+The API enforces these restrictions, not just the React buttons. Relevant
+checks live in `API/src/services/moderationPolicy.js`, and the dedicated
+MySQL integration suite is `npm run test:moderator`. As with all integration
+tests in this project, use `NODE_ENV=test` and a disposable database ending
+in `_ci` or `_test`. The Circle GitHub Actions workflow runs this suite
+on every update to `circle-threads-feed`.
+
+## UX improvements
+
+Circle uses one understated rounded design language for the feed, discussion
+pages, editors, member profiles, saved posts, settings, notifications and admin
+controls. Small repeated actions (save, share, votes, delete notification) are
+icon-only with accessible labels; important tasks keep text next to their icon.
+
+- **Share** any post directly from its feed card or detail page using the share
+  icon; the copied URL opens the same post.
+- **Text draft recovery:** while writing a new post, text, selected categories
+  and publication settings are saved in the current browser tab. They survive
+  a refresh and can be discarded. **Images are not persisted** and must be
+  reselected after a reload. After successfully publishing, the draft clears.
+- **Empty feed recovery:** if filters return no posts, clear them in one click.
+- **Notifications:** compact single-icon delete action and labelled mark-all-read.
+
+These are optional usability features beyond the Basic PDF; they require no
+database changes. The underlying permissions and sorting/filtering rules remain
+covered by the course requirements and automated review tests.
+
+Design/flow audit: [docs/UX_AUDIT_OCT2026.md](docs/UX_AUDIT_OCT2026.md).
+
+## New community features
+
+- **Post photos:** authors upload up to four JPEG/PNG/WebP photos (5 MB each); images are decoded and normalized to WebP, stored under `API/uploads/posts`, shown in cards and a full-screen gallery, and removable by the author.
+- **Best answer:** a post author can mark/unmark one active reply as accepted, so the post displays `Solved` and the selected reply displays `Best answer`.
+- **Reporting:** signed-in users may report someone else's post or comment for spam, abuse, off-topic content or other reasons; duplicates are rejected. Reports are handled in the Admin → Reports queue.
+- **Formatting:** posts support headings, bold text and ordered/unordered lists. The composer offers toolbar buttons and a live safe preview; text is rendered as React nodes without injecting user-supplied HTML.
+- **Moderators:** administrators can grant/revoke `moderator` in Admin → Members → Edit → Role. Moderators can review reports, lock, deactivate or delete posts and comments, and moderate reactions; they cannot create users, change roles, manage categories or edit other authors' post text/categories. The server checks every permission.
+
+On an existing database, run `npm run db:init` to apply additive schema upgrades without erasing users/posts. Use `npm run db:reset` only on a disposable database.
+
+Integration test in CI: `npm run test:features` (requires `NODE_ENV=test` and a disposable `*_ci` or `*_test` database). Tests include real image upload and readback, owner-only deletion, accepted answers, reports and moderator permissions.
+
+## Fixing the guest feed network warning (macOS AirPlay port collision)
+
+**On macOS the `AirPlay Receiver` / `AirTunes` service can claim port
+5000 and reply with `HTTP 403` (header `Server: AirTunes`). This is not
+a login error, and restarting MySQL will not fix it.** In your existing
+uncommitted root `.env`, change these two lines while preserving the DB/SMTP
+credentials:
+
+```dotenv
+APP_PORT=5050
+VITE_API_ORIGIN=http://127.0.0.1:5050
+```
+
+Vite dynamically reads `APP_PORT` from the SAME `.env` and proxies API
+requests there. Both Node and Vite must be restarted once after changing a
+server port, but future React/CSS updates are automatic. **Do not** create a
+new Docker volume, reinitialize the database, switch branches, or turn off
+AirPlay globally.
+
+Public posts do **not** require login. If the guest home shows a network error
+even when Docker is healthy and `npm start` says the API is listening, use
+the **Threads UI branch** and restart the Vite process to pick up its new
+same-origin proxy config. The browser now fetches `/api/...` from port 5173,
+and Vite forwards the requests to `127.0.0.1:5050`.
+
+In **one** terminal run `npm start`. In the **other** terminate the previous
+Vite process with Ctrl+C, then run `npm run web`. Check both:
+
+```bash
+curl http://127.0.0.1:5050/api/health
+curl http://localhost:5173/api/health
+```
+
+Both should return `{"status":"ok"}` while the real DB is connected.
+If they do, reload the browser with Cmd+Shift+R. Do not switch to
+`web:demo` and do not reset the MySQL database to hide the warning.
+
+This branch also exposes a **Try again** action when a genuine API request
+fails; browser requests work while logged out as well as logged in.
 
 ## Real email — test it before fixing MySQL
 
@@ -110,7 +237,7 @@ For real registration and password reset emails, set `MAIL_HOST`, `MAIL_PORT`, `
 
 ## Screenshots and verification
 
-The full-requirements branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older screenshots under `docs/screenshots` show the preceding interface, not the simplified Basic theme.
+The circle-threads-feed branch CI runs backend security tests, all mandatory and Creative API smoke tests (the backend remains compatible), MySQL email verification checks, a React build and Chromium checks covering a 390px mobile viewport, admin pagination and real registration. Check the latest run on the [Actions page](https://github.com/Anastasia2627/usof/actions) for UI evidence. Older images under `docs/screenshots` are historical. For current screenshots of the public home, post/profile, editor and mobile UI, open the latest successful Circle workflow run in GitHub Actions and download its `circle-basic-screenshots` artifact.
 
 ## Documentation
 
