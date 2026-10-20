@@ -15,6 +15,8 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
   const [banReason, setBanReason] = useState('');
   const [adminNote, setAdminNote] = useState('');
   const [banBusy, setBanBusy] = useState(false);
+  const toolsRef = useRef(null);
+  const closeTools = () => { if (toolsRef.current) toolsRef.current.open = false; };
   const [form, setForm] = useState({
     login: user.login,
     email: user.email,
@@ -75,27 +77,35 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
       </div>
       <span className="adminRoleChip">{t(user.banned_at ? 'Banned' : user.role)}</span>
       <span className="adminScore" title={t('User rating')}>{Number(user.rating || 0)} {t('points')}</span>
-      <div className="adminRowTools">
-        {user.role!=='admin' && (user.banned_at ?
-          <button type="button" className="adminIconAction" title="Unban user" aria-label={'Unban '+user.login}
-            disabled={banBusy} onClick={unblock}><Icon name="unlock" size={18}/></button> :
-          <button type="button" className="adminIconAction" title="Ban user" aria-label={'Ban '+user.login}
-            onClick={()=>setShowBan(v=>!v)}><Icon name="lock" size={18}/></button>)}
-        {user.role!=='admin' && <button type="button" className={user.role==='moderator'?'roleQuickButton roleRevoke':'roleQuickButton'}
-          disabled={roleBusy || saving} aria-label={(user.role==='moderator'?'Remove moderator from ':'Make moderator: ')+user.login}
-          onClick={quickRole}>
-          <Icon name={user.role==='moderator'?'close':'shield'} size={17}/>
-          <span>{t(roleBusy?'Saving…':user.role==='moderator'?'Remove moderator':'Make moderator')}</span>
-        </button>}
-        <button type="button" className="adminIconAction" title={t('Edit')}
-          aria-label={'Edit user ' + user.login} onClick={() => setEditing(value => !value)}>
-          <Icon name="edit" size={18}/>
-        </button>
-        <button type="button" className="adminIconAction dangerText" disabled={Number(user.id) === Number(auth.user.id)}
-          aria-label={t('Delete')+' @'+user.login} onClick={() => onDelete(user)}
-          title={Number(user.id) === Number(auth.user.id) ? 'You cannot delete your own admin account' : t('Delete')}>
-          <Icon name="trash" size={17}/>
-        </button>
+      <div className="adminRowTools adminUserRowTools">
+        <details className="adminUserActionMenu" ref={toolsRef}>
+          <summary title={t('More')} aria-label={t('More')+' · @'+user.login}>
+            <Icon name="more" size={20}/>
+          </summary>
+          <div className="adminUserMenuItems">
+            <button type="button" onClick={() => { closeTools(); setEditing(value => !value); }}>
+              <Icon name="edit" size={17}/>{t('Edit')}
+            </button>
+            {user.role!=='admin' && <button type="button" disabled={roleBusy||saving}
+              onClick={()=>{closeTools();quickRole();}}>
+              <Icon name={user.role==='moderator'?'close':'shield'} size={17}/>
+              {t(user.role==='moderator'?'Remove moderator':'Make moderator')}
+            </button>}
+            {user.role!=='admin' && (user.banned_at ?
+              <button type="button" disabled={banBusy} onClick={()=>{closeTools();unblock();}}>
+                <Icon name="unlock" size={17}/>{t('Unblock')}
+              </button> :
+              <button type="button" onClick={()=>{closeTools();setShowBan(value=>!value);}}>
+                <Icon name="lock" size={17}/>{t('Block')}
+              </button>)}
+            <div className="adminUserMenuDivider" role="separator"/>
+            <button type="button" className="adminUserMenuDanger"
+              disabled={Number(user.id)===Number(auth.user.id)}
+              onClick={()=>{closeTools();onDelete(user);}}>
+              <Icon name="trash" size={17}/>{t('Delete')}
+            </button>
+          </div>
+        </details>
       </div>
     </div>
     {showBan && !user.banned_at && <form className="adminInlineForm banEditor" onSubmit={submitBan}>
@@ -435,7 +445,13 @@ export default function AdminPage({initialTab='users'}) {
     reports: reportPagination?.total||0,
     appeals: data.appeals.filter(item=>item.status==='pending').length,
   };
-  const sections = moderator ? ['reports','posts','comments','reactions'] : ['dashboard','users','appeals','suggestions','reports','posts','categories','comments','reactions'];
+  const primarySections = moderator ? ['reports','posts'] : ['dashboard','users','appeals','reports','posts'];
+  const extraSections = moderator ? ['comments','reactions'] : ['suggestions','categories','comments','reactions'];
+  const moreTabsRef=useRef(null);
+  const changeSection=name=>{
+    setTab(name);
+    if(moreTabsRef.current) moreTabsRef.current.open=false;
+  };
 
   return <main className="adminPage">
     <header className="adminTop">
@@ -447,13 +463,28 @@ export default function AdminPage({initialTab='users'}) {
         <Icon name="refresh" size={19}/>
       </button>
     </header>
-    <nav className="tabs adminTabs" aria-label="Admin sections">
-      {sections.map(name => <button type="button" key={name}
-        className={tab === name ? 'active' : ''} aria-pressed={tab === name}
-        onClick={() => setTab(name)}>
-        {t(name.charAt(0).toUpperCase()+name.slice(1))}{name in counts && <span className="adminTabCount">{counts[name]}</span>}
-      </button>)}
-    </nav>
+    <div className="adminCompactNav">
+      <nav className="tabs adminTabs" aria-label="Admin sections">
+        {primarySections.map(name=><button type="button" key={name}
+          className={tab===name?'active':''} aria-pressed={tab===name}
+          onClick={()=>changeSection(name)}>
+          {t(name.charAt(0).toUpperCase()+name.slice(1))}
+          {name==='appeals'&&counts.appeals>0&&<span className="adminTabCount">{counts.appeals}</span>}
+        </button>)}
+      </nav>
+      <details className={'adminMoreTabs'+(extraSections.includes(tab)?' adminMoreActive':'')} ref={moreTabsRef}>
+        <summary aria-label={t('More')} title={t('More')}>
+          {t('More')} <Icon name="chevron" size={16}/>
+        </summary>
+        <div className="adminMoreMenu">
+          {extraSections.map(name=><button type="button" key={name}
+            className={tab===name?'active':''} aria-current={tab===name?'page':undefined}
+            onClick={()=>changeSection(name)}>
+            {t(name.charAt(0).toUpperCase()+name.slice(1))}
+          </button>)}
+        </div>
+      </details>
+    </div>
     <ErrorBox error={error}/>
     {tab === 'dashboard' && !moderator && <DashboardPage embedded/>}
     {loading && tab !== 'dashboard' ? <p className="adminLoading">{t('Loading community data…')}</p> : <>
