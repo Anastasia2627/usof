@@ -52,8 +52,8 @@ export default function App() {
   else if (path === '/settings') page = <SettingsPage />;
   else if (path === '/interests') page = <InterestsPage />;
   else if (path === '/ban') page = <BanPage />;
-  else if (path === '/login') page = <AuthPage mode="login" />;
-  else if (path === '/register') page = <AuthPage mode="register" />;
+  else if (path === '/login') page = <AuthPage key="login" mode="login" />;
+  else if (path === '/register') page = <AuthPage key="register" mode="register" />;
   else if (path === '/categories') page = <CategoriesPage />;
   else if (path === '/search') page = <SearchPage hash={hash} />;
   else if (path === '/profile') page = <ProfilePage />;
