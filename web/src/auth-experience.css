@@ -629,8 +629,13 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 }
 
 
-/* Login and registration: deliberate 3.6-second arc entrance, progressively staggered. */
-#root .circleAuthGallery .circleAuthTile{
+/* Keep the cards invisible until every gallery photo has decoded.
+   The animation then starts reliably, including after switching auth routes. */
+#root .circleAuthGallery:not(.circleAuthGallery--ready) .circleAuthTile{
+  animation:none!important;
+  opacity:0;
+}
+#root .circleAuthGallery.circleAuthGallery--ready .circleAuthTile{
   animation-name:circleElegantArrival;
   animation-duration:3.6s;
   animation-timing-function:cubic-bezier(.18,.7,.17,1);
