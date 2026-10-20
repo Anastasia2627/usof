@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {useDispatch,useSelector} from 'react-redux';
 import {api} from '../api.js';
-import {ErrorBox,go} from '../ui.jsx';
+import {ErrorBox,Icon,go} from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 export default function BanPage(){
@@ -102,9 +102,15 @@ export default function BanPage(){
               {t('Submit appeal')}
             </button> : <form className="circleBlockedHeroForm" onSubmit={submit}>
               <label htmlFor="banAppealInput">{t('Appeal this decision')}</label>
-              <textarea id="banAppealInput" required minLength={5} maxLength={4000}
-                rows={3} value={text} onChange={event=>setText(event.target.value)}
-                placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
+              <div className="circleBlockedAppealField">
+                <textarea id="banAppealInput" required minLength={5} maxLength={4000}
+                  rows={3} value={text} onChange={event=>setText(event.target.value)}
+                  placeholder={isUkrainian ? 'Напишіть, чому ви не погоджуєтеся з блокуванням…' : 'Tell us why you disagree with this decision…'}/>
+                <div className="circleBlockedAppealFieldFooter">
+                  <Icon name="edit" size={15}/>
+                  <span>{text.length}/4000</span>
+                </div>
+              </div>
               <div className="circleBlockedHeroFormActions">
                 <button type="button" onClick={()=>setShowAppeal(false)}
                   disabled={busy}>{isUkrainian ? 'Скасувати' : 'Cancel'}</button>
