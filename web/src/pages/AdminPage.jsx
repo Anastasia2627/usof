@@ -674,17 +674,18 @@ export default function AdminPage({initialTab='users'}) {
             </details>}
             {activeAppeal.status==='pending'
               ? <div className="appealReviewDecision">
-                {appealNoteOpen?<label className="appealResponseField">
-                  {t('Review note (optional)')}
+                <label className="appealResponseField">
+                  <span className="appealResponseLabel">
+                    <Icon name="edit" size={16}/>{t('Review note (optional)')}
+                  </span>
                   <textarea rows="3" maxLength={1000}
+                    placeholder={language==='uk'?'Напишіть відповідь користувачу…':'Write a response to the member…'}
                     value={appealNotes[activeAppeal.id]||''}
                     onChange={event=>setAppealNotes(value=>({
                       ...value,[activeAppeal.id]:event.target.value
                     }))}/>
-                </label>:<button type="button" className="appealAddNote"
-                  onClick={()=>setAppealNoteOpen(true)}>
-                    <Icon name="edit" size={17}/>{t('Add response (optional)')}
-                  </button>}
+                  <small>{(appealNotes[activeAppeal.id]||'').length}/1000</small>
+                </label>
                 <div className="appealReviewButtons">
                   <button type="button" className="appealApprove"
                     onClick={()=>decideAppeal(activeAppeal,'approved')}>
