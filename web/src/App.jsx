@@ -69,8 +69,9 @@ export default function App() {
 
   // A restriction takes precedence over every normal page, including stored routes.
   if (auth?.user?.banned_at) page = <BanPage />;
+  const isBanScreen = path === '/ban' || Boolean(auth?.user?.banned_at);
 
-  return <><Header />
+  return <>{!isBanScreen && <Header />}
     {sessionExpired && <div className="sessionExpiredBanner" role="status">
       <span>{t('Your session has expired. Please log in again.')}</span>
       <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
