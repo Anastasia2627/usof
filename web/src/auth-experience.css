@@ -635,7 +635,7 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
   animation-duration:2.35s;
   animation-timing-function:cubic-bezier(.16,.65,.18,1);
   animation-fill-mode:both;
-  animation-delay:calc(var(--delay) * 1.4);
+  animation-delay:var(--delay);
 }
 @keyframes circleSoftArcArrival{
   0%{
