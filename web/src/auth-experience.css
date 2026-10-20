@@ -84,7 +84,7 @@
   48% {
     opacity:1;
     transform:translate(calc(-50% + var(--x) + var(--arc-offset)),calc(var(--y) - 23px))
-      rotate(calc(var(--rotation) * 1)) scale(1.035);
+      rotate(var(--rotation)) scale(1.035);
     filter:blur(0);
   }
   78% {
