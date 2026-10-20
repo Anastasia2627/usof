@@ -15,6 +15,7 @@ import './modern-polish.css';
 import './review-fixes.css';
 import './auth-editorial.css';
 import './product-refinement.css';
+import './auth-experience.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
