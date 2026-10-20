@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { api, isDemoMode } from '../api.js';
-import { ErrorBox, go } from '../ui.jsx';
+import { ErrorBox, Icon, go } from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 function VerificationForm({ email, delivery, initialCode, login, password, onLogin }) {
@@ -106,6 +106,22 @@ function CircleAuthGallery() {
   </div>;
 }
 
+function AuthInput({ label, icon, type = 'text', visible = false, toggleVisibility, showLabel, hideLabel, ...props }) {
+  const canReveal = type === 'password';
+  return <label className="circleAuthInputLabel">
+    <span>{label}</span>
+    <span className="circleAuthInputShell">
+      <Icon name={icon} size={18}/>
+      <input {...props} type={canReveal && visible ? 'text' : type}/>
+      {canReveal && <button type="button" className="circleAuthVisibility"
+        onClick={toggleVisibility} aria-label={visible ? hideLabel : showLabel}
+        title={visible ? hideLabel : showLabel} aria-pressed={visible}>
+        <Icon name={visible ? 'eyeOff' : 'eye'} size={18}/>
+      </button>}
+    </span>
+  </label>;
+}
+
 export function AuthPage({ mode }) {
   const {t}=usePreferences();
   const dispatch = useDispatch();
@@ -119,6 +135,8 @@ export function AuthPage({ mode }) {
   const [recoveryMessage, setRecoveryMessage] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
@@ -184,36 +202,35 @@ export function AuthPage({ mode }) {
       </div> : <>
         <div className="circleAuthHeading">
           <h1>{t(register ? 'Create account' : 'Welcome back')}</h1>
-          <p>{register
-            ? (t('Join the conversation. Create your Circle profile.'))
-            : (t('Sign in to continue the conversation.'))}</p>
         </div>
         {isDemoMode() && <p className="circleAuthDemo" role="note">
           {t('Preview mode: accounts and email are simulated.')}
         </p>}
         <form className="circleAuthForm" onSubmit={submit}>
           {register ? <>
-            <label>{t('Username')}<input autoComplete="username" required minLength="3" maxLength="50"
-              value={form.login} onChange={field('login')} placeholder="yourname"/></label>
-            <label>{t('Full name')}<input autoComplete="name" maxLength="100"
-              value={form.fullName} onChange={field('fullName')} placeholder={t('Your name')}/></label>
-            <label>{t('Email')}<input type="email" autoComplete="email" required
-              value={form.email} onChange={field('email')} placeholder="name@example.com"/></label>
-          </> : <label>{t('Username or email')}
-            <input autoComplete="username" required value={form.identifier} onChange={field('identifier')}
-              placeholder={t('Username or email')}/>
-          </label>}
-          <label>{t('Password')}
-            <input type="password" autoComplete={register ? 'new-password' : 'current-password'}
-              required minLength={register ? 8 : undefined} maxLength="128"
-              value={form.password} onChange={field('password')}
-              placeholder={t('Password')}/>
-          </label>
-          {register && <label>{t('Confirm password')}
-            <input type="password" autoComplete="new-password" required minLength="8" maxLength="128"
-              value={form.passwordConfirmation} onChange={field('passwordConfirmation')}
-              placeholder={t('Confirm password')}/>
-          </label>}
+            <AuthInput label={t('Username')} icon="user" autoComplete="username"
+              required minLength="3" maxLength="50" value={form.login}
+              onChange={field('login')} placeholder="yourname"/>
+            <AuthInput label={t('Full name')} icon="user" autoComplete="name"
+              maxLength="100" value={form.fullName}
+              onChange={field('fullName')} placeholder={t('Your name')}/>
+            <AuthInput label={t('Email')} icon="mail" type="email" autoComplete="email"
+              required value={form.email} onChange={field('email')} placeholder="name@example.com"/>
+          </> : <AuthInput label={t('Username or email')} icon="user" autoComplete="username"
+              required value={form.identifier} onChange={field('identifier')}
+              placeholder={t('Username or email')}/>}
+          <AuthInput label={t('Password')} icon="lock" type="password"
+            autoComplete={register ? 'new-password' : 'current-password'}
+            required minLength={register ? 8 : undefined} maxLength="128"
+            value={form.password} onChange={field('password')} placeholder={t('Password')}
+            visible={showPassword} toggleVisibility={() => setShowPassword(v => !v)}
+            showLabel={t('Show password')} hideLabel={t('Hide password')}/>
+          {register && <AuthInput label={t('Confirm password')} icon="lock" type="password"
+            autoComplete="new-password" required minLength="8" maxLength="128"
+            value={form.passwordConfirmation} onChange={field('passwordConfirmation')}
+            placeholder={t('Confirm password')}
+            visible={showConfirmation} toggleVisibility={() => setShowConfirmation(v => !v)}
+            showLabel={t('Show password')} hideLabel={t('Hide password')}/>}
           {!register && <button className="circleAuthForgot" type="button" onClick={() => go('/reset')}>
             {t('Forgot password?')}
           </button>}
