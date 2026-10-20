@@ -96,11 +96,64 @@ const circleAuthImages = [
 ];
 
 function CircleAuthGallery() {
-  return <div className="circleAuthGallery" aria-hidden="true">
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Before this change the CSS animation started while 12 large PNGs
+    // were still loading: their photos sometimes appeared after the reveal.
+    let mounted = true;
+    let loaded = false;
+    let started = false;
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    const startWhenVisible = () => {
+      if (!mounted || !loaded || started || document.visibilityState === 'hidden') return;
+      started = true;
+      firstFrame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          if (mounted) setReady(true);
+        });
+      });
+    };
+
+    const images = circleAuthImages.map(filename => new Promise(resolve => {
+      const photo = new window.Image();
+      photo.onload = resolve;
+      photo.onerror = resolve;
+      photo.src = '/images/' + encodeURIComponent(filename);
+      // Wait for decoded pixels, not just the network request.
+      if (typeof photo.decode === 'function') photo.decode().then(resolve, resolve);
+    }));
+
+    const fallback = window.setTimeout(() => {
+      loaded = true;
+      startWhenVisible();
+    }, 12000);
+
+    Promise.all(images).then(() => {
+      if (!mounted) return;
+      loaded = true;
+      window.clearTimeout(fallback);
+      startWhenVisible();
+    });
+
+    document.addEventListener('visibilitychange', startWhenVisible);
+    return () => {
+      mounted = false;
+      window.clearTimeout(fallback);
+      document.removeEventListener('visibilitychange', startWhenVisible);
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, []);
+
+  return <div className={`circleAuthGallery${ready ? ' circleAuthGallery--ready' : ''}`}
+    aria-hidden="true">
     {circleAuthImages.map((filename, index) => (
       <span className={`circleAuthTile circleAuthTile--${index + 1}`} key={filename}>
         <img src={`/images/${encodeURIComponent(filename)}`} alt=""
-          draggable="false" decoding="async" />
+          draggable="false" decoding="async" loading="eager" />
       </span>
     ))}
   </div>;
