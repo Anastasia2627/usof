@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {useDispatch,useSelector} from 'react-redux';
 import {api} from '../api.js';
-import {ErrorBox,Icon,go} from '../ui.jsx';
+import {ErrorBox,go} from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 
 export default function BanPage(){
@@ -11,6 +11,7 @@ export default function BanPage(){
   const [appeal,setAppeal]=useState(null);
   const [initialLoading,setInitialLoading]=useState(true);
   const [text,setText]=useState('');
+  const [showAppeal,setShowAppeal]=useState(false);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState(null);
 
@@ -51,6 +52,7 @@ export default function BanPage(){
         method:'POST',token:auth.token,body:{explanation:text},
       });
       setText('');
+      setShowAppeal(false);
       await refresh();
     }catch(err){setError(err);}
     finally{setBusy(false);}
@@ -62,79 +64,71 @@ export default function BanPage(){
   }
 
 
-  const blockedCopy = language === 'uk'
-    ? 'Доступ до вашого акаунта обмежено. Нижче можна переглянути причину та оскаржити рішення.'
-    : 'Access to your account has been restricted. You can review the reason and appeal below.';
-  const detailsLabel = language === 'uk' ? 'Переглянути деталі' : 'View details';
-  const refreshLabel = t('Refresh status');
+  const isUkrainian = language === 'uk';
+  const reason = auth?.user?.ban_reason ||
+    (isUkrainian ? 'Причину не вказано' : 'No reason provided');
+  const date = auth?.user?.banned_at ? formatDate(auth.user.banned_at) : '';
 
-  if (!auth) return <main className="circleBlockedPage circleBlockedLoggedOut">
+  if(!auth) return <main className="circleBlockedHeroPage circleBlockedSignedOut">
     <h1>{t('Sign in to view your account status.')}</h1>
-    <button type="button" onClick={() => go('/login')} className="circleBlockedPrimary">
-      {t('Log in')}
-    </button>
+    <button type="button" onClick={()=>go('/login')}>{t('Log in')}</button>
   </main>;
 
-  return <main className="circleBlockedPage">
-    <section className="circleBlockedIntro" aria-labelledby="restriction-title">
-      <div className="circleBlockedArtwork">
-        <img src="/images/Frame%202072750582.png" alt="" decoding="async" fetchPriority="high"/>
-      </div>
-      <div className="circleBlockedIntroText">
+  return <main className="circleBlockedHeroPage">
+    <img
+      className="circleBlockedHeroImage"
+      src="/images/Frame%202072750582.png"
+      alt=""
+      fetchPriority="high"
+      decoding="async"
+    />
+    <section className="circleBlockedHeroOverlay" aria-labelledby="restriction-title">
+      <div className="circleBlockedHeroContent">
         <h1 id="restriction-title">{t('Account blocked')}</h1>
-        <p>{blockedCopy}</p>
-        <a className="circleBlockedPrimary" href="#circleBlockedDetails">
-          {detailsLabel}<span aria-hidden="true">↓</span>
-        </a>
-      </div>
-    </section>
-
-    <section id="circleBlockedDetails" className="circleBlockedDetails"
-      aria-label={t('Account restriction details')}>
-      <div className="circleBlockedReason">
-        <span className="circleBlockedLabel">{t('Official reason')}</span>
-        <h2>{auth.user?.ban_reason || t('Account access has been restricted by an administrator.')}</h2>
-        {auth.user?.banned_at && <time dateTime={auth.user.banned_at}>
-          {t('Blocked on')} · {formatDate(auth.user.banned_at)}
+        <p className="circleBlockedHeroReason">
+          <span>{isUkrainian ? 'Причина:' : 'Reason:'}</span> {reason}
+        </p>
+        {date && <time className="circleBlockedHeroDate" dateTime={auth.user.banned_at}>
+          {isUkrainian ? 'Заблоковано' : 'Blocked'} · {date}
         </time>}
-      </div>
-      <div className="circleBlockedAppeal">
-        {initialLoading ? <p className="circleBlockedLoading" role="status">{t('Loading…')}</p>
-          : appeal ? <div className="circleBlockedAppealReview">
-            <div className="circleBlockedStatusLine">
-              <h2>{t('Your appeal')}</h2>
-              <span className={`circleBlockedStatus circleBlockedStatus--${appeal.status}`}>
+
+        {initialLoading ? <p className="circleBlockedHeroLoading" role="status">{t('Loading…')}</p>
+          : appeal ? <>
+            <p className="circleBlockedHeroAppealStatus">
+              <span>{isUkrainian ? 'Оскарження:' : 'Appeal:'}</span>
+              <strong className={`circleBlockedHeroStatus circleBlockedHeroStatus--${appeal.status}`}>
                 {t(appeal.status)}
-              </span>
-            </div>
-            <p className="circleBlockedExplanation">{appeal.explanation}</p>
-            {appeal.review_note && <div className="circleBlockedReviewNote">
-              <strong>{t('Admin response')}</strong>
+              </strong>
+            </p>
+            {appeal.review_note && <details className="circleBlockedHeroReview">
+              <summary>{t('Admin response')}</summary>
               <p>{appeal.review_note}</p>
-            </div>}
-            <time dateTime={appeal.created_at}>{t('Submitted')} · {formatDate(appeal.created_at)}</time>
-          </div> : <form className="circleBlockedAppealForm" onSubmit={submit}>
-            <h2>{t('Appeal this decision')}</h2>
-            <label className="srOnly" htmlFor="banAppealInput">{t('Your appeal')}</label>
-            <textarea id="banAppealInput" required minLength={5} maxLength={4000}
-              rows="4" value={text} onChange={event => setText(event.target.value)}
-              placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
-            <div className="circleBlockedFormActions">
-              <span>{text.length}/4000</span>
-              <button type="submit" className="circleBlockedPrimary"
-                disabled={busy || initialLoading || text.trim().length < 5}>
-                {t(busy ? 'Sending…' : 'Submit appeal')}
-              </button>
-            </div>
-          </form>}
+            </details>}
+          </> : !showAppeal ? <button className="circleBlockedHeroAppealButton" type="button"
+              onClick={()=>setShowAppeal(true)}>
+              {t('Submit appeal')}
+            </button> : <form className="circleBlockedHeroForm" onSubmit={submit}>
+              <label htmlFor="banAppealInput">{t('Appeal this decision')}</label>
+              <textarea id="banAppealInput" required minLength={5} maxLength={4000}
+                rows={3} value={text} onChange={event=>setText(event.target.value)}
+                placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
+              <div className="circleBlockedHeroFormActions">
+                <button type="button" onClick={()=>setShowAppeal(false)}
+                  disabled={busy}>{isUkrainian ? 'Скасувати' : 'Cancel'}</button>
+                <button type="submit" disabled={busy || text.trim().length < 5}>
+                  {t(busy ? 'Sending…' : 'Submit appeal')}
+                </button>
+              </div>
+            </form>}
         <ErrorBox error={error}/>
+        <div className="circleBlockedHeroActions">
+          <button type="button" onClick={refresh} disabled={busy || initialLoading}>
+            {t('Refresh status')}
+          </button>
+          <span aria-hidden="true">·</span>
+          <button type="button" onClick={logOut}>{t('Log out')}</button>
+        </div>
       </div>
     </section>
-    <div className="circleBlockedFooter">
-      <button type="button" onClick={refresh} disabled={busy || initialLoading}>
-        <Icon name="refresh" size={17}/>{refreshLabel}
-      </button>
-      <button type="button" onClick={logOut}>{t('Log out')}</button>
-    </div>
   </main>;
 }
