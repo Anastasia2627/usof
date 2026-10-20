@@ -78,28 +78,31 @@ function VerificationForm({ email, delivery, initialCode, login, password, onLog
 }
 
 
-/* A small gallery of original, code-drawn hobby illustrations.
-   Kept local so the sign-in screen never relies on remote image hosts. */
-function CircleArtTile({ variant }) {
-  const common = { viewBox: '0 0 96 96', xmlns: 'http://www.w3.org/2000/svg', focusable: 'false' };
-  switch (variant) {
-    case 0: return <svg {...common}><circle cx="48" cy="48" r="33" fill="#F6D8EB"/><path d="M27 65c15-18 27-26 41-33" fill="none" stroke="#315C4C" strokeWidth="4" strokeLinecap="round"/><path d="M42 50c-18-1-17-19-4-20 10 3 11 12 4 20Zm12-9c-3-15 12-21 20-11 1 10-8 16-20 11Z" fill="#6DAB89"/><circle cx="63" cy="27" r="10" fill="#F2849E"/><circle cx="63" cy="27" r="4" fill="#FBE4A6"/></svg>;
-    case 1: return <svg {...common}><rect x="13" y="15" width="70" height="68" rx="20" fill="#1D2741"/><circle cx="58" cy="32" r="17" fill="#F9E2A6"/><circle cx="64" cy="26" r="16" fill="#1D2741"/><path d="m30 35 3 7 7 3-7 3-3 7-3-7-7-3 7-3Zm41 20 2 4 4 2-4 2-2 4-2-4-4-2 4-2Z" fill="#F8EBD4"/><path d="M19 73c16-15 39-11 61-1" fill="none" stroke="#7E95BC" strokeWidth="4" strokeLinecap="round"/></svg>;
-    case 2: return <svg {...common}><rect x="9" y="9" width="78" height="78" rx="18" fill="#F9B6A9"/><circle cx="66" cy="32" r="19" fill="#FFE2A6"/><path d="M9 64 32 35l21 23 14-16 20 20v24H9Z" fill="#C57997"/><path d="M9 74 33 55l19 18 13-8 22 13v8H9Z" fill="#644E8C"/></svg>;
-    case 3: return <svg {...common}><rect x="11" y="10" width="74" height="76" rx="23" fill="#F8E8D2"/><path d="M32 62V42c0-10 7-17 16-17s16 7 16 17v20c0 10-6 15-16 15s-16-5-16-15Z" fill="#24252A"/><path d="M32 41 26 25q10-3 19 6m19 10 6-16q-10-3-19 6" fill="#24252A"/><ellipse cx="40" cy="49" rx="3" ry="5" fill="#FFF"/><ellipse cx="56" cy="49" rx="3" ry="5" fill="#FFF"/><path d="M46 58q2 3 4 0" fill="none" stroke="#FFF" strokeWidth="2" strokeLinecap="round"/></svg>;
-    case 4: return <svg {...common}><rect x="10" y="10" width="76" height="76" rx="22" fill="#D6C3F1"/><path d="M20 64c18-43 34-50 55-33M20 74c15-37 36-47 56-30M30 81c11-21 26-28 44-24" stroke="#8061B9" strokeWidth="11" fill="none" strokeLinecap="round"/><circle cx="63" cy="31" r="8" fill="#F0B5D4"/></svg>;
-    case 5: return <svg {...common}><rect x="9" y="9" width="78" height="78" rx="18" fill="#BBD8E5"/><path d="M19 79V57L35 23l17 28 13-16 13 27v17Z" fill="#4A83A0"/><path d="M35 23 25 44l9-6 9 11 9 2ZM65 35l-9 20 9-7 8 7Z" fill="#FFF8EF"/><path d="M9 70q20-16 39 0t39 0v17H9Z" fill="#6B9D82"/></svg>;
-    case 6: return <svg {...common}><rect x="9" y="9" width="78" height="78" rx="22" fill="#EDD0D7"/><path d="M27 40c0-15 11-25 24-25 14 0 24 10 24 25 0 7-4 15-8 22l-2 16H37l-2-17c-5-7-8-14-8-21Z" fill="#9C544A"/><ellipse cx="50" cy="34" rx="20" ry="16" fill="#C77E69"/><path d="M36 32c7 4 14 2 23-4 5 7 9 8 15 7" stroke="#66372F" strokeWidth="7" fill="none" strokeLinecap="round"/><circle cx="43" cy="43" r="2.8"/><circle cx="61" cy="43" r="2.8"/><path d="M46 54q7 5 14-1" stroke="#66372F" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>;
-    case 7: return <svg {...common}><rect x="10" y="10" width="76" height="76" rx="19" fill="#CFECDF"/><circle cx="48" cy="44" r="22" fill="#F3AEB9"/><g fill="#FFF7EA"><ellipse cx="48" cy="25" rx="9" ry="16"/><ellipse cx="48" cy="63" rx="9" ry="16"/><ellipse cx="29" cy="44" rx="16" ry="9"/><ellipse cx="67" cy="44" rx="16" ry="9"/></g><circle cx="48" cy="44" r="10" fill="#EAA74E"/><path d="M48 78v9" stroke="#527967" strokeWidth="4"/></svg>;
-    default: return <svg {...common}><rect x="9" y="9" width="78" height="78" rx="21" fill="#F4D6B5"/><path d="M17 60c15-20 30-15 37-36 8 15 24 14 25 35" fill="none" stroke="#B56E6B" strokeWidth="13" strokeLinecap="round"/><path d="M21 76c19-21 36-22 53-6" fill="none" stroke="#896B9B" strokeWidth="10" strokeLinecap="round"/><circle cx="54" cy="24" r="8" fill="#E8A24E"/></svg>;
-  }
-}
+/* Gallery artwork exported from the user's Figma designs.
+   These assets are served locally from web/public/images. */
+const circleAuthImages = [
+  'Frame 2072750583.png',
+  'Frame 2072750584.png',
+  'Frame 2072750585.png',
+  'Frame 2072750586.png',
+  'Frame 2072750587.png',
+  'Frame 2072750588.png',
+  'Frame 2072750589.png',
+  'Frame 2072750590.png',
+  'Frame 2072750591.png',
+  'Frame 2072750592.png',
+  'Frame 2072750593.png',
+  'Frame 2072750594.png',
+];
+
 function CircleAuthGallery() {
   return <div className="circleAuthGallery" aria-hidden="true">
-    {Array.from({ length: 9 }, (_, index) =>
-      <span className={`circleAuthTile circleAuthTile--${index + 1}`} key={index}>
-        <CircleArtTile variant={index}/>
-      </span>)}
+    {circleAuthImages.map((filename, index) => (
+      <span className={`circleAuthTile circleAuthTile--${index + 1}`} key={filename}>
+        <img src={`/images/${encodeURIComponent(filename)}`} alt=""
+          draggable="false" decoding="async" />
+      </span>
+    ))}
   </div>;
 }
 
