@@ -627,3 +627,142 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 @media(prefers-reduced-motion:reduce){
   .circleAuthTile{animation:none!important;will-change:auto;}
 }
+
+
+/* Calm, slower arrivals for the artwork on both authentication screens. */
+#root .circleAuthGallery .circleAuthTile{
+  animation-name:circleSoftArcArrival;
+  animation-duration:2.35s;
+  animation-timing-function:cubic-bezier(.16,.65,.18,1);
+  animation-fill-mode:both;
+  animation-delay:calc(var(--delay) * 1.4);
+}
+@keyframes circleSoftArcArrival{
+  0%{
+    opacity:0;
+    transform:translate(calc(-50% + var(--x) + var(--flight-offset)),calc(var(--y) + 92px))
+      rotate(calc(var(--rotation) + var(--flight-rotate))) scale(.84);
+    filter:blur(2px);
+  }
+  44%{
+    opacity:.84;
+    transform:translate(calc(-50% + var(--x) + var(--arc-offset)),calc(var(--y) - 17px))
+      rotate(var(--rotation)) scale(1.015);
+    filter:blur(0);
+  }
+  74%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x)),calc(var(--y) + 3px))
+      rotate(var(--rotation)) scale(1);
+  }
+  100%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation)) scale(1);
+  }
+}
+#root > main.circleBlockedHeroPage {
+  min-height:100svh!important;
+  background:linear-gradient(180deg,#b4d5fa 0%,#ecd8ff 56%,#fbeafa 77%,#fbeafa 100%)!important;
+}
+#root > main.circleBlockedHeroPage > .circleBlockedHeroImage {
+  inset:0 auto auto 0;
+  width:100%;
+  height:74svh;
+  object-fit:cover;
+  object-position:center 45%;
+  z-index:0;
+}
+#root > main.circleBlockedHeroPage .circleBlockedHeroOverlay{
+  position:relative;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  align-items:center;
+  min-height:100svh;
+  height:auto;
+  padding:74svh 20px 24px;
+  background:transparent;
+}
+#root > main.circleBlockedHeroPage .circleBlockedHeroContent{
+  flex:none;
+  margin:0 auto;
+  padding:10px 0 0;
+  width:min(100%,700px);
+  text-align:center;
+}
+#root > main.circleBlockedHeroPage .circleBlockedHeroContent h1{
+  position:absolute;
+  top:clamp(22px,3.5vh,48px);
+  left:50%;
+  transform:translateX(-50%);
+  margin:0;
+  padding:0 10px;
+  color:#2a232e;
+}
+/* A coherent custom appeal editor, not a browser-default textarea. */
+#root .circleBlockedHeroForm{width:min(100%,490px);gap:10px;margin-top:12px;}
+#root .circleBlockedHeroForm label{font-size:12px;letter-spacing:-.01em;color:#43354b;}
+#root .circleBlockedAppealField{
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(119,88,129,.2);
+  border-radius:17px;
+  background:rgba(255,255,255,.58);
+  box-shadow:0 4px 18px rgba(114,71,137,.035);
+  transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
+}
+#root .circleBlockedAppealField:focus-within{
+  border-color:rgba(109,67,162,.58);
+  background:rgba(255,255,255,.8);
+  box-shadow:0 0 0 3px rgba(112,74,157,.075);
+}
+#root .circleBlockedAppealField textarea{
+  width:100%;
+  min-height:76px;
+  max-height:210px;
+  resize:vertical;
+  padding:14px 16px 7px;
+  background:transparent;
+  border:0;
+  border-radius:16px 16px 0 0;
+  font-size:13px;
+  line-height:1.55;
+  color:#33253b;
+  outline:0;
+  box-shadow:none;
+}
+#root .circleBlockedAppealField textarea:focus-visible{
+  outline:0;
+}
+#root .circleBlockedAppealField textarea::placeholder{color:#95879d;opacity:1;}
+.circleBlockedAppealFieldFooter{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:0 13px 10px;
+  color:#917e9b;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+}
+.circleBlockedAppealFieldFooter .circleIcon{opacity:.7;}
+#root .circleBlockedHeroFormActions{gap:12px;}
+#root .circleBlockedHeroFormActions button:last-child{min-height:38px;padding:8px 16px;}
+#root .circleBlockedHeroReason{margin-top:3px;}
+#root .circleBlockedHeroActions{margin-top:14px;}
+@media(max-width:650px){
+  #root > main.circleBlockedHeroPage > .circleBlockedHeroImage{
+    height:68svh;
+    object-position:center 35%;
+  }
+  #root > main.circleBlockedHeroPage .circleBlockedHeroOverlay{
+    padding:68svh 14px max(24px,env(safe-area-inset-bottom));
+  }
+  #root > main.circleBlockedHeroPage .circleBlockedHeroContent h1{
+    top:clamp(20px,3vh,33px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #root .circleAuthGallery .circleAuthTile{animation:none!important;}
+}
