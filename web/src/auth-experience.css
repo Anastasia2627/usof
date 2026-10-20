@@ -498,7 +498,18 @@ html[data-theme="dark"] .circleAuthSubmit:hover:not(:disabled){background:#fff;c
 
 /* October UI refinements: icon inputs, strong arced reveal, aligned feed. */
 .circleAuthHeading{margin-bottom:28px;}
-.circleAuthInputLabel{min-width:0;}
+.circleAuthInputLabel{
+  display:grid;
+  gap:7px;
+  min-width:0;
+}
+.circleAuthInputLabel > label{
+  color:#424047;
+  font-size:12px;
+  font-weight:680;
+  line-height:1.5;
+}
+html[data-theme="dark"] .circleAuthInputLabel > label{color:#d6ceda;}
 .circleAuthInputShell{
   display:flex;
   align-items:center;
