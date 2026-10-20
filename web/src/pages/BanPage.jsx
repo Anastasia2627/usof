@@ -61,63 +61,80 @@ export default function BanPage(){
     go('/login');
   }
 
-  if(!auth)return <main className="banPage banNightPage">
+
+  const blockedCopy = language === 'uk'
+    ? 'Доступ до вашого акаунта обмежено. Нижче можна переглянути причину та оскаржити рішення.'
+    : 'Access to your account has been restricted. You can review the reason and appeal below.';
+  const detailsLabel = language === 'uk' ? 'Переглянути деталі' : 'View details';
+  const refreshLabel = t('Refresh status');
+
+  if (!auth) return <main className="circleBlockedPage circleBlockedLoggedOut">
     <h1>{t('Sign in to view your account status.')}</h1>
-    <button className="primary" onClick={()=>go('/login')}>{t('Log in')}</button>
+    <button type="button" onClick={() => go('/login')} className="circleBlockedPrimary">
+      {t('Log in')}
+    </button>
   </main>;
 
-  return <main className="banPage banEditorialPage">
-    <header className="banNightStage banEditorialHero">
-      <h1 id="restriction-title">{t('Account blocked')}</h1>
-      <div className="banEditorialUnderline" aria-hidden="true"/>
-    </header>
-    <section className="banNightPanel banEditorialDetails" aria-labelledby="restriction-title">
-      <div className="banEditorialReason">
-        <span className="banEditorialCaption">{t('Official reason')}</span>
-        <h2>{auth.user?.ban_reason||
-          t('Account access has been restricted by an administrator.')}</h2>
-        {auth.user?.banned_at&&<time dateTime={auth.user.banned_at}>
+  return <main className="circleBlockedPage">
+    <section className="circleBlockedIntro" aria-labelledby="restriction-title">
+      <div className="circleBlockedArtwork">
+        <img src="/images/Frame%202072750582.png" alt="" decoding="async" fetchPriority="high"/>
+      </div>
+      <div className="circleBlockedIntroText">
+        <h1 id="restriction-title">{t('Account blocked')}</h1>
+        <p>{blockedCopy}</p>
+        <a className="circleBlockedPrimary" href="#circleBlockedDetails">
+          {detailsLabel}<span aria-hidden="true">↓</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="circleBlockedDetails" className="circleBlockedDetails"
+      aria-label={t('Account restriction details')}>
+      <div className="circleBlockedReason">
+        <span className="circleBlockedLabel">{t('Official reason')}</span>
+        <h2>{auth.user?.ban_reason || t('Account access has been restricted by an administrator.')}</h2>
+        {auth.user?.banned_at && <time dateTime={auth.user.banned_at}>
           {t('Blocked on')} · {formatDate(auth.user.banned_at)}
         </time>}
       </div>
-      <div className="banEditorialAppeal">
-        {initialLoading?<p role="status">{t('Loading…')}</p>
-          :appeal?<div className="banEditorialAppealStatus">
-            <div className="banEditorialStatusLine">
+      <div className="circleBlockedAppeal">
+        {initialLoading ? <p className="circleBlockedLoading" role="status">{t('Loading…')}</p>
+          : appeal ? <div className="circleBlockedAppealReview">
+            <div className="circleBlockedStatusLine">
               <h2>{t('Your appeal')}</h2>
-              <span className={'banNightAppealBadge banAppealStatus-'+appeal.status}>
+              <span className={`circleBlockedStatus circleBlockedStatus--${appeal.status}`}>
                 {t(appeal.status)}
               </span>
             </div>
-            <p className="banNightExplanation">{appeal.explanation}</p>
-            {appeal.review_note&&<p className="banEditorialReview">
-              <strong>{t('Admin response')}</strong> {appeal.review_note}
-            </p>}
-            <time dateTime={appeal.created_at}>
-              {t('Submitted')} · {formatDate(appeal.created_at)}
-            </time>
-          </div>:<form className="banNightForm banEditorialForm" onSubmit={submit}>
+            <p className="circleBlockedExplanation">{appeal.explanation}</p>
+            {appeal.review_note && <div className="circleBlockedReviewNote">
+              <strong>{t('Admin response')}</strong>
+              <p>{appeal.review_note}</p>
+            </div>}
+            <time dateTime={appeal.created_at}>{t('Submitted')} · {formatDate(appeal.created_at)}</time>
+          </div> : <form className="circleBlockedAppealForm" onSubmit={submit}>
             <h2>{t('Appeal this decision')}</h2>
             <label className="srOnly" htmlFor="banAppealInput">{t('Your appeal')}</label>
-            <textarea id="banAppealInput" value={text}
-              onChange={event=>setText(event.target.value)}
-              required minLength={5} maxLength={4000} rows="4"
+            <textarea id="banAppealInput" required minLength={5} maxLength={4000}
+              rows="4" value={text} onChange={event => setText(event.target.value)}
               placeholder={t('Explain why you believe this restriction should be reconsidered…')}/>
-            <div className="banEditorialSubmit">
+            <div className="circleBlockedFormActions">
               <span>{text.length}/4000</span>
-              <button type="submit" className="primary" disabled={busy||text.trim().length<5}>
-                {t(busy?'Sending…':'Submit appeal')} <Icon name="arrow" size={17}/>
+              <button type="submit" className="circleBlockedPrimary"
+                disabled={busy || initialLoading || text.trim().length < 5}>
+                {t(busy ? 'Sending…' : 'Submit appeal')}
               </button>
             </div>
           </form>}
         <ErrorBox error={error}/>
       </div>
     </section>
-    <nav className="banEditorialFooter" aria-label={t('Account restriction details')}>
-      <button type="button" onClick={refresh} disabled={busy}>
-        <Icon name="refresh" size={17}/>{t('Refresh status')}
+    <div className="circleBlockedFooter">
+      <button type="button" onClick={refresh} disabled={busy || initialLoading}>
+        <Icon name="refresh" size={17}/>{refreshLabel}
       </button>
       <button type="button" onClick={logOut}>{t('Log out')}</button>
-    </nav>
+    </div>
   </main>;
 }
