@@ -5,6 +5,10 @@ const LANGUAGE_NAMES = { en: 'English', uk: 'Українська' };
 
 const translations = {
   uk: {
+    "Join the conversation. Create your Circle profile.": "Приєднуйся до розмов. Створи свій профіль у Circle.",
+    "Sign in to continue the conversation.": "Увійди, щоб продовжити спілкування.",
+    "Preview mode: accounts and email are simulated.": "Режим перегляду: акаунти та листи імітуються.",
+    "Your name": "Ваше ім’я",
     'Home':'Головна', 'Explore':'Огляд', 'Search':'Пошук', 'Categories':'Категорії',
     'New post':'Новий допис', 'Admin':'Адміністрування', 'Saved':'Збережене',
     'Dashboard':'Статистика', 'Settings':'Налаштування', 'Log in':'Увійти',
