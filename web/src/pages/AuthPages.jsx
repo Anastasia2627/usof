@@ -112,16 +112,23 @@ function CircleAuthGallery() {
       if (typeof image.decode === 'function') image.decode().then(resolve, resolve);
       else image.onload = resolve;
     }));
-    Promise.all(photos).then(() => {
-      if (!active) return;
+    let started = false;
+    const begin = () => {
+      if (!active || started) return;
+      started = true;
+      window.clearTimeout(fallback);
       raf1 = window.requestAnimationFrame(() => {
         raf2 = window.requestAnimationFrame(() => {
           if (active) setReady(true);
         });
       });
-    });
+    };
+    // A broken image must never leave the entire gallery invisible indefinitely.
+    const fallback = window.setTimeout(begin, 10000);
+    Promise.all(photos).then(begin);
     return () => {
       active = false;
+      window.clearTimeout(fallback);
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
     };
