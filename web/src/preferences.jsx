@@ -5,6 +5,8 @@ const LANGUAGE_NAMES = { en: 'English', uk: 'Українська' };
 
 const translations = {
   uk: {
+    'Hide password': 'Приховати пароль',
+    'Show password': 'Показати пароль',
     "Join the conversation. Create your Circle profile.": "Приєднуйся до розмов. Створи свій профіль у Circle.",
     "Sign in to continue the conversation.": "Увійди, щоб продовжити спілкування.",
     "Preview mode: accounts and email are simulated.": "Режим перегляду: акаунти та листи імітуються.",
