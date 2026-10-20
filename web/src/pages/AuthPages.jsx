@@ -107,19 +107,20 @@ function CircleAuthGallery() {
 }
 
 function AuthInput({ label, icon, type = 'text', visible = false, toggleVisibility, showLabel, hideLabel, ...props }) {
+  const id = React.useId();
   const canReveal = type === 'password';
-  return <label className="circleAuthInputLabel">
-    <span>{label}</span>
+  return <div className="circleAuthInputLabel">
+    <label htmlFor={id}>{label}</label>
     <span className="circleAuthInputShell">
       <Icon name={icon} size={18}/>
-      <input {...props} type={canReveal && visible ? 'text' : type}/>
+      <input {...props} id={id} type={canReveal && visible ? 'text' : type}/>
       {canReveal && <button type="button" className="circleAuthVisibility"
         onClick={toggleVisibility} aria-label={visible ? hideLabel : showLabel}
         title={visible ? hideLabel : showLabel} aria-pressed={visible}>
         <Icon name={visible ? 'eyeOff' : 'eye'} size={18}/>
       </button>}
     </span>
-  </label>;
+  </div>;
 }
 
 export function AuthPage({ mode }) {
