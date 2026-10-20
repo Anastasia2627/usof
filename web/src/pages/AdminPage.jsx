@@ -17,6 +17,16 @@ function UserRow({ user, auth, onSave, onDelete, onBan, onUnban }) {
   const [banBusy, setBanBusy] = useState(false);
   const toolsRef = useRef(null);
   const closeTools = () => { if (toolsRef.current) toolsRef.current.open = false; };
+  useEffect(()=>{
+    const outside=event=>{if(toolsRef.current?.open&&!toolsRef.current.contains(event.target))closeTools();};
+    const escape=event=>{if(event.key==='Escape')closeTools();};
+    document.addEventListener('pointerdown',outside);
+    document.addEventListener('keydown',escape);
+    return()=>{
+      document.removeEventListener('pointerdown',outside);
+      document.removeEventListener('keydown',escape);
+    };
+  },[]);
   const [form, setForm] = useState({
     login: user.login,
     email: user.email,
@@ -243,6 +253,24 @@ export default function AdminPage({initialTab='users'}) {
   const [commentMenu,setCommentMenu]=useState(null);
   const commentMenuRef=useRef(null);
   const moreTabsRef=useRef(null);
+  useEffect(()=>{
+    const outside=event=>{
+      if(moreTabsRef.current?.open&&!moreTabsRef.current.contains(event.target))
+        moreTabsRef.current.open=false;
+    };
+    const escape=event=>{
+      if(event.key==='Escape'&&moreTabsRef.current?.open){
+        moreTabsRef.current.open=false;
+        moreTabsRef.current.querySelector('summary')?.focus();
+      }
+    };
+    document.addEventListener('pointerdown',outside);
+    document.addEventListener('keydown',escape);
+    return()=>{
+      document.removeEventListener('pointerdown',outside);
+      document.removeEventListener('keydown',escape);
+    };
+  },[]);
   const [banFromReport,setBanFromReport]=useState(null);
   const [reportBanReason,setReportBanReason]=useState('');
   const [reportBanNote,setReportBanNote]=useState('');
