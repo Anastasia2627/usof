@@ -719,9 +719,9 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 }
 #root .circleBlockedAppealField textarea{
   width:100%;
-  min-height:76px;
+  min-height:92px;
   max-height:210px;
-  resize:vertical;
+  resize:none;
   padding:14px 16px 7px;
   background:transparent;
   border:0;
