@@ -107,10 +107,10 @@ function CircleAuthGallery() {
     let raf2 = 0;
     const photos = circleAuthImages.map(filename => new Promise(resolve => {
       const image = new window.Image();
-      image.onload = resolve;
       image.onerror = resolve;
       image.src = '/images/' + encodeURIComponent(filename);
       if (typeof image.decode === 'function') image.decode().then(resolve, resolve);
+      else image.onload = resolve;
     }));
     Promise.all(photos).then(() => {
       if (!active) return;
@@ -160,7 +160,7 @@ function CircleAuthGallery() {
       ], {
         duration: 3400,
         delay: index * 45,
-        easing: 'cubic-bezier(.17,.68,.18,1)',
+        easing: 'cubic-bezier(.42,0,.58,1)',
         fill: 'both',
       });
     });
