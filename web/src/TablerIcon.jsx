@@ -23,7 +23,7 @@ import {
   IconAdjustmentsHorizontal,
   IconSun, IconMoon, IconLanguage,
   IconBell, IconPhoto, IconSend,
-  IconEye, IconStar, IconStarFilled,
+  IconEye, IconEyeOff, IconMail, IconStar, IconStarFilled,
   IconMessages, IconActivity, IconCalendar,
   IconList, IconWorld, IconFolder,
 } from '@tabler/icons-react';
@@ -76,6 +76,8 @@ const icons = {
   photo: IconPhoto,
   send: IconSend,
   eye: IconEye,
+  eyeOff: IconEyeOff,
+  mail: IconMail,
   star: IconStar,
   starFilled: IconStarFilled,
   activity: IconActivity,
