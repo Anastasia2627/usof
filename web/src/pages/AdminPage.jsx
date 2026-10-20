@@ -242,6 +242,7 @@ export default function AdminPage({initialTab='users'}) {
   const [appealNoteOpen,setAppealNoteOpen]=useState(false);
   const [commentMenu,setCommentMenu]=useState(null);
   const commentMenuRef=useRef(null);
+  const moreTabsRef=useRef(null);
   const [banFromReport,setBanFromReport]=useState(null);
   const [reportBanReason,setReportBanReason]=useState('');
   const [reportBanNote,setReportBanNote]=useState('');
@@ -447,7 +448,6 @@ export default function AdminPage({initialTab='users'}) {
   };
   const primarySections = moderator ? ['reports','posts'] : ['dashboard','users','appeals','reports','posts'];
   const extraSections = moderator ? ['comments','reactions'] : ['suggestions','categories','comments','reactions'];
-  const moreTabsRef=useRef(null);
   const changeSection=name=>{
     setTab(name);
     if(moreTabsRef.current) moreTabsRef.current.open=false;
