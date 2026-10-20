@@ -1,0 +1,64 @@
+/* One consistent horizontal rhythm throughout the home / explore feed.
+   Applies to the existing layout without changing its data or interactions. */
+#root > main.homePage{
+  --feed-edge:clamp(16px,2vw,28px);
+  box-sizing:border-box;
+  min-width:0;
+}
+main.homePage .feedPageTitle{
+  box-sizing:border-box;
+  padding-left:var(--feed-edge);
+  padding-right:var(--feed-edge);
+  text-align:left;
+}
+main.homePage .feedTabs{
+  box-sizing:border-box;
+  width:auto;
+  margin-left:var(--feed-edge);
+  margin-right:var(--feed-edge);
+}
+main.homePage .feedComposer{
+  box-sizing:border-box;
+  width:calc(100% - var(--feed-edge) - var(--feed-edge));
+  max-width:none;
+  margin:17px var(--feed-edge) 12px;
+}
+main.homePage .feedFilterStrip{
+  box-sizing:border-box;
+  width:auto;
+  min-width:0;
+  margin-left:var(--feed-edge);
+  margin-right:var(--feed-edge);
+  padding:12px 0 16px;
+}
+main.homePage .feedTopicScroller{min-width:0;}
+main.homePage .feedShell{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+}
+main.homePage .threadGrid{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  padding:14px var(--feed-edge) 20px;
+}
+main.homePage .threadGrid > .threadCard{
+  box-sizing:border-box;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  margin-left:0;
+  margin-right:0;
+}
+main.homePage .feedEmptyState,
+main.homePage .feedMessage{
+  margin-left:var(--feed-edge);
+  margin-right:var(--feed-edge);
+}
+@media(max-width:720px){
+  #root > main.homePage{--feed-edge:12px;}
+  main.homePage .feedComposer{margin-top:12px;margin-bottom:10px;}
+  main.homePage .threadGrid{padding-top:10px;}
+  main.homePage .feedFilterStrip{padding-top:10px;padding-bottom:13px;}
+}
