@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { api, isDemoMode } from '../api.js';
 import { ErrorBox, Icon, go } from '../ui.jsx';
@@ -96,66 +96,93 @@ const circleAuthImages = [
 ];
 
 function CircleAuthGallery() {
+  const galleryRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [replay, setReplay] = useState(0);
 
   useEffect(() => {
-    // Before this change the CSS animation started while 12 large PNGs
-    // were still loading: their photos sometimes appeared after the reveal.
-    let mounted = true;
-    let loaded = false;
-    let started = false;
-    let firstFrame = 0;
-    let secondFrame = 0;
-
-    const startWhenVisible = () => {
-      if (!mounted || !loaded || started || document.visibilityState === 'hidden') return;
-      started = true;
-      firstFrame = window.requestAnimationFrame(() => {
-        secondFrame = window.requestAnimationFrame(() => {
-          if (mounted) setReady(true);
+    // Animate *after* photos are ready: an image cannot appear midway through its entrance.
+    let active = true;
+    let raf1 = 0;
+    let raf2 = 0;
+    const photos = circleAuthImages.map(filename => new Promise(resolve => {
+      const image = new window.Image();
+      image.onload = resolve;
+      image.onerror = resolve;
+      image.src = '/images/' + encodeURIComponent(filename);
+      if (typeof image.decode === 'function') image.decode().then(resolve, resolve);
+    }));
+    Promise.all(photos).then(() => {
+      if (!active) return;
+      raf1 = window.requestAnimationFrame(() => {
+        raf2 = window.requestAnimationFrame(() => {
+          if (active) setReady(true);
         });
       });
-    };
-
-    const images = circleAuthImages.map(filename => new Promise(resolve => {
-      const photo = new window.Image();
-      photo.onload = resolve;
-      photo.onerror = resolve;
-      photo.src = '/images/' + encodeURIComponent(filename);
-      // Wait for decoded pixels, not just the network request.
-      if (typeof photo.decode === 'function') photo.decode().then(resolve, resolve);
-    }));
-
-    const fallback = window.setTimeout(() => {
-      loaded = true;
-      startWhenVisible();
-    }, 12000);
-
-    Promise.all(images).then(() => {
-      if (!mounted) return;
-      loaded = true;
-      window.clearTimeout(fallback);
-      startWhenVisible();
     });
-
-    document.addEventListener('visibilitychange', startWhenVisible);
     return () => {
-      mounted = false;
-      window.clearTimeout(fallback);
-      document.removeEventListener('visibilitychange', startWhenVisible);
-      window.cancelAnimationFrame(firstFrame);
-      window.cancelAnimationFrame(secondFrame);
+      active = false;
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
     };
   }, []);
 
-  return <div className={`circleAuthGallery${ready ? ' circleAuthGallery--ready' : ''}`}
-    aria-hidden="true">
-    {circleAuthImages.map((filename, index) => (
-      <span className={`circleAuthTile circleAuthTile--${index + 1}`} key={filename}>
-        <img src={`/images/${encodeURIComponent(filename)}`} alt=""
-          draggable="false" decoding="async" loading="eager" />
-      </span>
-    ))}
+  useLayoutEffect(() => {
+    if (!ready || !galleryRef.current) return undefined;
+    // Web Animations run independently of stylesheet @keyframes, media queries and
+    // CSS-animation overrides left over from earlier iterations of the theme.
+    const gallery = galleryRef.current;
+    const tiles = Array.from(gallery.querySelectorAll('.circleAuthTile'))
+      .filter(tile => window.getComputedStyle(tile).display !== 'none');
+
+    const animations = tiles.map((tile, index) => {
+      const css = window.getComputedStyle(tile);
+      const number = (key, fallback = 0) => {
+        const value = parseFloat(css.getPropertyValue(key));
+        return Number.isFinite(value) ? value : fallback;
+      };
+      const x = number('--x');
+      const y = number('--y');
+      const rotation = number('--rotation');
+      const outward = x < 0 ? -1 : 1;
+      const pose = (dx, dy, angle, scale) =>
+        `translate(-50%, 0) translate(${x + dx}px, ${y + dy}px) rotate(${angle}deg) scale(${scale})`;
+
+      return tile.animate([
+        { opacity: 0, transform: pose(outward * 135, 125, rotation + outward * 16, .72),
+          filter: 'blur(5px)', offset: 0 },
+        { opacity: .8, transform: pose(outward * 55, -42, rotation + outward * 5, .95),
+          filter: 'blur(1px)', offset: .38 },
+        { opacity: 1, transform: pose(-outward * 12, 11, rotation, 1.035),
+          filter: 'blur(0px)', offset: .68 },
+        { opacity: 1, transform: pose(0, 0, rotation, 1),
+          filter: 'blur(0px)', offset: 1 },
+      ], {
+        duration: 3400,
+        delay: index * 45,
+        easing: 'cubic-bezier(.17,.68,.18,1)',
+        fill: 'both',
+      });
+    });
+    return () => animations.forEach(animation => animation.cancel());
+  }, [ready, replay]);
+
+  return <div ref={galleryRef}
+    className={`circleAuthGallery${ready ? ' circleAuthGallery--ready' : ''}`}>
+    <div className="circleAuthGalleryTiles" aria-hidden="true">
+      {circleAuthImages.map((filename, index) => (
+        <span className={`circleAuthTile circleAuthTile--${index + 1}`} key={filename}>
+          <img src={`/images/${encodeURIComponent(filename)}`} alt=""
+            draggable="false" decoding="async" loading="eager" />
+        </span>
+      ))}
+    </div>
+    {ready && <button type="button" className="circleAuthReplay"
+      title="Повторити анімацію / Replay animation"
+      aria-label="Повторити анімацію"
+      onClick={() => setReplay(count => count + 1)}>
+      <Icon name="refresh" size={16}/>
+    </button>}
   </div>;
 }
 
