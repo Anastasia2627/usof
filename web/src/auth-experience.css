@@ -780,3 +780,48 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 @media(prefers-reduced-motion:reduce){
   #root .circleAuthGallery .circleAuthTile{animation:none!important;}
 }
+
+
+/* Auth-gallery motion is now driven by the Web Animations API.
+   The many legacy CSS @keyframes are intentionally disabled here so they
+   cannot cancel or override the timed transforms on the same elements. */
+#root .circleAuthGallery .circleAuthTile{
+  animation:none!important;
+  opacity:0;
+  filter:none;
+  will-change:transform,opacity;
+}
+#root .circleAuthGallery.circleAuthGallery--ready .circleAuthTile{
+  opacity:1;
+}
+#root .circleAuthGallery .circleAuthGalleryTiles{
+  position:static;
+  pointer-events:none;
+}
+#root .circleAuthGallery .circleAuthReplay{
+  position:absolute;
+  top:5px;
+  right:5px;
+  z-index:4;
+  display:grid;
+  place-items:center;
+  width:33px;
+  height:33px;
+  min-height:0;
+  padding:0;
+  background:rgba(255,255,255,.83);
+  border:1px solid #e9e3ed;
+  border-radius:50%;
+  color:#84778a;
+  box-shadow:0 3px 12px rgba(51,37,70,.045);
+  cursor:pointer;
+  transition:background-color .18s ease,color .18s ease;
+}
+#root .circleAuthGallery .circleAuthReplay:hover{
+  background:#f5f0fa;
+  color:#4c3568;
+}
+#root .circleAuthGallery .circleAuthReplay:focus-visible{
+  outline:2px solid #8969b9;
+  outline-offset:3px;
+}
