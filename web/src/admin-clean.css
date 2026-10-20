@@ -1,0 +1,302 @@
+/* Circle admin workspace: fewer simultaneous controls, readable navigation and compact rows. */
+#root > main.adminPage{
+  width:min(1120px,calc(100% - 82px));
+  max-width:1120px;
+  padding-top:25px;
+}
+.adminPage .adminTop{
+  margin:0 0 20px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.adminPage .adminTop h1{font-size:clamp(25px,2.5vw,32px);letter-spacing:-.05em;}
+.adminPage .adminRefresh{width:37px;height:37px;min-height:37px;flex:none;}
+/* Only the sections used most are always visible. Other sections live under More. */
+.adminPage .adminCompactNav{
+  display:flex;
+  align-items:stretch;
+  justify-content:space-between;
+  gap:16px;
+  margin:0 0 25px;
+  border-bottom:1px solid #e9e7eb;
+}
+.adminPage .adminCompactNav .adminTabs{
+  display:flex;
+  flex:1 1 auto;
+  min-width:0;
+  width:auto;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+  gap:2px;
+}
+.adminPage .adminCompactNav .adminTabs::-webkit-scrollbar{display:none;}
+.adminPage .adminCompactNav .adminTabs button{
+  position:relative;
+  flex:none;
+  display:inline-flex;
+  gap:5px;
+  align-items:center;
+  justify-content:center;
+  min-height:47px;
+  padding:12px 16px;
+  margin:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#817d85;
+  font-size:12px;
+  font-weight:650;
+  white-space:nowrap;
+}
+.adminPage .adminCompactNav .adminTabs button.active{
+  background:transparent;
+  color:#332c3d;
+  font-weight:770;
+}
+.adminPage .adminCompactNav .adminTabs button.active::after{
+  content:"";
+  display:block;
+  position:absolute;
+  left:15px;right:15px;bottom:0;
+  height:2px;
+  border:0;
+  background:#7754bb;
+}
+.adminPage .adminCompactNav .adminTabs button:hover{
+  background:transparent;
+  color:#332b3b;
+}
+.adminPage .adminCompactNav .adminTabs .adminTabCount{
+  background:#f1edf7;
+  color:#6d519f;
+  border-radius:6px;
+  min-width:19px;
+  padding:2px 5px;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+  text-align:center;
+}
+.adminPage .adminMoreTabs{
+  flex:none;
+  position:relative;
+  align-self:stretch;
+  z-index:30;
+}
+.adminPage .adminMoreTabs summary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  list-style:none;
+  min-height:47px;
+  padding:8px 12px;
+  border:0;
+  border-radius:0;
+  color:#77717d;
+  background:transparent;
+  font-size:12px;
+  font-weight:680;
+}
+.adminPage .adminMoreTabs summary::-webkit-details-marker{display:none;}
+.adminPage .adminMoreTabs summary:hover,.adminPage .adminMoreActive summary{
+  color:#6f4ca9;
+  background:transparent;
+}
+.adminPage .adminMoreTabs[open] summary .circleIcon{transform:rotate(180deg);}
+.adminPage .adminMoreMenu{
+  position:absolute;
+  right:0;
+  top:calc(100% + 7px);
+  display:grid;
+  width:max-content;
+  min-width:184px;
+  max-width:245px;
+  gap:2px;
+  padding:7px;
+  border:1px solid #ebe6ee;
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 14px 35px rgba(27,20,34,.11);
+  z-index:60;
+}
+.adminPage .adminMoreMenu button{
+  width:100%;
+  display:block;
+  text-align:left;
+  padding:10px 12px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#514a56;
+  font-size:12px;
+  font-weight:600;
+}
+.adminPage .adminMoreMenu button:hover,.adminPage .adminMoreMenu button.active{
+  background:#f5f1f9;
+  color:#533583;
+}
+.adminPage .adminSectionHeader{margin:0 0 13px;padding:0 2px 12px;border-bottom:1px solid #f0eef2;}
+.adminPage .adminSectionHeader h2{font-size:17px;letter-spacing:-.03em;}
+.adminPage .adminSectionHeader span{font-size:11px;color:#96919a;}
+/* No big repeated rounded tiles for members: one quiet, evenly spaced list. */
+.adminPage .adminSimpleList:has(.adminUserRow){
+  display:block;
+  gap:0;
+  border-top:0;
+  border-bottom:1px solid #ece9ef;
+}
+.adminPage .adminSimpleList > .adminUserRow{
+  position:relative;
+  overflow:visible;
+  margin:0;
+  padding:0 12px;
+  border:0;
+  border-bottom:1px solid #eeeaf0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+}
+.adminPage .adminSimpleList > .adminUserRow:last-child{border-bottom:0;}
+.adminPage .adminSimpleList > .adminUserRow:hover,
+.adminPage .adminSimpleList > .adminUserRow:focus-within{background:#fcfbfd;}
+.adminPage .adminUserRow .adminItemLine{
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:14px;
+  min-height:73px;
+  padding:11px 0;
+}
+.adminPage .adminUserRow .avatar-md{width:39px;height:39px;flex:none;}
+.adminPage .adminUserRow .adminItemText{flex:1 1 auto;min-width:90px;}
+.adminPage .adminUserRow .adminItemText .adminName{font-size:13px;line-height:1.5;}
+.adminPage .adminUserRow .adminItemText p{font-size:11px;color:#97919a;line-height:1.45;}
+.adminPage .adminUserRow .adminRoleChip{
+  flex:none;
+  padding:5px 10px;
+  background:#f4f2f5;
+  border:0;
+  color:#77717b;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:650;
+}
+.adminPage .adminUserRow .adminScore{
+  flex:none;
+  text-align:right;
+  min-width:52px;
+  font-size:11px;
+  color:#9f99a2;
+}
+.adminPage .adminUserRowTools{
+  display:flex;
+  width:auto;
+  margin:0;
+  gap:0;
+  flex:none;
+}
+.adminPage .adminUserActionMenu{position:relative;z-index:1;}
+.adminPage .adminUserActionMenu[open]{z-index:50;}
+.adminPage .adminUserActionMenu > summary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  list-style:none;
+  width:35px;
+  height:35px;
+  cursor:pointer;
+  border:0;
+  border-radius:10px;
+  color:#817b86;
+  background:transparent;
+}
+.adminPage .adminUserActionMenu > summary::-webkit-details-marker{display:none;}
+.adminPage .adminUserActionMenu > summary:hover,
+.adminPage .adminUserActionMenu[open] > summary{
+  background:#f1edf5;
+  color:#493654;
+}
+.adminPage .adminUserMenuItems{
+  position:absolute;
+  top:calc(100% + 5px);
+  right:0;
+  z-index:60;
+  display:grid;
+  gap:2px;
+  min-width:214px;
+  padding:7px;
+  border:1px solid #e9e4ed;
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 12px 34px rgba(38,27,46,.13);
+}
+.adminPage .adminUserMenuItems button,
+.adminPage .adminRowTools .adminUserMenuItems button,
+.adminPage .adminRowTools .adminUserMenuItems button:not(.roleRevoke){
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  min-height:37px;
+  padding:8px 10px;
+  margin:0;
+  gap:10px;
+  text-align:left;
+  background:transparent;
+  border:0;
+  border-radius:8px;
+  color:#514b54;
+  font-size:12px;
+  font-weight:620;
+}
+.adminPage .adminUserMenuItems button:hover:not(:disabled),
+.adminPage .adminRowTools .adminUserMenuItems button:hover:not(:disabled){
+  background:#f5f1f9;
+  color:#352943;
+}
+.adminPage .adminUserMenuDivider{height:1px;background:#eee9f0;margin:5px 3px;}
+.adminPage .adminUserMenuItems button.adminUserMenuDanger{color:#ae5b65;}
+.adminPage .adminUserMenuItems button.adminUserMenuDanger:hover:not(:disabled){
+  background:#fff1f2;
+  color:#ad3b4e;
+}
+.adminPage .adminUserRow .adminInlineForm,
+.adminPage .adminUserRow .adminBanSummary{
+  margin:0 0 17px;
+  padding:14px 16px;
+  border:1px solid #efeaf2;
+  border-radius:12px;
+  background:#fbfafd;
+}
+/* Keep secondary content and existing moderation forms working. */
+html[data-theme="dark"] .adminPage .adminCompactNav{border-color:#39323f;}
+html[data-theme="dark"] .adminPage .adminMoreMenu,
+html[data-theme="dark"] .adminPage .adminUserMenuItems{
+  background:#242129;color:#f2edf5;border-color:#4a414f;
+}
+html[data-theme="dark"] .adminPage .adminUserMenuItems button,
+html[data-theme="dark"] .adminPage .adminMoreMenu button{color:#e4dce8;}
+html[data-theme="dark"] .adminPage .adminSimpleList > .adminUserRow{border-color:#39333d;}
+html[data-theme="dark"] .adminPage .adminSimpleList > .adminUserRow:hover{background:#252128;}
+html[data-theme="dark"] .adminPage .adminUserRow .adminRoleChip{background:#342e38;color:#d1c7d7;}
+html[data-theme="dark"] .adminPage .adminCompactNav .adminTabs button.active{color:#f1e8f8;}
+@media(max-width:850px){
+  #root > main.adminPage{width:calc(100% - 30px);max-width:100%;padding-top:20px;}
+  .adminPage .adminCompactNav{gap:5px;}
+  .adminPage .adminCompactNav .adminTabs button{padding:11px 10px;}
+}
+@media(max-width:600px){
+  .adminPage .adminUserRow .adminItemLine{gap:8px;min-height:67px;}
+  .adminPage .adminUserRow .avatar-md{width:34px;height:34px;}
+  .adminPage .adminUserRow .adminRoleChip{padding:4px 7px;}
+  .adminPage .adminUserRow .adminScore{display:none;}
+  .adminPage .adminSimpleList > .adminUserRow{padding:0 5px;}
+  .adminPage .adminCompactNav .adminTabs button{font-size:11px;}
+}
