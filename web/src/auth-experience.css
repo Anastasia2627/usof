@@ -494,3 +494,125 @@ html[data-theme="dark"] .circleAuthSubmit:hover:not(:disabled){background:#fff;c
   .circleAuthTile,.circleAuthContent{animation:none!important;filter:none!important;}
   .circleAuthSubmit,.circleAuthResend{transition:none;}
 }
+
+
+/* October UI refinements: icon inputs, strong arced reveal, aligned feed. */
+.circleAuthHeading{margin-bottom:28px;}
+.circleAuthInputLabel{min-width:0;}
+.circleAuthInputShell{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  height:47px;
+  padding:0 12px;
+  background:#fff;
+  border:1px solid #e4e2e6;
+  border-radius:11px;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+.circleAuthInputShell:focus-within{
+  border-color:#a99ac5;
+  box-shadow:0 0 0 3px rgba(159,130,199,.09);
+}
+.circleAuthInputShell > .circleIcon{
+  display:flex;
+  flex:none;
+  align-items:center;
+  justify-content:center;
+  color:#96909c;
+}
+.circleAuthForm .circleAuthInputShell > input{
+  flex:1;
+  width:100%;
+  min-width:0;
+  height:100%;
+  padding:0;
+  margin:0;
+  border:0!important;
+  border-radius:0;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+.circleAuthInputShell .circleAuthVisibility{
+  flex:none;
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:8px;
+  color:#7c7581;
+}
+.circleAuthInputShell .circleAuthVisibility:hover{background:#f7f5fa;color:#27212e;}
+.circleAuthInputShell .circleAuthVisibility:focus-visible{outline:2px solid #856cad;outline-offset:1px;}
+.circleAuthInputShell .circleAuthVisibility .circleIcon{display:flex;align-items:center;justify-content:center;}
+html[data-theme="dark"] .circleAuthInputShell{background:#27232e;border-color:#49404e;}
+html[data-theme="dark"] .circleAuthInputShell:focus-within{border-color:#c0a7df;}
+html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility{color:#ddd2e6;}
+html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{background:#39303e;color:#fff;}
+
+/* Make the movement visible: each photo follows a curved arrival path rather than only fading. */
+.circleAuthTile{
+  animation-name:circleArcFly;
+  animation-duration:1.42s;
+  animation-timing-function:cubic-bezier(.2,.72,.15,1);
+  animation-fill-mode:both;
+  will-change:transform,opacity;
+}
+@keyframes circleArcFly{
+  0%{
+    opacity:0;
+    transform:translate(calc(-50% + var(--x) + var(--flight-offset) * 1.6),calc(var(--y) + 170px))
+      rotate(calc(var(--rotation) + var(--flight-rotate))) scale(.62);
+    filter:blur(4px);
+  }
+  36%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x) + var(--arc-offset) * 2),calc(var(--y) - 48px))
+      rotate(var(--rotation)) scale(1.065);
+    filter:blur(0);
+  }
+  69%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x) - var(--arc-offset) / 3),calc(var(--y) + 12px))
+      rotate(var(--rotation)) scale(.99);
+    filter:blur(0);
+  }
+  100%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation)) scale(1);
+    filter:blur(0);
+  }
+}
+/* Remove the phantom 80px navigation column when the ban screen has no navbar. */
+#root:has(> main.circleBlockedHeroPage){display:block!important;grid-template-columns:none!important;}
+#root > main.circleBlockedHeroPage{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  min-height:100svh!important;
+}
+.circleBlockedHeroOverlay{position:relative;min-height:100svh;}
+.circleBlockedHeroContent h1{
+  position:absolute;
+  top:clamp(24px,3.5vh,50px);
+  left:50%;
+  transform:translateX(-50%);
+  width:calc(100% - 40px);
+  max-width:850px;
+  margin:0;
+  font-size:clamp(27px,3.3vw,41px);
+  text-align:center;
+}
+.circleBlockedHeroContent{padding-bottom:0;}
+@media(max-width:650px){
+  .circleBlockedHeroContent h1{font-size:clamp(23px,6.5vw,31px);top:26px;}
+  .circleAuthInputShell{height:46px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .circleAuthTile{animation:none!important;will-change:auto;}
+}
