@@ -629,35 +629,44 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 }
 
 
-/* Calm, slower arrivals for the artwork on both authentication screens. */
+/* Login and registration: deliberate 3.6-second arc entrance, progressively staggered. */
 #root .circleAuthGallery .circleAuthTile{
-  animation-name:circleSoftArcArrival;
-  animation-duration:2.35s;
-  animation-timing-function:cubic-bezier(.16,.65,.18,1);
+  animation-name:circleElegantArrival;
+  animation-duration:3.6s;
+  animation-timing-function:cubic-bezier(.18,.7,.17,1);
   animation-fill-mode:both;
   animation-delay:var(--delay);
+  will-change:transform,opacity;
 }
-@keyframes circleSoftArcArrival{
+@keyframes circleElegantArrival{
   0%{
     opacity:0;
-    transform:translate(calc(-50% + var(--x) + var(--flight-offset)),calc(var(--y) + 92px))
-      rotate(calc(var(--rotation) + var(--flight-rotate))) scale(.84);
-    filter:blur(2px);
+    transform:translate(calc(-50% + var(--x) + var(--flight-offset)),calc(var(--y) + 112px))
+      rotate(calc(var(--rotation) + var(--flight-rotate))) scale(.78);
+    filter:blur(5px);
   }
-  44%{
-    opacity:.84;
-    transform:translate(calc(-50% + var(--x) + var(--arc-offset)),calc(var(--y) - 17px))
-      rotate(var(--rotation)) scale(1.015);
+  25%{
+    opacity:.5;
+    transform:translate(calc(-50% + var(--x) + var(--arc-offset)),calc(var(--y) + 18px))
+      rotate(var(--rotation)) scale(.9);
+    filter:blur(1px);
+  }
+  53%{
+    opacity:1;
+    transform:translate(calc(-50% + var(--x)),calc(var(--y) - 18px))
+      rotate(var(--rotation)) scale(1.025);
     filter:blur(0);
   }
-  74%{
+  78%{
     opacity:1;
-    transform:translate(calc(-50% + var(--x)),calc(var(--y) + 3px))
-      rotate(var(--rotation)) scale(1);
+    transform:translate(calc(-50% + var(--x)),calc(var(--y) + 4px))
+      rotate(var(--rotation)) scale(.995);
+    filter:blur(0);
   }
   100%{
     opacity:1;
     transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation)) scale(1);
+    filter:blur(0);
   }
 }
 #root > main.circleBlockedHeroPage {
