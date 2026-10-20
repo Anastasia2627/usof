@@ -1,0 +1,414 @@
+/* Circle sign-in, registration and account restriction.
+   Deliberately scoped: previous editorial/ban styles must not leak into these screens. */
+
+#root > main.circleAuthScreen {
+  width:min(960px,calc(100% - 32px));
+  max-width:960px;
+  min-height:calc(100vh - 106px);
+  margin:0 auto;
+  padding:42px 0 80px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:transparent;
+  color:#19191c;
+}
+.circleAuthGallery {
+  width:min(100%,900px);
+  height:258px;
+  flex:none;
+  position:relative;
+  isolation:isolate;
+  margin:0 auto;
+}
+.circleAuthGallery::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:50%;
+  top:36px;
+  transform:translateX(-50%);
+  width:min(540px,90%);
+  height:220px;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(227,210,243,.35),rgba(237,220,238,.12) 47%,transparent 76%);
+  filter:blur(19px);
+}
+.circleAuthTile {
+  --x:0px;
+  --y:0px;
+  --rotation:0deg;
+  --delay:0ms;
+  position:absolute;
+  top:0;
+  left:50%;
+  width:91px;
+  height:91px;
+  display:block;
+  overflow:hidden;
+  border:4px solid #fff;
+  border-radius:23px;
+  background:#fbf8fb;
+  box-shadow:0 9px 26px rgba(41,29,57,.105),0 1px 4px rgba(33,28,45,.055);
+  transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation));
+  animation:circleAuthTileEnter .8s cubic-bezier(.2,.72,.22,1) both;
+  animation-delay:var(--delay);
+  user-select:none;
+}
+.circleAuthTile svg{display:block;width:100%;height:100%;}
+.circleAuthTile--1{--x:-390px;--y:159px;--rotation:-28deg;--delay:0ms;}
+.circleAuthTile--2{--x:-309px;--y:98px;--rotation:-23deg;--delay:60ms;}
+.circleAuthTile--3{--x:-213px;--y:46px;--rotation:-15deg;--delay:120ms;}
+.circleAuthTile--4{--x:-109px;--y:14px;--rotation:-6deg;--delay:180ms;}
+.circleAuthTile--5{--x:0px;--y:0px;--rotation:0deg;--delay:240ms;}
+.circleAuthTile--6{--x:109px;--y:14px;--rotation:7deg;--delay:300ms;}
+.circleAuthTile--7{--x:213px;--y:46px;--rotation:15deg;--delay:360ms;}
+.circleAuthTile--8{--x:309px;--y:98px;--rotation:23deg;--delay:420ms;}
+.circleAuthTile--9{--x:390px;--y:159px;--rotation:29deg;--delay:480ms;}
+@keyframes circleAuthTileEnter {
+  from{opacity:0;transform:translate(calc(-50% + var(--x)),calc(var(--y) + 27px)) rotate(var(--rotation)) scale(.83);filter:blur(3px);}
+  to{opacity:1;transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation)) scale(1);filter:blur(0);}
+}
+@keyframes circleAuthContentEnter {
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.circleAuthContent {
+  width:min(100%,408px);
+  margin:0 auto;
+  animation:circleAuthContentEnter .65s cubic-bezier(.19,.8,.3,1) .3s both;
+}
+.circleAuthHeading{text-align:center;margin:1px 0 27px;}
+.circleAuthHeading h1{
+  margin:0 0 11px;
+  font-size:clamp(31px,4.4vw,39px);
+  line-height:1.18;
+  letter-spacing:-.056em;
+  color:inherit;
+  font-weight:780;
+}
+.circleAuthHeading p{margin:0;color:#828086;font-size:13px;line-height:1.6;}
+.circleAuthForm{display:grid;gap:14px;margin:0;}
+.circleAuthForm label,
+.circleAuthRecoveryForm label {
+  display:grid;
+  gap:7px;
+  font-size:12px;
+  font-weight:680;
+  line-height:1.5;
+  color:#424047;
+}
+.circleAuthForm input,
+.circleAuthRecoveryForm input,
+.circleAuthVerify input:not([type="checkbox"]){
+  display:block;
+  width:100%;
+  min-width:0;
+  height:46px;
+  margin:0;
+  padding:11px 14px;
+  border:1px solid #e4e2e6;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:none;
+  color:#202025;
+  font-size:13px;
+  outline:none;
+}
+.circleAuthForm input::placeholder,
+.circleAuthRecoveryForm input::placeholder{color:#adabb0;}
+.circleAuthForm input:focus,
+.circleAuthRecoveryForm input:focus,
+.circleAuthVerify input:focus{border-color:#a99ac5;box-shadow:0 0 0 3px rgba(159,130,199,.09);}
+.circleAuthSubmit,.circleAuthResend{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  min-height:47px;
+  padding:12px 17px;
+  margin:7px 0 0;
+  background:#1a191b;
+  color:#fff;
+  border:1px solid #1a191b;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  transition:background-color .18s ease, transform .18s ease;
+}
+.circleAuthSubmit{width:100%;position:relative;}
+.circleAuthSubmit span{position:absolute;right:20px;font-size:18px;font-weight:450;}
+.circleAuthSubmit:hover:not(:disabled),
+.circleAuthResend:hover:not(:disabled){background:#39363d;color:white;transform:translateY(-1px);}
+.circleAuthForgot{
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:-3px 0 0 auto;
+  color:#746d7b;
+  font-size:12px;
+  font-weight:550;
+}
+.circleAuthForgot:hover{background:transparent!important;color:#17171a;text-decoration:underline;}
+.circleAuthSwitch{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:22px 0 0;
+  color:#838087;
+  font-size:12px;
+}
+.circleAuthSwitch button,
+.circleAuthRecoveryToggle{
+  border:0;
+  padding:4px;
+  background:transparent;
+  color:#262329;
+  font-size:12px;
+  font-weight:740;
+}
+.circleAuthSwitch button:hover,
+.circleAuthRecoveryToggle:hover{background:transparent!important;text-decoration:underline;text-underline-offset:3px;}
+.circleAuthRecovery{
+  margin:16px auto 0;
+  text-align:center;
+  border-top:1px solid #f0eef2;
+  padding-top:12px;
+}
+.circleAuthRecoveryToggle{color:#89838d;font-weight:510;}
+.circleAuthRecoveryForm{text-align:left;display:grid;gap:13px;margin-top:15px;}
+.circleAuthResend{width:100%;margin:0;}
+.circleAuthDemo{
+  background:#f6f4f8;
+  border-radius:11px;
+  padding:12px 14px;
+  margin-bottom:17px;
+  color:#71697c;
+  font-size:12px;
+}
+.circleAuthVerify{padding-top:0;}
+.circleAuthVerify .verificationForm{display:grid;gap:16px;}
+.circleAuthVerify .verificationForm h1{font-size:31px;text-align:center;letter-spacing:-.045em;margin:0;}
+.circleAuthVerify .verificationVisual{display:none;}
+.circleAuthVerify .verificationForm p{text-align:center;font-size:13px;color:#78747d;}
+.circleAuthVerify .verificationForm label{text-align:left;color:#46414c;font-size:12px;font-weight:650;}
+.circleAuthVerify .verificationForm .toolbar{display:grid;gap:9px;}
+.circleAuthVerify .verificationForm .toolbar button{width:100%;min-height:42px;border-radius:999px;}
+.circleAuthVerify .verificationForm .toolbar .authSubmit{background:#171719;color:white;border:0;}
+.circleAuthVerify .verificationForm .toolbar .verifyResend{background:transparent;border:0;color:#777;}
+.circleAuthScreen .inlineError{font-size:12px;line-height:1.55;border-radius:10px;}
+/* Account restriction artwork is the Figma asset, including the large 403.
+   Do not place a second 403 or a dark masthead over it. */
+#root > main.circleBlockedPage{
+  width:min(1010px,calc(100% - 36px));
+  max-width:1010px;
+  min-height:calc(100vh - 90px);
+  margin:30px auto 80px;
+  padding:0;
+  background:transparent;
+  color:#201e24;
+}
+.circleBlockedIntro{text-align:center;}
+.circleBlockedArtwork{
+  width:100%;
+  aspect-ratio:2.23/1;
+  overflow:hidden;
+  background:#f2dcfb;
+  border-radius:19px;
+}
+.circleBlockedArtwork img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 40%;
+}
+.circleBlockedIntroText{padding:25px 14px 33px;}
+.circleBlockedIntroText h1{
+  font-size:clamp(30px,4.1vw,43px);
+  font-weight:790;
+  letter-spacing:-.05em;
+  line-height:1.2;
+  margin:0 0 9px;
+  color:inherit;
+}
+.circleBlockedIntroText p{
+  max-width:470px;
+  margin:0 auto 22px;
+  font-size:13px;
+  line-height:1.7;
+  color:#817c85;
+}
+.circleBlockedPrimary{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+  min-height:42px;
+  border:1px solid #222025;
+  background:#222025;
+  color:white;
+  border-radius:999px;
+  padding:10px 19px;
+  font-size:12px;
+  font-weight:720;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.circleBlockedPrimary:hover:not(:disabled){background:#47404b;color:#fff;text-decoration:none;}
+.circleBlockedPrimary:disabled{opacity:.5;}
+.circleBlockedDetails{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  border-top:1px solid #ece9ed;
+  border-bottom:1px solid #ece9ed;
+  scroll-margin-top:100px;
+  margin-top:5px;
+}
+.circleBlockedReason,.circleBlockedAppeal{min-width:0;padding:31px 32px 35px;}
+.circleBlockedReason{border-right:1px solid #ece9ed;}
+.circleBlockedLabel{font-size:12px;color:#89858d;font-weight:650;}
+.circleBlockedReason h2{
+  font-size:20px;
+  line-height:1.45;
+  letter-spacing:-.035em;
+  font-weight:720;
+  margin:12px 0 14px;
+  overflow-wrap:anywhere;
+  color:inherit;
+}
+.circleBlockedDetails time{color:#928c96;font-size:11px;line-height:1.6;}
+.circleBlockedStatusLine{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px;}
+.circleBlockedStatusLine h2,.circleBlockedAppealForm h2{
+  color:inherit;
+  font-size:18px;
+  letter-spacing:-.03em;
+  font-weight:720;
+  margin:0;
+}
+.circleBlockedStatus{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f2eef7;
+  color:#705b85;
+  font-size:11px;
+  font-weight:670;
+  white-space:nowrap;
+}
+.circleBlockedStatus--approved{background:#eaf5eb;color:#34724a;}
+.circleBlockedStatus--rejected{background:#f9eceb;color:#9d514c;}
+.circleBlockedExplanation{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:13px;color:#554f5b;margin:0 0 12px;}
+.circleBlockedReviewNote{border-left:2px solid #a99aca;padding:7px 0 7px 13px;margin:13px 0;}
+.circleBlockedReviewNote strong{display:block;font-size:12px;margin-bottom:4px;}
+.circleBlockedReviewNote p{margin:0;font-size:13px;line-height:1.6;}
+.circleBlockedAppealForm{display:grid;gap:14px;}
+.circleBlockedAppealForm textarea{
+  display:block;
+  width:100%;
+  min-height:120px;
+  border:1px solid #e7e3eb;
+  border-radius:11px;
+  background:#fff;
+  padding:12px 14px;
+  resize:vertical;
+  font-size:13px;
+  line-height:1.6;
+  color:#26222a;
+}
+.circleBlockedAppealForm textarea:focus{outline:2px solid #c2b3d7;outline-offset:1px;}
+.circleBlockedAppealForm textarea::placeholder{color:#a49da8;}
+.circleBlockedFormActions{display:flex;gap:14px;align-items:center;justify-content:space-between;}
+.circleBlockedFormActions span{font-size:11px;color:#9d95a1;}
+.circleBlockedLoading{font-size:13px;color:#827b85;}
+.circleBlockedFooter{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:18px 32px 0;}
+.circleBlockedFooter button{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:6px 4px;
+  border:0;
+  background:transparent;
+  font-size:12px;
+  font-weight:620;
+  color:#77717c;
+}
+.circleBlockedFooter button:hover:not(:disabled){background:transparent;color:#29242d;text-decoration:underline;}
+.circleBlockedLoggedOut{text-align:center;padding-top:80px!important;}
+.circleBlockedLoggedOut h1{font-size:29px;}
+/* The rest of Circle can use a dark theme; its illustrations keep their colors. */
+html[data-theme="dark"] #root > main.circleAuthScreen,
+html[data-theme="dark"] #root > main.circleBlockedPage{color:#f3eff5;}
+html[data-theme="dark"] .circleAuthHeading p,
+html[data-theme="dark"] .circleAuthSwitch,
+html[data-theme="dark"] .circleBlockedIntroText p,
+html[data-theme="dark"] .circleBlockedExplanation,
+html[data-theme="dark"] .circleBlockedFooter button{color:#bab0c1;}
+html[data-theme="dark"] .circleAuthForm label,
+html[data-theme="dark"] .circleAuthRecoveryForm label,
+html[data-theme="dark"] .circleBlockedLabel{color:#d6ceda;}
+html[data-theme="dark"] .circleAuthForm input,
+html[data-theme="dark"] .circleAuthRecoveryForm input,
+html[data-theme="dark"] .circleBlockedAppealForm textarea{background:#27232e;border-color:#49404e;color:#f5eff8;}
+html[data-theme="dark"] .circleAuthSwitch button,
+html[data-theme="dark"] .circleAuthRecoveryToggle,
+html[data-theme="dark"] .circleAuthForgot{color:#e4d4ef;}
+html[data-theme="dark"] .circleAuthRecovery,
+html[data-theme="dark"] .circleBlockedDetails,
+html[data-theme="dark"] .circleBlockedReason{border-color:#413a46;}
+html[data-theme="dark"] .circleBlockedPrimary,
+html[data-theme="dark"] .circleAuthSubmit{background:#ebe3f1;border-color:#ebe3f1;color:#201c24;}
+html[data-theme="dark"] .circleBlockedPrimary:hover:not(:disabled),
+html[data-theme="dark"] .circleAuthSubmit:hover:not(:disabled){background:#fff;color:#181519;}
+@media(max-width:900px){
+  .circleAuthTile{width:76px;height:76px;border-radius:19px;}
+  .circleAuthTile--1{--x:-310px;--y:140px;}
+  .circleAuthTile--2{--x:-248px;--y:89px;}
+  .circleAuthTile--3{--x:-170px;--y:40px;}
+  .circleAuthTile--4{--x:-86px;--y:9px;}
+  .circleAuthTile--6{--x:86px;--y:9px;}
+  .circleAuthTile--7{--x:170px;--y:40px;}
+  .circleAuthTile--8{--x:248px;--y:89px;}
+  .circleAuthTile--9{--x:310px;--y:140px;}
+}
+@media(max-width:650px){
+  #root > main.circleAuthScreen{padding:28px 0 55px;}
+  .circleAuthGallery{height:179px;}
+  .circleAuthGallery::before{width:300px;height:155px;top:20px;filter:blur(12px);}
+  .circleAuthTile{width:63px;height:63px;border:3px solid white;border-radius:17px;}
+  .circleAuthTile--1,.circleAuthTile--2,.circleAuthTile--8,.circleAuthTile--9{display:none;}
+  .circleAuthTile--3{--x:-130px;--y:69px;--rotation:-23deg;}
+  .circleAuthTile--4{--x:-67px;--y:24px;--rotation:-10deg;}
+  .circleAuthTile--5{--x:0px;--y:4px;}
+  .circleAuthTile--6{--x:67px;--y:24px;--rotation:10deg;}
+  .circleAuthTile--7{--x:130px;--y:69px;--rotation:23deg;}
+  .circleAuthContent{width:min(100%,410px);}
+  .circleAuthHeading{margin-bottom:23px;}
+  .circleAuthHeading h1{font-size:31px;}
+  .circleAuthForm{gap:13px;}
+  #root > main.circleBlockedPage{width:calc(100% - 24px);margin:18px auto 45px;}
+  .circleBlockedArtwork{aspect-ratio:1.62/1;border-radius:15px;}
+  .circleBlockedIntroText{padding:24px 10px 27px;}
+  .circleBlockedIntroText h1{font-size:30px;}
+  .circleBlockedDetails{grid-template-columns:1fr;}
+  .circleBlockedReason{border-right:0;border-bottom:1px solid #ece9ed;}
+  .circleBlockedReason,.circleBlockedAppeal{padding:24px 15px;}
+  .circleBlockedFooter{padding:13px 13px 0;}
+}
+@media(max-width:380px){
+  .circleAuthTile--3{--x:-112px;--y:69px;}
+  .circleAuthTile--4{--x:-59px;--y:23px;}
+  .circleAuthTile--6{--x:59px;--y:23px;}
+  .circleAuthTile--7{--x:112px;--y:69px;}
+  .circleBlockedArtwork{aspect-ratio:1.4/1;}
+  .circleBlockedStatusLine{align-items:flex-start;flex-direction:column;}
+}
+@media(prefers-reduced-motion:reduce){
+  .circleAuthTile,.circleAuthContent{animation:none!important;}
+  .circleAuthSubmit,.circleAuthResend{transition:none;}
+}
