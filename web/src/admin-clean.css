@@ -300,3 +300,308 @@ html[data-theme="dark"] .adminPage .adminCompactNav .adminTabs button.active{col
   .adminPage .adminSimpleList > .adminUserRow{padding:0 5px;}
   .adminPage .adminCompactNav .adminTabs button{font-size:11px;}
 }
+
+
+/* Appeals — compact two-pane inbox. Uses the existing moderation actions and data. */
+.adminPage .banAppeals .appealWorkbenchHeading{
+  border-bottom:0;
+  padding:0 2px 13px;
+  margin:0;
+}
+.adminPage .banAppeals .appealWorkbenchHeading h2{
+  font-size:18px;
+  letter-spacing:-.04em;
+}
+.adminPage .banAppeals .appealWorkspace{
+  display:grid;
+  grid-template-columns:minmax(255px,330px) minmax(0,1fr);
+  align-items:start;
+  gap:18px;
+  min-height:0;
+  max-width:100%;
+  background:transparent;
+  border:0;
+}
+.adminPage .banAppeals .appealWorkspaceList{
+  min-width:0;
+  max-height:min(690px,calc(100vh - 240px));
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  border:1px solid #ebe8ef;
+  border-radius:16px;
+  background:#fff;
+  scrollbar-width:thin;
+  scrollbar-color:#ddd5e6 transparent;
+}
+.adminPage .banAppeals .appealInboxItem{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:17px 17px 16px;
+  border:0;
+  border-bottom:1px solid #f0edf2;
+  border-radius:0;
+  background:transparent;
+  color:#312b36;
+  text-align:left;
+  transition:background-color .2s ease;
+}
+.adminPage .banAppeals .appealInboxItem:last-child{border-bottom:0;}
+.adminPage .banAppeals .appealInboxItem:hover:not(.selected){background:#fbfafd;}
+.adminPage .banAppeals .appealInboxItem.selected{
+  background:#f7f3fb;
+  box-shadow:inset 3px 0 0 #9071c7;
+}
+.adminPage .banAppeals .appealInboxHeading{display:flex;gap:8px;align-items:center;}
+.adminPage .banAppeals .appealInboxHeading strong{
+  font-size:13px;
+  font-weight:760;
+  letter-spacing:-.01em;
+}
+.adminPage .banAppeals .appealInboxUnread{width:6px;height:6px;background:#8a69bb;}
+.adminPage .banAppeals .appealInboxPreview{
+  color:#827986;
+  font-size:12px;
+  line-height:1.55;
+  min-height:18px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.adminPage .banAppeals .appealInboxFoot{
+  margin-top:3px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.adminPage .banAppeals .appealInboxFoot time{color:#a29aa6;font-size:11px;}
+.adminPage .banAppeals .appealInboxStatus{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#f1eafa;
+  color:#7551a5;
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.adminPage .banAppeals .appealInboxStatus.appealStatus-approved{
+  background:#eaf4ec;
+  color:#347249;
+}
+.adminPage .banAppeals .appealInboxStatus.appealStatus-rejected{
+  background:#f5edf0;
+  color:#976271;
+}
+.adminPage .banAppeals .appealWorkspaceDetail{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:460px;
+  padding:26px clamp(22px,3vw,33px) 27px;
+  border:1px solid #ebe8ef;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 4px 17px rgba(28,20,43,.025);
+}
+.adminPage .banAppeals .appealWorkspaceTop{
+  gap:14px;
+  align-items:start;
+  padding-bottom:21px;
+  border-color:#f0edf2;
+}
+.adminPage .banAppeals .appealWorkspaceTop h3{
+  margin:0 0 7px;
+  font-size:20px;
+  line-height:1.25;
+  letter-spacing:-.04em;
+  color:#27232c;
+}
+.adminPage .banAppeals .appealWorkspaceTop time{
+  font-size:11px;
+  color:#9a919e;
+}
+.adminPage .banAppeals .appealReviewFact,
+.adminPage .banAppeals .appealReviewMessage{
+  padding:18px 0;
+  border-bottom:1px solid #f0edf2;
+}
+.adminPage .banAppeals .appealReviewFact > span,
+.adminPage .banAppeals .appealReviewMessage h4{
+  margin:0 0 8px;
+  font-size:11px;
+  font-weight:740;
+  color:#8f8795;
+}
+.adminPage .banAppeals .appealReviewFact p,
+.adminPage .banAppeals .appealReviewMessage p{
+  margin:0 0 7px;
+  font-size:13px;
+  line-height:1.65;
+  color:#423945;
+  overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+.adminPage .banAppeals .appealReviewFact small{
+  font-size:10px;
+  color:#a39ba6;
+}
+.adminPage .banAppeals .appealPrivateDetails{
+  padding:14px 0;
+  border-color:#f0edf2;
+}
+.adminPage .banAppeals .appealPrivateDetails summary{
+  min-height:32px;
+  font-weight:650;
+  font-size:12px;
+  color:#77707e;
+}
+.adminPage .banAppeals .appealReviewDecision{
+  margin-top:auto;
+  padding-top:21px;
+}
+.adminPage .banAppeals .appealResponseField{
+  display:block;
+  position:relative;
+  margin:0 0 18px;
+  padding:13px 13px 8px;
+  border:1px solid #e8e3ec;
+  border-radius:14px;
+  background:#faf9fc;
+  transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease;
+}
+.adminPage .banAppeals .appealResponseField:focus-within{
+  border-color:#b79dd9;
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(145,112,191,.08);
+}
+.adminPage .banAppeals .appealResponseLabel{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:700;
+  color:#73657d;
+}
+.adminPage .banAppeals .appealResponseField textarea{
+  display:block;
+  width:100%;
+  min-height:87px;
+  max-height:200px;
+  margin:0;
+  padding:5px 0 0;
+  border:0;
+  border-radius:0;
+  outline:0;
+  box-shadow:none;
+  background:transparent;
+  resize:vertical;
+  font-family:inherit;
+  font-size:13px;
+  line-height:1.6;
+  color:#302735;
+}
+.adminPage .banAppeals .appealResponseField textarea:focus-visible{
+  outline:0;
+  box-shadow:none;
+}
+.adminPage .banAppeals .appealResponseField textarea::placeholder{color:#a59aa9;}
+.adminPage .banAppeals .appealResponseField small{
+  display:block;
+  margin-top:5px;
+  text-align:right;
+  color:#a29aaa;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+}
+.adminPage .banAppeals .appealReviewButtons{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.adminPage .banAppeals .appealReviewButtons button{
+  min-height:42px;
+  border:0;
+  border-radius:999px;
+  padding:10px 16px;
+  font-size:12px;
+  font-weight:720;
+}
+.adminPage .banAppeals .appealReviewButtons .appealApprove{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#25212a;
+  color:#fff;
+}
+.adminPage .banAppeals .appealReviewButtons .appealApprove:hover{
+  background:#4d3b60;
+  color:#fff;
+}
+.adminPage .banAppeals .appealReviewButtons .appealReject{
+  background:transparent;
+  color:#a06572;
+  padding-left:6px;
+  padding-right:6px;
+}
+.adminPage .banAppeals .appealReviewButtons .appealReject:hover{
+  background:transparent;
+  color:#873d54;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.adminPage .banAppeals .appealReviewOutcome{
+  margin-top:21px;
+  padding:15px;
+  border-radius:12px;
+  background:#f8f5fa;
+  color:#5c5064;
+  font-size:12px;
+}
+html[data-theme="dark"] .adminPage .banAppeals .appealWorkspaceList,
+html[data-theme="dark"] .adminPage .banAppeals .appealWorkspaceDetail{
+  background:#211e26;
+  border-color:#453c4b;
+  box-shadow:none;
+}
+html[data-theme="dark"] .adminPage .banAppeals .appealInboxItem{
+  color:#f0eaf2;
+  border-color:#3f3743;
+}
+html[data-theme="dark"] .adminPage .banAppeals .appealInboxItem.selected{background:#352b42;}
+html[data-theme="dark"] .adminPage .banAppeals .appealInboxItem:hover:not(.selected){background:#2c2531;}
+html[data-theme="dark"] .adminPage .banAppeals .appealWorkspaceTop h3,
+html[data-theme="dark"] .adminPage .banAppeals .appealReviewFact p,
+html[data-theme="dark"] .adminPage .banAppeals .appealReviewMessage p{color:#efe8f4;}
+html[data-theme="dark"] .adminPage .banAppeals .appealResponseField{
+  background:#29242e;
+  border-color:#4f4357;
+}
+html[data-theme="dark"] .adminPage .banAppeals .appealResponseField textarea{color:#f5eff8;}
+html[data-theme="dark"] .adminPage .banAppeals .appealReviewOutcome{background:#2d2635;color:#e9daec;}
+@media(max-width:900px){
+  .adminPage .banAppeals .appealWorkspace{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .adminPage .banAppeals .appealWorkspaceList{
+    max-height:270px;
+  }
+  .adminPage .banAppeals .appealWorkspaceDetail{
+    min-height:0;
+    padding:22px 20px;
+  }
+}
+@media(max-width:600px){
+  .adminPage .banAppeals .appealInboxItem{padding:13px 14px;}
+  .adminPage .banAppeals .appealWorkspaceDetail{padding:20px 16px;}
+  .adminPage .banAppeals .appealReviewButtons button{font-size:11px;}
+}
