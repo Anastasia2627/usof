@@ -16,6 +16,7 @@ import './review-fixes.css';
 import './auth-editorial.css';
 import './product-refinement.css';
 import './auth-experience.css';
+import './feed-alignment.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
