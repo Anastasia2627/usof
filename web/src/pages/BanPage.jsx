@@ -15,9 +15,6 @@ export default function BanPage(){
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState(null);
 
-  const formatDate=value=>value?new Date(value).toLocaleString(
-    language==='uk'?'uk-UA':'en-US',{dateStyle:'medium',timeStyle:'short'}):'';
-
   async function refresh(){
     if(!auth?.token)return;
     try{
@@ -67,7 +64,6 @@ export default function BanPage(){
   const isUkrainian = language === 'uk';
   const reason = auth?.user?.ban_reason ||
     (isUkrainian ? 'Причину не вказано' : 'No reason provided');
-  const date = auth?.user?.banned_at ? formatDate(auth.user.banned_at) : '';
 
   if(!auth) return <main className="circleBlockedHeroPage circleBlockedSignedOut">
     <h1>{t('Sign in to view your account status.')}</h1>
@@ -88,9 +84,6 @@ export default function BanPage(){
         <p className="circleBlockedHeroReason">
           <span>{isUkrainian ? 'Причина:' : 'Reason:'}</span> {reason}
         </p>
-        {date && <time className="circleBlockedHeroDate" dateTime={auth.user.banned_at}>
-          {isUkrainian ? 'Заблоковано' : 'Blocked'} · {date}
-        </time>}
 
         {initialLoading ? <p className="circleBlockedHeroLoading" role="status">{t('Loading…')}</p>
           : appeal ? <>
