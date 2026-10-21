@@ -1,73 +1,269 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { api } from '../api.js';
-import { ErrorBox, PostCard, Icon, go } from '../ui.jsx';
+import React, {useEffect,useMemo,useState} from 'react';
+import {useSelector} from 'react-redux';
+import {api} from '../api.js';
+import {ErrorBox, PostCard, Icon, go} from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import SuggestTopic from '../SuggestTopic.jsx';
-import { useInfiniteRecords, InfiniteScrollEnd } from '../InfiniteScroll.jsx';
+import {useInfiniteRecords, InfiniteScrollEnd} from '../InfiniteScroll.jsx';
+
+// Use the original photo cards already included with Circle, never duplicate
+// categories or invent available interests; IDs come from /api/categories
+const photoLibrary=Array.from({length:12},(_,index)=>
+  '/images/'+encodeURIComponent('Frame '+(2072750583+index)+'.png'));
+const coverRules=[
+  [/тварин|animal|pets?|соба|кот|cat|dog/i,0],
+  [/кіно|фільм|movie|film|cinema|попкорн/i,1],
+  [/вишив|craft|рукоділ|хобі|handmade/i,2],
+  [/подорож|travel|природ|nature|мандр/i,3],
+  [/мод|style|fashion|стиль|одяг/i,4],
+  [/крас|beauty|догляд|flower|квіт/i,5],
+  [/авіа|літак|plane|flight/i,6],
+  [/мистец|art|творч|design|дизайн|малю/i,7],
+  [/фітнес|спорт|fitness|sport|йог|gym/i,8],
+  [/автомоб|машин|car|auto/i,9],
+  [/книг|book|літера|читан/i,10],
+  [/робот|кар'єр|career|work|business|бізнес/i,11],
+  [/музик|music|anime|аніме/i,2],
+];
+const categoryCover=(category,index)=>{
+  const text=String(category?.title||'');
+  const photoIndex=coverRules.find(([pattern])=>pattern.test(text))?.[1]??index%photoLibrary.length;
+  return photoLibrary[photoIndex];
+};
 
 export default function CategoriesPage() {
-  const {t}=usePreferences();
-  const [categories, setCategories] = useState([]);
+  const auth=useSelector(state=>state.auth);
+  const {t,language}=usePreferences();
+  const uk=language==='uk';
+  const [categories,setCategories]=useState([]);
+  const [selected,setSelected]=useState([]);
   const [query,setQuery]=useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentSlide,setCurrentSlide]=useState(0);
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const [error,setError]=useState(null);
 
-  useEffect(() => {
-    let active=true;
-    const refresh=()=>api('/categories').then(result=>{if(active)setCategories(result.data);})
-      .catch(err=>{if(active)setError(err);})
-      .finally(()=>{if(active)setLoading(false);});
-    refresh();
-    window.addEventListener('circle:categories-updated',refresh);
-    return()=>{active=false;window.removeEventListener('circle:categories-updated',refresh);};
-  }, []);
+  useEffect(()=>{
+    const controller=new AbortController();
+    const load=async()=>{
+      setLoading(true);
+      try{
+        const [all,choices]=await Promise.all([
+          api('/categories',{signal:controller.signal}),
+          auth?.token?api('/social/interests',{token:auth.token,signal:controller.signal}):Promise.resolve({data:[]}),
+        ]);
+        if(controller.signal.aborted)return;
+        setCategories(Array.isArray(all?.data)?all.data:[]);
+        setSelected(Array.isArray(choices?.data)?choices.data.map(Number):[]);
+        setError(null);
+      }catch(err){
+        if(!controller.signal.aborted&&err.name!=='AbortError')setError(err);
+      }finally{
+        if(!controller.signal.aborted)setLoading(false);
+      }
+    };
+    load();
+    const changed=()=>{if(!controller.signal.aborted)load();};
+    window.addEventListener('circle:categories-updated',changed);
+    return()=>{controller.abort();window.removeEventListener('circle:categories-updated',changed);};
+  },[auth?.token]);
 
-  const found=categories.filter(category=>[category.title,t(category.title),category.description||'',t(category.description||'')]
-    .some(value=>String(value).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())));
-  const editorialAnchor=!query.trim()&&found.find(category=>
-    ['art','мистецтво','design','дизайн','crafts','рукоділля'].includes(
-      String(category.title).trim().toLocaleLowerCase()));
-  const visibleCategories=editorialAnchor
-    ?[editorialAnchor,...found.filter(category=>category.id!==editorialAnchor.id)]
-    :found;
-  return <main className="categoriesPage categoryEditorialPage">
-    <header className="categoryEditorialHeader">
-      <h1>{t('Explore topics')}</h1>
-      <div className="topicSearchField categorySearchField">
-        <Icon name="search" size={19}/>
-        <input type="search" aria-label={t('Search topics')} placeholder={t('Search topics')}
-          value={query} onChange={event=>setQuery(event.target.value)}/>
-        {query&&<button type="button" aria-label={t('Clear search')}
-          onClick={()=>setQuery('')}><Icon name="close" size={17}/></button>}
-      </div>
+  const visualOrder=useMemo(()=>[...categories].sort((a,b)=>{
+    const aIndex=coverRules.findIndex(([p])=>p.test(a.title||''));
+    const bIndex=coverRules.findIndex(([p])=>p.test(b.title||''));
+    return (aIndex<0?100:aIndex)-(bIndex<0?100:bIndex)||
+      Number(b.post_count||0)-Number(a.post_count||0);
+  }),[categories]);
+  const popular=useMemo(()=>[...categories]
+    .sort((a,b)=>Number(b.post_count||0)-Number(a.post_count||0)||
+      String(a.title).localeCompare(String(b.title)))
+    .slice(0,8),[categories]);
+  const cards=useMemo(()=>{
+    const n=Math.min(7,visualOrder.length);
+    return Array.from({length:n},(_,i)=>visualOrder[(currentSlide+i)%visualOrder.length]);
+  },[visualOrder,currentSlide]);
+  const results=useMemo(()=>{
+    const search=query.trim().toLocaleLowerCase();
+    return categories.filter(c=>(String(c.title)+' '+t(c.title)+' '+String(c.description||''))
+      .toLocaleLowerCase().includes(search));
+  },[categories,query,t]);
+
+  function toggle(id){
+    if(!auth?.token){go('/login');return;}
+    const number=Number(id);
+    setSelected(current=>current.includes(number)
+      ?current.filter(value=>value!==number)
+      :[...current,number]);
+  }
+  async function save(){
+    if(!auth?.token){go('/login');return;}
+    if(loading||saving)return;
+    setSaving(true);setError(null);
+    try{
+      await api('/social/interests',{method:'PUT',token:auth.token,
+        body:{categories:selected}});
+      window.dispatchEvent(new Event('circle:interests-updated'));
+      go('/');
+    }catch(err){setError(err);}
+    finally{setSaving(false);}
+  }
+  const shift=step=>setCurrentSlide(position=>visualOrder.length?
+    (position+step+visualOrder.length)%visualOrder.length:0);
+
+  return <main className="categoriesPage topicStudioPage">
+    <header className="topicStudioIntro">
+      <h1>{uk?'Знайди свою тему':'Find your thing'}</h1>
+      <p>{uk?'Обери те, що тобі цікаво, і Circle підлаштує стрічку під тебе':
+        'Pick what you love and make your feed feel like yours'}</p>
     </header>
-    <div className="categoryEditorialToolbar">
-      <span className="categoryResultsLabel">{t('All categories')}
-        <strong>{found.length}</strong>
-      </span>
-      <SuggestTopic/>
-    </div>
-    <ErrorBox error={error}/>
-    {loading?<div className="categoryEditorialLoading">{t('Loading categories…')}</div>
-      :found.length?<section className="categoryGrid categoryEditorialGrid"
-        aria-label={t('Categories')}>
-        {visibleCategories.map((category,index)=>{
-          const name=t(category.title);
-          return <button type="button" key={category.id}
-            className={'categoryCard categoryEditorialCard categoryTone'+(index%6)+(index===0?' categoryFeature':'')}
-            aria-label={name} onClick={()=>go('/category/'+category.id)}>
-            <span className="categoryCardArtwork" aria-hidden="true">
-              {Array.from(name)[0]?.toLocaleUpperCase()||'•'}
-            </span>
-            <span className="categoryCardArrow" aria-hidden="true"><Icon name="arrow" size={20}/></span>
-            <h2>{name}</h2>
-          </button>;
+
+    <section className="topicStudioFeature" aria-labelledby="topic-studio-picks">
+      <div className="topicStudioFeatureHeading">
+        <h2 id="topic-studio-picks">{uk?'Відкривай цікаве':'Explore what inspires you'}</h2>
+        <div className="topicStudioControls">
+          <button type="button" onClick={()=>shift(-1)} disabled={cards.length<2}
+            aria-label={uk?'Попередні теми':'Previous topics'}>
+            <Icon name="arrowBack" size={19}/>
+          </button>
+          <button type="button" onClick={()=>shift(1)} disabled={cards.length<2}
+            aria-label={uk?'Наступні теми':'Next topics'}>
+            <Icon name="arrow" size={19}/>
+          </button>
+        </div>
+      </div>
+      <div className="topicStudioFan" role="group"
+        aria-label={uk?'Картки тем':'Choose from topic cards'}>
+        {cards.map((category,index)=>{
+          const distance=index-(cards.length-1)/2;
+          const chosen=selected.includes(Number(category.id));
+          return <div key={category.id}
+            className={'topicStudioFanItem'+(chosen?' isSelected':'')}
+            style={{
+              '--fan-offset':distance,
+              '--fan-shift':(distance*112)+'px',
+              '--fan-drop':(distance*distance*11)+'px',
+              '--fan-rotate':(distance*6.2)+'deg',
+              '--fan-depth':String(20-Math.abs(distance)),
+            }}>
+            <button type="button" className="topicStudioCard" onClick={()=>toggle(category.id)}
+              aria-pressed={chosen} aria-label={(chosen?(uk?'Прибрати ':'Remove '):(uk?'Обрати ':'Choose '))+t(category.title)}>
+              <img src={categoryCover(category,index)} alt="" loading="eager" decoding="async"/>
+              <span className="topicStudioCardShade" aria-hidden="true"/>
+              <span className="topicStudioCardSelect" aria-hidden="true">
+                <Icon name={chosen?'check':'plusSimple'} size={18}/>
+              </span>
+              <strong>{t(category.title)}</strong>
+            </button>
+            <button type="button" className="topicStudioCardBrowse"
+              onClick={()=>go('/category/'+category.id)}
+              aria-label={(uk?'Переглянути дописи: ':'Browse posts: ')+t(category.title)}>
+              <Icon name="arrow" size={14}/>
+            </button>
+          </div>;
         })}
-      </section>:<div className="topicsEmpty">
-        <p>{t(query?'No matching topics':'No categories yet.')}</p>
-        {query&&<button type="button" onClick={()=>setQuery('')}>{t('Clear search')}</button>}
-      </div>}
+        {loading&&<p role="status" className="topicStudioFanPlaceholder">
+          {uk?'Завантажуємо теми…':'Loading topics…'}</p>}
+        {!loading&&!cards.length&&<p className="topicStudioFanPlaceholder">
+          {uk?'Поки немає тем':'No topics yet'}</p>}
+      </div>
+      <div className="topicStudioFanCaption">
+        <span>{uk?'Натисни на картку, щоб обрати тему':'Tap a photo to select a topic'}</span>
+        <span>{cards.length>0?String((currentSlide%Math.max(visualOrder.length,1))+1).padStart(2,'0')+
+          ' / '+String(visualOrder.length).padStart(2,'0'):''}</span>
+      </div>
+    </section>
+
+    <div className="topicStudioMiddle">
+      <div className="topicStudioPopular">
+        <div className="topicStudioSectionTitle">
+          <h2>{uk?'Популярні теми':'Popular topics'}</h2>
+          <span>{uk?'Обери декілька':'Choose a few'}</span>
+        </div>
+        <div className="topicStudioPopularGrid">
+          {popular.map(category=>{
+            const chosen=selected.includes(Number(category.id));
+            return <button type="button" key={category.id}
+              className={'topicStudioPopularButton'+(chosen?' isSelected':'')}
+              aria-pressed={chosen} onClick={()=>toggle(category.id)}>
+              <span>{t(category.title)}</span>
+              <Icon name={chosen?'check':'plusSimple'} size={17}/>
+            </button>;
+          })}
+        </div>
+      </div>
+      <aside className="topicStudioSelection">
+        <span className="topicStudioSelectionEyebrow">{uk?'ТВОЯ СТРІЧКА':'YOUR FEED'}</span>
+        <h2>{selected.length?
+          (uk?'Це твоє':'Made for you'):
+          (uk?'Обирай своє':'Make it yours')}</h2>
+        <p>{uk?'Ми показуватимемо більше дописів за вибраними темами, а інші залишаться доступними':
+          'We will bring your interests to the top while keeping other posts available'}</p>
+        <div className="topicStudioSelectedTags" aria-live="polite">
+          {selected.length?selected.map(id=>{
+            const category=categories.find(c=>Number(c.id)===id);
+            if(!category)return null;
+            return <button type="button" key={id} onClick={()=>toggle(id)}
+              title={uk?'Прибрати тему':'Remove interest'}>
+              {t(category.title)} <Icon name="close" size={14}/>
+            </button>;
+          }):<span className="topicStudioEmptySelection">
+            {uk?'Поки нічого не обрано':'No topics selected yet'}
+          </span>}
+        </div>
+        <div className="topicStudioActions">
+          <button type="button" className="topicStudioSkip" onClick={()=>go('/')}
+            disabled={saving}>{uk?'Пропустити':'Skip for now'}</button>
+          <button type="button" className="topicStudioSave" onClick={save}
+            disabled={loading||saving}>
+            {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
+            <Icon name="arrow" size={17}/>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <section className="topicStudioAll">
+      <div className="topicStudioAllHeader">
+        <div>
+          <h2>{uk?'Усі теми':'All topics'}</h2>
+          <span>{results.length}</span>
+        </div>
+        <div className="topicStudioAllActions">
+          <label className="topicStudioSearch">
+            <Icon name="search" size={17}/>
+            <input type="search" value={query}
+              onChange={event=>setQuery(event.target.value)}
+              placeholder={uk?'Пошук тем':'Search topics'}
+              aria-label={uk?'Пошук тем':'Search topics'}/>
+            {query&&<button type="button" onClick={()=>setQuery('')}
+              aria-label={uk?'Очистити пошук':'Clear search'}>
+              <Icon name="close" size={16}/>
+            </button>}
+          </label>
+          <SuggestTopic/>
+        </div>
+      </div>
+      <div className="topicStudioDirectory">
+        {results.map(category=>{
+          const chosen=selected.includes(Number(category.id));
+          return <div key={category.id} className="topicStudioDirectoryItem">
+            <button type="button" className="topicStudioDirectoryOpen"
+              onClick={()=>go('/category/'+category.id)}>
+              <span>{t(category.title)}</span>
+              <Icon name="arrow" size={15}/>
+            </button>
+            {auth&&<button type="button" className={'topicStudioDirectoryToggle'+(chosen?' isSelected':'')}
+              onClick={()=>toggle(category.id)} aria-pressed={chosen}
+              aria-label={(chosen?(uk?'Прибрати ':'Remove '):(uk?'Обрати ':'Choose '))+t(category.title)}>
+              <Icon name={chosen?'check':'plusSimple'} size={16}/>
+            </button>}
+          </div>;
+        })}
+      </div>
+      {!loading&&!results.length&&<p className="topicStudioNoResults">
+        {uk?'Нічого не знайдено':'No matching topics'}</p>}
+    </section>
+    <ErrorBox error={error}/>
   </main>;
 }
 
