@@ -624,3 +624,69 @@ html[data-theme=dark] .reportReviewSection p{color:#d8d1e1;}
 html[data-theme=dark] .reportReviewActions button{background:#322a3d;color:#ded4e9;}
 html[data-theme=dark] .reportReviewActions button:first-child{background:#6b52a3;color:white;}
 html[data-theme=dark] .reportBanInline textarea{background:#2d2735;color:#f1ebf6;border-color:#4a3e54;}
+
+
+/* Restore proper hit areas to discussion reactions — the old universal 38px
+   button rule clipped the "Votes" label into the neighboring comment icon */
+.naturalPostReactions{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.naturalPostReactions .reactionPanel{
+  flex:0 1 auto;
+  min-width:0;
+}
+.naturalPostReactions .reactionPanel .reactionButtons{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:6px;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .voteReaction{
+  width:auto;
+  min-width:44px;
+  padding:0 9px;
+  gap:5px;
+  flex:none;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .reactionVoteDetails{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:46px;
+  height:36px;
+  min-height:36px;
+  padding:0 10px;
+  gap:5px;
+  flex:none;
+  white-space:nowrap;
+  font-size:12px;
+  border-radius:11px;
+}
+.naturalPostReactions .reactionPanel .reactionButtons .reactionVoteDetails>span:not(.circleIcon){
+  font-size:12px;
+  line-height:1;
+  color:inherit;
+}
+.naturalPostReactions .naturalPostCommentCount{
+  display:inline-flex;
+  align-items:center;
+  flex:none;
+  gap:5px;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.naturalPostReactions .naturalPostIconButton{
+  flex:none;
+  width:38px;
+  min-width:38px;
+}
+@media(max-width:560px){
+  .naturalPostReactions{column-gap:10px;row-gap:4px;}
+  .naturalPostReactions .reactionPanel .reactionButtons{gap:2px;}
+  .naturalPostReactions .reactionPanel .reactionButtons .voteReaction{min-width:40px;padding:0 6px;}
+}
