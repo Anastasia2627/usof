@@ -34,8 +34,8 @@ function normalizePostText(title, content) {
   if (cleanTitle.length > 180) {
     throw new AppError(422, 'TITLE_TOO_LONG', 'title must contain at most 180 characters');
   }
-  if (cleanContent.length > 50000) {
-    throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 50000 characters');
+  if (cleanContent.length > 50000 || Buffer.byteLength(cleanContent,'utf8') > 60000) {
+    throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 50000 characters and fit in 60000 UTF-8 bytes');
   }
   return { title: cleanTitle, content: cleanContent };
 }
@@ -140,16 +140,16 @@ export async function listPostFeed(query, user) {
     throw new AppError(422, 'INVALID_DATE_RANGE', 'from must be earlier than or equal to to');
   }
   if (query.from) {
-    where.push('p.created_at>=?');
+    where.push('COALESCE(p.publish_at,p.created_at)>=?');
     params.push(query.from);
   }
   if (query.to) {
     const exclusiveEnd = endExclusiveForDateOnly(query.to);
     if (exclusiveEnd) {
-      where.push('p.created_at<?');
+      where.push('COALESCE(p.publish_at,p.created_at)<?');
       params.push(exclusiveEnd);
     } else {
-      where.push('p.created_at<=?');
+      where.push('COALESCE(p.publish_at,p.created_at)<=?');
       params.push(query.to);
     }
   }
