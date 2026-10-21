@@ -26,8 +26,11 @@ function normalizeCategories(value) {
 }
 
 function normalizePostText(title, content) {
-  const cleanTitle = String(title ?? '').trim();
-  const cleanContent = String(content ?? '').trim();
+  if (typeof title !== 'string' || typeof content !== 'string') {
+    throw new AppError(422, 'VALIDATION_ERROR', 'title and content must be strings');
+  }
+  const cleanTitle = title.trim();
+  const cleanContent = content.trim();
   if (!cleanTitle || !cleanContent) {
     throw new AppError(422, 'VALIDATION_ERROR', 'title and content are required');
   }
