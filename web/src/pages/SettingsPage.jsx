@@ -8,13 +8,17 @@ export default function SettingsPage() {
 
   return <main className="simpleFeaturePage settingsPage circleSettingsPage">
     <header className="circleSettingsHeader">
-      <h1><Icon name="settings" size={28}/>{t('Settings')}</h1>
+      <h1>{t('Settings')}</h1>
+      <span className="circleSettingsHeaderSymbol" aria-hidden="true">
+        <Icon name="settings" size={24}/>
+      </span>
     </header>
 
     <div className="circleSettingsSections">
       <section className="circleSettingsRow" aria-labelledby="circle-settings-theme">
         <div className="circleSettingsRowHeading">
           <h2 id="circle-settings-theme">{t('App appearance')}</h2>
+          <small>{uk?'Світла чи темна':'Light or dark'}</small>
         </div>
         <div className="circleSettingsThemeOptions" role="radiogroup" aria-label={t('App appearance')}>
           {['light', 'dark'].map(value => (
@@ -33,6 +37,7 @@ export default function SettingsPage() {
       <section className="circleSettingsRow" aria-labelledby="circle-settings-language">
         <div className="circleSettingsRowHeading">
           <h2 id="circle-settings-language">{t('Language')}</h2>
+          <small>{uk?'Мова інтерфейсу':'Interface language'}</small>
         </div>
         <div className="circleSettingsLanguageOptions" role="radiogroup" aria-label={t('Language')}>
           {Object.entries(LANGUAGE_NAMES).map(([value, label]) => (
@@ -52,6 +57,7 @@ export default function SettingsPage() {
       <section className="circleSettingsRow" aria-labelledby="circle-settings-interests">
         <div className="circleSettingsRowHeading">
           <h2 id="circle-settings-interests">{uk?'Мої теми':'My interests'}</h2>
+          <small>{uk?'Вибір тем для стрічки':'Feed preferences'}</small>
         </div>
         <button type="button" className="circleSettingsInterestsLink" onClick={()=>go('/categories')}>
           <Icon name="categories" size={19}/>
