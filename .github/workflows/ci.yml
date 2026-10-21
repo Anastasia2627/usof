@@ -2,7 +2,7 @@ name: Usof CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, design/clean-auth-account-status-2026-10-20]
   pull_request:
     branches: [main]
 
