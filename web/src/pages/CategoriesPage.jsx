@@ -22,12 +22,6 @@ const coverRules=[
   [/робот|кар'єр|career|work|business|бізнес/i,11],
   [/музик|music|anime|аніме/i,2],
 ];
-const coverFor=(category,index)=>{
-  const label=String(category?.title||'');
-  const photoIndex=coverRules.find(([pattern])=>pattern.test(label))?.[1]??index%photoLibrary.length;
-  return photoLibrary[photoIndex];
-};
-
 export default function CategoriesPage(){
   const auth=useSelector(state=>state.auth);
   const {t,language}=usePreferences();
@@ -36,7 +30,6 @@ export default function CategoriesPage(){
   const [selected,setSelected]=useState([]);
   const [query,setQuery]=useState('');
   const orbitRef=useRef(null);
-  const orbitPaused=useRef(false);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState(null);
@@ -80,13 +73,33 @@ export default function CategoriesPage(){
   }),[categories]);
 
   const cards=useMemo(()=>visual.slice(0,Math.min(8,visual.length)),[visual]);
+  // Reserve a distinct image for each visible card, even when two
+  // categories match the same photo rule (for example two travel topics)
+  const cardsWithPhotos=useMemo(()=>{
+    const used=new Set();
+    return cards.map((category,index)=>{
+      const label=String(category.title||'');
+      const match=coverRules.find(([pattern])=>pattern.test(label));
+      let photoIndex=match?.[1]??(index%photoLibrary.length);
+      if(used.has(photoIndex)){
+        for(let step=0;step<photoLibrary.length;step++){
+          const candidate=(index+step)%photoLibrary.length;
+          if(!used.has(candidate)){
+            photoIndex=candidate;
+            break;
+          }
+        }
+      }
+      used.add(photoIndex);
+      return {category,photo:photoLibrary[photoIndex]};
+    });
+  },[cards]);
 
   useLayoutEffect(()=>{
     if(!cards.length||!orbitRef.current)return undefined;
     const element=orbitRef.current;
     const tiles=Array.from(element.querySelectorAll('.categoryReferencePhoto'));
     if(!tiles.length)return undefined;
-    const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame=0;
     let visible=true;
     let elapsed=0;
@@ -113,16 +126,15 @@ export default function CategoriesPage(){
         }
         const phase=((index/tiles.length)+elapsed/52000)%1;
         const travel=.86;
-        const reduced=motion.matches;
-        const onArc=reduced||phase<travel;
-        const u=reduced?index/(tiles.length-1):onArc?phase/travel:(phase-travel)/(1-travel);
+        const onArc=phase<travel;
+        const u=onArc?phase/travel:(phase-travel)/(1-travel);
         const x=onArc?radius*(2*u-1):radius*(1-2*u);
         const height=Math.sin(Math.PI*u);
         const y=onArc?baseY-arcHeight*height:baseY+23*height;
         const rotate=onArc?(u-.5)*13:0;
         const scale=onArc?.94+.06*height:.94;
         // Fully faded before the turn-around, visible through the main arc
-        const opacity=reduced?1:onArc?Math.min(1,u/.065,(1-u)/.065):0;
+        const opacity=onArc?Math.min(1,u/.065,(1-u)/.065):0;
         tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
         tile.style.zIndex=String(onArc?10+Math.round(height*14):1);
         tile.style.opacity=String(Math.max(0,opacity));
@@ -131,14 +143,12 @@ export default function CategoriesPage(){
     };
     const tick=now=>{
       if(!last)last=now;
-      if(!orbitPaused.current&&visible&&!motion.matches)
-        elapsed+=Math.min(now-last,40);
+      if(visible)elapsed+=Math.min(now-last,40);
       last=now;
       position();
       frame=window.requestAnimationFrame(tick);
     };
     const onVisibility=()=>{visible=!document.hidden;last=0;};
-    const onMotionChange=()=>{last=0;};
     const observer=typeof IntersectionObserver!=='undefined'
       ?new IntersectionObserver(entries=>{
         visible=!document.hidden&&entries.some(entry=>entry.isIntersecting);
@@ -149,14 +159,12 @@ export default function CategoriesPage(){
     observer?.observe(element);
     document.addEventListener('visibilitychange',onVisibility);
     window.addEventListener('resize',measure);
-    motion.addEventListener?.('change',onMotionChange);
     frame=window.requestAnimationFrame(tick);
     return()=>{
       window.cancelAnimationFrame(frame);
       observer?.disconnect();
       document.removeEventListener('visibilitychange',onVisibility);
       window.removeEventListener('resize',measure);
-      motion.removeEventListener?.('change',onMotionChange);
       tiles.forEach(tile=>{
         tile.style.transform='';
         tile.style.zIndex='';
@@ -209,14 +217,8 @@ export default function CategoriesPage(){
       <h1 id="category-reference-heading">{uk?'Знайди свою тему':'Find your thing'}</h1>
 
       <div ref={orbitRef} className="categoryReferenceCollage" role="group"
-        onPointerEnter={()=>{orbitPaused.current=true;}}
-        onPointerLeave={()=>{orbitPaused.current=false;}}
-        onFocusCapture={()=>{orbitPaused.current=true;}}
-        onBlurCapture={event=>{
-          if(!event.currentTarget.contains(event.relatedTarget))orbitPaused.current=false;
-        }}
         aria-label={uk?'Обрати цікаві теми на фото':'Select interests from the photos'}>
-        {cards.map((category,index)=>{
+        {cardsWithPhotos.map(({category,photo},index)=>{
           const offset=index-(cards.length-1)/2;
           const chosen=selected.includes(Number(category.id));
           return <button type="button" key={category.id}
@@ -229,7 +231,7 @@ export default function CategoriesPage(){
             onClick={()=>toggle(category.id)}
             aria-pressed={chosen}
             aria-label={(chosen?(uk?'Зняти вибір: ':'Deselect: '):(uk?'Обрати: ':'Select: '))+t(category.title)}>
-            <img src={coverFor(category,index)} alt="" loading="eager" decoding="async"/>
+            <img src={photo} alt="" loading="eager" decoding="async"/>
             <span className="categoryReferencePhotoCheck" aria-hidden="true">
               <Icon name={chosen?'check':'plusSimple'} size={17}/>
             </span>
