@@ -231,7 +231,7 @@ export default function InterestsPage(){
           {uk?'Пропустити':'Skip for now'}
         </button>
         <button type="button" className="circleInterestContinue" onClick={save}
-          disabled={saving||loading||Boolean(error)}>
+          disabled={saving||loading}>
           {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
           <Icon name="arrow" size={18}/>
         </button>
