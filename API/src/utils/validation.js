@@ -4,8 +4,13 @@ export const normalizeEmail = (value = '') => String(value).trim().toLowerCase()
 export const normalizeLogin = (value = '') => String(value).trim();
 
 export function positiveInt(value, code = 'INVALID_ID', message = 'Expected a positive integer') {
+  // Reject booleans, arrays and objects instead of coercing them to IDs
+  if (!(typeof value === 'number' && Number.isSafeInteger(value)) &&
+      !(typeof value === 'string' && /^[1-9][0-9]*$/.test(value))) {
+    throw new AppError(422, code, message);
+  }
   const id = Number(value);
-  if (!Number.isInteger(id) || id < 1) throw new AppError(422, code, message);
+  if (!Number.isSafeInteger(id) || id < 1) throw new AppError(422, code, message);
   return id;
 }
 
