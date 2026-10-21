@@ -58,11 +58,11 @@ export default function App() {
   else if (path === '/search') page = <SearchPage hash={hash} />;
   else if (path === '/profile') page = <ProfilePage />;
   else if (parts[0] === 'profile' && /^\d+$/.test(parts[1] || '')) page = <ProfilePage userId={parts[1]} />;
-  else if (path === '/create') page = <PostEditor />;
+  else if (path === '/create') page = <PostEditor key={'create-'+(auth?.user?.id||'guest')} />;
   else if (path === '/admin') page = <AdminPage initialTab={new URLSearchParams(hash.split('?')[1]||'').get('tab')||'users'}/>;
   else if (parts[0] === 'category' && parts[1]) page = <CategoryDetailPage id={parts[1]} />;
-  else if (parts[0] === 'post' && parts[1]) page = <PostPage id={parts[1]} />;
-  else if (parts[0] === 'edit' && parts[1]) page = <PostEditor id={parts[1]} />;
+  else if (parts[0] === 'post' && parts[1]) page = <PostPage key={'post-'+parts[1]} id={parts[1]} />;
+  else if (parts[0] === 'edit' && parts[1]) page = <PostEditor key={'edit-'+parts[1]} id={parts[1]} />;
   else if (parts[0] === 'verify') page = <VerifyPage token={parts[1] || ''} />;
   else if (parts[0] === 'reset') page = <ResetPage token={parts[1] || ''} />;
   else page = <main className="narrow"><h1>Page not found</h1><button onClick={() => go('/')}>Home</button></main>;
