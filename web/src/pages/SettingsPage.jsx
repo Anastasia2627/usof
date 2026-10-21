@@ -53,7 +53,7 @@ export default function SettingsPage() {
         <div className="circleSettingsRowHeading">
           <h2 id="circle-settings-interests">{uk?'Мої теми':'My interests'}</h2>
         </div>
-        <button type="button" className="circleSettingsInterestsLink" onClick={()=>go('/interests')}>
+        <button type="button" className="circleSettingsInterestsLink" onClick={()=>go('/categories')}>
           <Icon name="categories" size={19}/>
           <span>{uk?'Налаштувати теми стрічки':'Customize feed topics'}</span>
           <Icon name="arrow" size={17}/>
