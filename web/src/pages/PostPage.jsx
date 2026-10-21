@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { api } from '../api.js';
 import { Avatar, ErrorBox, Icon, StatusBadges, fmt, go } from '../ui.jsx';
@@ -81,6 +81,8 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
   const {t}=usePreferences();
   const [reply, setReply] = useState('');
   const [replying, setReplying] = useState(false);
+  const replyFlight=useRef(false);
+  const [replyBusy,setReplyBusy]=useState(false);
   const [error, setError] = useState(null);
   const [reportOpen,setReportOpen]=useState(false);
   const actionsMenu=useContextActions();
@@ -106,9 +108,17 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
 
   async function sendReply(event) {
     event.preventDefault();
-    if (await run(`/posts/${postId}/comments`, 'POST', { content: reply, parentCommentId: item.id })) {
-      setReply('');
-      setReplying(false);
+    if (replyFlight.current || !reply.trim()) return;
+    replyFlight.current=true;
+    setReplyBusy(true);
+    try {
+      if (await run(`/posts/${postId}/comments`, 'POST', { content: reply, parentCommentId: item.id })) {
+        setReply('');
+        setReplying(false);
+      }
+    } finally {
+      replyFlight.current=false;
+      setReplyBusy(false);
     }
   }
 
@@ -178,7 +188,7 @@ function Comment({ item, comments, postId, auth, refresh, acceptedId, postAuthor
       <ContextActions menu={actionsMenu} items={commentMenuItems} label={t('Comment actions')}/>
       {replying && <form className="replyForm" onSubmit={sendReply}>
         <label>{t('Reply')}<textarea required maxLength="20000" value={reply} onChange={e => setReply(e.target.value)} /></label>
-        <div className="toolbar"><button className="primary">{t('Post reply')}</button><button type="button" onClick={() => setReplying(false)}>{t('Cancel')}</button></div>
+        <div className="toolbar"><button className="primary" disabled={replyBusy}>{t('Post reply')}</button><button type="button" onClick={() => setReplying(false)}>{t('Cancel')}</button></div>
       </form>}
       <ErrorBox error={error} />
     </article>
@@ -196,23 +206,39 @@ export default function PostPage({ id }) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied,setCopied] = useState(false);
+  const commentFlight=useRef(false);
+  const [commentBusy,setCommentBusy]=useState(false);
+  const routeKey=useRef('');
+  const requestGeneration=useRef(0);
+  routeKey.current=String(id)+'|'+String(auth?.token||'');
   const [reportOpen,setReportOpen]=useState(false);
   const postMenu=useContextActions();
   const {t} = usePreferences();
 
   async function load() {
+    const requested=routeKey.current;
+    const sequence=++requestGeneration.current;
     try {
       const [postResult, commentResult] = await Promise.all([
         api(`/posts/${id}`, { token: auth?.token }),
         api(`/posts/${id}/comments`, { token: auth?.token }),
       ]);
+      if(routeKey.current!==requested||sequence!==requestGeneration.current)return;
       setPost(postResult.data);
       setComments(commentResult.data);
       setError(null);
-    } catch (err) { setError(err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      if(routeKey.current===requested&&sequence===requestGeneration.current)setError(err);
+    }
+    finally {
+      if(routeKey.current===requested&&sequence===requestGeneration.current)setLoading(false);
+    }
   }
-  useEffect(() => { setLoading(true); setPost(null); setCopied(false); load(); }, [id, auth?.token]);
+  useEffect(() => {
+    setLoading(true);setPost(null);setComments([]);setCopied(false);
+    load();
+    return()=>{requestGeneration.current+=1;};
+  }, [id, auth?.token]);
   useEffect(() => {
     if (!auth?.token) { setSaved(false); return; }
     let live = true;
@@ -262,22 +288,32 @@ export default function PostPage({ id }) {
   }
 
   async function refreshReplies(){
+    const currentRoute=routeKey.current;
     try{
       const result=await api(`/posts/${id}/comments`,{token:auth?.token});
+      if(routeKey.current!==currentRoute)return;
       setComments(result.data);
-      setPost(current=>current?{...current,comment_count:result.data.length}:current);
-    }catch(err){setError(err);}
+      setPost(current=>current?{...current,
+        comment_count:result.data.filter(item=>item.status==='active').length}:current);
+    }catch(err){if(routeKey.current===currentRoute)setError(err);}
   }
   async function sendComment(event) {
     event.preventDefault();
+    if(commentFlight.current||!text.trim())return;
+    commentFlight.current=true;setCommentBusy(true);
+    const currentRoute=routeKey.current;
     try {
       const result=await api(`/posts/${id}/comments`,{method:'POST',token:auth.token,body:{content:text}});
-      // The new reply is visible immediately, even if the subsequent network refresh is slow.
+      if(routeKey.current!==currentRoute)return;
       setComments(current=>current.some(item=>Number(item.id)===Number(result.data.id))
         ?current:[...current,result.data]);
       setText('');
       await refreshReplies();
-    } catch (err) { setError(err); }
+    } catch (err) {
+      if(routeKey.current===currentRoute)setError(err);
+    } finally {
+      commentFlight.current=false;setCommentBusy(false);
+    }
   }
 
   async function copyLink() {
@@ -370,7 +406,7 @@ export default function PostPage({ id }) {
         <Reactions kind="post" id={post.id} auth={auth} authorId={post.author_id}
           visible={isAdmin||post.status==='active'} hideCounts={hideCounts}
           writable={isAdmin||(post.status==='active'&&!post.locked)} onChange={load}/>
-        <span className="naturalPostCommentCount"><Icon name="comment" size={19}/>{comments.length}</span>
+        <span className="naturalPostCommentCount"><Icon name="comment" size={19}/>{comments.filter(item=>item.status==='active').length}</span>
         <button className="naturalPostIconButton postCopyAction" type="button"
           aria-label={t(copied?'Link copied':'Copy link')}
           title={t(copied?'Link copied':'Copy link')} onClick={copyLink}>
@@ -389,7 +425,7 @@ export default function PostPage({ id }) {
       <ErrorBox error={error}/>
     </article>
     <section className="naturalComments">
-      <h2>{t('Replies')} <span>{comments.length}</span></h2>
+      <h2>{t('Replies')} <span>{comments.filter(item=>item.status==='active').length}</span></h2>
       {roots.length ? <div className="naturalCommentTree">
         {roots.map(item=><Comment key={item.id} item={item} comments={comments} postId={post.id} auth={auth} refresh={load} acceptedId={post.accepted_comment_id} postAuthorId={post.author_id}/>)}
       </div> : <div className="naturalEmptyReplies"><Icon name="comment" size={25}/>
@@ -399,7 +435,7 @@ export default function PostPage({ id }) {
         <label className="srOnly" htmlFor="main-reply-input">{t('New comment')}</label>
         <textarea id="main-reply-input" required maxLength="20000" rows="2"
           placeholder={t('Add to the conversation…')} value={text} onChange={e=>setText(e.target.value)}/>
-        <button className="primary" type="submit" aria-label="Comment" title="Send reply"><Icon name="arrow" size={20}/></button>
+        <button className="primary" type="submit" disabled={commentBusy} aria-label="Comment" title="Send reply"><Icon name="arrow" size={20}/></button>
       </form> : <p className="naturalReplyLocked">{t(!auth?'Log in to reply':post.closed?'Discussion closed':'New replies are disabled')}</p>}
     </section>
   </main>;
