@@ -135,7 +135,8 @@ export async function verifyEmailToken(tokenValue) {
          verification_token=NULL,
          verification_token_expires=NULL,
          verification_code_hash=NULL,
-         verification_code_expires=NULL
+         verification_code_expires=NULL,
+         verification_attempts=0
      WHERE email_verified=0
        AND verification_token=?
        AND verification_token_expires>NOW()`,
