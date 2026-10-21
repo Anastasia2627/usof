@@ -131,7 +131,11 @@ export async function getUserDashboard(userId) {
     weeklyGoal: { target: weeklyTarget, current: weeklyProgress, completed: weeklyProgress >= weeklyTarget },
     reactionsReceived: reactionBreakdown,
     achievements: buildAchievements({ posts: Number(counts.posts || 0), answers: Number(counts.answers || 0), positiveReceived, streak, rating }),
-    suggestions: await Post.attachCategories(suggestionRows),
+    suggestions: (await Post.attachCategories(suggestionRows)).map(post=>
+      post.hide_likes && Number(post.author_id)!==Number(userId)
+        ? {...post,like_count:null,dislike_count:null,score:null}
+        : post
+    ),
   };
 }
 
