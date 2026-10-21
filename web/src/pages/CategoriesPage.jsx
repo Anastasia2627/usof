@@ -126,6 +126,7 @@ export default function CategoriesPage(){
         tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
         tile.style.zIndex=String(onArc?10+Math.round(height*14):1);
         tile.style.opacity=String(Math.max(0,opacity));
+        tile.style.pointerEvents=opacity>.15?'auto':'none';
       });
     };
     const tick=now=>{
@@ -160,6 +161,7 @@ export default function CategoriesPage(){
         tile.style.transform='';
         tile.style.zIndex='';
         tile.style.opacity='';
+        tile.style.pointerEvents='';
       });
     };
   },[cards]);
