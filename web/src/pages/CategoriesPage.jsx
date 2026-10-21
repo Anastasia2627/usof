@@ -142,6 +142,10 @@ export default function CategoriesPage() {
               '--fan-offset':distance,
               '--fan-shift':(distance*112)+'px',
               '--fan-drop':(distance*distance*11)+'px',
+              '--fan-mobile-shift':(distance*60)+'px',
+              '--fan-mobile-drop':(distance*distance*6.4)+'px',
+              '--fan-small-shift':(distance*50)+'px',
+              '--fan-small-drop':(distance*distance*5.2)+'px',
               '--fan-rotate':(distance*6.2)+'deg',
               '--fan-depth':String(20-Math.abs(distance)),
             }}>
