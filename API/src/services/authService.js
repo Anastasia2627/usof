@@ -266,7 +266,7 @@ async function fetchGoogleProfile(credential) {
 
   let response;
   try {
-    response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+    response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`, { signal: AbortSignal.timeout(5000) });
   } catch {
     throw new AppError(502, 'GOOGLE_AUTH_UNAVAILABLE', 'Could not verify Google sign-in');
   }
@@ -321,18 +321,10 @@ export async function authenticateWithGoogleCredential(body) {
     user = byEmailRows[0];
 
     if (user) {
-      if (user.google_sub && user.google_sub !== profile.sub) {
-        throw new AppError(409, 'GOOGLE_ACCOUNT_CONFLICT', 'This email is linked to another Google account');
-      }
-      await pool.execute(
-        `UPDATE users
-         SET google_sub=?, email_verified=1,
-             verification_token=NULL, verification_token_expires=NULL,
-             verification_code_hash=NULL, verification_code_expires=NULL,
-             avatar=COALESCE(avatar, ?)
-         WHERE id=?`,
-        [profile.sub, profile.picture || null, user.id],
-      );
+      // Email equality alone does not prove that the Google identity owns
+      // an existing password account. Never auto-link or verify it here.
+      throw new AppError(409, 'GOOGLE_LINK_REQUIRED',
+        'An account already uses this email. Sign in with your password first; Google linking needs separate verification.');
     } else {
       const login = await availableGoogleLogin(email);
       const fallbackPassword = crypto.randomBytes(48).toString('base64url');
