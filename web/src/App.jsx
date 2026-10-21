@@ -14,7 +14,6 @@ import WelcomePage from './pages/WelcomePage.jsx';
 import SavedPage from './pages/SavedPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
-import InterestsPage from './pages/InterestsPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import BanPage from './pages/BanPage.jsx';
 
@@ -42,6 +41,7 @@ export default function App() {
 
   const path = hash.split('?')[0];
   const parts = path.split('/').filter(Boolean);
+  useEffect(()=>{if(path==='/interests')go('/categories');},[path]);
   let page;
   if (path === '/') page = <HomePage hash={hash} />;
   else if (path === '/welcome') page = <WelcomePage />;
@@ -50,7 +50,7 @@ export default function App() {
   else if (path === '/notifications') page = <NotificationsPage />;
   else if (path === '/dashboard') page = auth?.user?.role==='admin'?<AdminPage initialTab="dashboard"/>:<DashboardPage />;
   else if (path === '/settings') page = <SettingsPage />;
-  else if (path === '/interests') page = <InterestsPage />;
+  else if (path === '/interests') page = <CategoriesPage />;
   else if (path === '/ban') page = <BanPage />;
   else if (path === '/login') page = <AuthPage key="login" mode="login" />;
   else if (path === '/register') page = <AuthPage key="register" mode="register" />;
