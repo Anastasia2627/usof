@@ -2,7 +2,7 @@ name: Circle Threads UI & connection check
 
 on:
   push:
-    branches: [circle-threads-feed]
+    branches: [circle-threads-feed, design/clean-auth-account-status-2026-10-20]
   workflow_dispatch:
 
 jobs:
