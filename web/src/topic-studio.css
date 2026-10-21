@@ -302,7 +302,6 @@ html[data-theme="dark"] .categoryReferenceSkip{color:#c2b6ca}
   .categoryReferenceSearch{width:min(355px,100%);margin-bottom:12px}
   .categoryReferencePills{min-height:70px;gap:8px}
   .categoryReferencePill{min-height:43px;padding:9px 14px;font-size:13px}
-  .categoryReferenceDescription{font-size:11px}
 }
 @media(max-width:390px){
   .categoryReferenceHero h1{font-size:clamp(26px,7vw,32px)}
