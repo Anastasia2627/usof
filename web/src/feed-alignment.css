@@ -62,3 +62,35 @@ main.homePage .feedMessage{
   main.homePage .threadGrid{padding-top:10px;}
   main.homePage .feedFilterStrip{padding-top:10px;padding-bottom:13px;}
 }
+
+/* Keep For You / Popular / Latest on a single row at every viewport size */
+main.homePage .feedTabs.feedTabs--three{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  column-gap:0;
+  row-gap:0;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+main.homePage .feedTabs.feedTabs--three > button{
+  display:block;
+  box-sizing:border-box;
+  min-width:0;
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:14px clamp(3px,1.4vw,15px);
+  font-size:clamp(12px,1.55vw,15px);
+  line-height:1.35;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media(max-width:420px){
+  main.homePage .feedTabs.feedTabs--three > button{
+    font-size:12px;
+    padding:12px 2px;
+  }
+}
