@@ -138,7 +138,6 @@ export default function CategoriesPage(){
         tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
         tile.style.zIndex=String(onArc?10+Math.round(height*14):1);
         tile.style.opacity=String(Math.max(0,opacity));
-        tile.style.pointerEvents=opacity>.15?'auto':'none';
       });
     };
     const tick=now=>{
@@ -169,7 +168,6 @@ export default function CategoriesPage(){
         tile.style.transform='';
         tile.style.zIndex='';
         tile.style.opacity='';
-        tile.style.pointerEvents='';
       });
     };
   },[cards]);
@@ -216,26 +214,18 @@ export default function CategoriesPage(){
     <section className="categoryReferenceHero" aria-labelledby="category-reference-heading">
       <h1 id="category-reference-heading">{uk?'Знайди свою тему':'Find your thing'}</h1>
 
-      <div ref={orbitRef} className="categoryReferenceCollage" role="group"
-        aria-label={uk?'Обрати цікаві теми на фото':'Select interests from the photos'}>
+      <div ref={orbitRef} className="categoryReferenceCollage" aria-hidden="true">
         {cardsWithPhotos.map(({category,photo},index)=>{
           const offset=index-(cards.length-1)/2;
-          const chosen=selected.includes(Number(category.id));
-          return <button type="button" key={category.id}
-            className={'categoryReferencePhoto'+(chosen?' isSelected':'')}
+          return <div key={category.id}
+            className="categoryReferencePhoto"
             style={{
               '--photo-x':(offset*108)+'px',
               '--photo-y':(offset*offset*9)+'px',
               '--photo-angle':(offset*5)+'deg'
-            }}
-            onClick={()=>toggle(category.id)}
-            aria-pressed={chosen}
-            aria-label={(chosen?(uk?'Зняти вибір: ':'Deselect: '):(uk?'Обрати: ':'Select: '))+t(category.title)}>
+            }}>
             <img src={photo} alt="" loading="eager" decoding="async"/>
-            <span className="categoryReferencePhotoCheck" aria-hidden="true">
-              <Icon name={chosen?'check':'plusSimple'} size={17}/>
-            </span>
-          </button>;
+          </div>;
         })}
         {loading&&<span className="categoryReferenceLoad" role="status">
           {uk?'Завантажуємо теми…':'Loading topics…'}
