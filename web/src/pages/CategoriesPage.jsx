@@ -1,13 +1,11 @@
-import React, {useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useState} from 'react';
 import {useSelector} from 'react-redux';
 import {api} from '../api.js';
-import {ErrorBox, PostCard, Icon, go} from '../ui.jsx';
+import {ErrorBox,PostCard,Icon,go} from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
 import SuggestTopic from '../SuggestTopic.jsx';
-import {useInfiniteRecords, InfiniteScrollEnd} from '../InfiniteScroll.jsx';
+import {useInfiniteRecords,InfiniteScrollEnd} from '../InfiniteScroll.jsx';
 
-// Use the original photo cards already included with Circle, never duplicate
-// categories or invent available interests; IDs come from /api/categories
 const photoLibrary=Array.from({length:12},(_,index)=>
   '/images/'+encodeURIComponent('Frame '+(2072750583+index)+'.png'));
 const coverRules=[
@@ -25,20 +23,20 @@ const coverRules=[
   [/робот|кар'єр|career|work|business|бізнес/i,11],
   [/музик|music|anime|аніме/i,2],
 ];
-const categoryCover=(category,index)=>{
-  const text=String(category?.title||'');
-  const photoIndex=coverRules.find(([pattern])=>pattern.test(text))?.[1]??index%photoLibrary.length;
+const coverFor=(category,index)=>{
+  const label=String(category?.title||'');
+  const photoIndex=coverRules.find(([pattern])=>pattern.test(label))?.[1]??index%photoLibrary.length;
   return photoLibrary[photoIndex];
 };
 
-export default function CategoriesPage() {
+export default function CategoriesPage(){
   const auth=useSelector(state=>state.auth);
   const {t,language}=usePreferences();
   const uk=language==='uk';
   const [categories,setCategories]=useState([]);
   const [selected,setSelected]=useState([]);
   const [query,setQuery]=useState('');
-  const [currentSlide,setCurrentSlide]=useState(0);
+  const [slide,setSlide]=useState(0);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState(null);
@@ -48,13 +46,16 @@ export default function CategoriesPage() {
     const load=async()=>{
       setLoading(true);
       try{
-        const [all,choices]=await Promise.all([
+        const [all,interests]=await Promise.all([
           api('/categories',{signal:controller.signal}),
-          auth?.token?api('/social/interests',{token:auth.token,signal:controller.signal}):Promise.resolve({data:[]}),
+          auth?.token
+            ?api('/social/interests',{token:auth.token,signal:controller.signal})
+            :Promise.resolve({data:[]})
         ]);
         if(controller.signal.aborted)return;
         setCategories(Array.isArray(all?.data)?all.data:[]);
-        setSelected(Array.isArray(choices?.data)?choices.data.map(Number):[]);
+        setSelected(Array.isArray(interests?.data)?
+          interests.data.map(Number).filter(Number.isInteger):[]);
         setError(null);
       }catch(err){
         if(!controller.signal.aborted&&err.name!=='AbortError')setError(err);
@@ -63,160 +64,169 @@ export default function CategoriesPage() {
       }
     };
     load();
-    const changed=()=>{if(!controller.signal.aborted)load();};
-    window.addEventListener('circle:categories-updated',changed);
-    return()=>{controller.abort();window.removeEventListener('circle:categories-updated',changed);};
+    const reload=()=>{if(!controller.signal.aborted)load();};
+    window.addEventListener('circle:categories-updated',reload);
+    return()=>{
+      controller.abort();
+      window.removeEventListener('circle:categories-updated',reload);
+    };
   },[auth?.token]);
 
-  const visualOrder=useMemo(()=>[...categories].sort((a,b)=>{
-    const aIndex=coverRules.findIndex(([p])=>p.test(a.title||''));
-    const bIndex=coverRules.findIndex(([p])=>p.test(b.title||''));
-    return (aIndex<0?100:aIndex)-(bIndex<0?100:bIndex)||
+  const visual=useMemo(()=>[...categories].sort((a,b)=>{
+    const indexA=coverRules.findIndex(([pattern])=>pattern.test(a.title||''));
+    const indexB=coverRules.findIndex(([pattern])=>pattern.test(b.title||''));
+    return (indexA<0?100:indexA)-(indexB<0?100:indexB)||
       Number(b.post_count||0)-Number(a.post_count||0);
   }),[categories]);
+
   const cards=useMemo(()=>{
-    const n=Math.min(7,visualOrder.length);
-    return Array.from({length:n},(_,i)=>visualOrder[(currentSlide+i)%visualOrder.length]);
-  },[visualOrder,currentSlide]);
+    const length=Math.min(7,visual.length);
+    return Array.from({length},(_,index)=>visual[(slide+index)%visual.length]);
+  },[visual,slide]);
+
   const results=useMemo(()=>{
     const search=query.trim().toLocaleLowerCase();
-    return categories.filter(c=>(String(c.title)+' '+t(c.title)+' '+String(c.description||''))
-      .toLocaleLowerCase().includes(search));
+    return categories.filter(category=>!search||
+      (String(category.title)+' '+t(category.title)+' '+String(category.description||''))
+        .toLocaleLowerCase().includes(search));
   },[categories,query,t]);
 
-  function toggle(id){
+  const toggle=id=>{
     if(!auth?.token){go('/login');return;}
     const number=Number(id);
-    setSelected(current=>current.includes(number)
-      ?current.filter(value=>value!==number)
-      :[...current,number]);
-  }
-  async function save(){
+    setSelected(previous=>previous.includes(number)
+      ?previous.filter(value=>value!==number):[...previous,number]);
+  };
+
+  const save=async()=>{
     if(!auth?.token){go('/login');return;}
     if(loading||saving)return;
-    setSaving(true);setError(null);
+    setSaving(true);
+    setError(null);
     try{
-      await api('/social/interests',{method:'PUT',token:auth.token,
-        body:{categories:selected}});
+      await api('/social/interests',{
+        token:auth.token,
+        method:'PUT',
+        body:{categories:selected}
+      });
       window.dispatchEvent(new Event('circle:interests-updated'));
       go('/');
-    }catch(err){setError(err);}
-    finally{setSaving(false);}
-  }
-  const shift=step=>setCurrentSlide(position=>visualOrder.length?
-    (position+step+visualOrder.length)%visualOrder.length:0);
+    }catch(err){
+      setError(err);
+    }finally{
+      setSaving(false);
+    }
+  };
 
-  return <main className="categoriesPage topicStudioPage">
-    <header className="topicStudioIntro">
-      <h1>{uk?'Знайди свою тему':'Find your thing'}</h1>
-      <p>{uk?'Вибирай те, що любиш, і наповнюй стрічку своїм':
-        'Choose what inspires you and shape your own feed'}</p>
-    </header>
+  const move=direction=>setSlide(old=>visual.length?
+    (old+direction+visual.length)%visual.length:0);
 
-    <section className="topicStudioFeature" aria-label={uk?'Картки тем':'Topic cards'}>
-      <div className="topicStudioFan">
+  return <main className="categoriesPage categoryReferencePage">
+    <section className="categoryReferenceHero" aria-labelledby="category-reference-heading">
+      <h1 id="category-reference-heading">
+        {uk?<>Знайди свою<br/>тему</>:<>Find your<br/>thing</>}
+      </h1>
+
+      <div className="categoryReferenceCollage" role="group"
+        aria-label={uk?'Обрати тему на фото':'Choose an interest from the photos'}>
         {cards.map((category,index)=>{
-          const offset=index-(cards.length-1)/2;
+          const distance=index-(cards.length-1)/2;
           const chosen=selected.includes(Number(category.id));
-          return <div key={category.id}
-            className={'topicGalleryItem'+(Math.abs(offset)>2?' isOuter':'')+
-              (chosen?' isSelected':'')}
+          return <button type="button" key={category.id}
+            className={'categoryReferencePhoto'+(chosen?' isSelected':'')}
             style={{
-              '--card-shift':(offset*117)+'px',
-              '--card-shift-md':(offset*80)+'px',
-              '--card-drop':(offset*offset*9)+'px',
-              '--card-angle':(offset*5.3)+'deg',
-              '--card-shift-sm':(offset*59)+'px',
-              '--card-drop-sm':(offset*offset*5)+'px',
-              '--card-shift-xs':(offset*51)+'px',
-              '--card-drop-xs':(offset*offset*4)+'px',
-              '--card-level':String(10-Math.abs(offset)),
-            }}>
-            <button type="button" className="topicGalleryCard"
-              aria-pressed={chosen}
-              aria-label={(chosen?(uk?'Прибрати тему ':'Remove topic '):(uk?'Обрати тему ':'Select topic '))+t(category.title)}
-              onClick={()=>toggle(category.id)}>
-              <img src={categoryCover(category,index)} alt="" decoding="async" loading="eager"/>
-              <span className="topicGalleryTint" aria-hidden="true"/>
-              <span className="topicGalleryMark" aria-hidden="true">
-                <Icon name={chosen?'check':'plusSimple'} size={17}/>
-              </span>
-              <strong>{t(category.title)}</strong>
-            </button>
-            <button type="button" className="topicGalleryBrowse"
-              onClick={()=>go('/category/'+category.id)}
-              aria-label={(uk?'Переглянути дописи: ':'Browse posts: ')+t(category.title)}>
-              <Icon name="arrow" size={16}/>
-            </button>
-          </div>;
+              '--photo-x':(distance*108)+'px',
+              '--photo-y':(distance*distance*9)+'px',
+              '--photo-angle':(distance*5)+'deg',
+              '--photo-x-tablet':(distance*79)+'px',
+              '--photo-x-phone':(distance*48)+'px',
+              '--photo-y-phone':(distance*distance*5)+'px',
+              '--photo-layer':String(20-Math.abs(distance))
+            }}
+            onClick={()=>toggle(category.id)}
+            aria-pressed={chosen}
+            aria-label={(chosen?(uk?'Зняти вибір: ':'Deselect: '):(uk?'Обрати: ':'Select: '))+t(category.title)}>
+            <img src={coverFor(category,index)} alt="" loading="eager" decoding="async"/>
+            <span className="categoryReferencePhotoCheck" aria-hidden="true">
+              <Icon name={chosen?'check':'plusSimple'} size={17}/>
+            </span>
+            {(index===1||index===cards.length-2)&&
+              <span className={'categoryReferencePhotoLabel'+(index===1?' labelBlue':' labelGreen')}>
+                {t(category.title)}
+              </span>}
+          </button>;
         })}
-        {loading&&<span className="topicStudioLoading" role="status">
-          {uk?'Завантажуємо теми…':'Loading topics…'}</span>}
-        {!loading&&!cards.length&&<span className="topicStudioLoading">
-          {uk?'Поки немає тем':'No topics yet'}</span>}
+        {loading&&<span className="categoryReferenceLoad" role="status">
+          {uk?'Завантажуємо теми…':'Loading topics…'}
+        </span>}
+        {!loading&&!cards.length&&<span className="categoryReferenceLoad">
+          {uk?'Поки немає тем':'No topics yet'}
+        </span>}
       </div>
-      <div className="topicGalleryNavigation">
-        <button type="button" onClick={()=>shift(-1)} disabled={cards.length<2}
+
+      <div className="categoryReferenceCaption">
+        <button type="button" onClick={()=>move(-1)} disabled={cards.length<2}
           aria-label={uk?'Попередні теми':'Previous topics'}>
-          <Icon name="arrowBack" size={19}/>
+          <Icon name="arrowBack" size={18}/>
         </button>
-        <span>{cards.length?String(currentSlide%visualOrder.length+1).padStart(2,'0')+
-          ' / '+String(visualOrder.length).padStart(2,'0'):''}</span>
-        <button type="button" onClick={()=>shift(1)} disabled={cards.length<2}
+        <span>{uk?'Обирай те, що подобається — і ми підлаштуємо твою стрічку':
+          'Choose what you love and make the feed your own'}</span>
+        <button type="button" onClick={()=>move(1)} disabled={cards.length<2}
           aria-label={uk?'Наступні теми':'Next topics'}>
-          <Icon name="arrow" size={19}/>
+          <Icon name="arrow" size={18}/>
         </button>
+      </div>
+
+      <div className="categoryReferenceHeroActions">
+        <button type="button" className="categoryReferencePrimary"
+          onClick={save} disabled={loading||saving}>
+          {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
+          <Icon name="arrow" size={16}/>
+        </button>
+        <button type="button" className="categoryReferenceSkip" onClick={()=>go('/')}
+          disabled={saving}>{uk?'Пропустити':'Skip for now'}</button>
       </div>
     </section>
 
-    <section className="topicCapsuleSection" aria-labelledby="topics-caption">
-      <div className="topicCapsuleHeading">
-        <div>
-          <h2 id="topics-caption">{uk?'Обери цікаві теми':'Pick your interests'}</h2>
-          <p>{uk?'За вибраними темами ми налаштуємо твою стрічку':
-            'Your chosen topics help personalize your feed'}</p>
+    <section className="categoryReferenceTopics" aria-labelledby="category-topics-label">
+      <div className="categoryReferenceTopicsHead">
+        <div className="categoryReferenceTitleRow">
+          <h2 id="category-topics-label">{uk?'Теми':'Topics'}</h2>
+          <span>{selected.length?selected.length+' '+(uk?'обрано':'selected'):''}</span>
         </div>
-        <label className="topicCapsuleSearch">
+        <label className="categoryReferenceSearch">
           <Icon name="search" size={18}/>
           <input type="search" value={query}
-            onChange={event=>setQuery(event.target.value)}
             placeholder={uk?'Пошук тем':'Search topics'}
-            aria-label={uk?'Пошук тем':'Search topics'}/>
+            aria-label={uk?'Пошук тем':'Search topics'}
+            onChange={event=>setQuery(event.target.value)}/>
           {query&&<button type="button" onClick={()=>setQuery('')}
-            aria-label={uk?'Очистити':'Clear search'}><Icon name="close" size={16}/></button>}
+            aria-label={uk?'Очистити пошук':'Clear search'}>
+            <Icon name="close" size={15}/>
+          </button>}
         </label>
       </div>
-      <div className="topicCapsuleRail" role="group"
-        aria-label={uk?'Вибери теми':'Select topics'}>
+
+      <div className="categoryReferencePills" role="group"
+        aria-label={uk?'Вибір тем':'Topic selection'}>
         {results.map(category=>{
           const chosen=selected.includes(Number(category.id));
-          return <button key={category.id} type="button"
-            className={'topicCapsule'+(chosen?' isSelected':'')}
+          return <button type="button" key={category.id}
+            className={'categoryReferencePill'+(chosen?' isSelected':'')}
             aria-pressed={chosen} onClick={()=>toggle(category.id)}>
             <span>{t(category.title)}</span>
             <Icon name={chosen?'check':'plusSimple'} size={17}/>
           </button>;
         })}
-        {!loading&&!results.length&&<span className="topicCapsuleEmpty">
-          {uk?'Нічого не знайдено':'No matching topics'}</span>}
+        {!loading&&!results.length&&<span className="categoryReferenceEmpty">
+          {uk?'Нічого не знайдено':'No matching topics'}
+        </span>}
       </div>
-      <div className="topicCapsuleFooter">
-        <div className="topicCapsuleFooterLeft">
-          <span className="topicCapsuleCount">
-            {selected.length>0?(uk?'Обрано: ':'Selected: ')+selected.length:
-              (uk?'Ще нічого не обрано':'Nothing selected yet')}
-          </span>
-          <SuggestTopic/>
-        </div>
-        <div className="topicCapsuleActions">
-          <button type="button" className="topicCapsuleSkip" onClick={()=>go('/')}
-            disabled={saving}>{uk?'Пропустити':'Skip'}</button>
-          <button type="button" className="topicCapsuleContinue"
-            disabled={loading||saving} onClick={save}>
-            {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
-            <Icon name="arrow" size={17}/>
-          </button>
-        </div>
+
+      <div className="categoryReferenceBottom">
+        <SuggestTopic/>
+        <span>{uk?'Теми можна змінити в налаштуваннях':
+          'You can change your interests in Settings'}</span>
       </div>
       <ErrorBox error={error}/>
     </section>
