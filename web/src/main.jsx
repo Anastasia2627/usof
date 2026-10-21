@@ -19,6 +19,7 @@ import './auth-experience.css';
 import './feed-alignment.css';
 import './admin-clean.css';
 import './settings-redesign.css';
+import './interests-onboarding.css';
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
