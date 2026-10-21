@@ -1,7 +1,17 @@
 import { AppError } from './AppError.js';
 
-export const normalizeEmail = (value = '') => String(value).trim().toLowerCase();
-export const normalizeLogin = (value = '') => String(value).trim();
+export function normalizeEmail(value = '') {
+  if (value == null) return '';
+  if (typeof value !== 'string')
+    throw new AppError(422, 'INVALID_EMAIL', 'Email must be a single string');
+  return value.trim().toLowerCase();
+}
+export function normalizeLogin(value = '') {
+  if (value == null) return '';
+  if (typeof value !== 'string')
+    throw new AppError(422, 'INVALID_LOGIN', 'Login must be a string');
+  return value.trim();
+}
 
 export function positiveInt(value, code = 'INVALID_ID', message = 'Expected a positive integer') {
   // Reject booleans, arrays and objects instead of coercing them to IDs
@@ -36,7 +46,9 @@ export function validatePassword(password, field = 'Password') {
 }
 
 export function validateFullName(value = '') {
-  const fullName = String(value);
+  if (typeof value !== 'string')
+    throw new AppError(422, 'INVALID_FULL_NAME', 'Full name must be a string');
+  const fullName = value;
   if (fullName.length > 100) {
     throw new AppError(422, 'INVALID_FULL_NAME', 'Full name must contain at most 100 characters');
   }
