@@ -49,18 +49,13 @@
   border-radius:18px;
   background:#e4e0e7;
   box-shadow:0 10px 27px rgba(25,18,32,.14);
-  color:#fff;
-  cursor:pointer;
   overflow:hidden;
+  pointer-events:none;
+  user-select:none;
   transform:translate(calc(-50% + var(--photo-x)),var(--photo-y)) rotate(var(--photo-angle));
   transform-origin:center center;
   will-change:transform;
   backface-visibility:hidden;
-  text-align:left;
-  transition:box-shadow .2s ease,border-color .2s ease;
-}
-.categoryReferencePhoto:hover,.categoryReferencePhoto:focus-visible{
-  box-shadow:0 16px 32px rgba(29,20,38,.22);
 }
 .categoryReferencePhoto img{
   position:absolute;
@@ -71,31 +66,6 @@
   object-fit:cover;
   border-radius:15px;
   pointer-events:none;
-}
-.categoryReferencePhoto.isSelected{
-  border-color:#e9d9f7;
-  box-shadow:0 0 0 2px #a582bf,0 12px 29px rgba(29,20,38,.16);
-}
-.categoryReferencePhotoCheck{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:29px;
-  height:29px;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  color:#302535;
-  background:rgba(255,255,255,.96);
-  opacity:0;
-  transition:opacity .2s ease;
-}
-.categoryReferencePhoto:hover .categoryReferencePhotoCheck,
-.categoryReferencePhoto:focus-visible .categoryReferencePhotoCheck,
-.categoryReferencePhoto.isSelected .categoryReferencePhotoCheck{opacity:1}
-.categoryReferencePhoto.isSelected .categoryReferencePhotoCheck{
-  background:#e6d4f5;
-  color:#694780;
 }
 .categoryReferenceLoad{
   position:absolute;
@@ -298,7 +268,6 @@ html[data-theme="dark"] .categoryReferenceSkip{color:#c2b6ca}
   .categoryReferenceCollage{height:196px;margin-top:23px}
   .categoryReferencePhoto{width:105px;height:119px;border-width:2px;border-radius:14px}
   .categoryReferencePhoto img{border-radius:12px}
-  .categoryReferencePhotoCheck{width:23px;height:23px;top:6px;right:6px}
   .categoryReferenceSearch{width:min(355px,100%);margin-bottom:12px}
   .categoryReferencePills{min-height:70px;gap:8px}
   .categoryReferencePill{min-height:43px;padding:9px 14px;font-size:13px}
