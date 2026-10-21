@@ -98,7 +98,6 @@ const circleAuthImages = [
 function CircleAuthGallery() {
   const galleryRef = useRef(null);
   const [ready, setReady] = useState(false);
-  const [replay, setReplay] = useState(0);
 
   useEffect(() => {
     // Animate *after* photos are ready: an image cannot appear midway through its entrance.
@@ -165,14 +164,14 @@ function CircleAuthGallery() {
         { opacity: 1, transform: pose(0, 0, rotation, 1),
           filter: 'blur(0px)', offset: 1 },
       ], {
-        duration: 3400,
+        duration: 2500,
         delay: index * 45,
         easing: 'cubic-bezier(.42,0,.58,1)',
         fill: 'both',
       });
     });
     return () => animations.forEach(animation => animation.cancel());
-  }, [ready, replay]);
+  }, [ready]);
 
   return <div ref={galleryRef}
     className={`circleAuthGallery${ready ? ' circleAuthGallery--ready' : ''}`}>
@@ -184,12 +183,6 @@ function CircleAuthGallery() {
         </span>
       ))}
     </div>
-    {ready && <button type="button" className="circleAuthReplay"
-      title="Повторити анімацію / Replay animation"
-      aria-label="Повторити анімацію"
-      onClick={() => setReplay(count => count + 1)}>
-      <Icon name="refresh" size={16}/>
-    </button>}
   </div>;
 }
 
