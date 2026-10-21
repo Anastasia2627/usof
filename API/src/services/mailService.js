@@ -144,6 +144,7 @@ export async function sendVerificationEmail({ to, login, token, code }) {
   const url = `${frontendOrigin()}/#/verify/${encodeURIComponent(token)}`;
   const safeUrl = escapeHtml(url);
   const safeCode = escapeHtml(String(code).replace(/[^0-9]/g,''));
+  // All user-provided text goes through emailShell's escaping before HTML output
   const html = emailShell({
     eyebrow: 'Підтвердження електронної пошти',
     heading: 'Підтвердь свою пошту',
