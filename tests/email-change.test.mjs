@@ -43,7 +43,7 @@ const authenticate = (token) => new Promise((resolve, reject) => {
   requireAuth({ headers: { authorization: `Bearer ${token}` } }, {}, (error) => error ? reject(error) : resolve());
 });
 
-test('email change preserves current session but requires confirmation of the new address', async (t) => {
+test('email change denies current session until the new address is verified', async (t) => {
   const user = await fixture(t);
   const session = signAuthToken(user);
   const email = `new_${user.email}`;
@@ -52,7 +52,7 @@ test('email change preserves current session but requires confirmation of the ne
   assert.equal(changed.data.email_verified, 0);
   assert.ok(changed.verificationToken);
   assert.equal(changed.emailDelivery, 'not-configured');
-  await authenticate(session);
+  await assert.rejects(authenticate(session), {code:'EMAIL_NOT_VERIFIED'});
   await assert.rejects(confirmPasswordReset({ params: { confirm_token: user.token }, body: { newPassword: password } }, response), { code: 'INVALID_RESET_TOKEN' });
   await assert.rejects(verifyEmail({ params: { token: user.verification } }, response), { code: 'INVALID_TOKEN' });
   await assert.rejects(login({ body: { login: user.login, password } }, response), { code: 'EMAIL_NOT_VERIFIED' });
