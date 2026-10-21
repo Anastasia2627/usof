@@ -629,50 +629,12 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 }
 
 
-/* Keep the cards invisible until every gallery photo has decoded.
-   The animation then starts reliably, including after switching auth routes. */
+/* The photo entrance is driven by the Web Animations API in AuthPages.jsx. */
 #root .circleAuthGallery:not(.circleAuthGallery--ready) .circleAuthTile{
-  animation:none!important;
   opacity:0;
 }
 #root .circleAuthGallery.circleAuthGallery--ready .circleAuthTile{
-  animation-name:circleElegantArrival;
-  animation-duration:3.6s;
-  animation-timing-function:cubic-bezier(.18,.7,.17,1);
-  animation-fill-mode:both;
-  animation-delay:var(--delay);
-  will-change:transform,opacity;
-}
-@keyframes circleElegantArrival{
-  0%{
-    opacity:0;
-    transform:translate(calc(-50% + var(--x) + var(--flight-offset)),calc(var(--y) + 112px))
-      rotate(calc(var(--rotation) + var(--flight-rotate))) scale(.78);
-    filter:blur(5px);
-  }
-  25%{
-    opacity:.5;
-    transform:translate(calc(-50% + var(--x) + var(--arc-offset)),calc(var(--y) + 18px))
-      rotate(var(--rotation)) scale(.9);
-    filter:blur(1px);
-  }
-  53%{
-    opacity:1;
-    transform:translate(calc(-50% + var(--x)),calc(var(--y) - 18px))
-      rotate(var(--rotation)) scale(1.025);
-    filter:blur(0);
-  }
-  78%{
-    opacity:1;
-    transform:translate(calc(-50% + var(--x)),calc(var(--y) + 4px))
-      rotate(var(--rotation)) scale(.995);
-    filter:blur(0);
-  }
-  100%{
-    opacity:1;
-    transform:translate(calc(-50% + var(--x)),var(--y)) rotate(var(--rotation)) scale(1);
-    filter:blur(0);
-  }
+  opacity:1;
 }
 /* 403 image is a finished 16:9 Figma composition. Never crop its top via
    object-fit:cover: the large numbers were being cut off above the viewport. */
