@@ -74,10 +74,6 @@ export default function CategoriesPage() {
     return (aIndex<0?100:aIndex)-(bIndex<0?100:bIndex)||
       Number(b.post_count||0)-Number(a.post_count||0);
   }),[categories]);
-  const popular=useMemo(()=>[...categories]
-    .sort((a,b)=>Number(b.post_count||0)-Number(a.post_count||0)||
-      String(a.title).localeCompare(String(b.title)))
-    .slice(0,8),[categories]);
   const cards=useMemo(()=>{
     const n=Math.min(7,visualOrder.length);
     return Array.from({length:n},(_,i)=>visualOrder[(currentSlide+i)%visualOrder.length]);
@@ -113,158 +109,116 @@ export default function CategoriesPage() {
   return <main className="categoriesPage topicStudioPage">
     <header className="topicStudioIntro">
       <h1>{uk?'Знайди свою тему':'Find your thing'}</h1>
-      <p>{uk?'Обери те, що тобі цікаво, і Circle підлаштує стрічку під тебе':
-        'Pick what you love and make your feed feel like yours'}</p>
+      <p>{uk?'Вибирай те, що любиш, і наповнюй стрічку своїм':
+        'Choose what inspires you and shape your own feed'}</p>
     </header>
 
-    <section className="topicStudioFeature" aria-labelledby="topic-studio-picks">
-      <div className="topicStudioFeatureHeading">
-        <h2 id="topic-studio-picks">{uk?'Відкривай цікаве':'Explore what inspires you'}</h2>
-        <div className="topicStudioControls">
-          <button type="button" onClick={()=>shift(-1)} disabled={cards.length<2}
-            aria-label={uk?'Попередні теми':'Previous topics'}>
-            <Icon name="arrowBack" size={19}/>
-          </button>
-          <button type="button" onClick={()=>shift(1)} disabled={cards.length<2}
-            aria-label={uk?'Наступні теми':'Next topics'}>
-            <Icon name="arrow" size={19}/>
-          </button>
-        </div>
-      </div>
-      <div className="topicStudioFan" role="group"
-        aria-label={uk?'Картки тем':'Choose from topic cards'}>
+    <section className="topicStudioFeature" aria-label={uk?'Картки тем':'Topic cards'}>
+      <div className="topicStudioFan">
         {cards.map((category,index)=>{
-          const distance=index-(cards.length-1)/2;
+          const offset=index-(cards.length-1)/2;
           const chosen=selected.includes(Number(category.id));
           return <div key={category.id}
-            className={'topicStudioFanItem'+(chosen?' isSelected':'')}
+            className={'topicGalleryItem'+(Math.abs(offset)>2?' isOuter':'')+
+              (chosen?' isSelected':'')}
             style={{
-              '--fan-offset':distance,
-              '--fan-shift':(distance*112)+'px',
-              '--fan-drop':(distance*distance*11)+'px',
-              '--fan-mobile-shift':(distance*60)+'px',
-              '--fan-mobile-drop':(distance*distance*6.4)+'px',
-              '--fan-small-shift':(distance*50)+'px',
-              '--fan-small-drop':(distance*distance*5.2)+'px',
-              '--fan-rotate':(distance*6.2)+'deg',
-              '--fan-depth':String(20-Math.abs(distance)),
+              '--card-shift':(offset*117)+'px',
+              '--card-drop':(offset*offset*9)+'px',
+              '--card-angle':(offset*5.3)+'deg',
+              '--card-shift-sm':(offset*68)+'px',
+              '--card-drop-sm':(offset*offset*5)+'px',
+              '--card-shift-xs':(offset*51)+'px',
+              '--card-drop-xs':(offset*offset*4)+'px',
+              '--card-level':String(10-Math.abs(offset)),
             }}>
-            <button type="button" className="topicStudioCard" onClick={()=>toggle(category.id)}
-              aria-pressed={chosen} aria-label={(chosen?(uk?'Прибрати ':'Remove '):(uk?'Обрати ':'Choose '))+t(category.title)}>
-              <img src={categoryCover(category,index)} alt="" loading="eager" decoding="async"/>
-              <span className="topicStudioCardShade" aria-hidden="true"/>
-              <span className="topicStudioCardSelect" aria-hidden="true">
-                <Icon name={chosen?'check':'plusSimple'} size={18}/>
+            <button type="button" className="topicGalleryCard"
+              aria-pressed={chosen}
+              aria-label={(chosen?(uk?'Прибрати тему ':'Remove topic '):(uk?'Обрати тему ':'Select topic '))+t(category.title)}
+              onClick={()=>toggle(category.id)}>
+              <img src={categoryCover(category,index)} alt="" decoding="async" loading="eager"/>
+              <span className="topicGalleryTint" aria-hidden="true"/>
+              <span className="topicGalleryMark" aria-hidden="true">
+                <Icon name={chosen?'check':'plusSimple'} size={17}/>
               </span>
               <strong>{t(category.title)}</strong>
             </button>
-            <button type="button" className="topicStudioCardBrowse"
+            <button type="button" className="topicGalleryBrowse"
               onClick={()=>go('/category/'+category.id)}
               aria-label={(uk?'Переглянути дописи: ':'Browse posts: ')+t(category.title)}>
-              <Icon name="arrow" size={14}/>
+              <Icon name="arrow" size={16}/>
             </button>
           </div>;
         })}
-        {loading&&<p role="status" className="topicStudioFanPlaceholder">
-          {uk?'Завантажуємо теми…':'Loading topics…'}</p>}
-        {!loading&&!cards.length&&<p className="topicStudioFanPlaceholder">
-          {uk?'Поки немає тем':'No topics yet'}</p>}
+        {loading&&<span className="topicStudioLoading" role="status">
+          {uk?'Завантажуємо теми…':'Loading topics…'}</span>}
+        {!loading&&!cards.length&&<span className="topicStudioLoading">
+          {uk?'Поки немає тем':'No topics yet'}</span>}
       </div>
-      <div className="topicStudioFanCaption">
-        <span>{uk?'Натисни на картку, щоб обрати тему':'Tap a photo to select a topic'}</span>
-        <span>{cards.length>0?String((currentSlide%Math.max(visualOrder.length,1))+1).padStart(2,'0')+
+      <div className="topicGalleryNavigation">
+        <button type="button" onClick={()=>shift(-1)} disabled={cards.length<2}
+          aria-label={uk?'Попередні теми':'Previous topics'}>
+          <Icon name="arrowBack" size={19}/>
+        </button>
+        <span>{cards.length?String(currentSlide%visualOrder.length+1).padStart(2,'0')+
           ' / '+String(visualOrder.length).padStart(2,'0'):''}</span>
+        <button type="button" onClick={()=>shift(1)} disabled={cards.length<2}
+          aria-label={uk?'Наступні теми':'Next topics'}>
+          <Icon name="arrow" size={19}/>
+        </button>
       </div>
     </section>
 
-    <div className="topicStudioMiddle">
-      <div className="topicStudioPopular">
-        <div className="topicStudioSectionTitle">
-          <h2>{uk?'Популярні теми':'Popular topics'}</h2>
-          <span>{uk?'Обери декілька':'Choose a few'}</span>
+    <section className="topicCapsuleSection" aria-labelledby="topics-caption">
+      <div className="topicCapsuleHeading">
+        <div>
+          <h2 id="topics-caption">{uk?'Обери цікаві теми':'Pick your interests'}</h2>
+          <p>{uk?'За вибраними темами ми налаштуємо твою стрічку':
+            'Your chosen topics help personalize your feed'}</p>
         </div>
-        <div className="topicStudioPopularGrid">
-          {popular.map(category=>{
-            const chosen=selected.includes(Number(category.id));
-            return <button type="button" key={category.id}
-              className={'topicStudioPopularButton'+(chosen?' isSelected':'')}
-              aria-pressed={chosen} onClick={()=>toggle(category.id)}>
-              <span>{t(category.title)}</span>
-              <Icon name={chosen?'check':'plusSimple'} size={17}/>
-            </button>;
-          })}
-        </div>
+        <label className="topicCapsuleSearch">
+          <Icon name="search" size={18}/>
+          <input type="search" value={query}
+            onChange={event=>setQuery(event.target.value)}
+            placeholder={uk?'Пошук тем':'Search topics'}
+            aria-label={uk?'Пошук тем':'Search topics'}/>
+          {query&&<button type="button" onClick={()=>setQuery('')}
+            aria-label={uk?'Очистити':'Clear search'}><Icon name="close" size={16}/></button>}
+        </label>
       </div>
-      <aside className="topicStudioSelection">
-        <h2>{uk?'Налаштуй свою стрічку':'Make your feed yours'}</h2>
-        <p>{uk?'Дописів за вибраними темами буде більше, але решта теж залишиться у стрічці':
-          'We will show more posts about your interests, without hiding the rest'}</p>
-        <div className="topicStudioSelectedTags" aria-live="polite">
-          {selected.length?selected.map(id=>{
-            const category=categories.find(c=>Number(c.id)===id);
-            if(!category)return null;
-            return <button type="button" key={id} onClick={()=>toggle(id)}
-              title={uk?'Прибрати тему':'Remove interest'}>
-              {t(category.title)} <Icon name="close" size={14}/>
-            </button>;
-          }):<span className="topicStudioEmptySelection">
-            {uk?'Поки нічого не обрано':'No topics selected yet'}
-          </span>}
+      <div className="topicCapsuleRail" role="group"
+        aria-label={uk?'Вибери теми':'Select topics'}>
+        {results.map(category=>{
+          const chosen=selected.includes(Number(category.id));
+          return <button key={category.id} type="button"
+            className={'topicCapsule'+(chosen?' isSelected':'')}
+            aria-pressed={chosen} onClick={()=>toggle(category.id)}>
+            <span>{t(category.title)}</span>
+            <Icon name={chosen?'check':'plusSimple'} size={17}/>
+          </button>;
+        })}
+        {!loading&&!results.length&&<span className="topicCapsuleEmpty">
+          {uk?'Нічого не знайдено':'No matching topics'}</span>}
+      </div>
+      <div className="topicCapsuleFooter">
+        <div className="topicCapsuleFooterLeft">
+          <span className="topicCapsuleCount">
+            {selected.length>0?(uk?'Обрано: ':'Selected: ')+selected.length:
+              (uk?'Ще нічого не обрано':'Nothing selected yet')}
+          </span>
+          <SuggestTopic/>
         </div>
-        <div className="topicStudioActions">
-          <button type="button" className="topicStudioSkip" onClick={()=>go('/')}
-            disabled={saving}>{uk?'Пропустити':'Skip for now'}</button>
-          <button type="button" className="topicStudioSave" onClick={save}
-            disabled={loading||saving}>
+        <div className="topicCapsuleActions">
+          <button type="button" className="topicCapsuleSkip" onClick={()=>go('/')}
+            disabled={saving}>{uk?'Пропустити':'Skip'}</button>
+          <button type="button" className="topicCapsuleContinue"
+            disabled={loading||saving} onClick={save}>
             {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
             <Icon name="arrow" size={17}/>
           </button>
         </div>
-      </aside>
-    </div>
-
-    <section className="topicStudioAll">
-      <div className="topicStudioAllHeader">
-        <div>
-          <h2>{uk?'Усі теми':'All topics'}</h2>
-          <span>{results.length}</span>
-        </div>
-        <div className="topicStudioAllActions">
-          <label className="topicStudioSearch">
-            <Icon name="search" size={17}/>
-            <input type="search" value={query}
-              onChange={event=>setQuery(event.target.value)}
-              placeholder={uk?'Пошук тем':'Search topics'}
-              aria-label={uk?'Пошук тем':'Search topics'}/>
-            {query&&<button type="button" onClick={()=>setQuery('')}
-              aria-label={uk?'Очистити пошук':'Clear search'}>
-              <Icon name="close" size={16}/>
-            </button>}
-          </label>
-          <SuggestTopic/>
-        </div>
       </div>
-      <div className="topicStudioDirectory">
-        {results.map(category=>{
-          const chosen=selected.includes(Number(category.id));
-          return <div key={category.id} className="topicStudioDirectoryItem">
-            <button type="button" className="topicStudioDirectoryOpen"
-              onClick={()=>go('/category/'+category.id)}>
-              <span>{t(category.title)}</span>
-              <Icon name="arrow" size={15}/>
-            </button>
-            {auth&&<button type="button" className={'topicStudioDirectoryToggle'+(chosen?' isSelected':'')}
-              onClick={()=>toggle(category.id)} aria-pressed={chosen}
-              aria-label={(chosen?(uk?'Прибрати ':'Remove '):(uk?'Обрати ':'Choose '))+t(category.title)}>
-              <Icon name={chosen?'check':'plusSimple'} size={16}/>
-            </button>}
-          </div>;
-        })}
-      </div>
-      {!loading&&!results.length&&<p className="topicStudioNoResults">
-        {uk?'Нічого не знайдено':'No matching topics'}</p>}
+      <ErrorBox error={error}/>
     </section>
-    <ErrorBox error={error}/>
   </main>;
 }
 
