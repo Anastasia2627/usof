@@ -138,7 +138,7 @@
   position:absolute;
   bottom:22px;
   left:17px;
-  right:16px;
+  right:45px;
   font-size:17px;
   font-weight:740;
   color:#fff;
@@ -505,10 +505,10 @@ html[data-theme="dark"] .topicStudioSearch input{color:#fff}
   .topicStudioFanItem{
     width:150px;
     height:209px;
-    transform:translate(calc(-50% + var(--fan-offset) * 60px),calc(var(--fan-drop) * .58)) rotate(var(--fan-rotate));
+    transform:translate(calc(-50% + var(--fan-mobile-shift)),var(--fan-mobile-drop)) rotate(var(--fan-rotate));
   }
   .topicStudioFanItem:hover,.topicStudioFanItem:focus-within{
-    transform:translate(calc(-50% + var(--fan-offset) * 60px),calc(var(--fan-drop) * .58 - 10px)) rotate(var(--fan-rotate)) scale(1.015);
+    transform:translate(calc(-50% + var(--fan-mobile-shift)),calc(var(--fan-mobile-drop) - 10px)) rotate(var(--fan-rotate)) scale(1.015);
   }
   .topicStudioCard{border-width:2px;border-radius:16px}
   .topicStudioCard strong{font-size:14px;bottom:17px;left:12px;right:13px}
@@ -524,10 +524,10 @@ html[data-theme="dark"] .topicStudioSearch input{color:#fff}
   .topicStudioFan{min-height:275px}
   .topicStudioFanItem{
     width:137px;height:193px;
-    transform:translate(calc(-50% + var(--fan-offset) * 50px),calc(var(--fan-drop) * .47)) rotate(var(--fan-rotate));
+    transform:translate(calc(-50% + var(--fan-small-shift)),var(--fan-small-drop)) rotate(var(--fan-rotate));
   }
   .topicStudioFanItem:hover,.topicStudioFanItem:focus-within{
-    transform:translate(calc(-50% + var(--fan-offset) * 50px),calc(var(--fan-drop) * .47 - 9px)) rotate(var(--fan-rotate));
+    transform:translate(calc(-50% + var(--fan-small-shift)),calc(var(--fan-small-drop) - 9px)) rotate(var(--fan-rotate));
   }
   .topicStudioPopularGrid{grid-template-columns:1fr}
   .topicStudioAllActions{align-items:flex-start}
