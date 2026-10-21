@@ -214,13 +214,6 @@
   font-size:12px;
   color:#8b8490;
 }
-.categoryReferenceDescription{
-  margin:12px auto 0;
-  text-align:center;
-  color:#8e8792;
-  font-size:12px;
-  line-height:1.6;
-}
 .categoryReferenceFooter{
   display:flex;
   align-items:center;
