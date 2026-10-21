@@ -118,6 +118,22 @@ export async function resendVerificationEmail(body) {
   const delivery = await sendVerificationEmail({
     to: email, login: user.login, token: verificationToken, code: verificationCode,
   });
+  // An SMTP failure must not invalidate a previously issued code on a live site
+  // Test/dev still expose one-time codes when SMTP has not been configured
+  if (process.env.NODE_ENV === 'production' && !delivery.sent) {
+    await pool.execute(
+      `UPDATE users SET verification_token=?, verification_token_expires=?,
+        verification_code_hash=?, verification_code_expires=?,
+        verification_attempts=?
+       WHERE id=? AND verification_token=? AND email_verified=0`,
+      [
+        user.verification_token, user.verification_token_expires,
+        user.verification_code_hash, user.verification_code_expires,
+        Number(user.verification_attempts||0),
+        user.id, verificationToken,
+      ],
+    );
+  }
   return {
     message,
     emailDelivery: delivery.sent ? 'sent' : delivery.configured ? 'failed' : 'not-configured',
@@ -220,7 +236,7 @@ export async function issuePasswordReset(body) {
   validateEmail(email);
 
   const genericMessage = 'If that email exists, a reset link has been created';
-  const [rows] = await pool.execute('SELECT id, login FROM users WHERE email=?', [email]);
+  const [rows] = await pool.execute('SELECT id, login, reset_token_hash, reset_token_expires FROM users WHERE email=?', [email]);
   if (!rows[0]) return { message: genericMessage };
 
   const token = crypto.randomBytes(32).toString('hex');
@@ -234,6 +250,12 @@ export async function issuePasswordReset(body) {
   if (!result.affectedRows) return { message: genericMessage };
 
   const delivery = await sendPasswordResetEmail({ to: email, token });
+  if (process.env.NODE_ENV === 'production' && !delivery.sent) {
+    await pool.execute(
+      'UPDATE users SET reset_token_hash=?, reset_token_expires=? WHERE id=? AND reset_token_hash=?',
+      [rows[0].reset_token_hash, rows[0].reset_token_expires, rows[0].id, hash],
+    );
+  }
   const response = {
     message: genericMessage,
     ...devTokenPayload({ resetToken: token }),
