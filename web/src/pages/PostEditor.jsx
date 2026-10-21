@@ -9,6 +9,14 @@ import SuggestTopic from '../SuggestTopic.jsx';
 import DatePicker from '../DatePicker.jsx';
 import {assetUrl} from '../api.js';
 
+function toLocalDateTime(value) {
+  if (!value) return '';
+  const date=new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local=new Date(date.getTime()-date.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,16);
+}
+
 export default function PostEditor({ id }) {
   const auth = useSelector((state) => state.auth);
   const {t} = usePreferences();
@@ -58,7 +66,7 @@ export default function PostEditor({ id }) {
           title: result.data.title,
           content: result.data.content,
           categories: result.data.categories.map((category) => Number(category.id)),
-          publishAt: result.data.publish_at ? new Date(result.data.publish_at).toISOString().slice(0,16) : '',
+          publishAt: toLocalDateTime(result.data.publish_at),
           hideLikes: Boolean(result.data.hide_likes),
         }); })
         .catch(setError)
