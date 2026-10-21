@@ -1,0 +1,281 @@
+/* Circle settings / October 2026: practical controls and a live, graphic preview. */
+#root > main.circleSettingsPage{
+  width:min(1020px,calc(100% - 88px));
+  max-width:1020px;
+  min-width:0;
+  padding:48px 0 90px;
+  margin:0 auto;
+  color:#211e24;
+}
+.circleSettingsPage .circleSettingsHeader{
+  border:0;
+  padding:0 0 32px;
+  margin:0 0 34px;
+  border-bottom:1px solid #e9e6eb;
+}
+.circleSettingsKicker{
+  display:flex;align-items:center;gap:8px;
+  color:#856aa1;
+  font-size:10px;font-weight:800;letter-spacing:.12em;
+  margin-bottom:13px;
+}
+.circleSettingsKicker>span{
+  display:block;width:7px;height:7px;border-radius:50%;background:#9d79d0;
+}
+.circleSettingsPage .circleSettingsHeader h1{
+  margin:0 0 7px;
+  font-size:clamp(34px,4vw,47px);
+  font-weight:800;
+  line-height:1.13;
+  letter-spacing:-.055em;
+}
+.circleSettingsPage .circleSettingsHeader p{
+  margin:0;color:#89838d;font-size:13px;line-height:1.6;
+}
+.circleSettingsLayout{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) minmax(250px,1fr);
+  gap:42px;align-items:start;
+}
+.circleSettingsControls{display:grid;gap:37px;min-width:0;}
+.circleSettingsGroup{margin:0;padding:0;border:0;}
+.circleSettingsGroupTitle{
+  display:flex;align-items:flex-start;gap:17px;
+  margin:0 0 18px;
+}
+.circleSettingsIndex{
+  flex:none;
+  display:grid;place-items:center;
+  width:28px;height:28px;border-radius:9px;
+  background:#f2eef7;color:#7955ae;
+  font-size:11px;font-weight:760;
+}
+.circleSettingsGroupTitle h2{
+  margin:0 0 5px;
+  font-size:18px;
+  font-weight:770;
+  line-height:1.28;
+  letter-spacing:-.035em;
+  color:inherit;
+}
+.circleSettingsGroupTitle p{
+  font-size:12px;
+  line-height:1.5;
+  color:#918b94;
+  margin:0;
+}
+.circleSettingsThemeGrid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+}
+.circleSettingsThemeChoice{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  padding:8px;
+  margin:0;
+  text-align:left;
+  border:1px solid #e9e6ec;
+  border-radius:17px;
+  background:#fff;
+  min-width:0;
+  cursor:pointer;
+  transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.circleSettingsThemeChoice:hover{
+  transform:translateY(-2px);
+  border-color:#cbbbdc;
+}
+.circleSettingsThemeChoice.isSelected{
+  border-color:#8967bc;
+  box-shadow:0 0 0 2px rgba(144,104,196,.12);
+}
+.circleSettingsThemeChoice:focus-visible,
+.circleSettingsLanguageChoice:focus-visible{
+  outline:2px solid #8768b3;outline-offset:3px;
+}
+.circleSettingsThemeScene{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:140px;
+  overflow:hidden;
+  border-radius:10px;
+  background:#f5f4f6;
+  border:1px solid rgba(22,15,27,.05);
+}
+.circleSettingsThemeScene.themeNight{background:#1a1920;border-color:#35313b;}
+.circleSettingsThemeScene .sceneHeader{
+  height:24px;display:flex;align-items:center;gap:6px;padding:0 10px;
+  background:#fff;border-bottom:1px solid #eae8ec;
+}
+.circleSettingsThemeScene.themeNight .sceneHeader{
+  background:#27242e;border-color:#3e3946;
+}
+.circleSettingsThemeScene .sceneHeader i:first-child{height:10px;width:10px;border:2px solid #17141a;border-radius:50%;}
+.circleSettingsThemeScene .sceneHeader b{height:7px;width:43%;margin:auto;border-radius:9px;background:#eeeaf1;}
+.circleSettingsThemeScene .sceneHeader i:last-child{height:10px;width:10px;border-radius:50%;background:#c8bed1;}
+.circleSettingsThemeScene.themeNight .sceneHeader i:first-child{border-color:#eee4f7;}
+.circleSettingsThemeScene.themeNight .sceneHeader b{background:#38323f;}
+.circleSettingsThemeScene.themeNight .sceneHeader i:last-child{background:#665974;}
+.circleSettingsThemeScene .sceneBody{display:flex;flex:1;gap:10px;padding:11px;}
+.circleSettingsThemeScene .sceneSide{display:flex;flex-direction:column;gap:7px;align-items:center;padding-top:3px;}
+.circleSettingsThemeScene .sceneSide i{height:9px;width:9px;border-radius:3px;background:#bcb7c1;}
+.circleSettingsThemeScene .sceneSide i:first-child{background:#9372c1;}
+.circleSettingsThemeScene .scenePosts{display:grid;gap:7px;flex:1;}
+.circleSettingsThemeScene .scenePosts i{
+  display:block;min-height:20px;
+  background:#fff;border-radius:6px;
+  border:1px solid #e8e6eb;
+}
+.circleSettingsThemeScene .scenePosts i:first-child{height:36px;}
+.circleSettingsThemeScene.themeNight .scenePosts i{background:#2b2630;border-color:#413948;}
+.circleSettingsThemeScene.themeNight .sceneSide i{background:#696071;}
+.circleSettingsThemeScene.themeNight .sceneSide i:first-child{background:#b292dd;}
+.circleSettingsChoiceInfo{
+  display:flex;align-items:center;gap:8px;
+  width:100%;min-height:44px;padding:9px 8px 4px;
+  color:#363039;
+}
+.circleSettingsChoiceInfo strong{
+  font-size:12px;font-weight:750;flex:1;
+}
+.circleSettingsChoiceInfo>.circleIcon{flex:none;color:#7d7483;}
+.circleSettingsChoiceCheck{
+  width:21px;height:21px;flex:none;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid #e7e3ea;
+  color:transparent;
+}
+.isSelected .circleSettingsChoiceCheck{
+  background:#29212e;border-color:#29212e;color:#fff;
+}
+.circleSettingsLanguageOptions{display:grid;gap:9px;}
+.circleSettingsLanguageChoice{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  width:100%;min-height:61px;
+  padding:11px 15px;
+  border:1px solid #ebe8ed;
+  border-radius:13px;
+  background:#fff;
+  color:#454049;
+  text-align:left;
+  font-size:13px;font-weight:650;
+  cursor:pointer;
+  transition:border-color .2s ease,background-color .2s ease;
+}
+.circleSettingsLanguageChoice:hover{background:#fbf9fd;border-color:#cdbfda;}
+.circleSettingsLanguageChoice.isSelected{
+  border-color:#a68cc6;background:#fbf9fe;color:#2d2434;
+}
+.circleSettingsLanguageChoice>span:nth-child(2){flex:1;}
+.circleSettingsLangTag{
+  flex:none;display:grid;place-items:center;
+  width:37px;height:29px;border-radius:8px;
+  background:#f2eef6;color:#7c6991;
+  font-size:11px;font-weight:800;letter-spacing:.02em;
+}
+.circleSettingsPreviewPanel{
+  min-width:0;
+  position:sticky;top:105px;
+  padding:18px;
+  border:1px solid #ebe7ed;
+  border-radius:19px;
+  background:#faf9fb;
+}
+.circleSettingsPreviewHeading{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:15px;
+  color:#8b818f;font-size:10px;font-weight:790;letter-spacing:.09em;
+}
+.circleSettingsLiveDot{
+  width:7px;height:7px;border-radius:50%;background:#76b79a;
+  box-shadow:0 0 0 4px rgba(118,183,154,.12);
+}
+.circleSettingsPreviewCanvas{
+  overflow:hidden;height:277px;border-radius:12px;
+  background:#fafafa;
+  border:1px solid #e7e3e9;
+  color:#1a1820;
+  transition:background-color .2s ease,color .2s ease,border-color .2s ease;
+}
+.circleSettingsPreviewCanvas.isDark{background:#19181d;color:#f5f1f7;border-color:#453e49;}
+.circleSettingsPreviewBrowser{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;height:34px;padding:0 11px;background:#fff;border-bottom:1px solid #eae7ed;
+}
+.isDark .circleSettingsPreviewBrowser{background:#25212a;border-color:#403948;}
+.circleSettingsMiniLogo{display:flex;gap:4px;align-items:center;font-size:12px;font-weight:900;letter-spacing:-.08em;}
+.circleSettingsMiniLogo i{width:13px;height:13px;border:2px solid currentColor;border-radius:50%;}
+.circleSettingsMiniSearch{height:11px;width:39%;border:1px solid #eae6ed;border-radius:15px;background:#f6f4f7;}
+.isDark .circleSettingsMiniSearch{border-color:#39313f;background:#35303b;}
+.circleSettingsMiniAvatar{width:16px;height:16px;border-radius:50%;background:#c8b6dc;}
+.circleSettingsMiniBody{display:flex;height:calc(100% - 34px);}
+.circleSettingsMiniSidebar{
+  display:flex;flex-direction:column;align-items:center;gap:15px;
+  width:33px;flex:none;
+  border-right:1px solid #eeeaf0;padding-top:22px;
+}
+.isDark .circleSettingsMiniSidebar{border-color:#3c3741;}
+.circleSettingsMiniSidebar i{width:10px;height:10px;border:2px solid #ada6b1;border-radius:3px;}
+.circleSettingsMiniSidebar i:first-child{border-color:#9672c2;}
+.circleSettingsMiniFeed{display:flex;flex-direction:column;gap:10px;flex:1;padding:17px 13px;min-width:0;}
+.circleSettingsMiniTitle{font-size:15px;font-weight:870;letter-spacing:-.05em;}
+.circleSettingsMiniTabs{display:flex;gap:8px;padding-bottom:7px;border-bottom:1px solid #eae6ed;}
+.circleSettingsMiniTabs i{display:block;width:31px;height:5px;border-radius:10px;background:#e5e0e7;}
+.circleSettingsMiniTabs i:first-child{background:#a27acb;}
+.isDark .circleSettingsMiniTabs{border-color:#393440;}
+.isDark .circleSettingsMiniTabs i{background:#554b60;}
+.isDark .circleSettingsMiniTabs i:first-child{background:#ac8bda;}
+.circleSettingsMiniPost{
+  display:flex;flex-direction:column;gap:7px;padding:10px;
+  border-radius:9px;border:1px solid #ebe7ed;background:#fff;
+}
+.isDark .circleSettingsMiniPost{background:#29242e;border-color:#403846;}
+.circleSettingsMiniAuthor{display:flex;gap:7px;align-items:center;}
+.circleSettingsMiniAuthor i{height:15px;width:15px;border-radius:50%;background:#e1cce9;}
+.circleSettingsMiniAuthor b{height:5px;width:34%;border-radius:3px;background:#ddd5e1;}
+.circleSettingsMiniText{display:block;width:95%;height:4px;border-radius:3px;background:#e7e3e9;}
+.circleSettingsMiniText.short{width:65%;}
+.isDark .circleSettingsMiniText,.isDark .circleSettingsMiniAuthor b{background:#514758;}
+.circleSettingsMiniPicture{display:block;height:32px;border-radius:5px;background:linear-gradient(125deg,#e8c9e8 10%,#c3caed 53%,#e7dbf5 90%);}
+.circleSettingsMiniPost.lower{padding:10px;}
+.circleSettingsPreviewPanel>p{
+  font-size:11px;
+  color:#99919d;
+  text-align:center;
+  margin:14px 0 2px;
+}
+html[data-theme="dark"] #root > main.circleSettingsPage{color:#f0eaf5;}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsHeader{border-color:#423b46;}
+html[data-theme="dark"] .circleSettingsThemeChoice,
+html[data-theme="dark"] .circleSettingsLanguageChoice{
+  background:#242128;border-color:#4b4250;color:#f1e9f7;
+}
+html[data-theme="dark"] .circleSettingsThemeChoice.isSelected,
+html[data-theme="dark"] .circleSettingsLanguageChoice.isSelected{
+  background:#302838;border-color:#9a7ac5;
+}
+html[data-theme="dark"] .circleSettingsChoiceInfo{color:#f4edf7;}
+html[data-theme="dark"] .circleSettingsPreviewPanel{background:#252129;border-color:#4a414f;}
+html[data-theme="dark"] .circleSettingsIndex{background:#3a2d47;color:#d9bef8;}
+html[data-theme="dark"] .circleSettingsLangTag{background:#383040;color:#d5c1e9;}
+html[data-theme="dark"] .circleSettingsChoiceCheck{border-color:#675b6f;}
+html[data-theme="dark"] .isSelected .circleSettingsChoiceCheck{background:#c7a8ed;color:#251b30;border-color:#c7a8ed;}
+@media(max-width:980px){
+  #root > main.circleSettingsPage{width:calc(100% - 64px);}
+  .circleSettingsLayout{gap:24px;grid-template-columns:minmax(0,1.4fr) minmax(220px,1fr);}
+}
+@media(max-width:730px){
+  #root > main.circleSettingsPage{width:calc(100% - 30px);padding:28px 0 65px;}
+  .circleSettingsPage .circleSettingsHeader{margin-bottom:25px;padding-bottom:22px;}
+  .circleSettingsLayout{grid-template-columns:1fr;gap:25px;}
+  .circleSettingsControls{gap:30px;}
+  .circleSettingsPreviewPanel{position:static;max-width:440px;width:100%;margin:0 auto;}
+  .circleSettingsThemeScene{height:126px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .circleSettingsThemeChoice,.circleSettingsLanguageChoice,.circleSettingsPreviewCanvas{transition:none!important;}
+}
