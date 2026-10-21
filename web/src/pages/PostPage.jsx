@@ -68,7 +68,9 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
       </>}
       {!hideCounts && items.length>0 && <button type="button" className="reactionVoteDetails"
         aria-label={t('View votes')} title={t('View votes')}
-        onClick={()=>setOpen(x=>!x)}>{t('Votes')} · {items.length}</button>}
+        aria-expanded={open} onClick={()=>setOpen(x=>!x)}>
+        <Icon name="group" size={16}/><span>{items.length}</span>
+      </button>}
     </div>
     {open && <ul>{items.map(x => <li key={x.id}>{x.author_login}: {x.type}</li>)}</ul>}
     <ErrorBox error={error} />
