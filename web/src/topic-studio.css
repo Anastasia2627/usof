@@ -402,9 +402,15 @@ html[data-theme="dark"] .topicCapsuleContinue{
 }
 @media(max-width:880px){
   #root > main.topicStudioPage{width:calc(100% - 36px);padding-top:45px}
-  .topicGalleryItem{width:156px;height:206px}
+  .topicGalleryItem{
+    width:156px;height:206px;
+    transform:translate(calc(-50% + var(--card-shift-md)),var(--card-drop)) rotate(var(--card-angle));
+  }
+  .topicGalleryItem:hover,.topicGalleryItem:focus-within{
+    transform:translate(calc(-50% + var(--card-shift-md)),calc(var(--card-drop) - 12px))
+      rotate(var(--card-angle)) scale(1.025);
+  }
   .topicStudioFan{height:322px}
-  .topicGalleryItem{transform:translate(calc(-50% + var(--card-shift)),var(--card-drop)) rotate(var(--card-angle))}
 }
 @media(max-width:680px){
   #root > main.topicStudioPage{width:calc(100% - 28px);padding:32px 0 60px}
