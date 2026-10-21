@@ -537,3 +537,42 @@ html[data-theme="dark"] .topicStudioSearch input{color:#fff}
 @media(prefers-reduced-motion:reduce){
   .topicStudioFanItem,.topicStudioCard>img,.topicStudioControls button{transition:none!important}
 }
+
+/* Editorial split: quiet explanation on the left, addable popular topics on the right */
+.topicStudioMiddle{
+  grid-template-columns:minmax(0,1.15fr) minmax(280px,.78fr);
+  gap:70px;
+}
+.topicStudioSelection{
+  order:1;
+  padding:12px 0 0;
+  min-height:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+}
+.topicStudioSelection h2{
+  font-size:clamp(22px,2.4vw,30px);
+  margin-bottom:13px;
+}
+.topicStudioSelection p{
+  max-width:370px;
+  font-size:13px;
+  line-height:1.7;
+}
+.topicStudioSelectedTags{min-height:34px}
+.topicStudioActions{justify-content:flex-start;margin-top:23px}
+.topicStudioSave{order:1}
+.topicStudioSkip{order:2}
+.topicStudioPopular{order:2}
+.topicStudioPopularGrid{grid-template-columns:1fr;gap:0}
+.topicStudioPopularButton{min-height:48px}
+html[data-theme="dark"] .topicStudioSelection{
+  background:transparent;
+  border:0;
+}
+@media(max-width:760px){
+  .topicStudioMiddle{grid-template-columns:1fr;gap:26px}
+  .topicStudioSelection{padding-top:0}
+  .topicStudioPopular{order:2}
+}
