@@ -34,10 +34,13 @@ export default function HomePage({ hash, basePath = '/' }) {
   const {records:posts,hasMore,loading,error:feedError,loadMore,retry:retryFeed} = useInfiniteRecords({
     identity: basePath+'|'+hash+'|'+(auth?.token||'')+'|'+retry,
     request: (page,signal) => {
+      const personalized = Boolean(auth?.token) && basePath==='/' &&
+        (params.get('view')==='for-you' || (!params.get('view') && !params.get('sort')));
       const query=new URLSearchParams({
         page:String(page),limit:'12',
         sort:params.get('sort')||'likes',order:params.get('order')||'desc',
       });
+      if(personalized)query.set('personalized','1');
       for(const name of ['category','from','to','status','search']){
         if(params.get(name))query.set(name,params.get(name));
       }
@@ -84,16 +87,27 @@ export default function HomePage({ hash, basePath = '/' }) {
     go(query.size ? basePath + '?' + query : basePath);
   }
 
-  function changeSort(sort, order) {
+  function changeSort(sort, order, view) {
     const query = new URLSearchParams(params);
     query.set('sort', sort);
     query.set('order', order);
+    query.set('view', view);
     query.delete('page');
     go(basePath + '?' + query);
   }
+  function choosePersonalized() {
+    const query=new URLSearchParams(params);
+    query.set('view','for-you');
+    query.delete('sort');
+    query.delete('order');
+    query.delete('page');
+    go(basePath+'?'+query);
+  }
 
-  const popular = (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
-  const latest = params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
+  const forYou = Boolean(auth?.token) && basePath==='/' &&
+    (params.get('view')==='for-you' || (!params.get('view') && !params.get('sort')));
+  const popular = !forYou && (params.get('sort') || 'likes') === 'likes' && (params.get('order') || 'desc') === 'desc';
+  const latest = !forYou && params.get('sort') === 'date' && (params.get('order') || 'desc') === 'desc';
   const activeFilters = ['category', 'from', 'to', 'status'].filter(key => Boolean(params.get(key))).length;
   const today=new Date();
   const todayISO=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
@@ -109,8 +123,14 @@ export default function HomePage({ hash, basePath = '/' }) {
   return <main className="homePage">
     <h1 className="feedPageTitle">{t(basePath === '/explore' ? 'Explore' : 'Home')}</h1>
     <div className="feedTabs" role="group" aria-label="Feed views">
-      <button aria-pressed={popular} className={popular ? 'selectedTab' : ''} onClick={() => changeSort('likes', 'desc')}>{t('Popular')}</button>
-      <button aria-pressed={latest} className={latest ? 'selectedTab' : ''} onClick={() => changeSort('date', 'desc')}>{t('Latest')}</button>
+      {auth && basePath==='/' && <button type="button" aria-pressed={forYou}
+        className={forYou?'selectedTab':''} onClick={choosePersonalized}>
+        {language==='uk'?'Для вас':'For you'}
+      </button>}
+      <button type="button" aria-pressed={popular} className={popular ? 'selectedTab' : ''}
+        onClick={() => changeSort('likes', 'desc','popular')}>{t('Popular')}</button>
+      <button type="button" aria-pressed={latest} className={latest ? 'selectedTab' : ''}
+        onClick={() => changeSort('date', 'desc','latest')}>{t('Latest')}</button>
     </div>
 
     {auth ? <button className="feedComposer" onClick={() => go('/create')}>
