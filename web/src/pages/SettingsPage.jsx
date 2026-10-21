@@ -1,9 +1,10 @@
 import React from 'react';
-import { Icon } from '../ui.jsx';
+import { Icon, go } from '../ui.jsx';
 import { LANGUAGE_NAMES, usePreferences } from '../preferences.jsx';
 
 export default function SettingsPage() {
   const { theme, language, setTheme, setLanguage, t } = usePreferences();
+  const uk=language==='uk';
 
   return <main className="simpleFeaturePage settingsPage circleSettingsPage">
     <header className="circleSettingsHeader">
@@ -46,6 +47,17 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="circleSettingsRow" aria-labelledby="circle-settings-interests">
+        <div className="circleSettingsRowHeading">
+          <h2 id="circle-settings-interests">{uk?'Мої теми':'My interests'}</h2>
+        </div>
+        <button type="button" className="circleSettingsInterestsLink" onClick={()=>go('/interests')}>
+          <Icon name="categories" size={19}/>
+          <span>{uk?'Налаштувати теми стрічки':'Customize feed topics'}</span>
+          <Icon name="arrow" size={17}/>
+        </button>
       </section>
     </div>
   </main>;
