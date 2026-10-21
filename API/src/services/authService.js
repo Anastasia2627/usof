@@ -58,8 +58,8 @@ export async function registerAccount(body) {
       `INSERT INTO users(
          login,password_hash,full_name,email,email_verified,
          verification_token,verification_token_expires,
-         verification_code_hash,verification_code_expires,role
-       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),'user')`,
+         verification_code_hash,verification_code_expires,verification_attempts,role
+       ) VALUES(?,?,?,?,0,?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),0,'user')`,
       [login, passwordHash, fullName, email, verificationToken, verificationCodeHash],
     );
 
@@ -109,7 +109,8 @@ export async function resendVerificationEmail(body) {
     'UPDATE users SET verification_token=?, ' +
     'verification_token_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE), ' +
     'verification_code_hash=?, ' +
-    'verification_code_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE) ' +
+    'verification_code_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE), ' +
+    'verification_attempts=0 ' +
     'WHERE id=? AND email_verified=0',
     [verificationToken, verificationCodeHash, Number(user.id)],
   );
@@ -147,32 +148,46 @@ export async function verifyEmailToken(tokenValue) {
 }
 
 export async function verifyEmailCode(body) {
-  const email = normalizeEmail(body.email);
-  const code = String(body.code || '').replace(/\D/g, '');
-
-  if (!email || !/^\d{6}$/.test(code)) {
+  const email = normalizeEmail(body?.email);
+  const code = body?.code;
+  if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
     throw new AppError(422, 'INVALID_VERIFICATION_CODE', 'Provide a valid email and 6-digit code');
   }
   validateEmail(email);
 
-  const codeHash = hashVerificationCode(code);
-  const [result] = await pool.execute(
-    `UPDATE users
-     SET email_verified=1,
-         verification_token=NULL,
-         verification_token_expires=NULL,
-         verification_code_hash=NULL,
-         verification_code_expires=NULL
-     WHERE email_verified=0
-       AND email=?
-       AND verification_code_hash=?
-       AND verification_code_expires>NOW()`,
-    [email, codeHash],
-  );
-
-  if (!result.affectedRows) {
-    throw new AppError(400, 'INVALID_VERIFICATION_CODE', 'Verification code is invalid, expired, or already used');
+  const conn = await pool.getConnection();
+  let failure = null;
+  try {
+    await conn.beginTransaction();
+    const [[user]] = await conn.execute(
+      `SELECT id, email_verified, verification_code_hash,
+              verification_attempts, (verification_code_expires>NOW()) AS code_valid
+       FROM users WHERE email=? FOR UPDATE`,
+      [email],
+    );
+    if (!user || user.email_verified || !user.verification_code_hash || !user.code_valid) {
+      failure = new AppError(400, 'INVALID_VERIFICATION_CODE', 'Code is invalid or expired');
+    } else if (Number(user.verification_attempts) >= 5) {
+      failure = new AppError(429, 'VERIFICATION_LOCKED', 'Too many attempts. Request a new verification code');
+    } else if (hashVerificationCode(code) !== user.verification_code_hash) {
+      await conn.execute('UPDATE users SET verification_attempts=verification_attempts+1 WHERE id=?', [user.id]);
+      failure = new AppError(400, 'INVALID_VERIFICATION_CODE', 'Code is invalid or expired');
+    } else {
+      await conn.execute(
+        `UPDATE users SET email_verified=1,
+          verification_token=NULL, verification_token_expires=NULL,
+          verification_code_hash=NULL, verification_code_expires=NULL,
+          verification_attempts=0 WHERE id=?`, [user.id],
+      );
+    }
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
   }
+  if (failure) throw failure;
 }
 
 export async function authenticate(body) {
