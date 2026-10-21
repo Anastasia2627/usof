@@ -123,9 +123,10 @@ export default function CategoriesPage() {
               (chosen?' isSelected':'')}
             style={{
               '--card-shift':(offset*117)+'px',
+              '--card-shift-md':(offset*80)+'px',
               '--card-drop':(offset*offset*9)+'px',
               '--card-angle':(offset*5.3)+'deg',
-              '--card-shift-sm':(offset*68)+'px',
+              '--card-shift-sm':(offset*59)+'px',
               '--card-drop-sm':(offset*offset*5)+'px',
               '--card-shift-xs':(offset*51)+'px',
               '--card-drop-xs':(offset*offset*4)+'px',
