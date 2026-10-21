@@ -283,11 +283,28 @@ export async function updatePostForUser(user, idValue, body) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    if (categories) await assertCategoriesExist(connection, categories);
-    await connection.query(
-      'UPDATE posts SET title=?, content=?, status=?, locked=?, closed=?, hide_likes=?, publish_at=? WHERE id=?',
-      [title, content, status, locked ? 1 : 0, closed ? 1 : 0, hideLikes ? 1 : 0, publishAt, post.id],
+    // Lock the latest moderation state before applying any author edits
+    // Writing only submitted fields prevents stale requests from restoring
+    // an inactive/unlocked state after a moderator changed it
+    const [[fresh]] = await connection.query(
+      'SELECT id, locked, status FROM posts WHERE id=? FOR UPDATE', [post.id],
     );
+    if (!fresh) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
+    if (fresh.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
+    if (categories) await assertCategoriesExist(connection, categories);
+    const assignments = [];
+    const values = [];
+    const set = (column, value) => { assignments.push(column + '=?'); values.push(value); };
+    if (title !== post.title) set('title', title);
+    if (content !== post.content) set('content', content);
+    if (body.status !== undefined && isAdmin) set('status', status);
+    if (body.locked !== undefined && isAdmin) set('locked', locked ? 1 : 0);
+    if (body.closed !== undefined) set('closed', closed ? 1 : 0);
+    if (body.hideLikes !== undefined) set('hide_likes', hideLikes ? 1 : 0);
+    if (body.publishAt !== undefined) set('publish_at', publishAt);
+    if (assignments.length) {
+      await connection.query('UPDATE posts SET ' + assignments.join(',') + ' WHERE id=?', [...values, post.id]);
+    }
     if (categories) {
       await connection.query('DELETE FROM post_categories WHERE post_id=?', [post.id]);
       for (const categoryId of categories) {
