@@ -10,8 +10,11 @@ function announceChange() {
 
 // The API stores stable English event strings. Translate only recognized
 // server-generated patterns, leaving custom notification text untouched.
-function notificationBodyText(body,t) {
+function notificationBodyText(body,t,language) {
   const value=String(body||'');
+  const renamed=value.match(/^An administrator changed your username from @(.+?) to @(.+)\.$/);
+  if(renamed && language==='uk')
+    return `Адміністратор змінив ваш логін з @${renamed[1]} на @${renamed[2]}`;
   const suggested=value.match(/^(.+?) suggested: (.+)$/);
   if(suggested)return suggested[1]+' '+t('suggested a topic')+': '+suggested[2];
   const match=value.match(/^(.+?) (added an answer to your question\.|added a reply to your question\.|replied to your comment\.|reacted to your question\.|reacted to your answer\.|updated a question you follow\.|added a reply to a question you follow\.|added an answer to a question you follow\.)$/);
@@ -20,7 +23,7 @@ function notificationBodyText(body,t) {
 
 export default function NotificationsPage() {
   const auth = useSelector((state) => state.auth);
-  const {t}=usePreferences();
+  const {t,language}=usePreferences();
   const [items, setItems] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -179,7 +182,7 @@ export default function NotificationsPage() {
               <span className="notificationDescription">
                 {item.type==='ban_appeal'&&item.actor_login&&
                   <strong className="notificationActor">@{item.actor_login} · </strong>}
-                {notificationBodyText(item.body,t)}
+                {notificationBodyText(item.body,t,language)}
               </span>
               <time className="notificationTime" dateTime={item.created_at}>{fmt(item.created_at)}</time>
             </button>
