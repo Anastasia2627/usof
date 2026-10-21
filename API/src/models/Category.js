@@ -3,7 +3,14 @@ import { Post } from './Post.js';
 
 export class Category extends BaseModel {
   static async list() {
-    return this.query('SELECT id, title, description FROM categories ORDER BY title');
+    return this.query(`SELECT c.id,c.title,c.description,
+        COUNT(DISTINCT p.id) AS post_count
+      FROM categories c
+      LEFT JOIN post_categories pc ON pc.category_id=c.id
+      LEFT JOIN posts p ON p.id=pc.post_id
+        AND p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())
+      GROUP BY c.id,c.title,c.description
+      ORDER BY c.title`);
   }
 
   static async search(term) {
