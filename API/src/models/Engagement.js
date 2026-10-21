@@ -41,7 +41,11 @@ async function listPostsForUser(userId, relationTable, options) {
     offset: (normalized.page - 1) * normalized.limit,
   });
   return {
-    data: posts,
+    data: posts.map(post=>
+      post.hide_likes && Number(post.author_id)!==Number(userId)
+        ? {...post,like_count:null,dislike_count:null,score:null}
+        : post
+    ),
     pagination: {
       page: normalized.page,
       limit: normalized.limit,
