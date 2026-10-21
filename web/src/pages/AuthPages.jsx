@@ -221,7 +221,7 @@ export function AuthPage({ mode }) {
 
   function logIn(result, firstRegistration = false) {
     dispatch({ type: 'AUTH_SET', payload: result });
-    go(result.user?.banned_at ? '/ban' : firstRegistration ? '/interests' : '/');
+    go(result.user?.banned_at ? '/ban' : firstRegistration ? '/categories' : '/');
   }
 
   async function submit(event) {
