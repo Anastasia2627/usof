@@ -63,7 +63,7 @@ async function ensureCircleSchema(connection) {
   // Additive, idempotent migration: never drop existing user data.
   await connection.query("ALTER TABLE users MODIFY COLUMN role ENUM('user','moderator','admin') NOT NULL DEFAULT 'user'");
   // Existing databases need the new notification kind, without deleting old notifications.
-  await connection.query("ALTER TABLE notifications MODIFY COLUMN type ENUM('comment','reply','post_updated','reaction','role_changed','category_suggestion','category_decision','content_report','ban_appeal','ban_recommendation') NOT NULL");
+  await connection.query("ALTER TABLE notifications MODIFY COLUMN type ENUM('comment','reply','post_updated','reaction','role_changed','login_changed','category_suggestion','category_decision','content_report','ban_appeal','ban_recommendation') NOT NULL");
   const [postColumns] = await connection.query("SHOW COLUMNS FROM posts");
   const postKnown = new Set(postColumns.map(row=>row.Field));
   if (!postKnown.has('closed')) await connection.query("ALTER TABLE posts ADD COLUMN closed BOOLEAN NOT NULL DEFAULT 0");
@@ -418,7 +418,7 @@ async function initializeDatabase() {
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id INT UNSIGNED NOT NULL,
         actor_id INT UNSIGNED NULL,
-        type ENUM('comment','reply','post_updated','reaction','role_changed','category_suggestion','category_decision','content_report','ban_appeal','ban_recommendation') NOT NULL,
+        type ENUM('comment','reply','post_updated','reaction','role_changed','login_changed','category_suggestion','category_decision','content_report','ban_appeal','ban_recommendation') NOT NULL,
         post_id INT UNSIGNED NULL,
         comment_id INT UNSIGNED NULL,
         title VARCHAR(180) NOT NULL,
