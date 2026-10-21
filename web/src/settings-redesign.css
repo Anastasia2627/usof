@@ -1,268 +1,252 @@
-/* Circle settings. Functional controls, no decorative mock site or marketing panels. */
+/* Circle preferences — an editorial settings list, not a faux dashboard */
 #root > main.circleSettingsPage{
   box-sizing:border-box;
-  width:min(900px,calc(100% - 76px));
-  max-width:900px;
+  width:min(790px,calc(100% - 72px));
+  max-width:790px;
   min-width:0;
   margin:0 auto;
-  padding:45px 0 85px;
-  color:#222024;
+  padding:56px 0 95px;
+  color:#222026;
 }
 .circleSettingsPage .circleSettingsHeader{
-  display:block;
-  margin:0 0 35px;
-  padding:0;
-  border:0;
-  background:none;
-}
-.circleSettingsPage .circleSettingsHeader h1{
-  display:flex;
-  align-items:center;
-  gap:13px;
-  margin:0;
-  color:inherit;
-  font-size:clamp(27px,3vw,34px);
-  font-weight:780;
-  line-height:1.25;
-  letter-spacing:-.045em;
-}
-.circleSettingsPage .circleSettingsHeader h1 .circleIcon{
-  flex:none;
-  color:#4d4850;
-}
-.circleSettingsPage .circleSettingsSections{
-  width:100%;
-  border-top:1px solid #eae8ed;
-  border-bottom:1px solid #eae8ed;
-}
-.circleSettingsPage .circleSettingsRow{
-  display:grid;
-  grid-template-columns:minmax(160px,220px) minmax(0,1fr);
-  align-items:start;
-  column-gap:32px;
-  padding:30px 0;
-  margin:0;
-  border:0;
-}
-.circleSettingsPage .circleSettingsRow + .circleSettingsRow{
-  border-top:1px solid #efedf0;
-}
-.circleSettingsPage .circleSettingsRowHeading h2{
-  margin:10px 0 0;
-  font-size:15px;
-  font-weight:740;
-  line-height:1.35;
-  letter-spacing:-.025em;
-  color:inherit;
-}
-.circleSettingsPage .circleSettingsThemeOptions{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  min-width:0;
-}
-.circleSettingsPage .circleSettingsOption{
-  display:flex;
-  align-items:center;
-  gap:11px;
-  width:100%;
-  min-width:0;
-  min-height:61px;
-  margin:0;
-  padding:13px 17px;
-  border:1px solid #e5e2e8;
-  border-radius:12px;
-  background:#fff;
-  color:#5b565e;
-  text-align:left;
-  font-family:inherit;
-  font-size:13px;
-  font-weight:690;
-  line-height:1.25;
-  cursor:pointer;
-  box-shadow:none;
-  transition:background-color .16s ease,border-color .16s ease,color .16s ease;
-}
-.circleSettingsPage .circleSettingsOption > span:nth-of-type(1){
-  flex:1;
-}
-.circleSettingsPage .circleSettingsOption .circleIcon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:none;
-}
-.circleSettingsPage .circleSettingsOption:hover:not(.isSelected){
-  background:#f7f6f8;
-  color:#242128;
-  border-color:#d9d4de;
-}
-.circleSettingsPage .circleSettingsOption.isSelected{
-  background:#242127;
-  border-color:#242127;
-  color:#fff;
-}
-.circleSettingsPage .circleSettingsLanguageOptions{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:0;
-  min-width:0;
-  margin:0;
-  border:1px solid #e7e4e9;
-  border-radius:12px;
-  overflow:hidden;
-}
-.circleSettingsPage .circleSettingsLanguageOption{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
-  min-height:58px;
+  border-bottom:1px solid #e9e6ea;
+  padding:0 0 29px;
+  margin:0;
+  background:transparent;
+}
+.circleSettingsPage .circleSettingsHeader h1{
+  margin:0;
+  padding:0;
+  color:inherit;
+  font-size:clamp(29px,3.5vw,39px);
+  font-weight:780;
+  line-height:1.1;
+  letter-spacing:-.049em;
+}
+.circleSettingsHeaderSymbol{
+  display:grid;
+  place-items:center;
+  width:43px;
+  height:43px;
+  border:1px solid #e7e4e9;
+  border-radius:50%;
+  background:#faf9fb;
+  color:#4e4454;
+}
+.circleSettingsPage .circleSettingsSections{
   width:100%;
   margin:0;
-  padding:13px 17px;
-  background:#fff;
+  padding:0;
   border:0;
-  border-radius:0;
+}
+.circleSettingsPage .circleSettingsRow{
+  display:grid;
+  grid-template-columns:minmax(150px,210px) minmax(0,1fr);
+  align-items:center;
+  column-gap:28px;
+  min-width:0;
+  margin:0;
+  padding:26px 0;
+  border:0;
+  border-bottom:1px solid #eeeaf0;
+}
+.circleSettingsPage .circleSettingsRowHeading h2{
+  margin:0 0 5px;
+  color:inherit;
+  font-size:15px;
+  font-weight:725;
+  line-height:1.35;
+  letter-spacing:-.025em;
+}
+.circleSettingsPage .circleSettingsRowHeading small{
+  display:block;
+  font-size:11px;
+  font-weight:490;
+  color:#97919b;
+  line-height:1.5;
+}
+.circleSettingsPage .circleSettingsThemeOptions,
+.circleSettingsPage .circleSettingsLanguageOptions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px;
+  margin:0;
+  padding:5px;
+  min-width:0;
+  border:1px solid #eae7ed;
+  border-radius:14px;
+  background:#f8f7f9;
+  overflow:visible;
+}
+.circleSettingsPage .circleSettingsOption,
+.circleSettingsPage .circleSettingsLanguageOption{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-width:0;
+  min-height:49px;
+  margin:0;
+  padding:11px 13px;
+  border:1px solid transparent;
+  border-radius:10px;
+  color:#746d79;
+  background:transparent;
   box-shadow:none;
-  color:#676169;
-  text-align:left;
   font-family:inherit;
   font-size:13px;
-  font-weight:590;
+  line-height:1.3;
+  font-weight:630;
+  text-align:left;
   cursor:pointer;
-  transition:background-color .16s ease,color .16s ease;
+  transition:background-color .17s ease,color .17s ease,border-color .17s ease,box-shadow .17s ease;
+}
+.circleSettingsPage .circleSettingsOption>span:nth-of-type(1),
+.circleSettingsPage .circleSettingsLanguageOption>span:nth-child(1){
+  flex:1;
+  min-width:0;
+}
+.circleSettingsPage .circleSettingsOption>.circleIcon{
+  flex:none;
+  color:inherit;
+}
+.circleSettingsPage .circleSettingsOption:hover:not(.isSelected),
+.circleSettingsPage .circleSettingsLanguageOption:hover:not(.isSelected){
+  color:#242027;
+  background:#f0edf3;
+}
+.circleSettingsPage .circleSettingsOption.isSelected,
+.circleSettingsPage .circleSettingsLanguageOption.isSelected{
+  color:#30263a;
+  background:#fff;
+  border-color:#e8e0ee;
+  box-shadow:0 2px 7px rgba(41,28,51,.06);
+  font-weight:720;
+}
+.circleSettingsPage .circleSettingsOption.isSelected>.circleIcon:last-child{
+  color:#8a65a9;
 }
 .circleSettingsPage .circleSettingsLanguageOption + .circleSettingsLanguageOption{
-  border-top:1px solid #efedf0;
-}
-.circleSettingsPage .circleSettingsLanguageOption:hover:not(.isSelected){
-  background:#f8f7f9;
-  color:#272329;
-}
-.circleSettingsPage .circleSettingsLanguageOption.isSelected{
-  color:#272329;
-  font-weight:730;
-  background:#fbfafc;
+  border-top:1px solid transparent;
 }
 .circleSettingsPage .circleSettingsRadio{
   display:grid;
   place-items:center;
-  width:23px;
-  height:23px;
   flex:none;
-  border:1px solid #dedbe1;
+  width:20px;
+  height:20px;
   border-radius:50%;
+  border:1px solid #ddd7e2;
   color:transparent;
 }
 .circleSettingsPage .circleSettingsLanguageOption.isSelected .circleSettingsRadio{
-  background:#242127;
-  border-color:#242127;
   color:#fff;
+  background:#785b8e;
+  border-color:#785b8e;
+}
+.circleSettingsPage .circleSettingsInterestsLink{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-height:56px;
+  padding:12px 17px;
+  margin:0;
+  border:1px solid #e6e2e8;
+  border-radius:13px;
+  background:#fff;
+  color:#433c48;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:670;
+  text-align:left;
+  cursor:pointer;
+  transition:background-color .17s ease,border-color .17s ease;
+}
+.circleSettingsPage .circleSettingsInterestsLink:hover{
+  border-color:#c7b5d2;
+  background:#fbf8fe;
+}
+.circleSettingsPage .circleSettingsInterestsLink>span:nth-child(2){
+  flex:1;
+}
+.circleSettingsPage .circleSettingsInterestsLink>.circleIcon:last-child{
+  color:#8c7e93;
 }
 .circleSettingsPage button:focus-visible{
-  outline:2px solid #8b6ab7;
+  outline:2px solid #9372b0;
   outline-offset:3px;
 }
-/* Keep exactly the same controls legible after toggling Circle's dark mode. */
-html[data-theme="dark"] #root > main.circleSettingsPage{
-  color:#f1ecf4;
+html[data-theme="dark"] #root > main.circleSettingsPage{color:#f2edf4;}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsHeader,
+html[data-theme="dark"] .circleSettingsPage .circleSettingsRow{border-color:#47404b;}
+html[data-theme="dark"] .circleSettingsHeaderSymbol{
+  border-color:#534758;
+  color:#ece1f2;
+  background:#2c2631;
 }
-html[data-theme="dark"] .circleSettingsPage .circleSettingsSections,
-html[data-theme="dark"] .circleSettingsPage .circleSettingsRow + .circleSettingsRow{
-  border-color:#403944;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsHeader h1 .circleIcon{
-  color:#d9ccdf;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsOption{
-  background:#29252c;
-  border-color:#4b444f;
-  color:#d9d1dd;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsOption.isSelected{
-  background:#ede5f1;
-  border-color:#ede5f1;
-  color:#211b27;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsOption:hover:not(.isSelected){
-  background:#332d37;
-  color:#f7f0fa;
-}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsRowHeading small{color:#aca2b3;}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsThemeOptions,
 html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOptions{
-  border-color:#4b444f;
+  border-color:#4f4356;
+  background:#252029;
 }
-html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption{
-  background:#29252c;
-  color:#d6ceda;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption + .circleSettingsLanguageOption{
-  border-color:#423b46;
-}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsOption,
+html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption{color:#bab0c0;}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsOption.isSelected,
 html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption.isSelected{
-  background:#342e38;
-  color:#fff;
+  color:#f3eaf8;
+  background:#403448;
+  border-color:#594860;
+  box-shadow:none;
 }
+html[data-theme="dark"] .circleSettingsPage .circleSettingsOption:hover:not(.isSelected),
 html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption:hover:not(.isSelected){
-  background:#332d37;
   color:#fff;
+  background:#332c39;
 }
-html[data-theme="dark"] .circleSettingsPage .circleSettingsRadio{
-  border-color:#726778;
-}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsRadio{border-color:#72647b;}
 html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption.isSelected .circleSettingsRadio{
-  background:#eee5f2;
-  border-color:#eee5f2;
-  color:#211b27;
+  color:#292030;
+  background:#decbea;
+  border-color:#decbea;
 }
-@media(max-width:760px){
+html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink{
+  color:#efe7f2;
+  background:#2d2732;
+  border-color:#4f4454;
+}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink:hover{
+  background:#3b3041;
+  border-color:#8e79a0;
+}
+@media(max-width:720px){
   #root > main.circleSettingsPage{
     width:calc(100% - 36px);
-    padding:30px 0 65px;
+    padding:34px 0 65px;
   }
-  .circleSettingsPage .circleSettingsHeader{margin-bottom:27px;}
+  .circleSettingsPage .circleSettingsHeader{padding-bottom:22px;}
   .circleSettingsPage .circleSettingsRow{
-    grid-template-columns:minmax(0,1fr);
-    gap:17px;
-    padding:24px 0;
+    grid-template-columns:1fr;
+    gap:13px;
+    padding:23px 0;
   }
-  .circleSettingsPage .circleSettingsRowHeading h2{margin:0;}
 }
-@media(max-width:380px){
-  .circleSettingsPage .circleSettingsOption{padding:12px 10px;gap:7px;}
+@media(max-width:370px){
+  .circleSettingsPage .circleSettingsOption,
+  .circleSettingsPage .circleSettingsLanguageOption{
+    padding:10px 8px;
+    gap:5px;
+    font-size:12px;
+  }
 }
 @media(prefers-reduced-motion:reduce){
   .circleSettingsPage .circleSettingsOption,
-  .circleSettingsPage .circleSettingsLanguageOption{transition:none;}
-}
-
-/* Small, direct way to revisit feed interests after registration. */
-.circleSettingsPage .circleSettingsInterestsLink{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-height:57px;
-  padding:13px 17px;
-  width:100%;
-  background:#fff;
-  border:1px solid #e7e4e9;
-  border-radius:12px;
-  color:#413a44;
-  text-align:left;
-  font-size:13px;
-  font-weight:670;
-}
-.circleSettingsPage .circleSettingsInterestsLink>span:nth-child(2){flex:1;}
-.circleSettingsPage .circleSettingsInterestsLink:hover{
-  background:#f8f6fa;
-  border-color:#bda9d2;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink{
-  background:#29252c;
-  border-color:#4b444f;
-  color:#ede5f2;
-}
-html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink:hover{
-  background:#332b39;
-  border-color:#8e75a7;
+  .circleSettingsPage .circleSettingsLanguageOption,
+  .circleSettingsPage .circleSettingsInterestsLink{transition:none}
 }
