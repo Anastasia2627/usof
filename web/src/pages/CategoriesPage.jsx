@@ -3,7 +3,6 @@ import {useSelector} from 'react-redux';
 import {api} from '../api.js';
 import {ErrorBox,PostCard,Icon,go} from '../ui.jsx';
 import {usePreferences} from '../preferences.jsx';
-import SuggestTopic from '../SuggestTopic.jsx';
 import {useInfiniteRecords,InfiniteScrollEnd} from '../InfiniteScroll.jsx';
 
 const photoLibrary=Array.from({length:12},(_,index)=>
@@ -133,7 +132,7 @@ export default function CategoriesPage(){
           const distance=index-(cards.length-1)/2;
           const chosen=selected.includes(Number(category.id));
           return <button type="button" key={category.id}
-            className={'categoryReferencePhoto'+(chosen?' isSelected':'')}
+            className={'categoryReferencePhoto'+(Math.abs(distance)>2?' isOuter':'')+(chosen?' isSelected':'')}
             style={{
               '--photo-x':(distance*108)+'px',
               '--photo-y':(distance*distance*9)+'px',
@@ -223,11 +222,6 @@ export default function CategoriesPage(){
         </span>}
       </div>
 
-      <div className="categoryReferenceBottom">
-        <SuggestTopic/>
-        <span>{uk?'Теми можна змінити в налаштуваннях':
-          'You can change your interests in Settings'}</span>
-      </div>
       <ErrorBox error={error}/>
     </section>
   </main>;
