@@ -1,5 +1,6 @@
 import { BaseModel } from './BaseModel.js';
 import { Post } from './Post.js';
+import { pool as importedPool } from '../config/db.js';
 
 export class Category extends BaseModel {
   static async list() {
@@ -43,8 +44,37 @@ export class Category extends BaseModel {
   }
 
   static async remove(id) {
-    const result = await this.query('DELETE FROM categories WHERE id=?', [id]);
-    return result.affectedRows > 0;
+    const db = await importedPool.getConnection();
+    try {
+      await db.beginTransaction();
+      // Hold the category row while checking dependent posts
+      const [[category]] = await db.query('SELECT id FROM categories WHERE id=? FOR UPDATE', [id]);
+      if (!category) { await db.rollback(); return false; }
+      const [[dependent]] = await db.query(
+        `SELECT COUNT(*) AS total FROM posts p WHERE
+            EXISTS(SELECT 1 FROM post_categories pc WHERE pc.post_id=p.id AND pc.category_id=?)
+            AND NOT EXISTS(
+              SELECT 1 FROM post_categories others
+              WHERE others.post_id=p.id AND others.category_id<>?
+            )`, [id,id],
+      );
+      if (Number(dependent.total) > 0) {
+        throw new Error('CATEGORY_HAS_SOLE_POSTS');
+      }
+      await db.query('DELETE FROM categories WHERE id=?', [id]);
+      await db.commit();
+      return true;
+    } catch(error) {
+      await db.rollback();
+      if (error.message === 'CATEGORY_HAS_SOLE_POSTS') {
+        // Keep a stable service-level error code
+        const conflict = new Error('Move the last category of affected posts before deleting this category');
+        conflict.status = 409;
+        conflict.code = 'CATEGORY_HAS_SOLE_POSTS';
+        throw conflict;
+      }
+      throw error;
+    } finally { db.release(); }
   }
 
   static async postsForCategory(id, user) {
