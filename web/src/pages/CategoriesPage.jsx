@@ -196,12 +196,9 @@ export default function CategoriesPage() {
         </div>
       </div>
       <aside className="topicStudioSelection">
-        <span className="topicStudioSelectionEyebrow">{uk?'ТВОЯ СТРІЧКА':'YOUR FEED'}</span>
-        <h2>{selected.length?
-          (uk?'Це твоє':'Made for you'):
-          (uk?'Обирай своє':'Make it yours')}</h2>
-        <p>{uk?'Ми показуватимемо більше дописів за вибраними темами, а інші залишаться доступними':
-          'We will bring your interests to the top while keeping other posts available'}</p>
+        <h2>{uk?'Налаштуй свою стрічку':'Make your feed yours'}</h2>
+        <p>{uk?'Дописів за вибраними темами буде більше, але решта теж залишиться у стрічці':
+          'We will show more posts about your interests, without hiding the rest'}</p>
         <div className="topicStudioSelectedTags" aria-live="polite">
           {selected.length?selected.map(id=>{
             const category=categories.find(c=>Number(c.id)===id);
