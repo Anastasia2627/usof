@@ -47,7 +47,7 @@ async function resolveUserFromHeader(header, strict) {
   }
 
   const [rows] = await pool.execute(
-    'SELECT id, login, role, token_version, banned_at, ban_reason FROM users WHERE id=? LIMIT 1',
+    'SELECT id, login, role, email_verified, token_version, banned_at, ban_reason FROM users WHERE id=? LIMIT 1',
     [Number(payload.sub)],
   );
   const user = rows[0];
@@ -60,6 +60,7 @@ async function resolveUserFromHeader(header, strict) {
     sub: Number(user.id),
     login: user.login,
     role: user.role,
+    email_verified: Boolean(user.email_verified),
     ver: Number(user.token_version),
     banned_at: user.banned_at,
     ban_reason: user.ban_reason,
@@ -69,7 +70,7 @@ async function resolveUserFromHeader(header, strict) {
 export async function optionalAuth(req, res, next) {
   try {
     req.user = await resolveUserFromHeader(req.headers.authorization, false);
-    if (req.user?.banned_at) req.user = null;
+    if (req.user?.banned_at || (req.user && !req.user.email_verified)) req.user = null;
     next();
   } catch (error) {
     next(error);
@@ -79,6 +80,10 @@ export async function optionalAuth(req, res, next) {
 export async function requireAuth(req, res, next) {
   try {
     req.user = await resolveUserFromHeader(req.headers.authorization, true);
+    if (!req.user.email_verified) {
+      throw new AppError(403, 'EMAIL_NOT_VERIFIED',
+        'Confirm your email before accessing your account');
+    }
     if (req.user.banned_at) {
       throw new AppError(403, 'ACCOUNT_BANNED', 'This account is blocked', {
         banned_at: req.user.banned_at, ban_reason: req.user.ban_reason,
