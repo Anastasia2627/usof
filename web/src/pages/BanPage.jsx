@@ -55,9 +55,16 @@ export default function BanPage(){
     finally{setBusy(false);}
   }
 
-  function logOut(){
-    dispatch({type:'AUTH_CLEAR'});
-    go('/login');
+  async function logOut(){
+    try{
+      if(auth?.token) await api('/auth/logout',{method:'POST',token:auth.token});
+    }catch(error){
+      // A revoked or unavailable session must not trap members on the ban screen
+      console.warn('Session logout could not reach API');
+    }finally{
+      dispatch({type:'AUTH_CLEAR'});
+      go('/login');
+    }
   }
 
 
