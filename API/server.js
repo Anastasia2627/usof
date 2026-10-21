@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import app from './app.js';
+import { validateAuthConfiguration } from './src/middleware/auth.js';
 import { pingDatabase, pool } from './src/config/db.js';
 
 dotenv.config();
@@ -8,13 +9,14 @@ const port = Number(process.env.APP_PORT || 5050);
 let server;
 
 try {
+  validateAuthConfiguration();
   await pingDatabase();
   server = app.listen(port, () => {
     console.log(`Circle API listening on http://127.0.0.1:${port}`);
   });
 } catch (error) {
   console.error(
-    'Cannot start API: MySQL connection failed. Run npm run db:init after configuring .env.',
+    'Cannot start API: check AUTH_SECRET and MySQL configuration, then run npm run db:init.',
   );
   console.error(error.message);
   process.exit(1);
