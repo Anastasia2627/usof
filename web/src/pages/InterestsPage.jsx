@@ -131,7 +131,7 @@ export default function InterestsPage(){
           <div className="circleInterestArrows">
             <button type="button" onClick={()=>moveRail(-1)}
               aria-label={uk?'Попередні теми':'Previous topics'}>
-              <Icon name="arrowLeft" size={19}/>
+              <Icon name="arrowBack" size={19}/>
             </button>
             <button type="button" onClick={()=>moveRail(1)}
               aria-label={uk?'Наступні теми':'Next topics'}>
@@ -152,7 +152,7 @@ export default function InterestsPage(){
               <span className="circleTopicCardTop">
                 <span className="circleTopicNumber">{String(index+1).padStart(2,'0')}</span>
                 <span className="circleTopicSelect" aria-hidden="true">
-                  <Icon name={chosen?'check':'plus'} size={17}/>
+                  <Icon name={chosen?'check':'plusSimple'} size={17}/>
                 </span>
               </span>
               <strong>{t(category.title)}</strong>
@@ -185,7 +185,7 @@ export default function InterestsPage(){
           })}
         </div>
         <p className="circleInterestFeedHint">
-          <Icon name="sparkles" size={16}/>
+          <Icon name="star" size={16}/>
           {uk?'За вибраними темами ми покажемо більше цікавих тобі дописів.':
             'We will show more posts about the topics you choose.'}
         </p>
@@ -208,7 +208,7 @@ export default function InterestsPage(){
             const chosen=selected.includes(Number(category.id));
             return <button type="button" key={category.id} onClick={()=>toggle(category.id)}
               aria-pressed={chosen} className={chosen?'isSelected':''}>
-              <Icon name={chosen?'check':'plus'} size={15}/>
+              <Icon name={chosen?'check':'plusSimple'} size={15}/>
               {t(category.title)}
             </button>;
           })}
