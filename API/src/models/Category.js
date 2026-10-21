@@ -50,7 +50,11 @@ export class Category extends BaseModel {
   static async postsForCategory(id, user) {
     const conditions = ['EXISTS(SELECT 1 FROM post_categories pc WHERE pc.post_id=p.id AND pc.category_id=?)'];
     const params = [id];
-    if (!['admin','moderator'].includes(user?.role)) {
+    // Scheduled drafts of other members stay private for moderators
+    if (user?.role === 'moderator') {
+      conditions.push('(p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP() OR p.author_id=?)');
+      params.push(Number(user.sub));
+    } else if (user?.role !== 'admin') {
       if (user) {
         conditions.push("((p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())) OR p.author_id=?)");
         params.push(Number(user.sub));
