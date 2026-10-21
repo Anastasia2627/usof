@@ -67,12 +67,22 @@ export async function createManagedUser(body) {
   validateRole(role);
 
   const hash = await bcrypt.hash(body.password, 12);
+  const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
+  const token=crypto.randomBytes(32).toString('hex');
+  const codeHash=crypto.createHash('sha256').update(code).digest('hex');
   try {
     const [result] = await pool.execute(
-      `INSERT INTO users(login,password_hash,full_name,email,email_verified,role)
-       VALUES(?,?,?,?,1,?)`,
-      [login, hash, fullName, email, role],
+      `INSERT INTO users(
+        login,password_hash,full_name,email,email_verified,role,
+        verification_token,verification_token_expires,
+        verification_code_hash,verification_code_expires
+      ) VALUES(?,?,?,?,0,?,
+        ?,DATE_ADD(NOW(),INTERVAL 20 MINUTE),
+        ?,DATE_ADD(NOW(),INTERVAL 20 MINUTE))`,
+      [login, hash, fullName, email, role,token,codeHash],
     );
+    // Invitations must be verified by their recipients before first login
+    await sendVerificationEmail({to:email,login,token,code});
     return User.findById(result.insertId);
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
@@ -150,6 +160,7 @@ export async function updateAccount({ targetId, actor, body }) {
            verification_token_expires=IF(?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),verification_token_expires),
            verification_code_hash=IF(?,?,verification_code_hash),
            verification_code_expires=IF(?,DATE_ADD(NOW(), INTERVAL 20 MINUTE),verification_code_expires),
+           verification_attempts=IF(?,0,verification_attempts),
            reset_token_hash=IF(?,NULL,reset_token_hash),
            reset_token_expires=IF(?,NULL,reset_token_expires)
        WHERE id=?`,
@@ -165,6 +176,7 @@ export async function updateAccount({ targetId, actor, body }) {
         needsVerification,
         needsVerification,
         verificationCodeHash,
+        needsVerification,
         needsVerification,
         emailChanged,
         emailChanged,
