@@ -20,6 +20,13 @@ const managed=(await request('/users',{method:'POST',token:admin,status:201,body
   login:'social'+suffix,email:'social'+suffix+'@example.test',fullName:'Social Test User',
   role:'user',password:'Password123!',passwordConfirmation:'Password123!'
 }})).data;
+// Admin-created members must prove ownership before their first sign-in
+const confirmation=(await request('/auth/resend-verification',{
+  method:'POST',body:{email:managed.email},
+})).verificationCode;
+assert.match(confirmation,/^\d{6}$/);
+await request('/auth/verify-email-code',{method:'POST',
+  body:{email:managed.email,code:confirmation}});
 const originalSession=(await request('/auth/login',{method:'POST',
   body:{login:managed.login,password:'Password123!'}})).token;
 await request('/users/'+managed.id,{method:'PATCH',token:member,body:{role:'moderator'},status:403});
