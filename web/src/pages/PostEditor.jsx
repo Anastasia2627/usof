@@ -34,8 +34,16 @@ export default function PostEditor({ id }) {
     return blank;
   });
   const [selectedImages,setSelectedImages] = useState([]);
-  const [draftPostId,setDraftPostId] = useState(null);
+  const pendingPostKey=!editing && auth?.user?.id
+    ?'circle:unfinished-post:'+auth.user.id:null;
+  const [draftPostId,setDraftPostId] = useState(()=>{
+    try{
+      const value=pendingPostKey?Number(sessionStorage.getItem(pendingPostKey)):0;
+      return Number.isInteger(value)&&value>0?value:null;
+    }catch{return null;}
+  });
   const [existingImages,setExistingImages] = useState([]);
+  const [pendingRemovedImages,setPendingRemovedImages]=useState([]);
   const photoPreviewItems=useMemo(()=>[...existingImages,...selectedImages.map(file=>({file}))],[existingImages,selectedImages]);
   const [preview,setPreview] = useState(false);
   const [expandedTopics,setExpandedTopics] = useState(false);
@@ -62,7 +70,7 @@ export default function PostEditor({ id }) {
     window.addEventListener('circle:categories-updated',refreshTopics);
     if (editing && auth) {
       api(`/posts/${id}`, { token: auth.token })
-        .then((result) => { setExistingImages(result.data.images||[]); setForm({
+        .then((result) => { setPendingRemovedImages([]);setExistingImages(result.data.images||[]); setForm({
           title: result.data.title,
           content: result.data.content,
           categories: result.data.categories.map((category) => Number(category.id)),
@@ -89,11 +97,10 @@ export default function PostEditor({ id }) {
     setForm({...form,content:form.content.slice(0,a)+before+prefix+selected+suffix+form.content.slice(b)});
     requestAnimationFrame(()=>{el.focus();el.setSelectionRange(a+before.length+prefix.length,a+before.length+prefix.length+selected.length);});
   }
-  async function removeExisting(imageId){
-    try{
-      await api('/posts/'+id+'/images/'+imageId,{method:'DELETE',token:auth.token});
-      setExistingImages(items=>items.filter(item=>item.id!==imageId));
-    }catch(err){setError(err);}
+  function removeExisting(imageId){
+    // Staged until Save — leaving the editor must not delete an image
+    setPendingRemovedImages(items=>items.includes(imageId)?items:[...items,imageId]);
+    setExistingImages(items=>items.filter(item=>item.id!==imageId));
   }
   function toggle(categoryId) {
     setForm({
@@ -121,13 +128,23 @@ export default function PostEditor({ id }) {
         token: auth.token,
         body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null},
       });
-      if(!editing)setDraftPostId(result.data.id);
+      if(!editing){
+        setDraftPostId(result.data.id);
+        try{if(pendingPostKey)sessionStorage.setItem(pendingPostKey,String(result.data.id));}catch{}
+      }
+      for(const imageId of pendingRemovedImages){
+        await api('/posts/'+result.data.id+'/images/'+imageId,{method:'DELETE',token:auth.token});
+        setPendingRemovedImages(items=>items.filter(item=>item!==imageId));
+      }
       for(const image of selectedImages){
         const data=new FormData();data.append('image',image);
         await api('/posts/'+result.data.id+'/images',{method:'POST',token:auth.token,formData:data});
         setSelectedImages(current=>current.filter(item=>item!==image));
       }
-      if(draftKey)sessionStorage.removeItem(draftKey);
+      try{
+        if(draftKey)sessionStorage.removeItem(draftKey);
+        if(pendingPostKey)sessionStorage.removeItem(pendingPostKey);
+      }catch{}
       go(`/post/${result.data.id}`);
     } catch (err) {
       setError(err);
@@ -136,13 +153,18 @@ export default function PostEditor({ id }) {
     }
   }
 
-  const hasDraft=Boolean(!editing&&!draftPostId&&(form.title||form.content||form.categories.length||form.publishAt));
+  const hasDraft=Boolean(!editing&&(draftPostId||form.title||form.content||form.categories.length||form.publishAt));
   function clearDraft(){
     if(!window.confirm(t('Discard this draft?')))return;
     setForm({title:'',content:'',categories:[],publishAt:'',hideLikes:false});
     setSelectedImages([]);
+    setPendingRemovedImages([]);
+    setDraftPostId(null);
     setPreview(false);
-    try{if(draftKey)sessionStorage.removeItem(draftKey);}catch{}
+    try{
+      if(draftKey)sessionStorage.removeItem(draftKey);
+      if(pendingPostKey)sessionStorage.removeItem(pendingPostKey);
+    }catch{}
   }
 
   const visibleTopics=categories.filter(category=>{
