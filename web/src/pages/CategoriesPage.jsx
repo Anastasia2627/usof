@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {useSelector} from 'react-redux';
 import {api} from '../api.js';
 import {ErrorBox,PostCard,Icon,go} from '../ui.jsx';
@@ -79,9 +79,9 @@ export default function CategoriesPage(){
       Number(b.post_count||0)-Number(a.post_count||0);
   }),[categories]);
 
-  const cards=useMemo(()=>visual.slice(0,Math.min(7,visual.length)),[visual]);
+  const cards=useMemo(()=>visual.slice(0,Math.min(8,visual.length)),[visual]);
 
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     if(!cards.length||!orbitRef.current)return undefined;
     const element=orbitRef.current;
     const tiles=Array.from(element.querySelectorAll('.categoryReferencePhoto'));
