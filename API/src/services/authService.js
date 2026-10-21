@@ -236,8 +236,15 @@ export async function issuePasswordReset(body) {
   validateEmail(email);
 
   const genericMessage = 'If that email exists, a reset link has been created';
-  const [rows] = await pool.execute('SELECT id, login, reset_token_hash, reset_token_expires FROM users WHERE email=?', [email]);
+  const [rows] = await pool.execute('SELECT id, login FROM users WHERE email=?', [email]);
   if (!rows[0]) return { message: genericMessage };
+  // Reconfirm ownership before issuing a token; the email can change in a
+  // parallel admin request between lookup and the conditional UPDATE below
+  const [[previous]] = await pool.execute(
+    'SELECT reset_token_hash, reset_token_expires FROM users WHERE id=? AND email=? LIMIT 1',
+    [rows[0].id, email],
+  );
+  if (!previous) return { message: genericMessage };
 
   const token = crypto.randomBytes(32).toString('hex');
   const hash = crypto.createHash('sha256').update(token).digest('hex');
@@ -253,7 +260,7 @@ export async function issuePasswordReset(body) {
   if (process.env.NODE_ENV === 'production' && !delivery.sent) {
     await pool.execute(
       'UPDATE users SET reset_token_hash=?, reset_token_expires=? WHERE id=? AND reset_token_hash=?',
-      [rows[0].reset_token_hash, rows[0].reset_token_expires, rows[0].id, hash],
+      [previous.reset_token_hash, previous.reset_token_expires, rows[0].id, hash],
     );
   }
   const response = {
