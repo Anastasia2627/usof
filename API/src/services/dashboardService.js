@@ -94,7 +94,9 @@ export async function getUserDashboard(userId) {
               COALESCE((SELECT SUM(CASE r.type WHEN 'like' THEN 1 WHEN 'dislike' THEN -1 WHEN 'useful' THEN 2 WHEN 'thanks' THEN 1 WHEN 'fire' THEN 1 ELSE 0 END) FROM reactions r WHERE r.post_id=p.id), 0) AS score
        FROM posts p
        JOIN users u ON u.id=p.author_id
-       WHERE p.status='active' AND p.locked=0 AND p.author_id<>?
+       WHERE p.status='active' AND p.locked=0
+         AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP())
+         AND p.author_id<>?
          AND NOT EXISTS(SELECT 1 FROM comments mine WHERE mine.post_id=p.id AND mine.author_id=?)
        ORDER BY comment_count ASC, p.created_at DESC
        LIMIT 5`,
