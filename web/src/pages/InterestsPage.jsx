@@ -76,7 +76,10 @@ export default function InterestsPage(){
     return (aa<0?999:aa)-(bb<0?999:bb);
   }),[topics]);
   const featured=ordered.slice(0,Math.min(10,ordered.length));
-  const popular=ordered.slice(0,Math.min(9,ordered.length));
+  const popular=useMemo(()=>[...topics]
+    .sort((a,b)=>(Number(b.post_count)||0)-(Number(a.post_count)||0)||
+      (a.title||'').localeCompare(b.title||''))
+    .slice(0,9),[topics]);
   const filtered=useMemo(()=>{
     const term=query.trim().toLocaleLowerCase();
     return topics.filter(category=>
