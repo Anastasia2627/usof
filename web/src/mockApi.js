@@ -124,7 +124,17 @@ function userFromToken(token) {
   return allUsers().find((user) => Number(user.id) === Number(match[1])) || users[0];
 }
 
-function filterPosts(url) {
+function demoInterestsFor(token) {
+  const id=Number(userFromToken(token).id);
+  try {
+    const value=JSON.parse(localStorage.getItem('circle-demo-interests-'+id)||'[]');
+    return Array.isArray(value)?value.map(Number).filter(Number.isInteger):[];
+  } catch {
+    return [];
+  }
+}
+
+function filterPosts(url,token) {
   let data = allPosts();
   const search = (url.searchParams.get('search') || '').toLowerCase();
   const category = Number(url.searchParams.get('category') || 0);
@@ -140,7 +150,13 @@ function filterPosts(url) {
   if (status) data = data.filter((post) => post.status === status);
   if (author) data = data.filter((post) => Number(post.author_id) === author);
 
-  if (sort === 'likes') data.sort((a, b) => Number(b.like_count) - Number(a.like_count));
+  if (url.searchParams.get('personalized') === '1' && token && !category) {
+    const choices=new Set(demoInterestsFor(token));
+    const priority=post=>(post.categories||[]).some(item=>choices.has(Number(item.id)))?1:0;
+    data.sort((a,b)=>priority(b)-priority(a)||
+      Number(b.like_count||0)-Number(a.like_count||0)||
+      new Date(b.created_at)-new Date(a.created_at));
+  } else if (sort === 'likes') data.sort((a, b) => Number(b.like_count) - Number(a.like_count));
   else if (sort === 'trending') data.sort((a, b) => (Number(b.comment_count) + Number(b.like_count)) - (Number(a.comment_count) + Number(a.like_count)));
   else data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -151,6 +167,20 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   await new Promise((resolve) => setTimeout(resolve, 120));
   const url = new URL(path, 'http://circle.local');
   const pathname = url.pathname;
+
+  if (pathname === '/social/interests' && method === 'GET') {
+    return {data:demoInterestsFor(token)};
+  }
+  if (pathname === '/social/interests' && method === 'PUT') {
+    const ids=body?.categories;
+    if (!Array.isArray(ids) || ids.length>40 || ids.some(id=>
+      !Number.isInteger(id) || !categories.some(c=>Number(c.id)===id)))
+      throw new Error('Choose valid category IDs.');
+    const selected=[...new Set(ids)];
+    localStorage.setItem('circle-demo-interests-'+Number(userFromToken(token).id),
+      JSON.stringify(selected));
+    return {data:selected};
+  }
 
   if (pathname === '/categories' && method === 'GET') return { data: categories };
 
@@ -168,7 +198,7 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
   if (pathname === '/posts' && method === 'GET') {
     const page = Number(url.searchParams.get('page') || 1);
     const limit = Number(url.searchParams.get('limit') || 8);
-    return pagination(filterPosts(url), page, limit);
+    return pagination(filterPosts(url,token), page, limit);
   }
 
   if (pathname === '/posts' && method === 'POST') {
