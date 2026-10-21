@@ -182,7 +182,13 @@ export async function mockApi(path, { method = 'GET', body, token } = {}) {
     return {data:selected};
   }
 
-  if (pathname === '/categories' && method === 'GET') return { data: categories };
+  if (pathname === '/categories' && method === 'GET') return {
+    data: categories.map(category => ({
+      ...category,
+      post_count: allPosts().filter(post =>
+        (post.categories||[]).some(item=>Number(item.id)===Number(category.id))).length,
+    })),
+  };
 
   const categoryMatch = pathname.match(/^\/categories\/(\d+)$/);
   if (categoryMatch && method === 'GET') {
