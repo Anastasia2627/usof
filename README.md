@@ -1,11 +1,23 @@
-# Circle — USOF Basic
+# Circle — USOF Backend + Frontend
 
 Circle is a small question-and-answer discussion application built for the **Usof backend** and **Usof frontend** Basic assignments. It uses Node.js, Express, MySQL, React, Redux, HTML and CSS. No third-party UI framework is used.
+
+## October 2026 email verification and account protection
+
+- Registration and admin-created accounts now require a 6-digit confirmation code or verification link, delivered in a branded responsive Circle HTML email with a plain-text fallback
+- Verification codes expire after 20 minutes and are limited to five failed attempts per issued code; sign-in, registration, resend and reset routes also have single-process IP rate limits
+- Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` and `MAIL_FROM` in your **local** `.env` for real SMTP delivery — never commit credentials
+- An existing password account will **not** be automatically linked to Google solely because the two emails match; secure explicit linking is a separate future flow
+- In production, `AUTH_SECRET` must be a long, unique random value — example and weak values are rejected before startup
+- When creating a brand-new production database, supply private `BOOTSTRAP_ADMIN_LOGIN`, `BOOTSTRAP_ADMIN_EMAIL`, and `BOOTSTRAP_ADMIN_PASSWORD` (12–72 UTF-8 bytes); demo fixture accounts with known passwords are never created in production
+- After updating an existing MySQL database run `npm run db:init` to add `verification_attempts` and other additive fields, without deleting saved posts
+- Run backend checks with `npm run check:backend` and integration tests with `npm run test:auth`, `npm run test:email:integration` and `npm run test:smoke` against a **disposable test database**
+- Known remaining production-hardening work includes private-media URLs for unpublished posts, distributed request rate limiting, transactional mail outbox/retry, dependency updates with a committed lockfile, and secure Google account linking — do not treat this review branch as production certified
 
 ## Required features
 
 - Registration with email verification (code or link), login, logout and password reset
-- Two roles: `user` and `admin`, with API-enforced access permissions
+- Three roles: `user`, `moderator` and `admin`, with API-enforced access permissions
 - User profile, avatar upload, profile editing, account rating and personal posts
 - Posts: create, read, edit own content, delete, multiple categories, active/inactive status and locking
 - Comments and nested replies; comment status moderation, deletion and locking
@@ -15,7 +27,7 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - Responsive header containing site name, search, menu, avatar, login and role; logout remains accessible on mobile
 - Informative form errors, backend MVC/service/model structure, OOP, relational MySQL data and local avatar storage
 
-The frontend loads `web/src/basic.css` plus `web/src/threads.css`: a responsive, monochrome Threads-inspired style with a centered conversation column and bottom mobile navigation. There are no decorative animations. Optional Creative pages are not included in the Basic UI; this branch keeps the existing backend extensions so database migrations are not needed.
+The frontend combines the Circle editorial styling with light/dark settings, animated login and registration photography, interest-based feed ranking and a custom account-status page. This branch includes database migrations for new account verification and moderation fields, so run `npm run db:init` after pulling changes
 
 ## Run locally on macOS (Docker Desktop)
 
@@ -26,11 +38,11 @@ switching branches.
 
 ```bash
 git fetch origin
-git switch circle-threads-feed
+git switch design/clean-auth-account-status-2026-10-20
 npm install
 ```
 
-If that branch already exists locally, use `git switch circle-threads-feed`
+If that branch already exists locally, use `git switch design/clean-auth-account-status-2026-10-20`
 followed by `git pull --ff-only`.
 
 In your **existing local** `.env`, set:
@@ -89,7 +101,7 @@ The homepage `/#/` shows a public feed sorted by positive likes (descending) for
 
 ## Refined interface and moderator assignment
 
-The login and sign-up screens use a calm, two-column editorial layout on desktop
+The login and sign-up screens use a photo-arc editorial layout on desktop
 and a compact stacked layout on mobile. The post composer keeps the original title,
 body, category selection, preview, photos, and publication options, now arranged in
 smaller visual sections. Every category remains selectable within a compact,
@@ -134,7 +146,7 @@ checks live in `API/src/services/moderationPolicy.js`, and the dedicated
 MySQL integration suite is `npm run test:moderator`. As with all integration
 tests in this project, use `NODE_ENV=test` and a disposable database ending
 in `_ci` or `_test`. The Circle GitHub Actions workflow runs this suite
-on every update to `circle-threads-feed`.
+on updates to the active review branch.
 
 ## UX improvements
 
