@@ -53,6 +53,18 @@ export function errorHandler(error, req, res, next) {
 
   if (status >= 500) {
     message = 'Internal server error';
+    // Keep useful diagnostics in production while avoiding private SQL,
+    // credentials, request bodies, message content and user tokens
+    console.error(JSON.stringify({
+      event:'api_error',
+      requestId:req.requestId || null,
+      method:req.method,
+      path:req.path,
+      status,
+      code,
+      originalCode:error.code || null,
+      timestamp:new Date().toISOString(),
+    }));
     if (process.env.NODE_ENV !== 'production') console.error(error);
   }
 
@@ -62,6 +74,7 @@ export function errorHandler(error, req, res, next) {
       message,
     },
   };
+  if (req.requestId) payload.error.requestId=req.requestId;
   if (error.details) payload.error.details = error.details;
   res.status(status).json(payload);
 }
