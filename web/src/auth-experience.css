@@ -674,44 +674,50 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
     filter:blur(0);
   }
 }
-#root > main.circleBlockedHeroPage {
+/* 403 image is a finished 16:9 Figma composition. Never crop its top via
+   object-fit:cover: the large numbers were being cut off above the viewport. */
+#root > main.circleBlockedHeroPage{
   min-height:100svh!important;
-  background:linear-gradient(180deg,#b4d5fa 0%,#ecd8ff 56%,#fbeafa 77%,#fbeafa 100%)!important;
+  background:linear-gradient(180deg,#c4d9fb 0%,#edddf9 58%,#fbeafa 85%)!important;
 }
-#root > main.circleBlockedHeroPage > .circleBlockedHeroImage {
-  inset:0 auto auto 0;
-  width:100%;
-  height:74svh;
-  object-fit:cover;
-  object-position:center 45%;
+#root > main.circleBlockedHeroPage > .circleBlockedHeroImage{
+  position:absolute;
+  inset:0;
+  display:block;
   z-index:0;
+  width:100%;
+  height:100svh;
+  object-fit:fill;
+  object-position:center top;
+  pointer-events:none;
 }
 #root > main.circleBlockedHeroPage .circleBlockedHeroOverlay{
   position:relative;
   z-index:1;
   display:flex;
   flex-direction:column;
-  justify-content:flex-start;
+  justify-content:flex-end;
   align-items:center;
   min-height:100svh;
   height:auto;
-  padding:74svh 20px 24px;
+  padding:max(77svh,440px) 20px 26px;
   background:transparent;
 }
 #root > main.circleBlockedHeroPage .circleBlockedHeroContent{
   flex:none;
   margin:0 auto;
-  padding:10px 0 0;
+  padding:0;
   width:min(100%,700px);
   text-align:center;
 }
 #root > main.circleBlockedHeroPage .circleBlockedHeroContent h1{
   position:absolute;
-  top:clamp(22px,3.5vh,48px);
+  top:clamp(25px,3.5vh,48px);
   left:50%;
   transform:translateX(-50%);
+  width:calc(100% - 32px);
   margin:0;
-  padding:0 10px;
+  padding:0;
   color:#2a232e;
 }
 /* A coherent custom appeal editor, not a browser-default textarea. */
@@ -765,16 +771,23 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 #root .circleBlockedHeroFormActions button:last-child{min-height:38px;padding:8px 16px;}
 #root .circleBlockedHeroReason{margin-top:3px;}
 #root .circleBlockedHeroActions{margin-top:14px;}
-@media(max-width:650px){
+/* On narrow/portrait screens, retain the exact artwork aspect ratio and
+   let the explanation flow below the illustration instead of stretching it. */
+@media(max-width:850px){
   #root > main.circleBlockedHeroPage > .circleBlockedHeroImage{
-    height:68svh;
-    object-position:center 35%;
+    width:100%;
+    height:auto;
+    aspect-ratio:1649/928;
+    object-fit:contain;
+    object-position:top center;
   }
   #root > main.circleBlockedHeroPage .circleBlockedHeroOverlay{
-    padding:68svh 14px max(24px,env(safe-area-inset-bottom));
+    min-height:100svh;
+    padding:calc(100vw * 928 / 1649 + 18px) 18px max(25px,env(safe-area-inset-bottom));
   }
   #root > main.circleBlockedHeroPage .circleBlockedHeroContent h1{
-    top:clamp(20px,3vh,33px);
+    top:clamp(18px,3vh,35px);
+    font-size:clamp(22px,5.2vw,34px);
   }
 }
 @media(prefers-reduced-motion:reduce){
@@ -797,31 +810,4 @@ html[data-theme="dark"] .circleAuthInputShell .circleAuthVisibility:hover{backgr
 #root .circleAuthGallery .circleAuthGalleryTiles{
   position:static;
   pointer-events:none;
-}
-#root .circleAuthGallery .circleAuthReplay{
-  position:absolute;
-  top:5px;
-  right:5px;
-  z-index:4;
-  display:grid;
-  place-items:center;
-  width:33px;
-  height:33px;
-  min-height:0;
-  padding:0;
-  background:rgba(255,255,255,.83);
-  border:1px solid #e9e3ed;
-  border-radius:50%;
-  color:#84778a;
-  box-shadow:0 3px 12px rgba(51,37,70,.045);
-  cursor:pointer;
-  transition:background-color .18s ease,color .18s ease;
-}
-#root .circleAuthGallery .circleAuthReplay:hover{
-  background:#f5f0fa;
-  color:#4c3568;
-}
-#root .circleAuthGallery .circleAuthReplay:focus-visible{
-  outline:2px solid #8969b9;
-  outline-offset:3px;
 }
