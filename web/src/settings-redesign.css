@@ -235,3 +235,34 @@ html[data-theme="dark"] .circleSettingsPage .circleSettingsLanguageOption.isSele
   .circleSettingsPage .circleSettingsOption,
   .circleSettingsPage .circleSettingsLanguageOption{transition:none;}
 }
+
+/* Small, direct way to revisit feed interests after registration. */
+.circleSettingsPage .circleSettingsInterestsLink{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:57px;
+  padding:13px 17px;
+  width:100%;
+  background:#fff;
+  border:1px solid #e7e4e9;
+  border-radius:12px;
+  color:#413a44;
+  text-align:left;
+  font-size:13px;
+  font-weight:670;
+}
+.circleSettingsPage .circleSettingsInterestsLink>span:nth-child(2){flex:1;}
+.circleSettingsPage .circleSettingsInterestsLink:hover{
+  background:#f8f6fa;
+  border-color:#bda9d2;
+}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink{
+  background:#29252c;
+  border-color:#4b444f;
+  color:#ede5f2;
+}
+html[data-theme="dark"] .circleSettingsPage .circleSettingsInterestsLink:hover{
+  background:#332b39;
+  border-color:#8e75a7;
+}
