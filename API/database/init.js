@@ -52,6 +52,9 @@ async function ensureCircleSchema(connection) {
   if (!known.has('verification_code_expires')) {
     await connection.query('ALTER TABLE users ADD COLUMN verification_code_expires DATETIME NULL AFTER verification_code_hash');
   }
+  if (!known.has('verification_attempts')) {
+    await connection.query('ALTER TABLE users ADD COLUMN verification_attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER verification_code_expires');
+  }
   if (!known.has('google_sub')) {
     await connection.query('ALTER TABLE users ADD COLUMN google_sub VARCHAR(64) NULL UNIQUE AFTER role');
   }
