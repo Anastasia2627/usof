@@ -86,28 +86,46 @@ export default function CategoriesPage(){
     const element=orbitRef.current;
     const tiles=Array.from(element.querySelectorAll('.categoryReferencePhoto'));
     if(!tiles.length)return undefined;
-    const tau=Math.PI*2;
     const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame=0;
     let visible=true;
     let elapsed=0;
     let last=0;
-    let radius=300;
-    let depth=43;
+    let radius=340;
+    let arcHeight=105;
+    let baseY=118;
     const measure=()=>{
-      radius=Math.min(350,Math.max(105,(element.clientWidth-185)*.49));
-      depth=element.clientWidth<650?29:46;
+      const width=element.clientWidth;
+      radius=Math.min(365,Math.max(95,(width-185)*.47));
+      arcHeight=width<620?69:width<850?90:105;
+      baseY=width<620?79:width<850?104:119;
     };
+    // Each card travels across the same upper semicircle from left to right
+    // The short invisible return connects both ends without a visible jump
+    // This keeps approximately six cards visible instead of a rotating oval
     const position=()=>{
       tiles.forEach((tile,index)=>{
-        const angle=(index/tiles.length)*tau+(elapsed/52000)*tau;
-        const x=Math.sin(angle)*radius;
-        const front=(1+Math.cos(angle))/2;
-        const y=18+(1-front)*depth*2;
-        const scale=.90+front*.1;
-        tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${(Math.sin(angle)*7).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
-        tile.style.zIndex=String(10+Math.round(front*20));
-        tile.style.opacity=String(.88+front*.12);
+        if(tiles.length===1){
+          tile.style.transform='translate3d(-50%,14px,0)';
+          tile.style.opacity='1';
+          tile.style.zIndex='20';
+          return;
+        }
+        const phase=((index/tiles.length)+elapsed/52000)%1;
+        const travel=.86;
+        const reduced=motion.matches;
+        const onArc=reduced||phase<travel;
+        const u=reduced?index/(tiles.length-1):onArc?phase/travel:(phase-travel)/(1-travel);
+        const x=onArc?radius*(2*u-1):radius*(1-2*u);
+        const height=Math.sin(Math.PI*u);
+        const y=onArc?baseY-arcHeight*height:baseY+23*height;
+        const rotate=onArc?(u-.5)*13:0;
+        const scale=onArc?.94+.06*height:.94;
+        // Fully faded before the turn-around, visible through the main arc
+        const opacity=reduced?1:onArc?Math.min(1,u/.065,(1-u)/.065):0;
+        tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+        tile.style.zIndex=String(onArc?10+Math.round(height*14):1);
+        tile.style.opacity=String(Math.max(0,opacity));
       });
     };
     const tick=now=>{
@@ -251,10 +269,6 @@ export default function CategoriesPage(){
           {uk?'Нічого не знайдено':'No matching topics'}
         </span>}
       </div>
-      <p className="categoryReferenceDescription">
-        {uk?'Обери кілька тем — вони допоможуть налаштувати твою стрічку':
-          'Choose a few topics to personalize your feed'}
-      </p>
       <div className="categoryReferenceFooter">
         <span className="categoryReferenceCount" aria-live="polite">
           {selected.length>0?(uk?'Обрано: ':'Selected: ')+selected.length:''}
