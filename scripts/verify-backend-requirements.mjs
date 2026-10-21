@@ -270,8 +270,11 @@ await request('/comments/1', {
   expected: 403,
   body: { content: 'Admins also cannot edit comment content.' },
 });
-const unchangedComment = await request('/comments/1');
+const unchangedComment = await request('/comments/1', {token:admin.token});
 assert(unchangedComment.data.content === originalCommentContent, 'Comment content must remain immutable');
+const guestHiddenComment = await request('/comments/1');
+assert(guestHiddenComment.data.content === '[Comment hidden by moderation]',
+  'An inactive comment must not expose its original text to guest readers');
 
 await request('/comments/1', { method: 'DELETE', token: asya.token, expected: 403 });
 await request('/comments/1', {
