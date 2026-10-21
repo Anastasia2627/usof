@@ -172,6 +172,16 @@ export async function updateAccount({ targetId, actor, body }) {
       ],
     );
 
+    if (login !== current.login && isAdmin && Number(actor.sub) !== id) {
+      await connection.execute(
+        `INSERT INTO notifications(user_id,actor_id,type,title,body)
+         VALUES(?,?,'login_changed',?,?)`,
+        [id, Number(actor.sub),
+          'Your username was changed',
+          `An administrator changed your username from @${current.login} to @${login}.`],
+      );
+    }
+
     if (role !== current.role && isAdmin) {
       await connection.execute(
         `INSERT INTO notifications(user_id,actor_id,type,title,body)
