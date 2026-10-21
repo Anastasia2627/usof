@@ -206,8 +206,10 @@ async function ensureCircleSchema(connection) {
     ['Design','Graphic, digital and product design'],['Anime','Anime and animation'],
     ['History','History and cultures']
   ];
-  for (const [title,description] of topics)
-    await connection.query('INSERT IGNORE INTO categories(title,description) VALUES(?,?)',[title,description]);
+  if (process.env.NODE_ENV !== 'production') {
+    for (const [title,description] of topics)
+      await connection.query('INSERT IGNORE INTO categories(title,description) VALUES(?,?)',[title,description]);
+  }
 
   // Idempotent public demo conversations by seeded fixture users only
   // This makes the community feel social without modifying real members' posts
@@ -274,6 +276,19 @@ async function initializeDatabase() {
       );
     }
 
+    if (process.env.NODE_ENV === 'production' && existingAppTables.length===0) {
+      const required=['BOOTSTRAP_ADMIN_LOGIN','BOOTSTRAP_ADMIN_EMAIL','BOOTSTRAP_ADMIN_PASSWORD'];
+      const missing=required.filter(name=>!process.env[name]);
+      if(missing.length) throw new Error(
+        'Production initialization requires private bootstrap credentials: '+missing.join(', ')
+      );
+      if(!/^[a-zA-Z0-9_.-]{3,50}$/.test(process.env.BOOTSTRAP_ADMIN_LOGIN) ||
+        !/^[^,;\s@]+@[^,;\s@]+\.[a-zA-Z]{2,}$/.test(process.env.BOOTSTRAP_ADMIN_EMAIL) ||
+        process.env.BOOTSTRAP_ADMIN_PASSWORD.length<12 ||
+        Buffer.byteLength(process.env.BOOTSTRAP_ADMIN_PASSWORD,'utf8')>72) {
+        throw new Error('BOOTSTRAP_ADMIN_* must contain a valid login, email and a unique 12+ character password (max 72 bytes)');
+      }
+    }
     if (resetRequested) {
       if (!resetIsConfirmed()) {
         throw new Error(
@@ -452,6 +467,21 @@ async function initializeDatabase() {
       FOREIGN KEY(reviewer_id) REFERENCES users(id) ON DELETE SET NULL,
       FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL
     ) ENGINE=InnoDB`);
+
+    if (process.env.NODE_ENV==='production') {
+      const login=process.env.BOOTSTRAP_ADMIN_LOGIN;
+      const email=process.env.BOOTSTRAP_ADMIN_EMAIL.toLowerCase();
+      const passwordHash=await bcrypt.hash(process.env.BOOTSTRAP_ADMIN_PASSWORD,12);
+      await connection.query(
+        'INSERT INTO users(login,password_hash,full_name,email,email_verified,role) VALUES(?,?,?,?,1,?)',
+        [login,passwordHash,'Administrator',email,'admin'],
+      );
+      // Production receives only the real schema and the operator-provided
+      // initial admin, never the known demo passwords or fixture accounts
+      await ensureCircleSchema(connection);
+      console.log('Production schema and bootstrap administrator initialized');
+      return;
+    }
 
     const passwordHash = await bcrypt.hash('Password123!', 12);
     const users = [
