@@ -122,7 +122,7 @@ export class Post extends BaseModel {
     }));
   }
 
-  static async list({ clause = '', params = [], sort, order, limit, offset }) {
+  static async list({ clause = '', params = [], sort, order, sortParams = [], limit, offset }) {
     const countRows = await this.query(
       `SELECT COUNT(*) AS total FROM posts p JOIN users u ON u.id = p.author_id ${clause}`,
       params,
@@ -135,7 +135,7 @@ export class Post extends BaseModel {
        ${clause}
        ORDER BY ${sort} ${order}, p.created_at DESC, p.id DESC
        LIMIT ? OFFSET ?`,
-      [...params, limit, offset],
+      [...params, ...sortParams, limit, offset],
     );
     return { posts: await this.attachCategories(rows), total: Number(countRows[0].total) };
   }
