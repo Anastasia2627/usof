@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {useSelector} from 'react-redux';
 import {api} from '../api.js';
 import {ErrorBox,PostCard,Icon,go} from '../ui.jsx';
@@ -35,7 +35,8 @@ export default function CategoriesPage(){
   const [categories,setCategories]=useState([]);
   const [selected,setSelected]=useState([]);
   const [query,setQuery]=useState('');
-  const [slide,setSlide]=useState(0);
+  const orbitRef=useRef(null);
+  const orbitPaused=useRef(false);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState(null);
@@ -78,10 +79,72 @@ export default function CategoriesPage(){
       Number(b.post_count||0)-Number(a.post_count||0);
   }),[categories]);
 
-  const cards=useMemo(()=>{
-    const length=Math.min(7,visual.length);
-    return Array.from({length},(_,index)=>visual[(slide+index)%visual.length]);
-  },[visual,slide]);
+  const cards=useMemo(()=>visual.slice(0,Math.min(7,visual.length)),[visual]);
+
+  useEffect(()=>{
+    if(!cards.length||!orbitRef.current)return undefined;
+    const element=orbitRef.current;
+    const tiles=Array.from(element.querySelectorAll('.categoryReferencePhoto'));
+    if(!tiles.length)return undefined;
+    const tau=Math.PI*2;
+    const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame=0;
+    let visible=true;
+    let elapsed=0;
+    let last=0;
+    let radius=300;
+    let depth=43;
+    const measure=()=>{
+      radius=Math.min(350,Math.max(105,(element.clientWidth-185)*.49));
+      depth=element.clientWidth<650?29:46;
+    };
+    const position=()=>{
+      tiles.forEach((tile,index)=>{
+        const angle=(index/tiles.length)*tau+(elapsed/52000)*tau;
+        const x=Math.sin(angle)*radius;
+        const front=(1+Math.cos(angle))/2;
+        const y=18+(1-front)*depth*2;
+        const scale=.90+front*.1;
+        tile.style.transform=`translate3d(calc(-50% + ${x.toFixed(2)}px),${y.toFixed(2)}px,0) rotate(${(Math.sin(angle)*7).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+        tile.style.zIndex=String(10+Math.round(front*20));
+        tile.style.opacity=String(.88+front*.12);
+      });
+    };
+    const tick=now=>{
+      if(!last)last=now;
+      if(!orbitPaused.current&&visible&&!motion.matches)
+        elapsed+=Math.min(now-last,40);
+      last=now;
+      position();
+      frame=window.requestAnimationFrame(tick);
+    };
+    const onVisibility=()=>{visible=!document.hidden;last=0;};
+    const onMotionChange=()=>{last=0;};
+    const observer=typeof IntersectionObserver!=='undefined'
+      ?new IntersectionObserver(entries=>{
+        visible=!document.hidden&&entries.some(entry=>entry.isIntersecting);
+        last=0;
+      },{threshold:0}):null;
+    measure();
+    position();
+    observer?.observe(element);
+    document.addEventListener('visibilitychange',onVisibility);
+    window.addEventListener('resize',measure);
+    motion.addEventListener?.('change',onMotionChange);
+    frame=window.requestAnimationFrame(tick);
+    return()=>{
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      document.removeEventListener('visibilitychange',onVisibility);
+      window.removeEventListener('resize',measure);
+      motion.removeEventListener?.('change',onMotionChange);
+      tiles.forEach(tile=>{
+        tile.style.transform='';
+        tile.style.zIndex='';
+        tile.style.opacity='';
+      });
+    };
+  },[cards]);
 
   const results=useMemo(()=>{
     const search=query.trim().toLocaleLowerCase();
@@ -91,14 +154,18 @@ export default function CategoriesPage(){
   },[categories,query,t]);
 
   const toggle=id=>{
-    if(!auth?.token){go('/login');return;}
+    // Selection is local until Continue so more than one topic can be chosen
+    // Guests can explore and choose without being redirected on each click
     const number=Number(id);
     setSelected(previous=>previous.includes(number)
       ?previous.filter(value=>value!==number):[...previous,number]);
   };
 
   const save=async()=>{
-    if(!auth?.token){go('/login');return;}
+    if(!auth?.token){
+      setError(new Error(uk?'Увійдіть у свій акаунт, щоб зберегти вибрані теми':'Sign in to save your topics'));
+      return;
+    }
     if(loading||saving)return;
     setSaving(true);
     setError(null);
@@ -117,30 +184,27 @@ export default function CategoriesPage(){
     }
   };
 
-  const move=direction=>setSlide(old=>visual.length?
-    (old+direction+visual.length)%visual.length:0);
-
   return <main className="categoriesPage categoryReferencePage">
     <section className="categoryReferenceHero" aria-labelledby="category-reference-heading">
-      <h1 id="category-reference-heading">
-        {uk?<>Знайди свою<br/>тему</>:<>Find your<br/>thing</>}
-      </h1>
+      <h1 id="category-reference-heading">{uk?'Знайди свою тему':'Find your thing'}</h1>
 
-      <div className="categoryReferenceCollage" role="group"
-        aria-label={uk?'Обрати тему на фото':'Choose an interest from the photos'}>
+      <div ref={orbitRef} className="categoryReferenceCollage" role="group"
+        onPointerEnter={()=>{orbitPaused.current=true;}}
+        onPointerLeave={()=>{orbitPaused.current=false;}}
+        onFocusCapture={()=>{orbitPaused.current=true;}}
+        onBlurCapture={event=>{
+          if(!event.currentTarget.contains(event.relatedTarget))orbitPaused.current=false;
+        }}
+        aria-label={uk?'Обрати цікаві теми на фото':'Select interests from the photos'}>
         {cards.map((category,index)=>{
-          const distance=index-(cards.length-1)/2;
+          const offset=index-(cards.length-1)/2;
           const chosen=selected.includes(Number(category.id));
           return <button type="button" key={category.id}
-            className={'categoryReferencePhoto'+(Math.abs(distance)>2?' isOuter':'')+(chosen?' isSelected':'')}
+            className={'categoryReferencePhoto'+(chosen?' isSelected':'')}
             style={{
-              '--photo-x':(distance*108)+'px',
-              '--photo-y':(distance*distance*9)+'px',
-              '--photo-angle':(distance*5)+'deg',
-              '--photo-x-tablet':(distance*79)+'px',
-              '--photo-x-phone':(distance*48)+'px',
-              '--photo-y-phone':(distance*distance*5)+'px',
-              '--photo-layer':String(20-Math.abs(distance))
+              '--photo-x':(offset*108)+'px',
+              '--photo-y':(offset*offset*9)+'px',
+              '--photo-angle':(offset*5)+'deg'
             }}
             onClick={()=>toggle(category.id)}
             aria-pressed={chosen}
@@ -149,10 +213,6 @@ export default function CategoriesPage(){
             <span className="categoryReferencePhotoCheck" aria-hidden="true">
               <Icon name={chosen?'check':'plusSimple'} size={17}/>
             </span>
-            {(index===1||index===cards.length-2)&&
-              <span className={'categoryReferencePhotoLabel'+(index===1?' labelBlue':' labelGreen')}>
-                {t(category.title)}
-              </span>}
           </button>;
         })}
         {loading&&<span className="categoryReferenceLoad" role="status">
@@ -162,50 +222,20 @@ export default function CategoriesPage(){
           {uk?'Поки немає тем':'No topics yet'}
         </span>}
       </div>
-
-      <div className="categoryReferenceCaption">
-        <button type="button" onClick={()=>move(-1)} disabled={cards.length<2}
-          aria-label={uk?'Попередні теми':'Previous topics'}>
-          <Icon name="arrowBack" size={18}/>
-        </button>
-        <span>{uk?'Обирай те, що подобається — і ми підлаштуємо твою стрічку':
-          'Choose what you love and make the feed your own'}</span>
-        <button type="button" onClick={()=>move(1)} disabled={cards.length<2}
-          aria-label={uk?'Наступні теми':'Next topics'}>
-          <Icon name="arrow" size={18}/>
-        </button>
-      </div>
-
-      <div className="categoryReferenceHeroActions">
-        <button type="button" className="categoryReferencePrimary"
-          onClick={save} disabled={loading||saving}>
-          {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
-          <Icon name="arrow" size={16}/>
-        </button>
-        <button type="button" className="categoryReferenceSkip" onClick={()=>go('/')}
-          disabled={saving}>{uk?'Пропустити':'Skip for now'}</button>
-      </div>
     </section>
 
-    <section className="categoryReferenceTopics" aria-labelledby="category-topics-label">
-      <div className="categoryReferenceTopicsHead">
-        <div className="categoryReferenceTitleRow">
-          <h2 id="category-topics-label">{uk?'Теми':'Topics'}</h2>
-          <span>{selected.length?selected.length+' '+(uk?'обрано':'selected'):''}</span>
-        </div>
-        <label className="categoryReferenceSearch">
-          <Icon name="search" size={18}/>
-          <input type="search" value={query}
-            placeholder={uk?'Пошук тем':'Search topics'}
-            aria-label={uk?'Пошук тем':'Search topics'}
-            onChange={event=>setQuery(event.target.value)}/>
-          {query&&<button type="button" onClick={()=>setQuery('')}
-            aria-label={uk?'Очистити пошук':'Clear search'}>
-            <Icon name="close" size={15}/>
-          </button>}
-        </label>
-      </div>
-
+    <section className="categoryReferenceTopics" aria-label={uk?'Вибір тем':'Choose your topics'}>
+      <label className="categoryReferenceSearch">
+        <Icon name="search" size={19}/>
+        <input type="search" value={query}
+          placeholder={uk?'Пошук тем':'Search topics'}
+          aria-label={uk?'Пошук тем':'Search topics'}
+          onChange={event=>setQuery(event.target.value)}/>
+        {query&&<button type="button" onClick={()=>setQuery('')}
+          aria-label={uk?'Очистити пошук':'Clear search'}>
+          <Icon name="close" size={15}/>
+        </button>}
+      </label>
       <div className="categoryReferencePills" role="group"
         aria-label={uk?'Вибір тем':'Topic selection'}>
         {results.map(category=>{
@@ -221,7 +251,24 @@ export default function CategoriesPage(){
           {uk?'Нічого не знайдено':'No matching topics'}
         </span>}
       </div>
-
+      <p className="categoryReferenceDescription">
+        {uk?'Обери кілька тем — вони допоможуть налаштувати твою стрічку':
+          'Choose a few topics to personalize your feed'}
+      </p>
+      <div className="categoryReferenceFooter">
+        <span className="categoryReferenceCount" aria-live="polite">
+          {selected.length>0?(uk?'Обрано: ':'Selected: ')+selected.length:''}
+        </span>
+        <div className="categoryReferenceHeroActions">
+          <button type="button" className="categoryReferenceSkip"
+            onClick={()=>go('/')} disabled={saving}>{uk?'Пропустити':'Skip'}</button>
+          <button type="button" className="categoryReferencePrimary"
+            onClick={save} disabled={loading||saving}>
+            {saving?(uk?'Зберігаємо…':'Saving…'):(uk?'Продовжити':'Continue')}
+            <Icon name="arrow" size={16}/>
+          </button>
+        </div>
+      </div>
       <ErrorBox error={error}/>
     </section>
   </main>;
