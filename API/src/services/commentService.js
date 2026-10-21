@@ -85,7 +85,9 @@ export async function listCommentsForPost(idValue, user) {
 }
 
 export async function createCommentForUser(user, postIdValue, body) {
-  const content = String(body.content ?? '').trim();
+  if (typeof body.content !== 'string')
+    throw new AppError(422,'VALIDATION_ERROR','content must be a string');
+  const content = body.content.trim();
   if (!content) throw new AppError(422, 'VALIDATION_ERROR', 'content is required');
   if (content.length > 20000 || Buffer.byteLength(content,'utf8') > 60000) {
     throw new AppError(422, 'CONTENT_TOO_LONG', 'content must contain at most 20000 characters and fit in 60000 UTF-8 bytes');
