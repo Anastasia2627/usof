@@ -99,43 +99,45 @@ async function send({ to, subject, text, html }) {
 
 function emailShell({ eyebrow, heading, intro, primary, secondary = '', footer = '' }) {
   return `
-  <!doctype html>
-  <html lang="uk">
-  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-  <body style="margin:0;padding:0;background:#f6f5f7;font-family:Arial,Helvetica,sans-serif;color:#211f23">
-    <div style="display:none;font-size:1px;max-height:0;overflow:hidden;opacity:0">${escapeHtml(eyebrow)} — Circle</div>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f5f7">
-      <tr><td align="center" style="padding:38px 16px 52px">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-          style="max-width:530px;background:#ffffff;border:1px solid #eae7ec;border-radius:22px">
-          <tr><td style="padding:35px 38px 8px">
-            <span style="font-size:24px;font-weight:800;letter-spacing:-1.5px;color:#1c1b1e">
-              <span style="font-size:25px;font-weight:400;vertical-align:-1px">◎</span> circle
-            </span>
-          </td></tr>
-          <tr><td style="padding:32px 38px 4px">
-            <div style="color:#9877b2;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">
-              ${escapeHtml(eyebrow)}
-            </div>
-            <h1 style="font-family:Arial,Helvetica,sans-serif;font-size:31px;line-height:1.18;letter-spacing:-1.1px;color:#211f23;margin:17px 0 12px;font-weight:800">
-              ${escapeHtml(heading)}
-            </h1>
-            <p style="font-size:15px;line-height:1.65;color:#68636d;margin:0 0 24px">
-              ${escapeHtml(intro)}
-            </p>
-          </td></tr>
-          <tr><td style="padding:0 38px">${primary}</td></tr>
-          ${secondary ? `<tr><td style="padding:23px 38px 5px">${secondary}</td></tr>` : ''}
-          <tr><td style="padding:26px 38px 34px">
-            <p style="font-size:12px;line-height:1.6;color:#99919e;margin:0">
-              ${escapeHtml(footer)}
-            </p>
-          </td></tr>
-        </table>
-        <p style="font-size:12px;color:#99929d;margin:20px 0 0">Circle · Спільнота твоїх інтересів</p>
-      </td></tr>
-    </table>
-  </body></html>`;
+<!doctype html>
+<html lang="uk">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f4f6;color:#211e24;font-family:Arial,Helvetica,sans-serif">
+  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;color:#f5f4f6">
+    ${escapeHtml(eyebrow)} — Circle
+  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f4f6">
+    <tr><td align="center" style="padding:44px 16px 48px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+        style="width:100%;max-width:540px;background:#fff;border:1px solid #e7e4e9;border-radius:18px">
+        <tr><td style="padding:35px 40px 30px;border-bottom:1px solid #f0eef2">
+          <span style="color:#1b191f;font-size:26px;font-weight:800;letter-spacing:-1.5px;line-height:1">
+            <span style="font-size:30px;font-weight:400;vertical-align:-2px;margin-right:2px">◎</span>circle
+          </span>
+        </td></tr>
+        <tr><td style="padding:35px 40px 0">
+          <p style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#80659a;margin:0 0 17px;text-transform:uppercase">
+            ${escapeHtml(eyebrow)}
+          </p>
+          <h1 style="font-size:31px;line-height:1.17;letter-spacing:-1.25px;font-weight:800;color:#201c24;margin:0 0 15px">
+            ${escapeHtml(heading)}
+          </h1>
+          <p style="font-size:15px;line-height:1.7;color:#716a76;margin:0 0 29px">
+            ${escapeHtml(intro)}
+          </p>
+        </td></tr>
+        <tr><td style="padding:0 40px">${primary}</td></tr>
+        ${secondary ? `<tr><td style="padding:27px 40px 0">${secondary}</td></tr>` : ''}
+        <tr><td style="padding:32px 40px 36px">
+          <p style="margin:0;padding-top:22px;border-top:1px solid #f0eef2;color:#9b949f;font-size:12px;line-height:1.65">
+            ${escapeHtml(footer)}
+          </p>
+        </td></tr>
+      </table>
+      <p style="font-size:12px;color:#a29ba5;margin:18px 0 0">Circle · Місце для твоїх захоплень</p>
+    </td></tr>
+  </table>
+</body></html>`;
 }
 
 export async function sendVerificationEmail({ to, login, token, code }) {
@@ -143,33 +145,36 @@ export async function sendVerificationEmail({ to, login, token, code }) {
   const safeUrl = escapeHtml(url);
   const safeCode = escapeHtml(String(code).replace(/[^0-9]/g,''));
   const html = emailShell({
-    eyebrow: 'Підтвердження пошти',
-    heading: 'Ще один крок — і ти в Circle',
-    intro: `Привіт, ${login}! Введи код нижче, щоб підтвердити свою електронну адресу`,
+    eyebrow: 'Підтвердження електронної пошти',
+    heading: 'Підтвердь свою пошту',
+    intro: `Привіт, ${String(login||'').trim()}! Щоб завершити реєстрацію у Circle, введи цей код на сторінці підтвердження`,
     primary: `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-        style="border:1px solid #e5d9ed;background:#f7f1fb;border-radius:16px">
-        <tr><td align="center" style="padding:26px 12px">
-          <div style="font-size:11px;color:#81718e;letter-spacing:1.4px;font-weight:700;text-transform:uppercase;margin-bottom:12px">
-            Твій код підтвердження
-          </div>
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:38px;font-weight:800;letter-spacing:9px;line-height:1.1;color:#29212f">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+        style="background:#f5f0fa;border:1px solid #ebe0f4;border-radius:14px">
+        <tr><td align="center" style="padding:30px 12px 27px">
+          <p style="margin:0 0 17px;font-size:11px;line-height:1.4;color:#896c9c;font-weight:700;letter-spacing:1.3px;text-transform:uppercase">
+            Код підтвердження
+          </p>
+          <p style="margin:0;font-size:38px;line-height:1.1;font-weight:800;letter-spacing:7px;color:#291f30;font-variant-numeric:tabular-nums">
             ${safeCode}
-          </div>
-          <div style="font-size:12px;color:#897b91;margin-top:14px">Дійсний протягом 20 хвилин</div>
+          </p>
+          <p style="margin:19px 0 0;font-size:12px;color:#82768e">
+            Код діє 20 хвилин
+          </p>
         </td></tr>
       </table>`,
-    secondary: `<p style="font-size:13px;line-height:1.6;color:#89828d;margin:0 0 13px;text-align:center">
-      Або підтвердь адресу одним натисканням
-    </p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
-      <tr><td style="border-radius:40px;background:#242127">
-        <a href="${safeUrl}" style="display:inline-block;padding:14px 27px;color:#fff;text-decoration:none;font-size:14px;font-weight:700">
-          Підтвердити пошту &rarr;
-        </a>
-      </td></tr>
-    </table>`,
-    footer: 'Якщо ти не реєструвалася або не реєструвався в Circle, просто проігноруй цей лист',
+    secondary: `
+      <p style="margin:0 0 16px;color:#8c8590;font-size:13px;line-height:1.5;text-align:center">
+        Або підтвердь адресу одним натисканням
+      </p>
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center">
+        <tr><td align="center" style="border-radius:999px;background:#232027">
+          <a href="${safeUrl}" style="display:inline-block;padding:14px 26px;text-decoration:none;color:#fff;font-size:13px;font-weight:700">
+            Підтвердити пошту &rarr;
+          </a>
+        </td></tr>
+      </table>`,
+    footer: 'Якщо ти не створювала або не створював акаунт у Circle, можеш просто проігнорувати цей лист',
   });
   return send({
     to, subject: 'Circle — твій код підтвердження',
