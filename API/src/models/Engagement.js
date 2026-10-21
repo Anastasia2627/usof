@@ -24,7 +24,8 @@ async function listPostsForUser(userId, relationTable, options) {
   const normalized = normalizeListOptions(options);
   const relationColumn = relationTable === 'favorites' ? 'favorites' : 'post_subscriptions';
   const clause = `
-    WHERE (p.status='active' OR p.author_id=?)
+    WHERE ((p.status='active' AND (p.publish_at IS NULL OR p.publish_at<=UTC_TIMESTAMP()))
+      OR p.author_id=?)
       AND EXISTS(
         SELECT 1
         FROM ${relationColumn} relation_item
