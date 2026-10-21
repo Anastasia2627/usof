@@ -103,6 +103,11 @@ export class Category extends BaseModel {
       limit: 50,
       offset: 0,
     });
-    return posts;
+    const moderator = ['admin','moderator'].includes(user?.role);
+    return posts.map(post =>
+      post.hide_likes && !moderator && Number(user?.sub)!==Number(post.author_id)
+        ? {...post,like_count:null,dislike_count:null,score:null}
+        : post
+    );
   }
 }
