@@ -12,6 +12,7 @@ export async function addPostImage(user,postId,file) {
   const post=await getVisiblePost(postId,user);
   if(Number(post.author_id)!==Number(user.sub))
     throw new AppError(403,'OWNER_REQUIRED','Only the author can add images');
+  if(post.locked) throw new AppError(423,'POST_LOCKED','This post is locked');
   if(!file?.buffer) throw new AppError(422,'IMAGE_REQUIRED','Select an image');
   let bytes;
   try {
@@ -27,8 +28,9 @@ export async function addPostImage(user,postId,file) {
   let written=false;
   try {
     await connection.beginTransaction();
-    const [[row]]=await connection.execute('SELECT id FROM posts WHERE id=? FOR UPDATE',[post.id]);
+    const [[row]]=await connection.execute('SELECT id,locked FROM posts WHERE id=? FOR UPDATE',[post.id]);
     if(!row)throw new AppError(404,'POST_NOT_FOUND','Post not found');
+    if(row.locked)throw new AppError(423,'POST_LOCKED','This post is locked');
     const [[count]]=await connection.execute('SELECT COUNT(*) AS total FROM post_images WHERE post_id=?',[post.id]);
     if(Number(count.total)>=4)throw new AppError(422,'IMAGE_LIMIT','Maximum four images per post');
     await fs.mkdir(dir,{recursive:true});
@@ -49,8 +51,19 @@ export async function deletePostImage(user,postId,imageId) {
   if(Number(post.author_id)!==Number(user.sub))
     throw new AppError(403,'OWNER_REQUIRED','Only the author can remove images');
   const id=positiveInt(imageId,'INVALID_IMAGE_ID','Invalid image ID');
-  const [[img]]=await pool.execute('SELECT filename FROM post_images WHERE id=? AND post_id=?',[id,post.id]);
-  if(!img)throw new AppError(404,'IMAGE_NOT_FOUND','Image not found');
-  await pool.execute('DELETE FROM post_images WHERE id=? AND post_id=?',[id,post.id]);
-  await fs.unlink(path.join(dir,path.basename(img.filename))).catch(()=>{});
+  const connection=await pool.getConnection();
+  let filename;
+  try {
+    await connection.beginTransaction();
+    const [[fresh]]=await connection.execute('SELECT locked FROM posts WHERE id=? FOR UPDATE',[post.id]);
+    if(!fresh)throw new AppError(404,'POST_NOT_FOUND','Post not found');
+    if(fresh.locked)throw new AppError(423,'POST_LOCKED','This post is locked');
+    const [[img]]=await connection.execute('SELECT filename FROM post_images WHERE id=? AND post_id=?',[id,post.id]);
+    if(!img)throw new AppError(404,'IMAGE_NOT_FOUND','Image not found');
+    filename=img.filename;
+    await connection.execute('DELETE FROM post_images WHERE id=? AND post_id=?',[id,post.id]);
+    await connection.commit();
+  }catch(error){await connection.rollback();throw error;}
+  finally{connection.release();}
+  await fs.unlink(path.join(dir,path.basename(filename))).catch(()=>{});
 }
