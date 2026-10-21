@@ -28,6 +28,13 @@ const created=(await request('/users',{token:admin.token,method:'POST',expected:
   login:name,email:name+'@example.test',fullName:'Moderation Security Test',
   role:'user',password,passwordConfirmation:password,
 }})).data;
+// A managed user is unverified until the invitee confirms the email
+const verification=(await request('/auth/resend-verification',{
+  method:'POST',body:{email:created.email},
+})).verificationCode;
+assert.match(verification,/^\d{6}$/);
+await request('/auth/verify-email-code',{method:'POST',
+  body:{email:created.email,code:verification}});
 const signedIn=await request('/auth/login',{method:'POST',body:{login:name,password}});
 const moderator=signedIn.token;
 const signedVersion=jwt.decode(moderator).ver;
