@@ -10,7 +10,7 @@ export function positiveInt(value, code = 'INVALID_ID', message = 'Expected a po
 }
 
 export function validateEmail(email) {
-  if (!/^\S+@\S+\.\S+$/.test(email) || email.length > 190) {
+  if (typeof email !== 'string' || !/^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+$/i.test(email) || email.length > 190) {
     throw new AppError(422, 'INVALID_EMAIL', 'Invalid email format');
   }
   return email;
@@ -24,8 +24,8 @@ export function validateLogin(login) {
 }
 
 export function validatePassword(password, field = 'Password') {
-  if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
-    throw new AppError(422, 'WEAK_PASSWORD', `${field} must contain 8 to 128 characters`);
+  if (typeof password !== 'string' || password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) {
+    throw new AppError(422, 'WEAK_PASSWORD', `${field} must contain at least 8 characters and at most 72 UTF-8 bytes`);
   }
   return password;
 }
