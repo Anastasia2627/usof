@@ -2,12 +2,23 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 
-function authSecret() {
-  if (process.env.AUTH_SECRET) return process.env.AUTH_SECRET;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('AUTH_SECRET is required in production');
+const UNSAFE_SECRETS = new Set([
+  'replace-with-a-long-random-string',
+  'development-only-secret-change-me',
+  'changeme',
+  'your-secret-key',
+  'secret',
+]);
+export function validateAuthConfiguration() {
+  const value = String(process.env.AUTH_SECRET || '');
+  if (process.env.NODE_ENV === 'production' &&
+      (Buffer.byteLength(value, 'utf8') < 32 || UNSAFE_SECRETS.has(value.trim().toLowerCase()))) {
+    throw new Error('AUTH_SECRET must be a randomly generated, non-default secret of at least 32 bytes');
   }
-  return 'development-only-secret-change-me';
+}
+function authSecret() {
+  validateAuthConfiguration();
+  return process.env.AUTH_SECRET || 'development-only-secret-change-me';
 }
 
 export function signAuthToken(user) {
