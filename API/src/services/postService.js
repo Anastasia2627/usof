@@ -95,8 +95,19 @@ export async function getVisiblePost(idValue, user) {
 export async function listPostFeed(query, user) {
   const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
   const limit = Math.min(50, Math.max(1, Number.parseInt(query.limit, 10) || 10));
-  const sort = SORT_COLUMNS[query.sort] || SORT_COLUMNS.likes;
-  const order = String(query.order || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+  const wantsPersonalization = query.personalized === '1' && Boolean(user?.sub) && !query.category;
+  // Personalization is a ranking boost, not a restrictive filter: all posts remain discoverable.
+  // The parameterized EXISTS clause checks the interests saved for the signed-in user.
+  const sort = wantsPersonalization
+    ? `(CASE WHEN EXISTS (
+        SELECT 1 FROM post_categories preferred_pc
+        JOIN user_interests preferred_ui ON preferred_ui.category_id=preferred_pc.category_id
+        WHERE preferred_pc.post_id=p.id AND preferred_ui.user_id=?
+      ) THEN 1 ELSE 0 END)`
+    : (SORT_COLUMNS[query.sort] || SORT_COLUMNS.likes);
+  const sortParams = wantsPersonalization ? [Number(user.sub)] : [];
+  const order = wantsPersonalization ? 'DESC' :
+    (String(query.order || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC');
   const where = [];
   const params = [];
 
@@ -164,6 +175,7 @@ export async function listPostFeed(query, user) {
     params,
     sort,
     order,
+    sortParams,
     limit,
     offset: (page - 1) * limit,
   });
