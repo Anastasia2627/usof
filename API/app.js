@@ -1,4 +1,5 @@
 import path from 'path';
+import { randomUUID } from 'node:crypto';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -23,6 +24,11 @@ dotenv.config();
 const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
+app.use((req,res,next)=>{
+  req.requestId=randomUUID();
+  res.setHeader('X-Request-ID',req.requestId);
+  next();
+});
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
   if (req.body == null) req.body = {};
