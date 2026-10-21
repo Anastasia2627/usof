@@ -38,7 +38,14 @@ export async function replyToComment(req, res) {
 }
 
 export async function getComment(req, res) {
-  res.json({ data: await getVisibleComment(req.params.comment_id, req.user) });
+  const comment=await getVisibleComment(req.params.comment_id, req.user);
+  const viewer=req.user;
+  const canView=['admin','moderator'].includes(viewer?.role) ||
+    comment.status==='active' || Number(viewer?.sub)===Number(comment.author_id) ||
+    Number(viewer?.sub)===Number(comment.post_author_id);
+  res.json({ data:canView?comment:{
+    ...comment,content:'[Comment hidden by moderation]',
+  } });
 }
 
 export async function updateComment(req, res) {
