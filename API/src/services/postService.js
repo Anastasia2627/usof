@@ -103,7 +103,7 @@ export async function listPostFeed(query, user) {
         SELECT 1 FROM post_categories preferred_pc
         JOIN user_interests preferred_ui ON preferred_ui.category_id=preferred_pc.category_id
         WHERE preferred_pc.post_id=p.id AND preferred_ui.user_id=?
-      ) THEN 1 ELSE 0 END)`
+      ) THEN 1 ELSE 0 END) DESC, like_count`
     : (SORT_COLUMNS[query.sort] || SORT_COLUMNS.likes);
   const sortParams = wantsPersonalization ? [Number(user.sub)] : [];
   const order = wantsPersonalization ? 'DESC' :
