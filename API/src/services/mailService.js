@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { validateEmail } from '../utils/validation.js';
 
 let transporter;
 
@@ -68,6 +69,7 @@ function escapeHtml(value) {
 }
 
 async function send({ to, subject, text, html }) {
+  validateEmail(to);
   const transport = mailTransport();
   if (!transport) return { configured: false, sent: false };
   try {
@@ -84,10 +86,12 @@ async function send({ to, subject, text, html }) {
       address => address.toLowerCase() === String(to).toLowerCase(),
     ) || false };
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      // Do not print SMTP credentials, message bodies, tokens or passwords.
-      console.error('Circle email SMTP failure:', error.code || 'SMTP_ERROR', error.responseCode || '');
-    }
+    // Log only SMTP error metadata, never recipients, codes or email bodies
+    console.error(JSON.stringify({
+      event:'mail_delivery_failed',
+      code:error.code || 'SMTP_ERROR',
+      smtpStatus:error.responseCode || null,
+    }));
     return { configured: true, sent: false };
   }
 }
@@ -138,7 +142,6 @@ export async function sendVerificationEmail({ to, login, token, code }) {
   const url = `${frontendOrigin()}/#/verify/${encodeURIComponent(token)}`;
   const safeUrl = escapeHtml(url);
   const safeCode = escapeHtml(String(code).replace(/[^0-9]/g,''));
-  const safeLogin = escapeHtml(login);
   const html = emailShell({
     eyebrow: 'Підтвердження пошти',
     heading: 'Ще один крок — і ти в Circle',
