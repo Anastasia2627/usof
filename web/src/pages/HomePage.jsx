@@ -122,7 +122,7 @@ export default function HomePage({ hash, basePath = '/' }) {
 
   return <main className="homePage">
     <h1 className="feedPageTitle">{t(basePath === '/explore' ? 'Explore' : 'Home')}</h1>
-    <div className="feedTabs" role="group" aria-label="Feed views">
+    <div className={"feedTabs"+(auth && basePath==='/' ? " feedTabs--three" : "")} role="group" aria-label="Feed views">
       {auth && basePath==='/' && <button type="button" aria-pressed={forYou}
         className={forYou?'selectedTab':''} onClick={choosePersonalized}>
         {language==='uk'?'Для вас':'For you'}
