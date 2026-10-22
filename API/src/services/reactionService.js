@@ -1,5 +1,6 @@
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
+import { notifyPositiveReaction } from './notificationService.js';
 
 const REACTION_WEIGHTS = Object.freeze({
   like: 1,
@@ -152,6 +153,15 @@ async function setReactionOnce({ userId, postId = null, commentId = null, type, 
         target.author_id,
         reactionWeight(type) - reactionWeight(previousType),
       );
+      // This is part of the reaction transaction, so rollback/retry cannot
+      // leave a reaction without its notification
+      await notifyPositiveReaction({
+        targetAuthorId:Number(target.author_id),
+        actorId:Number(userId),
+        postId:target.kind==='post'?Number(target.id):Number(target.post_id),
+        commentId:target.kind==='comment'?Number(target.id):null,
+        type,
+      },connection);
     }
     await connection.commit();
 
