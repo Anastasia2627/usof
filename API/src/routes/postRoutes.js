@@ -26,7 +26,7 @@ router.post('/:post_id/favorite', requireAuth, savePost);
 router.delete('/:post_id/favorite', requireAuth, unsavePost);
 router.post('/:post_id/follow', requireAuth, followPost);
 router.delete('/:post_id/follow', requireAuth, unfollowPost);
-router.post('/:post_id/share', optionalAuth, recordShare);
+router.post('/:post_id/share', requireAuth, recordShare);
 router.patch('/:post_id/solution', requireAuth, extras.setSolution);
 router.post('/:post_id/images', requireAuth, postImageUpload.single('image'), extras.uploadImage);
 router.delete('/:post_id/images/:image_id', requireAuth, extras.removeImage);
