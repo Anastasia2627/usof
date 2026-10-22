@@ -34,6 +34,13 @@ try{
     passwordConfirmation:credentials.password,role:'user',
   }});
   accountId=created.data.id;
+  // Admin-created members require email confirmation just like public signups
+  const delivery=await request('/auth/resend-verification',{method:'POST',
+    body:{email:credentials.email}});
+  assert.match(delivery.verificationCode,/^\\d{6}$/,
+    'The disposable test setup should expose the verification code');
+  await request('/auth/verify-email-code',{method:'POST',
+    body:{email:credentials.email,code:delivery.verificationCode}});
   const member=await request('/auth/login',{method:'POST',
     body:{login:credentials.login,password:credentials.password}});
   await request('/users/'+accountId+'/ban',{method:'POST',token:adminToken,
@@ -94,7 +101,7 @@ try{
   await review.setViewportSize({width:390,height:844});
   await review.screenshot({path:'screenshots/appeals-refined-mobile.png',fullPage:true});
   await review.goto(web+'/#/categories',{waitUntil:'networkidle'});
-  await review.locator('.categoryEditorialCard').first().waitFor();
+  await review.locator('.categoryReferencePill').first().waitFor();
   await review.setViewportSize({width:1280,height:840});
   await review.screenshot({path:'screenshots/categories-refined-desktop.png',fullPage:true});
   await review.setViewportSize({width:390,height:844});
