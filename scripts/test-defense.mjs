@@ -253,11 +253,13 @@ try {
 
   // 16: admin updates first user.
   await open(admin,'/admin');
-  await admin.getByRole('button',{name:'Edit user '+name}).click();
-  const row=admin.locator('.adminUserRow').filter({has:admin.getByRole('textbox',{name:'Login for '+name})});
-  await row.getByRole('textbox',{name:'Full name for '+name}).fill('Admin edited member');
-  await row.getByRole('button',{name:'Save user'}).click();
-  await admin.getByRole('button',{name:'Edit user '+name}).waitFor();
+  const userRow=admin.locator('.adminUserRow')
+    .filter({has:admin.locator('.adminName',{hasText:name})}).first();
+  await userRow.locator('.adminUserActionMenu summary').click();
+  await userRow.locator('.adminUserMenuItems button').first().click();
+  await userRow.getByRole('textbox',{name:'Full name for '+name}).fill('Admin edited member');
+  await userRow.getByRole('button',{name:'Save user'}).click();
+  await userRow.locator('.adminInlineForm').waitFor({state:'detached'});
 
   // The redesigned admin list is responsive and does not expose edit forms by default.
   await mkdir('screenshots', { recursive: true });
@@ -291,14 +293,16 @@ try {
   // Role updates must keep an already logged-in user on the same page.
   const originalPage=user.url();
   await open(admin,'/admin');
+  await userRow.locator('.adminUserActionMenu summary').click();
   admin.once('dialog',dialog=>dialog.accept());
-  await admin.getByRole('button',{name:'Make moderator: '+name}).click();
+  await userRow.locator('.adminUserMenuItems button').filter({hasText:'Make moderator'}).click();
   await user.locator('.accountRole').getByText('moderator').waitFor({timeout:18000});
   assert.equal(user.url(),originalPage,'Promotion must not redirect the member');
   assert.equal(await user.locator('.sessionExpiredBanner').count(),0);
 
+  await userRow.locator('.adminUserActionMenu summary').click();
   admin.once('dialog',dialog=>dialog.accept());
-  await admin.getByRole('button',{name:'Remove moderator from '+name}).click();
+  await userRow.locator('.adminUserMenuItems button').filter({hasText:'Remove moderator'}).click();
   await user.locator('.accountRole').getByText('user').waitFor({timeout:18000});
   assert.equal(user.url(),originalPage,'Demotion must not redirect the member');
   assert.equal(await user.locator('.sessionExpiredBanner').count(),0);
