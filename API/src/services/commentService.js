@@ -264,6 +264,27 @@ export async function deleteCommentForUser(user, idValue) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    const [[fresh]]=await connection.execute(
+      `SELECT c.id,c.author_id,c.locked,p.author_id AS post_author_id,
+              p.status AS post_status,p.publish_at AS post_publish_at
+       FROM comments c JOIN posts p ON p.id=c.post_id
+       WHERE c.id=? FOR UPDATE`,
+      [comment.id],
+    );
+    if(!fresh) throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
+    if(!['admin','moderator'].includes(user.role) && fresh.locked)
+      throw new AppError(423,'COMMENT_LOCKED','This comment is locked');
+    if(!['admin','moderator'].includes(user.role) &&
+       Number(user.sub)!==Number(fresh.author_id))
+      throw new AppError(403,'FORBIDDEN','Cannot delete this comment');
+    const ownsThread=Number(user.sub)===Number(fresh.post_author_id);
+    const scheduled=Boolean(fresh.post_publish_at &&
+      new Date(fresh.post_publish_at).getTime()>Date.now());
+    if((fresh.post_status!=='active' && user.role==='user' && !ownsThread) ||
+       (scheduled && user.role!=='admin' && !ownsThread))
+      throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
+    if(user.role==='moderator' && Number(user.sub)!==Number(fresh.author_id))
+      await assertMayModerateComment(user,fresh,connection);
     await connection.query('DELETE FROM comments WHERE id=?', [comment.id]);
     await recalculateAllRatings(connection);
     await connection.commit();
