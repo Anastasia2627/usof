@@ -1,5 +1,6 @@
 import { BaseModel } from './BaseModel.js';
 import { Post } from './Post.js';
+import { preparePostMedia } from '../services/postMediaAccess.js';
 
 const LIST_SORT = {
   date: 'p.created_at',
@@ -20,7 +21,8 @@ function normalizeListOptions({ page = 1, limit = 10, sort = 'date', order = 'de
   };
 }
 
-async function listPostsForUser(userId, relationTable, options) {
+async function listPostsForUser(viewer, relationTable, options) {
+  const userId = Number(viewer.sub);
   const normalized = normalizeListOptions(options);
   const relationColumn = relationTable === 'favorites' ? 'favorites' : 'post_subscriptions';
   const clause = `
@@ -41,11 +43,12 @@ async function listPostsForUser(userId, relationTable, options) {
     offset: (normalized.page - 1) * normalized.limit,
   });
   return {
-    data: posts.map(post=>
-      post.hide_likes && Number(post.author_id)!==Number(userId)
+    data: posts.map(post=>preparePostMedia(
+      post.hide_likes && Number(post.author_id)!==Number(userId) && !['admin','moderator'].includes(viewer.role)
         ? {...post,like_count:null,dislike_count:null,score:null}
-        : post
-    ),
+        : post,
+      viewer,
+    )),
     pagination: {
       page: normalized.page,
       limit: normalized.limit,
@@ -102,12 +105,12 @@ export class Engagement extends BaseModel {
     return result.affectedRows > 0;
   }
 
-  static async listFavorites(userId, options) {
-    return listPostsForUser(userId, 'favorites', options);
+  static async listFavorites(viewer, options) {
+    return listPostsForUser(viewer, 'favorites', options);
   }
 
-  static async listFollowing(userId, options) {
-    return listPostsForUser(userId, 'post_subscriptions', options);
+  static async listFollowing(viewer, options) {
+    return listPostsForUser(viewer, 'post_subscriptions', options);
   }
 
   static async recordShare(postId, userId, channel) {
