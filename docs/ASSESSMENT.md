@@ -18,7 +18,7 @@ This checklist maps the Basic challenge requirements to the implementation and g
 | Registration + confirmed email | Register → expiring verification token/link → login blocked until verified. |
 | Login / logout / reset password | Implemented under `/api/auth`; logout/reset invalidate old bearer tokens; reset-token consumption is race-safe. |
 | Users CRUD | Admin: create/list/update/delete. User: read/edit own profile/avatar and delete own account. Email changes revoke stale credentials and require verification. |
-| Posts CRUD | Create/read/update/delete, multi-category relation, active/inactive moderation. Owner edits own content/categories; admin cannot edit user content. |
+| Posts CRUD | Create/read/update/delete, multi-category relation, active/inactive moderation. Owner edits own content/categories and can deactivate own post; only admins can reactivate. Admin cannot edit user post content. |
 | Categories CRUD | Full admin CRUD + public reads/category posts. |
 | Comments | Create/read/status moderation/delete plus nested replies through `parent_comment_id`; all comments/statuses are returned for a viewable post. |
 | User comment status rule | PDF's “update any” is implemented literally: any authenticated user may change active/inactive status on an accessible comment, but content is immutable. |
