@@ -13,9 +13,12 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
+  const votePanelRef=useRef(null);
   const path = kind === 'post' ? `/posts/${id}/like` : `/comments/${id}/like`;
   const own = items.find(item => Number(item.author_id) === Number(auth?.user?.id));
-  const canVote = Boolean(auth && writable && Number(auth.user.id) !== Number(authorId));
+  // Owners may like/dislike their own posts, but not their own comments
+  const canVote = Boolean(auth?.token && writable &&
+    (kind==='post' || Number(auth.user.id) !== Number(authorId)));
 
   async function load() {
     if (!visible) return;
@@ -34,6 +37,21 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
     return()=>window.removeEventListener('circle:reactions-updated',refresh);
   },[kind,id,path,auth?.token,visible]);
 
+  useEffect(()=>{
+    if(!open)return;
+    const dismiss=event=>{
+      if(!votePanelRef.current?.contains(event.target))setOpen(false);
+    };
+    const onEscape=event=>{if(event.key==='Escape')setOpen(false);};
+    document.addEventListener('pointerdown',dismiss);
+    document.addEventListener('keydown',onEscape);
+    return()=>{
+      document.removeEventListener('pointerdown',dismiss);
+      document.removeEventListener('keydown',onEscape);
+    };
+  },[open]);
+  useEffect(()=>setOpen(false),[kind,id]);
+
   async function change(method, type) {
     setError(null);
     try {
@@ -44,7 +62,7 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
   }
 
   if (!visible) return null;
-  return <div className="reactionPanel">
+  return <div ref={votePanelRef} className="reactionPanel">
     <div className="reactionButtons">
       {!hideCounts && !canVote && <span className="reactionTotals">
         <span title={t('Likes')} aria-label={t('Likes')+': '+items.filter(x=>x.type==='like').length}>
@@ -68,11 +86,22 @@ function Reactions({ kind, id, auth, visible, writable, authorId, onChange, hide
       </>}
       {!hideCounts && items.length>0 && <button type="button" className="reactionVoteDetails"
         aria-label={t('View votes')} title={t('View votes')}
-        aria-expanded={open} onClick={()=>setOpen(x=>!x)}>
-        <Icon name="group" size={16}/><span>{items.length}</span>
+        aria-expanded={open} aria-controls={'reaction-voters-'+kind+'-'+id}
+        onClick={()=>setOpen(x=>!x)}>
+        <Icon name="group" size={18}/><span className="reactionCount">{items.length}</span>
       </button>}
     </div>
-    {open && <ul>{items.map(x => <li key={x.id}>{x.author_login}: {x.type}</li>)}</ul>}
+    {open && items.length>0 && !hideCounts && <div className="reactionVotePopover"
+      id={'reaction-voters-'+kind+'-'+id}
+      role="region" aria-label={t('View votes')}>
+      <div className="reactionVotePopoverTitle">{t('View votes')} <span>{items.length}</span></div>
+      <ul className="reactionVoteList">
+        {items.map(x=><li key={x.id}>
+          <span className="reactionVoterName">@{x.author_login}</span>
+          <span className="reactionVoterType">{t(x.type==='like'?'Like':x.type==='dislike'?'Dislike':x.type)}</span>
+        </li>)}
+      </ul>
+    </div>}
     <ErrorBox error={error} />
   </div>;
 }
