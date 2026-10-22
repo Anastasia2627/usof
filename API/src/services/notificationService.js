@@ -1,14 +1,14 @@
 import { pool } from '../config/db.js';
 
-async function actorLogin(actorId) {
+async function actorLogin(actorId, database = pool) {
   if (!actorId) return 'Someone';
-  const [[actor]] = await pool.query('SELECT login FROM users WHERE id=? LIMIT 1', [actorId]);
+  const [[actor]] = await database.query('SELECT login FROM users WHERE id=? LIMIT 1', [actorId]);
   return actor?.login || 'Someone';
 }
 
-export async function createNotification({ userId, actorId = null, type, postId = null, commentId = null, title, body = '' }) {
+export async function createNotification({ userId, actorId = null, type, postId = null, commentId = null, title, body = '' }, database = pool) {
   if (!userId || Number(userId) === Number(actorId)) return false;
-  await pool.execute(
+  await database.execute(
     `INSERT INTO notifications(user_id,actor_id,type,post_id,comment_id,title,body)
      VALUES(?,?,?,?,?,?,?)`,
     [userId, actorId, type, postId, commentId, title, body],
@@ -39,8 +39,8 @@ export async function notifyPostFollowers({ postId, actorId, type, commentId = n
   );
 }
 
-export async function notifyReplyAuthor({ parentAuthorId, actorId, postId, commentId }) {
-  const actor = await actorLogin(actorId);
+export async function notifyReplyAuthor({ parentAuthorId, actorId, postId, commentId }, database = pool) {
+  const actor = await actorLogin(actorId,database);
   return createNotification({
     userId: parentAuthorId,
     actorId,
@@ -49,7 +49,7 @@ export async function notifyReplyAuthor({ parentAuthorId, actorId, postId, comme
     commentId,
     title: 'Someone replied to your comment',
     body: `${actor} replied to your comment.`,
-  });
+  }, database);
 }
 
 export async function notifyPositiveReaction({ targetAuthorId, actorId, postId = null, commentId = null, type }) {
@@ -67,8 +67,8 @@ export async function notifyPositiveReaction({ targetAuthorId, actorId, postId =
   });
 }
 
-export async function notifyPostAuthor({ postAuthorId, actorId, postId, commentId, isReply = false }) {
-  const actor = await actorLogin(actorId);
+export async function notifyPostAuthor({ postAuthorId, actorId, postId, commentId, isReply = false }, database = pool) {
+  const actor = await actorLogin(actorId,database);
   return createNotification({
     userId: postAuthorId,
     actorId,
@@ -77,7 +77,7 @@ export async function notifyPostAuthor({ postAuthorId, actorId, postId, commentI
     commentId,
     title: isReply ? 'New reply on your question' : 'New answer on your question',
     body: `${actor} added ${isReply ? 'a reply' : 'an answer'} to your question.`,
-  });
+  }, database);
 }
 
 // A failed INSERT after the associated post/comment is committed must not be
