@@ -107,6 +107,7 @@ export default function CategoriesPage(){
     let radius=340;
     let arcHeight=105;
     let baseY=118;
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
     const measure=()=>{
       const width=element.clientWidth;
       radius=Math.min(365,Math.max(95,(width-185)*.47));
@@ -124,10 +125,12 @@ export default function CategoriesPage(){
           tile.style.zIndex='20';
           return;
         }
-        const phase=((index/tiles.length)+elapsed/52000)%1;
+        const reduced=reducedMotion.matches;
+        const phase=((index/tiles.length)+elapsed/32000)%1;
         const travel=.86;
-        const onArc=phase<travel;
-        const u=onArc?phase/travel:(phase-travel)/(1-travel);
+        const onArc=reduced||phase<travel;
+        const u=reduced?index/(tiles.length-1)
+          :onArc?phase/travel:(phase-travel)/(1-travel);
         const x=onArc?radius*(2*u-1):radius*(1-2*u);
         const height=Math.sin(Math.PI*u);
         const y=onArc?baseY-arcHeight*height:baseY+23*height;
@@ -148,6 +151,7 @@ export default function CategoriesPage(){
       frame=window.requestAnimationFrame(tick);
     };
     const onVisibility=()=>{visible=!document.hidden;last=0;};
+    const onReducedMotion=()=>{elapsed=0;position();};
     const observer=typeof IntersectionObserver!=='undefined'
       ?new IntersectionObserver(entries=>{
         visible=!document.hidden&&entries.some(entry=>entry.isIntersecting);
@@ -157,12 +161,14 @@ export default function CategoriesPage(){
     position();
     observer?.observe(element);
     document.addEventListener('visibilitychange',onVisibility);
+    reducedMotion.addEventListener('change',onReducedMotion);
     window.addEventListener('resize',measure);
     frame=window.requestAnimationFrame(tick);
     return()=>{
       window.cancelAnimationFrame(frame);
       observer?.disconnect();
       document.removeEventListener('visibilitychange',onVisibility);
+      reducedMotion.removeEventListener('change',onReducedMotion);
       window.removeEventListener('resize',measure);
       tiles.forEach(tile=>{
         tile.style.transform='';
