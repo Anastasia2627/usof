@@ -103,6 +103,12 @@ if (checkSmtp) {
   assert.ok(reset.resetToken, 'test-only reset token missing');
   assertDelivered(reset.resetToken, null, 'password reset');
 }
+// A second request within the cooldown must not overwrite the first reset link
+const duplicateReset=await request('/auth/password-reset',{
+  method:'POST',body:{email},
+});
+assert.equal(duplicateReset.resetToken,undefined);
+
 // Complete the recovery workflow rather than only checking message submission
 assert.ok(reset.resetToken, 'A disposable test run must expose a reset token');
 await request('/auth/password-reset/'+reset.resetToken,{
