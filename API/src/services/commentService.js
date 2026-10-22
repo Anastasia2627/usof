@@ -242,13 +242,21 @@ export async function updateCommentForUser(user, idValue, body) {
     await connection.beginTransaction();
     // A moderator may lock a comment between the first read and this update
     // Lock both the comment and its parent post to validate the latest state
-    const [[fresh]]=await connection.execute(
-      `SELECT c.id,c.author_id,c.locked,p.author_id AS post_author_id,
-              p.status AS post_status,p.publish_at AS post_publish_at
-       FROM comments c JOIN posts p ON p.id=c.post_id
-       WHERE c.id=? FOR UPDATE`,
-      [comment.id],
+    // Consistent order: lock the post first, then its comment
+    const [[freshPost]]=await connection.execute(
+      'SELECT id,author_id,status,publish_at FROM posts WHERE id=? FOR UPDATE',
+      [comment.post_id],
     );
+    const [[freshComment]]=await connection.execute(
+      'SELECT id,author_id,locked FROM comments WHERE id=? AND post_id=? FOR UPDATE',
+      [comment.id,comment.post_id],
+    );
+    const fresh=freshPost && freshComment ? {
+      ...freshComment,
+      post_author_id:freshPost.author_id,
+      post_status:freshPost.status,
+      post_publish_at:freshPost.publish_at,
+    } : null;
     if(!fresh) throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
     if(!isAdmin && fresh.locked)
       throw new AppError(423,'COMMENT_LOCKED','This comment is locked');
@@ -300,13 +308,21 @@ export async function deleteCommentForUser(user, idValue) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
-    const [[fresh]]=await connection.execute(
-      `SELECT c.id,c.author_id,c.locked,p.author_id AS post_author_id,
-              p.status AS post_status,p.publish_at AS post_publish_at
-       FROM comments c JOIN posts p ON p.id=c.post_id
-       WHERE c.id=? FOR UPDATE`,
-      [comment.id],
+    // Consistent order: lock the post first, then its comment
+    const [[freshPost]]=await connection.execute(
+      'SELECT id,author_id,status,publish_at FROM posts WHERE id=? FOR UPDATE',
+      [comment.post_id],
     );
+    const [[freshComment]]=await connection.execute(
+      'SELECT id,author_id,locked FROM comments WHERE id=? AND post_id=? FOR UPDATE',
+      [comment.id,comment.post_id],
+    );
+    const fresh=freshPost && freshComment ? {
+      ...freshComment,
+      post_author_id:freshPost.author_id,
+      post_status:freshPost.status,
+      post_publish_at:freshPost.publish_at,
+    } : null;
     if(!fresh) throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
     if(!['admin','moderator'].includes(user.role) && fresh.locked)
       throw new AppError(423,'COMMENT_LOCKED','This comment is locked');
