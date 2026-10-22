@@ -320,6 +320,29 @@ await request(`/posts/${postA.data.id}`, {
   body: { content: 'Forbidden edit' },
 });
 
+// Check the course assessment status workflow independently from admin moderation
+const inactiveCheck=await request('/posts',{
+  method:'POST',token:asya.token,expected:201,
+  body:{title:'Owner status '+stamp,content:'Own post status verification',categories:[categoryA]},
+});
+await request('/posts/'+inactiveCheck.data.id,{
+  method:'PATCH',token:alex.token,expected:403,body:{status:'inactive'},
+});
+const hidden=await request('/posts/'+inactiveCheck.data.id,{
+  method:'PATCH',token:asya.token,body:{status:'inactive'},
+});
+assert(hidden.data.status==='inactive','Authors must be able to deactivate their posts');
+await request('/posts/'+inactiveCheck.data.id,{expected:404});
+await request('/posts/'+inactiveCheck.data.id,{
+  method:'PATCH',token:asya.token,body:{status:'active'},expected:403,
+});
+await request('/posts/'+inactiveCheck.data.id,{
+  method:'PATCH',token:admin.token,body:{status:'active'},
+});
+await request('/posts/'+inactiveCheck.data.id,{
+  method:'DELETE',token:asya.token,expected:204,
+});
+
 // Clean up temporary posts. Cascades also exercise dependent reaction deletion/rating recalculation.
 await request(`/posts/${postA.data.id}`, { method: 'DELETE', token: asya.token, expected: 204 });
 await request(`/posts/${postB.data.id}`, { method: 'DELETE', token: asya.token, expected: 204 });
