@@ -180,6 +180,15 @@ try {
   await user.getByLabel('New comment').fill(rootReply);
   await user.getByRole('button',{name:'Comment',exact:true}).click();
   await user.getByText(rootReply).waitFor();
+  // A locally displayed comment must also be committed and readable by the
+  // server before the other browser attempts to load it
+  let persisted=false;
+  for(let retry=0;retry<15;retry++){
+    const all=(await fetchApi('/posts/'+posts[0]+'/comments')).data;
+    if(all.some(item=>item.content===rootReply)){persisted=true;break;}
+    await user.waitForTimeout(300);
+  }
+  assert.ok(persisted,'The new comment must be visible from the public API');
   await open(admin,'/post/'+posts[0]);
   assert.equal(await admin.locator('.naturalPostManagement button').count(),0,
     'Discussion moderation is not an always-visible icon toolbar');
