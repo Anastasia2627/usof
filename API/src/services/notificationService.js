@@ -17,7 +17,6 @@ export async function createNotification({ userId, actorId = null, type, postId 
 }
 
 export async function notifyPostFollowers({ postId, actorId, type, commentId = null, excludeUserIds = [] }) {
-  const [followers] = await pool.execute('SELECT user_id FROM post_subscriptions WHERE post_id=?', [postId]);
   const actor = await actorLogin(actorId);
   const excluded = new Set([Number(actorId), ...excludeUserIds.map(Number)]);
   const copy = type === 'post_updated'
@@ -26,8 +25,18 @@ export async function notifyPostFollowers({ postId, actorId, type, commentId = n
       title: type === 'reply' ? 'New reply in a followed discussion' : 'New answer on a question you follow',
       body: `${actor} added ${type === 'reply' ? 'a reply' : 'an answer'} to a question you follow.`,
     };
-  const recipients = [...new Set(followers.map((row) => Number(row.user_id)).filter((userId) => !excluded.has(userId)))];
-  await Promise.all(recipients.map((userId) => createNotification({ userId, actorId, type, postId, commentId, ...copy })));
+  // A single INSERT ... SELECT is atomic, unlike one INSERT per follower
+  // It can be retried after a deadlock without duplicating partial successes
+  const blocked=[...excluded].filter(Number.isSafeInteger);
+  const ignoreSql=blocked.length
+    ? ' AND ps.user_id NOT IN ('+blocked.map(()=>'?').join(',')+')':'';
+  await pool.execute(
+    `INSERT INTO notifications(user_id,actor_id,type,post_id,comment_id,title,body)
+     SELECT ps.user_id,?,?,?,?,?,?
+     FROM post_subscriptions ps
+     WHERE ps.post_id=?${ignoreSql}`,
+    [actorId,type,postId,commentId,copy.title,copy.body,postId,...blocked],
+  );
 }
 
 export async function notifyReplyAuthor({ parentAuthorId, actorId, postId, commentId }) {
