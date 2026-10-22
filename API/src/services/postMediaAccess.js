@@ -49,6 +49,20 @@ export function signedMediaUrl(filename, viewerId, now = Date.now()) {
   return '/uploads/posts/' + filename + '?' + qs.toString();
 }
 
+export function validMediaTicket(filename, uid, exp, sig, now = Date.now()) {
+  const id = Number(uid);
+  const expiry = Number(exp);
+  const mac = String(sig || '');
+  const unixNow = Math.floor(now / 1000);
+  if (!MEDIA_FILENAME.test(filename) ||
+      !Number.isSafeInteger(id) || id < 1 ||
+      !Number.isSafeInteger(expiry) || expiry < unixNow || expiry > unixNow+MEDIA_TTL_SECONDS ||
+      !/^[a-f0-9]{64}$/i.test(mac)) return false;
+  const expected = Buffer.from(signature(filename,id,expiry),'hex');
+  const supplied = Buffer.from(mac,'hex');
+  return expected.length===supplied.length && crypto.timingSafeEqual(expected,supplied);
+}
+
 export function preparePostMedia(post, viewer) {
   if (!post?.images?.length || publicPostMedia(post)) return post;
   if (!permittedPrivateMedia(post,viewer)) {
@@ -82,17 +96,7 @@ export async function requireVisiblePostMedia(req,res,next) {
     if (!post) {res.status(404).end();return;}
     if (!publicPostMedia(post)) {
       const uid = Number(req.query?.uid);
-      const exp = Number(req.query?.exp);
-      const sig = String(req.query?.sig || '');
-      const now = Math.floor(Date.now()/1000);
-      if (!Number.isSafeInteger(uid) || uid<1 ||
-          !Number.isSafeInteger(exp) || exp < now || exp > now+MEDIA_TTL_SECONDS ||
-          !/^[a-f0-9]{64}$/i.test(sig)) {
-        res.status(404).end();return;
-      }
-      const expected = Buffer.from(signature(filename,uid,exp),'hex');
-      const supplied = Buffer.from(sig,'hex');
-      if (expected.length!==supplied.length || !crypto.timingSafeEqual(expected,supplied)) {
+      if (!validMediaTicket(filename,uid,req.query?.exp,req.query?.sig)) {
         res.status(404).end();return;
       }
       const [people] = await pool.execute(
