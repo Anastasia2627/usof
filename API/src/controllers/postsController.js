@@ -1,7 +1,7 @@
 import { Reaction } from '../models/Reaction.js';
 import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
-import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
+
 import { assertMayModerateAuthors, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createPostForUser,
@@ -57,16 +57,6 @@ export async function reactToPost(req, res) {
     type: req.body.type,
     isAdmin: ['admin','moderator'].includes(req.user.role),
   });
-  if (reaction.changed) {
-    await deliverNotifications([
-      () => notifyPositiveReaction({
-        targetAuthorId: reaction.targetAuthorId,
-        actorId: Number(req.user.sub),
-        postId: reaction.postId,
-        type: reaction.type,
-      }),
-    ]);
-  }
   res.json({ data: await getVisiblePost(post.id, req.user), message: 'Reaction saved' });
 }
 
