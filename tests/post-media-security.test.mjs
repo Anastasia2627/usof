@@ -14,8 +14,8 @@ const moderator={sub:3,role:'moderator',email_verified:true,banned_at:null};
 const guest={sub:99,role:'user',email_verified:true,banned_at:null};
 const filename='4f548512-1aa2-4aae-86a3-86aa32911629.webp';
 const now=Date.parse('2026-10-22T12:00:00Z');
-const future=new Date(now+3600000);
-const past=new Date(now-3600000);
+const future=new Date('2099-01-01T00:00:00Z');
+const past=new Date('2000-01-01T00:00:00Z');
 
 test('public media is served only for active, published posts',()=>{
   assert.equal(publicPostMedia({status:'active',publish_at:null},now),true);
