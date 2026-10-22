@@ -1,5 +1,6 @@
 import { BaseModel } from './BaseModel.js';
 import { Post } from './Post.js';
+import { preparePostMedia } from '../services/postMediaAccess.js';
 import { pool as importedPool } from '../config/db.js';
 
 export class Category extends BaseModel {
@@ -104,10 +105,11 @@ export class Category extends BaseModel {
       offset: 0,
     });
     const moderator = ['admin','moderator'].includes(user?.role);
-    return posts.map(post =>
+    return posts.map(post => preparePostMedia(
       post.hide_likes && !moderator && Number(user?.sub)!==Number(post.author_id)
         ? {...post,like_count:null,dislike_count:null,score:null}
-        : post
-    );
+        : post,
+      user,
+    ));
   }
 }
