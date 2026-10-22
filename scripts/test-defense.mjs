@@ -277,7 +277,8 @@ try {
 
   // 18: admin adds a category; 19: admin deletes other's comment.
   await open(admin,'/admin');
-  await admin.locator('.tabs').getByRole('button',{name:/categories/i}).click();
+  await admin.locator('.adminMoreTabs summary').click();
+  await admin.locator('.adminMoreMenu').getByRole('button',{name:/categories/i}).click();
   const categoryName='Review category '+suffix;
   await admin.locator('.adminCategoryCreate').getByLabel('Topic name').fill(categoryName);
   await admin.locator('.adminCategoryCreate').getByRole('button',{name:'Create topic'}).click();
