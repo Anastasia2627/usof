@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {
   deliverNotifications,
+  notifyPostFollowers,
   retryableNotificationError,
 } from '../API/src/services/notificationService.js';
 
@@ -46,4 +47,24 @@ test('delivery errors are isolated from other recipients and attempts are bounde
   assert.equal(calls,3);
   assert.equal(retryableNotificationError({code:'ER_LOCK_DEADLOCK'}),true);
   assert.equal(retryableNotificationError({code:'ER_DUP_ENTRY'}),false);
+});
+
+test('follower notification is one atomic insert with deduplicated exclusions',async()=>{
+  const queries=[],writes=[];
+  const database={
+    async query(sql,args){queries.push({sql,args});return [[{login:'author'}]];},
+    async execute(sql,args){writes.push({sql,args});return [{affectedRows:3}];},
+  };
+  await notifyPostFollowers({
+    postId:12,actorId:5,type:'reply',commentId:19,
+    excludeUserIds:[8,8,9],
+  },database);
+  assert.equal(queries.length,1);
+  assert.equal(writes.length,1);
+  assert.match(writes[0].sql,/INSERT INTO notifications/);
+  assert.match(writes[0].sql,/FROM post_subscriptions ps/);
+  assert.equal(writes[0].sql.includes('VALUES('),false);
+  assert.deepEqual(writes[0].args.slice(-4),[12,5,8,9]);
+  assert.equal(writes[0].args[0],5);
+  assert.equal(writes[0].args[1],'reply');
 });
