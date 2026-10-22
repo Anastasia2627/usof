@@ -10,7 +10,8 @@ import { pool } from '../config/db.js';
  * Do not log, cache or store these capability URLs.
  */
 const MEDIA_TTL_SECONDS = 5 * 60;
-const MEDIA_FILENAME = /^[a-f0-9-]{36}\.webp$/i;
+// Legacy seed media use seed-image-N.webp; all names must remain one safe basename
+const MEDIA_FILENAME = /^[a-z0-9][a-z0-9_-]{0,119}\.(?:webp|jpe?g|png)$/i;
 
 function signingKey() {
   return process.env.AUTH_SECRET || 'development-only-secret-change-me';
