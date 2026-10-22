@@ -47,7 +47,12 @@ async function verifyDatabaseRequirements() {
   });
 
   try {
-    const tables = ['users', 'categories', 'posts', 'post_categories', 'comments', 'reactions'];
+    const tables = [
+      'users','categories','posts','post_categories','comments','reactions',
+      'favorites','post_subscriptions','post_shares','notifications',
+      'user_follows','user_interests','post_images','content_reports',
+      'category_suggestions','ban_appeals',
+    ];
     for (const table of tables) {
       const [[row]] = await connection.query(`SELECT COUNT(*) AS count FROM \`${table}\``);
       assert(Number(row.count) >= 5, `${table} must contain at least five seeded rows`);
