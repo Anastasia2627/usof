@@ -1,7 +1,7 @@
 import { BaseModel } from './BaseModel.js';
 
 export class Reaction extends BaseModel {
-  static async listAdmin({ limit = 100, actor = null } = {}) {
+  static async listAdmin({ limit = 100, offset = 0, actor = null } = {}) {
     // Moderators should not browse other members' unpublished discussions.
     const restricted=actor?.role==='moderator';
     const where=restricted
@@ -16,9 +16,26 @@ export class Reaction extends BaseModel {
        LEFT JOIN comments c ON c.id=r.comment_id
        LEFT JOIN posts cp ON cp.id=c.post_id
        ${where}
-       ORDER BY r.created_at DESC, r.id DESC LIMIT ?`,
-      [...(restricted?[Number(actor.sub)]:[]),limit],
+       ORDER BY r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`,
+      [...(restricted?[Number(actor.sub)]:[]),limit,offset],
     );
+  }
+
+  static async countAdmin({ actor = null } = {}) {
+    const restricted=actor?.role==='moderator';
+    const where=restricted
+      ? 'WHERE (COALESCE(p.publish_at,cp.publish_at) IS NULL OR COALESCE(p.publish_at,cp.publish_at)<=UTC_TIMESTAMP() OR COALESCE(p.author_id,cp.author_id)=?)'
+      : '';
+    const rows=await this.query(
+      `SELECT COUNT(*) AS total
+       FROM reactions r
+       LEFT JOIN posts p ON p.id=r.post_id
+       LEFT JOIN comments c ON c.id=r.comment_id
+       LEFT JOIN posts cp ON cp.id=c.post_id
+       ${where}`,
+      restricted?[Number(actor.sub)]:[],
+    );
+    return Number(rows[0]?.total||0);
   }
 
   static async findById(id) {
