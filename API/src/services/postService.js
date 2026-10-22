@@ -2,6 +2,7 @@ import { pool } from '../config/db.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Post } from '../models/Post.js';
+import { preparePostMedia } from './postMediaAccess.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
@@ -71,8 +72,8 @@ const elevated = user => ['admin','moderator'].includes(user?.role);
 const isScheduled = post => Boolean(post.publish_at && new Date(post.publish_at).getTime() > Date.now());
 function hideCounts(post,user) {
   if (post.hide_likes && !elevated(user) && Number(user?.sub) !== Number(post.author_id))
-    return {...post,like_count:null,dislike_count:null,score:null};
-  return post;
+    return preparePostMedia({...post,like_count:null,dislike_count:null,score:null},user);
+  return preparePostMedia(post,user);
 }
 function publishDate(value) {
   if (!value) return null;
