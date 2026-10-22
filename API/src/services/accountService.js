@@ -99,6 +99,18 @@ export async function updateAccount({ targetId, actor, body }) {
   if (!isAdmin && Number(actor.sub) !== id) {
     throw new AppError(403, 'FORBIDDEN', 'You can update only your profile');
   }
+  // Support authenticated password changes and administrator-initiated resets
+  // while preserving legacy PATCH /users/:id profile updates
+  if (body.newPassword !== undefined && body.password !== undefined &&
+      body.newPassword !== body.password)
+    throw new AppError(422,'PASSWORD_MISMATCH','Supply one new password');
+  const newPassword=body.newPassword ?? body.password;
+  if(newPassword!==undefined){
+    validatePassword(newPassword,'New password');
+    if(body.passwordConfirmation!==undefined &&
+       newPassword!==body.passwordConfirmation)
+      throw new AppError(422,'PASSWORD_MISMATCH','Password confirmation does not match');
+  }
 
   const connection = await pool.getConnection();
   let updated;
@@ -143,10 +155,18 @@ export async function updateAccount({ targetId, actor, body }) {
 
     protectLastAdmin(adminIds, current, role);
 
+    const passwordChanged=newPassword!==undefined;
+    const isSelf=Number(actor.sub)===id;
+    if(passwordChanged && (isSelf || !isAdmin)){
+      if(typeof body.oldPassword!=='string' ||
+         !(await bcrypt.compare(body.oldPassword,current.password_hash)))
+        throw new AppError(403,'INVALID_OLD_PASSWORD','Current password is incorrect');
+    }
+    const passwordHash=passwordChanged?await bcrypt.hash(newPassword,12):null;
     const emailChanged = email !== current.email;
-    // Tokens carry immutable user id + token version, not login/email.
-    // Profile and admin edits therefore do not invalidate existing sessions.
-    invalidateSession = false;
+    // A changed password invalidates the target user's existing JWTs
+    // Other profile changes do not invalidate active sessions
+    invalidateSession=passwordChanged && isSelf;
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
     verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
@@ -155,6 +175,7 @@ export async function updateAccount({ targetId, actor, body }) {
     await connection.execute(
       `UPDATE users
        SET login=?, full_name=?, email=?, role=?,
+           password_hash=IF(?,?,password_hash),
            token_version=token_version+?,
            email_verified=IF(?,0,email_verified),
            verification_token=IF(?,?,verification_token),
@@ -170,7 +191,9 @@ export async function updateAccount({ targetId, actor, body }) {
         fullName,
         email,
         role,
-        invalidateSession ? 1 : 0,
+        passwordChanged,
+        passwordHash,
+        passwordChanged ? 1 : 0,
         emailChanged,
         needsVerification,
         verificationToken,
@@ -179,8 +202,8 @@ export async function updateAccount({ targetId, actor, body }) {
         verificationCodeHash,
         needsVerification,
         needsVerification,
-        emailChanged,
-        emailChanged,
+        emailChanged || passwordChanged,
+        emailChanged || passwordChanged,
         id,
       ],
     );
