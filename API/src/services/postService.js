@@ -7,7 +7,7 @@ import { preparePostMedia } from './postMediaAccess.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
-import { deliverNotifications, notifyPostFollowers } from './notificationService.js';
+import { notifyPostFollowers } from './notificationService.js';
 import { assertMayModerateAuthors } from './moderationPolicy.js';
 
 const SORT_COLUMNS = {
@@ -351,19 +351,16 @@ export async function updatePostForUser(user, idValue, body) {
       fields.some(field=>field==='title=?'||field==='content=?')||categoryChanged
     );
     finalStatus=body.status!==undefined&&isAdmin?body.status:fresh.status;
+    if(changedForFollowers&&finalStatus==='active')
+      await notifyPostFollowers({
+        postId:Number(post.id),actorId:Number(user.sub),type:'post_updated',
+      },connection);
     await connection.commit();
   } catch(error) {
     await connection.rollback();
     throw error;
   } finally {connection.release();}
 
-  if(changedForFollowers&&finalStatus==='active'){
-    await deliverNotifications([
-      ()=>notifyPostFollowers({
-        postId:Number(post.id),actorId:Number(user.sub),type:'post_updated',
-      }),
-    ]);
-  }
   return getVisiblePost(post.id,user);
 }
 
