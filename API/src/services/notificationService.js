@@ -16,8 +16,8 @@ export async function createNotification({ userId, actorId = null, type, postId 
   return true;
 }
 
-export async function notifyPostFollowers({ postId, actorId, type, commentId = null, excludeUserIds = [] }) {
-  const actor = await actorLogin(actorId);
+export async function notifyPostFollowers({ postId, actorId, type, commentId = null, excludeUserIds = [] }, database = pool) {
+  const actor = actorId ? (await database.query('SELECT login FROM users WHERE id=? LIMIT 1',[actorId]))[0][0]?.login || 'Someone' : 'Someone';
   const excluded = new Set([Number(actorId), ...excludeUserIds.map(Number)]);
   const copy = type === 'post_updated'
     ? { title: 'A followed question was updated', body: `${actor} updated a question you follow.` }
@@ -30,7 +30,7 @@ export async function notifyPostFollowers({ postId, actorId, type, commentId = n
   const blocked=[...excluded].filter(Number.isSafeInteger);
   const ignoreSql=blocked.length
     ? ' AND ps.user_id NOT IN ('+blocked.map(()=>'?').join(',')+')':'';
-  await pool.execute(
+  await database.execute(
     `INSERT INTO notifications(user_id,actor_id,type,post_id,comment_id,title,body)
      SELECT ps.user_id,?,?,?,?,?,?
      FROM post_subscriptions ps
