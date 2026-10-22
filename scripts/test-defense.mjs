@@ -75,8 +75,8 @@ try {
   await user.locator('[autocomplete=new-password]').nth(1).fill('Password123!');
   await user.locator('button.authSubmit').click();
   await user.locator('.verificationForm button.authSubmit').click();
-  await user.waitForURL(/#\/interests$/);
-  await user.getByRole('button',{name:'Maybe later'}).click();
+  await user.waitForURL(url => url.hash === '#/categories');
+  await user.locator('.categoryReferenceSkip').click();
   await user.waitForURL(/#\/$/);
 
   // 7, 8, 9: mobile header, profile, edit and reload.
