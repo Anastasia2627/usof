@@ -30,7 +30,7 @@ async function logIn(page,name){
   await open(page,'/login');
   await page.locator('[autocomplete=username]').fill(name);
   await page.locator('[autocomplete=current-password]').fill('Password123!');
-  await page.locator('button.authSubmit').click();
+  await page.locator('button.circleAuthSubmit').click();
   await page.waitForURL(/#\/$/);
 }
 try {
@@ -73,7 +73,7 @@ try {
   await user.locator('[autocomplete=email]').fill(email);
   await user.locator('[autocomplete=new-password]').nth(0).fill('Password123!');
   await user.locator('[autocomplete=new-password]').nth(1).fill('Password123!');
-  await user.locator('button.authSubmit').click();
+  await user.locator('button.circleAuthSubmit').click();
   await user.locator('.verificationForm button.authSubmit').click();
   await user.waitForURL(url => url.hash === '#/categories');
   await user.locator('.categoryReferenceSkip').click();
