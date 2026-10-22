@@ -2,7 +2,7 @@ import { Reaction } from '../models/Reaction.js';
 import { pool } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 import { deleteReaction, setReaction } from '../services/reactionService.js';
-import { deliverNotifications, notifyPositiveReaction } from '../services/notificationService.js';
+
 import { assertMayModerateComment, assertMayClearReactions } from '../services/moderationPolicy.js';
 import {
   createCommentForUser,
@@ -75,17 +75,6 @@ export async function reactToComment(req, res) {
     type: req.body.type,
     isAdmin: ['admin','moderator'].includes(req.user.role),
   });
-  if (reaction.changed) {
-    await deliverNotifications([
-      () => notifyPositiveReaction({
-        targetAuthorId: reaction.targetAuthorId,
-        actorId: Number(req.user.sub),
-        postId: reaction.postId,
-        commentId: reaction.commentId,
-        type: reaction.type,
-      }),
-    ]);
-  }
   res.json({
     data: await getVisibleComment(comment.id, req.user),
     message: 'Reaction saved',
