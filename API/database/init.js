@@ -631,6 +631,22 @@ async function initializeDatabase() {
       (5,3,NULL,'other','Seed example','reviewed'),
       (2,NULL,1,'other','Seed comment','dismissed'),
       (3,NULL,3,'other','Seed comment','reviewed')`);
+    // Historical resolved examples keep both optional moderation tables
+    // populated without creating fake pending appeals or admin actions
+    await connection.query(`INSERT INTO category_suggestions
+      (user_id,title,description,status,reviewer_id,category_id,reviewed_at) VALUES
+      (2,'Backend architecture','Example reviewed idea','approved',1,1,NOW()),
+      (3,'Frontend state','Example reviewed idea','approved',1,2,NOW()),
+      (4,'Database indexes','Example reviewed idea','approved',1,3,NOW()),
+      (5,'Accessibility','Example rejected idea','rejected',1,NULL,NOW()),
+      (2,'Old framework','Example rejected idea','rejected',1,NULL,NOW())`);
+    await connection.query(`INSERT INTO ban_appeals
+      (user_id,ban_started_at,ban_reason,banned_by,explanation,status,reviewed_by,reviewed_at) VALUES
+      (2,'2025-01-01 10:00:00','Historical resolved moderation example',1,'Old resolved appeal','approved',1,NOW()),
+      (3,'2025-01-02 10:00:00','Historical resolved moderation example',1,'Old rejected appeal','rejected',1,NOW()),
+      (4,'2025-01-03 10:00:00','Historical resolved moderation example',1,'Old resolved appeal','approved',1,NOW()),
+      (5,'2025-01-04 10:00:00','Historical resolved moderation example',1,'Old rejected appeal','rejected',1,NOW()),
+      (2,'2025-02-01 10:00:00','Historical resolved moderation example',1,'Another resolved appeal','approved',1,NOW())`);
 
 
     // Five REAL files for the optional image table, attached only to inactive
