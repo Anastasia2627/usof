@@ -83,18 +83,31 @@ export async function registerAccount(body) {
   }
 }
 
-// In-process throttle for local/single-server use; enforce IP limits at the public edge.
+// Per-address throttling prevents a distributed stream of requests from
+// repeatedly emailing one person on the local single-server deployment
+// Multi-instance production deployments must use a shared Redis/edge store
 const resendTimes = new Map();
+function recentMailRequest(key, now=Date.now()) {
+  const last=resendTimes.get(key);
+  if(last && now-last<60_000)return true;
+  if(resendTimes.size>=10000) {
+    for(const [item,time] of resendTimes) {
+      if(now-time>=60_000)resendTimes.delete(item);
+    }
+    while(resendTimes.size>=10000)
+      resendTimes.delete(resendTimes.keys().next().value);
+  }
+  resendTimes.set(key,now);
+  return false;
+}
 
 export async function resendVerificationEmail(body) {
   const email = normalizeEmail(body?.email);
   validateEmail(email);
-  const key = crypto.createHash('sha256').update(email).digest('hex');
-  const now = Date.now();
-  if (now - (resendTimes.get(key) || 0) < 60000) {
+  const key = 'verify:'+crypto.createHash('sha256').update(email).digest('hex');
+  if (recentMailRequest(key)) {
     throw new AppError(429, 'EMAIL_COOLDOWN', 'Wait one minute before requesting another email.');
   }
-  resendTimes.set(key, now);
   const user = await User.findByLoginOrEmail('', email);
   const message = 'If your account needs verification, we will send another code.';
   if (!user || user.email_verified) return { message };
@@ -233,6 +246,9 @@ export async function issuePasswordReset(body) {
   validateEmail(email);
 
   const genericMessage = 'If that email exists, a reset link has been created';
+  const key='reset:'+crypto.createHash('sha256').update(email).digest('hex');
+  // Same generic response for unknown, known and recently requested emails
+  if(recentMailRequest(key))return {message:genericMessage};
   const [rows] = await pool.execute('SELECT id, login FROM users WHERE email=?', [email]);
   if (!rows[0]) return { message: genericMessage };
   // Reconfirm ownership before issuing a token; the email can change in a
