@@ -83,6 +83,6 @@ export async function recordShare(req, res) {
       `channel must be one of: ${SHARE_CHANNELS.join(', ')}`,
     );
   }
-  await Engagement.recordShare(id, req.user ? Number(req.user.sub) : null, channel);
-  res.status(201).json({ data: { shareCount: await Engagement.shareCount(id) } });
+  const created=await Engagement.recordShare(id,Number(req.user.sub),channel);
+  res.status(created?201:200).json({ data: { shareCount: await Engagement.shareCount(id), counted:created } });
 }
