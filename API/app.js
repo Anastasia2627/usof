@@ -37,7 +37,10 @@ app.use((req, res, next) => {
 });
 // Enforce post visibility BEFORE accessing the filesystem.
 app.use('/uploads/posts', requireVisiblePostMedia,
-  express.static(path.resolve('API/uploads/posts'), {fallthrough:false}));
+  express.static(path.resolve('API/uploads/posts'), {
+    fallthrough:false,
+    setHeaders(res) {res.setHeader('Cache-Control','private, no-store');},
+  }));
 app.use('/uploads', express.static(path.resolve('API/uploads')));
 
 app.get('/api/health', async (req, res, next) => {
