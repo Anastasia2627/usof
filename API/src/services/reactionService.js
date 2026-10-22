@@ -118,8 +118,10 @@ async function setReactionOnce({ userId, postId = null, commentId = null, type, 
   try {
     await connection.beginTransaction();
     const target = await getTarget(connection, { postId, commentId });
-    if (Number(target.author_id) === Number(userId)) {
-      throw new AppError(409, 'SELF_REACTION_NOT_ALLOWED', 'You cannot react to your own contribution');
+    // Members may react to their own posts, as supported by the Circle UI
+    // Self-voting on replies remains prohibited to avoid reply rating abuse
+    if (target.kind === 'comment' && Number(target.author_id) === Number(userId)) {
+      throw new AppError(409, 'SELF_REACTION_NOT_ALLOWED', 'You cannot react to your own comment');
     }
     ensureReactable(target, isAdmin);
 
