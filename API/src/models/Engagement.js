@@ -1,5 +1,6 @@
 import { BaseModel } from './BaseModel.js';
 import { Post } from './Post.js';
+import { pool } from '../config/db.js';
 import { preparePostMedia } from '../services/postMediaAccess.js';
 
 const LIST_SORT = {
@@ -114,11 +115,32 @@ export class Engagement extends BaseModel {
   }
 
   static async recordShare(postId, userId, channel) {
-    const result = await this.query(
-      'INSERT INTO post_shares(post_id,user_id,channel) VALUES(?,?,?)',
-      [postId, userId || null, channel],
-    );
-    return Number(result.insertId);
+    const db=await pool.getConnection();
+    try {
+      await db.beginTransaction();
+      // Lock the parent post to serialize share events even across processes
+      await db.execute('SELECT id FROM posts WHERE id=? FOR UPDATE',[postId]);
+      const [existing]=await db.execute(
+        `SELECT id FROM post_shares WHERE post_id=? AND user_id=? AND channel=?
+         AND created_at>DATE_SUB(UTC_TIMESTAMP(),INTERVAL 24 HOUR) LIMIT 1`,
+        [postId,userId,channel],
+      );
+      if(existing.length){
+        await db.commit();
+        return false;
+      }
+      await db.execute(
+        'INSERT INTO post_shares(post_id,user_id,channel) VALUES(?,?,?)',
+        [postId,userId,channel],
+      );
+      await db.commit();
+      return true;
+    } catch(error) {
+      await db.rollback();
+      throw error;
+    } finally {
+      db.release();
+    }
   }
 
   static async shareCount(postId) {
