@@ -204,6 +204,43 @@ await request(`/posts/${postA.data.id}/like`, {
   body: { type: 'dislike' },
 });
 
+// Comment CRUD, one reaction per user/comment, and inactive visibility
+const reviewComment=await request('/posts/'+postA.data.id+'/comments',{
+  method:'POST',token:alex.token,expected:201,
+  body:{content:'Coursework review comment'},
+});
+const commentId=reviewComment.data.id;
+const commentDetails=await request('/comments/'+commentId);
+assert(commentDetails.data.content==='Coursework review comment');
+assert(commentDetails.data.author_id && commentDetails.data.created_at,
+  'Comment must expose its required entity fields');
+await request('/comments/'+commentId+'/like',{
+  method:'POST',token:maria.token,body:{type:'like'},
+});
+await request('/comments/'+commentId+'/like',{
+  method:'POST',token:maria.token,body:{type:'dislike'},
+});
+const commentVotes=await request('/comments/'+commentId+'/like');
+const ownVote=commentVotes.data.filter(item=>Number(item.author_id)===Number(maria.user.id));
+assert(ownVote.length===1 && ownVote[0].type==='dislike',
+  'Each account can have exactly one like or dislike on a comment');
+await request('/comments/'+commentId+'/like',{
+  method:'DELETE',token:maria.token,expected:204,
+});
+const inactiveReply=await request('/comments/'+commentId,{
+  method:'PATCH',token:sam.token,body:{status:'inactive'},
+});
+assert(inactiveReply.data.status==='inactive');
+const postReplies=await request('/posts/'+postA.data.id+'/comments');
+assert(postReplies.data.some(item=>Number(item.id)===Number(commentId)&&item.status==='inactive'),
+  'Inactive comments must remain in the post comment list');
+await request('/comments/'+commentId,{
+  method:'PATCH',token:sam.token,body:{status:'active'},
+});
+await request('/comments/'+commentId,{
+  method:'DELETE',token:alex.token,expected:204,
+});
+
 const sorted = await request(`/posts?author=${asya.user.id}&sort=likes&order=desc&limit=50`, {
   token: asya.token,
 });
