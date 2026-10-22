@@ -45,6 +45,9 @@ test('ticket expires and rejects other users, filenames and changed signatures',
   assert.equal(validMediaTicket(filename,14,exp,sig,now),false);
   assert.equal(validMediaTicket('other-file.webp',13,exp,sig,now),false);
   assert.equal(validMediaTicket(filename,13,exp,'a'.repeat(64),now),false);
+  assert.match(signedMediaUrl('seed-image-1.webp',13,now),/seed-image-1\.webp/);
+  assert.throws(()=>signedMediaUrl('../secrets.webp',13,now));
+  assert.throws(()=>signedMediaUrl('not-an-image.svg',13,now));
 });
 
 test('private media URLs are issued only to authorized readers',()=>{
