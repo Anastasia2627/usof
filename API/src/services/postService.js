@@ -248,8 +248,12 @@ export async function updatePostForUser(user, idValue, body) {
      (body.title!==undefined||body.content!==undefined))
     throw new AppError(403,'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
       'Admins may moderate status/categories/lock but cannot edit post title or content');
-  if(!isAdmin&&(body.status!==undefined||body.locked!==undefined))
-    throw new AppError(403,'ADMIN_REQUIRED','Only admins can change post status or lock state');
+  if(!isAdmin && body.locked!==undefined)
+    throw new AppError(403,'ADMIN_REQUIRED','Only admins can lock posts');
+  // A member may deactivate their own post, but cannot reactivate
+  // content removed by moderation (only an admin can do that)
+  if(!isAdmin && body.status!==undefined && body.status!=='inactive')
+    throw new AppError(403,'ADMIN_REQUIRED','Only admins can reactivate posts');
   if(body.closed!==undefined) {
     if(!isOwner&&!isAdmin)
       throw new AppError(403,'FORBIDDEN','Only the post owner or a moderator can close discussion');
@@ -311,8 +315,10 @@ export async function updatePostForUser(user, idValue, body) {
       set('title',updatedTitle.title);
     if(updatedTitle?.content!==undefined&&updatedTitle.content!==fresh.content)
       set('content',updatedTitle.content);
-    if(body.status!==undefined&&isAdmin){
+    if(body.status!==undefined){
       const status=validateStatus(body.status);
+      if(!isAdmin && (Number(user.sub)!==Number(fresh.author_id)||status!=='inactive'))
+        throw new AppError(403,'ADMIN_REQUIRED','Only admins can change another post status or reactivate posts');
       if(status!==fresh.status)set('status',status);
     }
     if(body.locked!==undefined&&isAdmin&&Number(fresh.locked)!==Number(body.locked))
@@ -350,7 +356,7 @@ export async function updatePostForUser(user, idValue, body) {
     changedForFollowers=isOwner&&user.role!=='admin'&&(
       fields.some(field=>field==='title=?'||field==='content=?')||categoryChanged
     );
-    finalStatus=body.status!==undefined&&isAdmin?body.status:fresh.status;
+    finalStatus=body.status!==undefined?body.status:fresh.status;
     if(changedForFollowers&&finalStatus==='active')
       await notifyPostFollowers({
         postId:Number(post.id),actorId:Number(user.sub),type:'post_updated',
