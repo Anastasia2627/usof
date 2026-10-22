@@ -109,13 +109,38 @@ export async function removeCommentReaction(req, res) {
 export async function reviewComment(req,res) {
   if (!['admin','moderator'].includes(req.user.role))
     throw new AppError(403,'MODERATOR_REQUIRED','Moderator permission required');
-  const comment=await getVisibleComment(req.params.comment_id,req.user);
-  if (comment.status !== 'active')
-    throw new AppError(409,'COMMENT_INACTIVE','Only active replies can be reviewed');
-  if(req.user.role==='moderator') await assertMayModerateComment(req.user,comment);
   if (typeof req.body.reviewed !== 'boolean')
     throw new AppError(422,'INVALID_REVIEW','reviewed must be boolean');
-  await pool.execute('UPDATE comments SET reviewed_by=? WHERE id=?',
-    [req.body.reviewed ? req.user.sub : null,comment.id]);
+  const comment=await getVisibleComment(req.params.comment_id,req.user);
+  const db=await pool.getConnection();
+  try {
+    await db.beginTransaction();
+    const [[freshPost]]=await db.execute(
+      'SELECT id,author_id,publish_at FROM posts WHERE id=? FOR UPDATE',
+      [comment.post_id],
+    );
+    const [[freshComment]]=await db.execute(
+      'SELECT id,author_id,status FROM comments WHERE id=? AND post_id=? FOR UPDATE',
+      [comment.id,comment.post_id],
+    );
+    if(!freshPost || !freshComment)
+      throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
+    if(freshComment.status!=='active')
+      throw new AppError(409,'COMMENT_INACTIVE','Only active replies can be reviewed');
+    if(req.user.role==='moderator') {
+      const future=Boolean(freshPost.publish_at &&
+        new Date(freshPost.publish_at).getTime()>Date.now());
+      if(future && Number(req.user.sub)!==Number(freshPost.author_id))
+        throw new AppError(404,'COMMENT_NOT_FOUND','Comment not found');
+      await assertMayModerateComment(req.user,{
+        author_id:freshComment.author_id,
+        post_author_id:freshPost.author_id,
+      },db);
+    }
+    await db.execute('UPDATE comments SET reviewed_by=? WHERE id=?',
+      [req.body.reviewed ? req.user.sub : null,comment.id]);
+    await db.commit();
+  }catch(error){await db.rollback();throw error;}
+  finally{db.release();}
   res.json({data:await getVisibleComment(comment.id,req.user)});
 }
