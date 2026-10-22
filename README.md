@@ -12,7 +12,7 @@ Circle is a small question-and-answer discussion application built for the **Uso
 - When creating a brand-new production database, supply private `BOOTSTRAP_ADMIN_LOGIN`, `BOOTSTRAP_ADMIN_EMAIL`, and `BOOTSTRAP_ADMIN_PASSWORD` (12–72 UTF-8 bytes); demo fixture accounts with known passwords are never created in production
 - After updating an existing MySQL database run `npm run db:init` to add `verification_attempts` and other additive fields, without deleting saved posts
 - Run backend checks with `npm run check:backend` and integration tests with `npm run test:auth`, `npm run test:email:integration` and `npm run test:smoke` against a **disposable test database**
-- Known remaining production-hardening work includes private-media URLs for unpublished posts, distributed request rate limiting, transactional mail outbox/retry, dependency updates with a committed lockfile, and secure Google account linking — do not treat this review branch as production certified
+- Protected media for unpublished posts now uses short-lived signed URLs and per-request database authorization. Remaining production-hardening work includes distributed request rate limiting, durable email-delivery retry/outbox, dependency updates with a committed lockfile, and secure Google account linking — do not treat this review branch as production certified
 
 ## Required features
 
