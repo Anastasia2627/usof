@@ -74,6 +74,28 @@ try{
   assert.equal(await like.locator('svg.tabler-icon').count(),1);
   await page.goto(origin+'/#/post/1',{waitUntil:'networkidle'});
   await page.locator('.naturalPost .tablerSvgIcon svg.tabler-icon').first().waitFor();
+  // Vote lists must behave as anchored popovers and must never shift the
+  // reaction toolbar into disconnected rows
+  const actions=page.locator('.naturalPostReactions');
+  await actions.waitFor();
+  const layout=await actions.evaluate(el=>{
+    const controls=[...el.querySelectorAll('.reactionButtons>button,.naturalPostCommentCount,.naturalPostIconButton')];
+    return controls.map(item=>({y:item.getBoundingClientRect().y,
+      right:item.getBoundingClientRect().right}));
+  });
+  assert.ok(layout.length>=3,'Post action row must contain reaction and share controls');
+  assert.ok(layout.every(item=>Math.abs(item.y-layout[0].y)<8),
+    'Post reactions and sharing buttons must align at desktop width');
+  const voteDetails=actions.locator('.reactionVoteDetails');
+  if(await voteDetails.count()){
+    await voteDetails.click();
+    const popover=actions.locator('.reactionVotePopover');
+    await popover.waitFor();
+    assert.equal(await popover.evaluate(el=>getComputedStyle(el).position),'absolute');
+    assert.ok(await popover.locator('.reactionVoteList>li').count()>0);
+    await page.keyboard.press('Escape');
+    await popover.waitFor({state:'detached'});
+  }
   await page.goto(origin+'/#/',{waitUntil:'networkidle'});
 
   // Rounded interactive surfaces stay legible at common desktop/mobile sizes.
