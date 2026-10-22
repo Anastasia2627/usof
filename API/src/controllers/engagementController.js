@@ -65,11 +65,11 @@ function listOptions(query) {
 }
 
 export async function listFavorites(req, res) {
-  res.json(await Engagement.listFavorites(Number(req.user.sub), listOptions(req.query)));
+  res.json(await Engagement.listFavorites(req.user, listOptions(req.query)));
 }
 
 export async function listFollowing(req, res) {
-  res.json(await Engagement.listFollowing(Number(req.user.sub), listOptions(req.query)));
+  res.json(await Engagement.listFollowing(req.user, listOptions(req.query)));
 }
 
 export async function recordShare(req, res) {
