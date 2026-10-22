@@ -71,11 +71,40 @@ export async function notifyPostAuthor({ postAuthorId, actorId, postId, commentI
   });
 }
 
-export async function deliverNotifications(tasks) {
-  const results = await Promise.allSettled(tasks.map((task) => task()));
-  for (const result of results) {
-    if (result.status === 'rejected' && process.env.NODE_ENV !== 'production') {
-      console.error('Notification delivery failed:', result.reason?.message || result.reason);
+// A failed INSERT after the associated post/comment is committed must not be
+// silently lost. Retry only DB errors for which MySQL rejects the statement
+// without writing it; network/connection errors are deliberately not retried,
+// because the INSERT may already have reached the server.
+export function retryableNotificationError(error) {
+  return ['ER_LOCK_DEADLOCK','ER_LOCK_WAIT_TIMEOUT','ER_CON_COUNT_ERROR']
+    .includes(error?.code) || [1213,1205,1040].includes(Number(error?.errno));
+}
+
+export async function deliverNotifications(tasks, {
+  maxAttempts=3, delayMs=75, sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms)),
+  logger=console,
+} = {}) {
+  const attempts=Math.max(1,Math.min(3,Math.floor(Number(maxAttempts)||1)));
+  const outcomes=await Promise.allSettled(tasks.map(async task=>{
+    for(let attempt=1;attempt<=attempts;attempt++){
+      try{return await task();}
+      catch(error){
+        if(attempt>=attempts || !retryableNotificationError(error))throw error;
+        await sleep(delayMs*attempt);
+      }
     }
+    return null;
+  }));
+  const failures=outcomes.filter(x=>x.status==='rejected');
+  if(failures.length){
+    // Error descriptions can include SQL parameters, including private
+    // messages and recipient addresses, so only log codes and totals.
+    logger.error('Notification writes failed',{
+      attempted:tasks.length,
+      failed:failures.length,
+      codes:failures.map(x=>String(x.reason?.code||'UNKNOWN').slice(0,40)),
+    });
   }
+  return {attempted:tasks.length,succeeded:outcomes.length-failures.length,
+    failed:failures.length};
 }
