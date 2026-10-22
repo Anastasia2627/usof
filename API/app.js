@@ -16,6 +16,7 @@ import searchRoutes from './src/routes/searchRoutes.js';
 import reactionsAdminRoutes from './src/routes/reactionsAdminRoutes.js';
 import reportRoutes from './src/routes/reportRoutes.js';
 import { pingDatabase } from './src/config/db.js';
+import { requireVisiblePostMedia } from './src/services/postMediaAccess.js';
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { AppError } from './src/utils/AppError.js';
 
@@ -34,6 +35,9 @@ app.use((req, res, next) => {
   if (req.body == null) req.body = {};
   next();
 });
+// Enforce post visibility BEFORE accessing the filesystem.
+app.use('/uploads/posts', requireVisiblePostMedia,
+  express.static(path.resolve('API/uploads/posts'), {fallthrough:false}));
 app.use('/uploads', express.static(path.resolve('API/uploads')));
 
 app.get('/api/health', async (req, res, next) => {
