@@ -23,6 +23,7 @@ export default function PostEditor({ id }) {
   const editing = Boolean(id);
   const draftKey=!editing && auth?.user?.id ? 'circle:post-draft:'+auth.user.id : null;
   const [categories, setCategories] = useState([]);
+  const [revision,setRevision]=useState(null);
   const [form, setForm] = useState(()=>{
     const blank={ title: '', content: '', categories: [], publishAt: '', hideLikes: false };
     if(!draftKey) return blank;
@@ -70,7 +71,7 @@ export default function PostEditor({ id }) {
     window.addEventListener('circle:categories-updated',refreshTopics);
     if (editing && auth) {
       api(`/posts/${id}`, { token: auth.token })
-        .then((result) => { setPendingRemovedImages([]);setExistingImages(result.data.images||[]); setForm({
+        .then((result) => { setRevision(result.data.revision||null);setPendingRemovedImages([]);setExistingImages(result.data.images||[]); setForm({
           title: result.data.title,
           content: result.data.content,
           categories: result.data.categories.map((category) => Number(category.id)),
@@ -126,8 +127,10 @@ export default function PostEditor({ id }) {
       const result = await api(targetId ? `/posts/${targetId}` : '/posts', {
         method: targetId ? 'PATCH' : 'POST',
         token: auth.token,
-        body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null},
+        body: {...form,publishAt:form.publishAt?new Date(form.publishAt).toISOString():null,
+          ...(targetId&&revision?{revision}:{})},
       });
+      if(result.data.revision)setRevision(result.data.revision);
       if(!editing){
         setDraftPostId(result.data.id);
         try{if(pendingPostKey)sessionStorage.setItem(pendingPostKey,String(result.data.id));}catch{}
