@@ -96,6 +96,23 @@ try{
   await page.getByText('No matching topics').waitFor();
   await page.locator('.categoryReferenceSearch').getByRole('button',{name:'Clear search'}).click();
   assert.ok(await page.locator('.categoryReferencePill').count()>0);
+  // The visual photo carousel is decorative: distinct photos, no click
+  // handlers, and actual continuous movement around the upper semicircle.
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const visualPhotos=page.locator('.categoryReferencePhoto');
+  await visualPhotos.first().waitFor();
+  const srcs=await visualPhotos.locator('img').evaluateAll(images=>
+    images.map(img=>img.getAttribute('src')));
+  assert.equal(new Set(srcs).size,srcs.length,
+    'Every orbiting tile must show a different image');
+  assert.equal(await visualPhotos.first().evaluate(el=>getComputedStyle(el).pointerEvents),
+    'none','Decorative photos must not trigger topic selection');
+  const firstPosition=await visualPhotos.first().evaluate(el=>el.style.transform);
+  await page.waitForTimeout(1100);
+  const laterPosition=await visualPhotos.first().evaluate(el=>el.style.transform);
+  assert.notEqual(laterPosition,firstPosition,
+    'Topic photos must continuously travel along the semicircle');
+
 
   // The whole language picker supports English and Ukrainian only.
   await page.goto(origin+'/#/settings',{waitUntil:'networkidle'});
