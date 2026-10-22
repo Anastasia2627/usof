@@ -114,11 +114,47 @@ export async function createCommentForUser(user, postIdValue, body) {
   }
 
   const actorId = Number(user.sub);
-  const [result] = await pool.execute(
-    "INSERT INTO comments(post_id,author_id,parent_comment_id,content,status,locked) VALUES(?,?,?,?,'active',0)",
-    [post.id, actorId, parent?.id || null, content],
-  );
-  const comment = await getVisibleComment(result.insertId, user);
+  const connection=await pool.getConnection();
+  let commentId;
+  try {
+    await connection.beginTransaction();
+    // Serialize comment creation with post lock/close/reschedule actions
+    const [[currentPost]]=await connection.execute(
+      'SELECT id,status,locked,closed,publish_at FROM posts WHERE id=? FOR UPDATE',
+      [post.id],
+    );
+    if(!currentPost) throw new AppError(404,'POST_NOT_FOUND','Post not found');
+    if(!isAdmin && currentPost.status!=='active')
+      throw new AppError(404,'POST_NOT_AVAILABLE','Active post not found');
+    if(!isAdmin && currentPost.locked)
+      throw new AppError(423,'POST_LOCKED','This post is locked');
+    if(currentPost.closed)
+      throw new AppError(423,'POST_CLOSED','The author has closed this discussion');
+    if(currentPost.publish_at &&
+       new Date(currentPost.publish_at).getTime()>Date.now())
+      throw new AppError(423,'POST_SCHEDULED','This discussion is not published yet');
+
+    if(parent){
+      const [[currentParent]]=await connection.execute(
+        'SELECT id,post_id,status,locked FROM comments WHERE id=? FOR UPDATE',
+        [parent.id],
+      );
+      if(!currentParent || Number(currentParent.post_id)!==Number(post.id))
+        throw new AppError(422,'INVALID_PARENT','Parent comment belongs to another post');
+      if(!isAdmin && (currentParent.status!=='active' || currentParent.locked))
+        throw new AppError(423,'COMMENT_LOCKED','This comment cannot receive replies');
+    }
+    const [result]=await connection.execute(
+      "INSERT INTO comments(post_id,author_id,parent_comment_id,content,status,locked) VALUES(?,?,?,?,'active',0)",
+      [post.id,actorId,parent?.id || null,content],
+    );
+    commentId=Number(result.insertId);
+    await connection.commit();
+  } catch(error) {
+    await connection.rollback();
+    throw error;
+  } finally {connection.release();}
+  const comment = await getVisibleComment(commentId, user);
   const excludedFollowerIds = [Number(post.author_id)];
   if (parent) excludedFollowerIds.push(Number(parent.author_id));
 
