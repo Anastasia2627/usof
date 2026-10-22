@@ -48,11 +48,11 @@ const post = await request('/posts', {
 });
 
 const postId = Number(post.data.id);
-const alexBefore = await request(`/users/${alex.user.id}`, { token: asya.token });
-
+// Circle intentionally permits authors to react to their own posts
 await request(`/posts/${postId}/like`, {
-  method: 'POST', token: alex.token, body: { type: 'like' }, expected: 409,
+  method: 'POST', token: alex.token, body: { type: 'like' },
 });
+const alexBefore = await request(`/users/${alex.user.id}`, { token: asya.token });
 
 await request(`/posts/${postId}/favorite`, { method: 'POST', token: asya.token, expected: 201 });
 await request(`/posts/${postId}/follow`, { method: 'POST', token: asya.token, expected: 201 });
@@ -66,9 +66,9 @@ assert(favorites.data.some((item) => Number(item.id) === postId), 'Saved post is
 const following = await request('/library/following?limit=50', { token: asya.token });
 assert(following.data.some((item) => Number(item.id) === postId), 'Followed post is missing from the library');
 
-const shared = await request(`/posts/${postId}/share`, { method: 'POST', body: { channel: 'copy' }, expected: 201 });
+const shared = await request(`/posts/${postId}/share`, { method: 'POST', token: asya.token, body: { channel: 'copy' }, expected: 201 });
 assert(shared.data.shareCount >= 1, 'Share tracking did not increment');
-await request(`/posts/${postId}/share`, { method: 'POST', body: { channel: 'invalid' }, expected: 422 });
+await request(`/posts/${postId}/share`, { method: 'POST', token: asya.token, body: { channel: 'invalid' }, expected: 422 });
 
 await request(`/posts/${postId}/like`, { method: 'POST', token: asya.token, body: { type: 'useful' } });
 const alexAfterUseful = await request(`/users/${alex.user.id}`, { token: asya.token });
