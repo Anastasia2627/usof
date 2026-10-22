@@ -368,25 +368,38 @@ export async function updatePostForUser(user, idValue, body) {
 }
 
 export async function deletePostForUser(user, idValue) {
-  const post = await getVisiblePost(idValue, user);
-  if (!elevated(user) && Number(user.sub) !== Number(post.author_id)) {
-    throw new AppError(403, 'FORBIDDEN', 'Cannot delete this post');
-  }
-  if (user.role === 'moderator' && Number(user.sub) !== Number(post.author_id))
-    await assertMayModerateAuthors(user, [post.author_id]);
+  const post=await getVisiblePost(idValue,user);
+  if(!elevated(user)&&Number(user.sub)!==Number(post.author_id))
+    throw new AppError(403,'FORBIDDEN','Cannot delete this post');
 
-  const [photos] = await pool.execute('SELECT filename FROM post_images WHERE post_id=?',[post.id]);
-  const connection = await pool.getConnection();
+  const connection=await pool.getConnection();
+  let photos=[];
   try {
     await connection.beginTransaction();
-    await connection.query('DELETE FROM posts WHERE id=?', [post.id]);
+    // Lock before listing media so a concurrent image upload cannot leave
+    // untracked files behind when this post is removed
+    const [[fresh]]=await connection.execute(
+      'SELECT id,author_id FROM posts WHERE id=? FOR UPDATE',[post.id],
+    );
+    if(!fresh)throw new AppError(404,'POST_NOT_FOUND','Post not found');
+    if(!elevated(user)&&Number(user.sub)!==Number(fresh.author_id))
+      throw new AppError(403,'FORBIDDEN','Cannot delete this post');
+    if(user.role==='moderator'&&Number(user.sub)!==Number(fresh.author_id))
+      await assertMayModerateAuthors(user,[fresh.author_id],connection);
+    const [images]=await connection.execute(
+      'SELECT filename FROM post_images WHERE post_id=?',[post.id],
+    );
+    photos=images;
+    await connection.execute('DELETE FROM posts WHERE id=?',[post.id]);
     await recalculateAllRatings(connection);
     await connection.commit();
-    for(const photo of photos) await fs.unlink(path.resolve('API/uploads/posts',path.basename(photo.filename))).catch(()=>{});
-  } catch (error) {
+  } catch(error) {
     await connection.rollback();
     throw error;
-  } finally {
-    connection.release();
-  }
+  } finally {connection.release();}
+  // Disk cleanup follows the committed delete; filesystem errors cannot
+  // undo a successful database transaction
+  for(const photo of photos)
+    await fs.unlink(path.resolve('API/uploads/posts',path.basename(photo.filename)))
+      .catch(()=>{});
 }
