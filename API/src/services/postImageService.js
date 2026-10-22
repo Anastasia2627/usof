@@ -4,6 +4,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { pool } from '../config/db.js';
 import { getVisiblePost } from './postService.js';
+import { preparePostMedia } from './postMediaAccess.js';
 import { AppError } from '../utils/AppError.js';
 import { positiveInt } from '../utils/validation.js';
 
@@ -39,7 +40,8 @@ export async function addPostImage(user,postId,file) {
     const [result]=await connection.execute(
       'INSERT INTO post_images(post_id,uploader_id,filename) VALUES(?,?,?)',[post.id,user.sub,filename]);
     await connection.commit();
-    return {id:result.insertId,url:'/uploads/posts/'+filename};
+    const image={id:result.insertId,url:'/uploads/posts/'+filename};
+    return preparePostMedia({...post,images:[image]},user).images[0];
   } catch(error) {
     await connection.rollback();
     if(written)await fs.unlink(path.join(dir,filename)).catch(()=>{});
