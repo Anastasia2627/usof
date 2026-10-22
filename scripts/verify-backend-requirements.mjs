@@ -145,6 +145,28 @@ await request(`/users/${managed.data.id}`, { method: 'DELETE', token: admin.toke
 
 const categories = await request('/categories');
 assert(categories.data.length >= 5, 'At least five categories must be available');
+// Admin-only category CRUD, including a public read of the new title
+await request('/categories',{
+  method:'POST',token:asya.token,expected:403,
+  body:{title:'Unauthorized category'},
+});
+const createdCategory=await request('/categories',{
+  method:'POST',token:admin.token,expected:201,
+  body:{title:'Course review category '+stamp,description:'Peer evaluation sample'},
+});
+const freshCategory=await request('/categories/'+createdCategory.data.id);
+assert(freshCategory.data.title===createdCategory.data.title);
+const changedCategory=await request('/categories/'+createdCategory.data.id,{
+  method:'PATCH',token:admin.token,body:{title:'Reviewed category '+stamp},
+});
+assert(changedCategory.data.title==='Reviewed category '+stamp);
+const categoryFeed=await request('/categories/'+createdCategory.data.id+'/posts');
+assert(Array.isArray(categoryFeed.data),'Category-specific post list is required');
+await request('/categories/'+createdCategory.data.id,{
+  method:'DELETE',token:admin.token,expected:204,
+});
+await request('/categories/'+createdCategory.data.id,{expected:404});
+
 const categoryA = Number(categories.data[0].id);
 const categoryB = Number(categories.data[1].id);
 
