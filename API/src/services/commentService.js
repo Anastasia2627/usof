@@ -6,7 +6,6 @@ import { positiveInt, validateStatus } from '../utils/validation.js';
 import { recalculateAllRatings } from './reactionService.js';
 import { assertMayModerateComment } from './moderationPolicy.js';
 import {
-  deliverNotifications,
   notifyPostAuthor,
   notifyPostFollowers,
   notifyReplyAuthor,
@@ -149,40 +148,36 @@ export async function createCommentForUser(user, postIdValue, body) {
       [post.id,actorId,parent?.id || null,content],
     );
     commentId=Number(result.insertId);
+    // Record the in-app notifications in the same transaction as the reply
+    // A process crash cannot leave a published comment with missing notices
+    const excludedFollowers=[Number(post.author_id)];
+    if(parent) excludedFollowers.push(Number(parent.author_id));
+    await notifyPostAuthor({
+      postAuthorId:Number(post.author_id),
+      actorId,
+      postId:Number(post.id),
+      commentId,
+      isReply:Boolean(parent),
+    },connection);
+    if(parent)await notifyReplyAuthor({
+      parentAuthorId:Number(parent.author_id),
+      actorId,
+      postId:Number(post.id),
+      commentId,
+    },connection);
+    await notifyPostFollowers({
+      postId:Number(post.id),
+      actorId,
+      type:parent?'reply':'comment',
+      commentId,
+      excludeUserIds:excludedFollowers,
+    },connection);
     await connection.commit();
   } catch(error) {
     await connection.rollback();
     throw error;
   } finally {connection.release();}
-  const comment = await getVisibleComment(commentId, user);
-  const excludedFollowerIds = [Number(post.author_id)];
-  if (parent) excludedFollowerIds.push(Number(parent.author_id));
-
-  await deliverNotifications([
-    () => notifyPostAuthor({
-      postAuthorId: Number(post.author_id),
-      actorId,
-      postId: Number(post.id),
-      commentId: Number(comment.id),
-      isReply: Boolean(parent),
-    }),
-    () => parent
-      ? notifyReplyAuthor({
-        parentAuthorId: Number(parent.author_id),
-        actorId,
-        postId: Number(post.id),
-        commentId: Number(comment.id),
-      })
-      : Promise.resolve(false),
-    () => notifyPostFollowers({
-      postId: Number(post.id),
-      actorId,
-      type: parent ? 'reply' : 'comment',
-      commentId: Number(comment.id),
-      excludeUserIds: excludedFollowerIds,
-    }),
-  ]);
-
+  const comment=await getVisibleComment(commentId,user);
   return comment;
 }
 
