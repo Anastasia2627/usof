@@ -239,6 +239,14 @@ export default function AdminPage({initialTab='users'}) {
   const [selectedReportId,setSelectedReportId] = useState(null);
   const [reportPagination,setReportPagination] = useState(null);
   const [postsRefresh,setPostsRefresh]=useState(0);
+  const [reactionsRefresh,setReactionsRefresh]=useState(0);
+  const reactionsFeed=useInfiniteRecords({
+    identity:(auth?.token||'')+'|reactions|'+reactionsRefresh,
+    enabled:Boolean(auth?.token && ['admin','moderator'].includes(auth?.user?.role)),
+    request:(page,signal)=>api('/reactions?'+new URLSearchParams({
+      page:String(page),limit:'20',
+    }),{token:auth?.token,signal}),
+  });
   const postsFeed=useInfiniteRecords({
     identity:(auth?.token||'')+'|'+postsRefresh,
     enabled:Boolean(auth?.token && ['admin','moderator'].includes(auth?.user?.role)),
@@ -246,7 +254,7 @@ export default function AdminPage({initialTab='users'}) {
       page:String(page),limit:'20',sort:'date',order:'desc',
     }),{token:auth?.token,signal}),
   });
-  const [data, setData] = useState({ users: [], categories: [], comments: [], reactions: [], reports: [], suggestions: [], appeals: [] });
+  const [data, setData] = useState({ users: [], categories: [], comments: [], reports: [], suggestions: [], appeals: [] });
   const [appealNotes,setAppealNotes]=useState({});
   const [selectedAppealId,setSelectedAppealId]=useState(null);
   const [appealNoteOpen,setAppealNoteOpen]=useState(false);
@@ -291,19 +299,17 @@ export default function AdminPage({initialTab='users'}) {
         moderator ? Promise.resolve({data:[]}) : api('/users', { token: auth.token }),
         api('/categories'),
         api('/comments', { token: auth.token }),
-        api('/reactions?limit=100', { token: auth.token }),
         api('/reports?status='+reportStatus+'&page='+reportPage,{token:auth.token}),
         moderator ? Promise.resolve({data:[]}) : api('/categories/suggestions?status='+suggestionStatus,{token:auth.token}),
         moderator ? Promise.resolve({data:[]}) : api('/users/ban-appeals',{token:auth.token}),
       ];
       const results = await Promise.allSettled(endpoints);
       const values = results.map(item=>item.status==='fulfilled'?item.value:null);
-      const [users, categories, comments, reactions, reports, suggestions, appeals] = values;
+      const [users, categories, comments, reports, suggestions, appeals] = values;
       setData(previous=>({
         users:users?.data??previous.users,
         categories:categories?.data??previous.categories,
         comments:comments?.data??previous.comments,
-        reactions:reactions?.data??previous.reactions,
         reports:reports?.data??previous.reports,
         suggestions:suggestions?.data??previous.suggestions,
         appeals:appeals?.data??previous.appeals,
@@ -375,6 +381,7 @@ export default function AdminPage({initialTab='users'}) {
       const result = await work();
       await load();
       setPostsRefresh(v=>v+1);
+      setReactionsRefresh(v=>v+1);
       return result;
     } catch (err) {
       setError(err);
@@ -873,9 +880,9 @@ export default function AdminPage({initialTab='users'}) {
       </section>}
 
       {tab === 'reactions' && <section className="adminStack">
-        <div className="adminSectionHeader"><h2>{t('Reactions')}</h2><span>100 latest maximum</span></div>
+        <div className="adminSectionHeader"><h2>{t('Reactions')}</h2><span>{reactionsFeed.total} total</span></div>
         <div className="adminSimpleList">
-          {data.reactions.length ? data.reactions.map(item => <div className="adminListItem" key={item.id}>
+          {reactionsFeed.records.length ? reactionsFeed.records.map(item => <div className="adminListItem" key={item.id}>
             <div className="adminItemLine">
               <div className="adminItemText"><h3>@{item.author_login} <span className="adminRoleChip">{item.type}</span></h3><p>{item.post_title || 'Deleted post'}</p></div>
               <div className="adminRowTools"><button type="button" className="dangerText"
@@ -883,6 +890,12 @@ export default function AdminPage({initialTab='users'}) {
             </div>
           </div>) : <p className="adminEmpty">No reactions.</p>}
         </div>
+        {!reactionsFeed.records.length&&<ErrorBox error={reactionsFeed.error} onRetry={reactionsFeed.retry}/>}
+        <InfiniteScrollEnd records={reactionsFeed.records}
+          loading={reactionsFeed.loading}
+          hasMore={reactionsFeed.hasMore} loadMore={reactionsFeed.loadMore}
+          error={reactionsFeed.error} retry={reactionsFeed.retry}
+          language={language}/>
       </section>}
     </>}
   </main>;
