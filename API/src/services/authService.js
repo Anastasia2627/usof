@@ -13,16 +13,13 @@ import {
   validatePassword,
 } from '../utils/validation.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from './mailService.js';
+import { hashEmailVerificationCode, matchesEmailVerificationCode } from '../utils/emailVerificationCode.js';
 
 function devTokenPayload(values) {
   // Local debugging credentials are opt-in and never exposed in production.
   if (process.env.NODE_ENV === 'production') return {};
   if (process.env.NODE_ENV !== 'test' && process.env.ALLOW_DEV_VERIFICATION_TOKENS !== 'true') return {};
   return { ...values, note: 'Local development credentials. Do not enable on a public server.' };
-}
-
-function hashVerificationCode(code) {
-  return crypto.createHash('sha256').update(String(code)).digest('hex');
 }
 
 function createVerificationCode() {
@@ -51,7 +48,7 @@ export async function registerAccount(body) {
   const passwordHash = await bcrypt.hash(password, 12);
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const verificationCode = createVerificationCode();
-  const verificationCodeHash = hashVerificationCode(verificationCode);
+  const verificationCodeHash = hashEmailVerificationCode(verificationCode);
 
   try {
     const [result] = await pool.execute(
@@ -104,7 +101,7 @@ export async function resendVerificationEmail(body) {
 
   const verificationToken = crypto.randomBytes(32).toString('hex');
   const verificationCode = createVerificationCode();
-  const verificationCodeHash = hashVerificationCode(verificationCode);
+  const verificationCodeHash = hashEmailVerificationCode(verificationCode);
   await pool.execute(
     'UPDATE users SET verification_token=?, ' +
     'verification_token_expires=DATE_ADD(NOW(), INTERVAL 20 MINUTE), ' +
@@ -186,7 +183,7 @@ export async function verifyEmailCode(body) {
       failure = new AppError(400, 'INVALID_VERIFICATION_CODE', 'Code is invalid or expired');
     } else if (Number(user.verification_attempts) >= 5) {
       failure = new AppError(429, 'VERIFICATION_LOCKED', 'Too many attempts. Request a new verification code');
-    } else if (hashVerificationCode(code) !== user.verification_code_hash) {
+    } else if (!matchesEmailVerificationCode(code, user.verification_code_hash)) {
       await conn.execute('UPDATE users SET verification_attempts=verification_attempts+1 WHERE id=?', [user.id]);
       failure = new AppError(400, 'INVALID_VERIFICATION_CODE', 'Code is invalid or expired');
     } else {
