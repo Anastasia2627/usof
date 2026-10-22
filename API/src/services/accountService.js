@@ -16,6 +16,7 @@ import {
   validateRole,
 } from '../utils/validation.js';
 import { sendVerificationEmail } from './mailService.js';
+import { hashEmailVerificationCode } from '../utils/emailVerificationCode.js';
 import { recalculateAllRatings } from './reactionService.js';
 
 async function lockAdmins(connection) {
@@ -69,7 +70,7 @@ export async function createManagedUser(body) {
   const hash = await bcrypt.hash(body.password, 12);
   const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
   const token=crypto.randomBytes(32).toString('hex');
-  const codeHash=crypto.createHash('sha256').update(code).digest('hex');
+  const codeHash=hashEmailVerificationCode(code);
   try {
     const [result] = await pool.execute(
       `INSERT INTO users(
@@ -149,7 +150,7 @@ export async function updateAccount({ targetId, actor, body }) {
     const needsVerification = emailChanged || (body.email !== undefined && !current.email_verified);
     verificationToken = needsVerification ? crypto.randomBytes(32).toString('hex') : null;
     verificationCode = needsVerification ? String(crypto.randomInt(0,1000000)).padStart(6,'0') : null;
-    const verificationCodeHash = verificationCode ? crypto.createHash('sha256').update(verificationCode).digest('hex') : null;
+    const verificationCodeHash = verificationCode ? hashEmailVerificationCode(verificationCode) : null;
 
     await connection.execute(
       `UPDATE users
