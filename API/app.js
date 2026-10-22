@@ -41,7 +41,9 @@ app.use('/uploads/posts', requireVisiblePostMedia,
     fallthrough:false,
     setHeaders(res) {res.setHeader('Cache-Control','private, no-store');},
   }));
-app.use('/uploads', express.static(path.resolve('API/uploads')));
+// Never expose the parent uploads directory: encoded or alternate paths must
+// not bypass post image access checks.
+app.use('/uploads/avatars',express.static(path.resolve('API/uploads/avatars')));
 
 app.get('/api/health', async (req, res, next) => {
   try {
