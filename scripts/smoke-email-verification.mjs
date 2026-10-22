@@ -103,4 +103,20 @@ if (checkSmtp) {
   assert.ok(reset.resetToken, 'test-only reset token missing');
   assertDelivered(reset.resetToken, null, 'password reset');
 }
+// Complete the recovery workflow rather than only checking message submission
+assert.ok(reset.resetToken, 'A disposable test run must expose a reset token');
+await request('/auth/password-reset/'+reset.resetToken,{
+  method:'POST',body:{newPassword:'Changed-Password-123!'},
+});
+await request('/auth/password-reset/'+reset.resetToken,{
+  method:'POST',body:{newPassword:'Another-Password-123!'},expected:400,
+});
+await request('/auth/login',{
+  method:'POST',body:{email,password},expected:401,
+});
+const recovered=await request('/auth/login',{
+  method:'POST',body:{email,password:'Changed-Password-123!'},
+});
+assert.ok(recovered.token);
+
 console.log('Real MySQL registration, resend, single-use codes, password-reset email and login passed.');
