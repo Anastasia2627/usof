@@ -10,7 +10,7 @@ try{
   await page.goto(origin+'/#/login',{waitUntil:'networkidle'});
   await page.locator('input[autocomplete="username"]').fill('admin');
   await page.locator('input[autocomplete="current-password"]').fill('Password123!');
-  await page.locator('button.authSubmit').click();
+  await page.locator('button.circleAuthSubmit').click();
   await page.waitForURL(/#\/$/);
 
   await page.goto(origin+'/#/create',{waitUntil:'networkidle'});
@@ -94,12 +94,12 @@ try{
   const categoryFilter=page.getByRole('searchbox',{name:'Search topics'});
   await categoryFilter.fill('zz_topic_that_does_not_exist');
   await page.getByText('No matching topics').waitFor();
-  await page.locator('.categorySearchField').getByRole('button',{name:'Clear search'}).click();
-  assert.ok(await page.locator('.categoryCard').count()>0);
+  await page.locator('.categoryReferenceSearch').getByRole('button',{name:'Clear search'}).click();
+  assert.ok(await page.locator('.categoryReferencePill').count()>0);
 
   // The whole language picker supports English and Ukrainian only.
   await page.goto(origin+'/#/settings',{waitUntil:'networkidle'});
-  assert.equal(await page.locator('.settingsLanguages button').count(),2);
+  assert.equal(await page.locator('.circleSettingsLanguageOptions button').count(),2);
   assert.equal(await page.getByText('Русский').count(),0);
   await page.getByRole('radio',{name:'Dark'}).click();
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
@@ -138,7 +138,7 @@ try{
   await memberPage.goto(origin+'/#/login',{waitUntil:'networkidle'});
   await memberPage.locator('input[autocomplete="username"]').fill('asya');
   await memberPage.locator('input[autocomplete="current-password"]').fill('Password123!');
-  await memberPage.locator('button.authSubmit').click();
+  await memberPage.locator('button.circleAuthSubmit').click();
   await memberPage.waitForURL(/#\/$/);
   await memberPage.goto(origin+'/#/create',{waitUntil:'networkidle'});
   const proposed='Community Idea '+Date.now();
