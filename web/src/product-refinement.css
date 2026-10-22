@@ -690,3 +690,172 @@ html[data-theme=dark] .reportBanInline textarea{background:#2d2735;color:#f1ebf6
   .naturalPostReactions .reactionPanel .reactionButtons{gap:2px;}
   .naturalPostReactions .reactionPanel .reactionButtons .voteReaction{min-width:40px;padding:0 6px;}
 }
+
+
+/* One reliable action row. Vote details are an anchored popover, never a
+   normal <ul> that makes the rest of the reaction buttons fall out of line. */
+.postPage .naturalPostReactions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  column-gap:8px;
+  row-gap:6px;
+  min-width:0;
+}
+.postPage .naturalPostReactions .reactionPanel,
+.postPage .naturalCommentTree .reactionPanel{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  flex:0 0 auto;
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.postPage .naturalPostReactions .reactionButtons,
+.postPage .naturalCommentTree .reactionButtons{
+  display:inline-flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  gap:3px;
+  margin:0;
+  padding:0;
+  min-width:0;
+}
+.postPage .naturalPostReactions .reactionButtons>button{
+  flex:0 0 auto;
+  box-sizing:border-box;
+  height:38px;
+  min-height:38px;
+  min-width:44px;
+  width:auto;
+  padding:0 8px;
+  display:inline-flex;
+  flex-flow:row nowrap;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  white-space:nowrap;
+  border-radius:12px;
+}
+.postPage .naturalPostReactions .reactionButtons .reactionVoteDetails{
+  min-width:44px;
+  height:38px;
+  padding:0 8px;
+  gap:5px;
+  flex:none;
+}
+.postPage .reactionButtons .reactionCount{
+  color:inherit;
+  font-size:12px;
+  font-weight:600;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.postPage .naturalPostReactions .naturalPostCommentCount{
+  display:inline-flex;
+  flex:0 0 auto;
+  height:38px;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  gap:5px;
+  font-size:12px;
+  color:#7e7d83;
+}
+.postPage .naturalPostReactions .naturalPostIconButton{
+  box-sizing:border-box;
+  flex:0 0 38px;
+  width:38px;
+  min-width:38px;
+  height:38px;
+  margin:0;
+  padding:0;
+}
+.postPage .reactionPanel .reactionVotePopover{
+  position:absolute;
+  z-index:60;
+  top:calc(100% + 9px);
+  left:0;
+  box-sizing:border-box;
+  width:clamp(210px,26vw,270px);
+  max-width:calc(100vw - 54px);
+  padding:13px 14px 9px;
+  border:1px solid #e7e4e9;
+  border-radius:15px;
+  background:#fff;
+  color:#262329;
+  box-shadow:0 15px 45px rgba(33,28,41,.12);
+  text-align:left;
+}
+.postPage .reactionVotePopoverTitle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 0 10px;
+  border-bottom:1px solid #f0edf1;
+  font-size:12px;
+  font-weight:720;
+  color:inherit;
+}
+.postPage .reactionVotePopoverTitle>span{color:#8f8795;font-weight:550;}
+.postPage .reactionPanel .reactionVoteList{
+  list-style:none;
+  margin:0;
+  padding:4px 0 0;
+  max-height:220px;
+  overflow-y:auto;
+}
+.postPage .reactionVoteList>li{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:nowrap;
+  gap:12px;
+  min-width:0;
+  padding:9px 0;
+  margin:0;
+  border-bottom:1px solid #f5f3f6;
+  font-size:12px;
+  line-height:1.4;
+}
+.postPage .reactionVoteList>li:last-child{border-bottom:0;}
+.postPage .reactionVoterName{
+  min-width:0;
+  overflow-wrap:anywhere;
+  font-weight:650;
+  color:#252229;
+}
+.postPage .reactionVoterType{
+  flex:none;
+  color:#81768a;
+  text-transform:capitalize;
+}
+.postPage .reactionVoteDetails[aria-expanded="true"]{
+  color:#5f4971;
+  background:#f3eef6;
+}
+html[data-theme="dark"] .postPage .reactionPanel .reactionVotePopover{
+  border-color:#514856;
+  background:#26232b;
+  color:#f7f2f8;
+  box-shadow:0 15px 44px rgba(0,0,0,.35);
+}
+html[data-theme="dark"] .postPage .reactionVotePopoverTitle,
+html[data-theme="dark"] .postPage .reactionVoteList>li{border-color:#453d4a;}
+html[data-theme="dark"] .postPage .reactionVoterName{color:#f7f2f8;}
+html[data-theme="dark"] .postPage .reactionVoterType{color:#c2b5ca;}
+@media(max-width:480px){
+  .postPage .naturalPostReactions{column-gap:4px;row-gap:4px;}
+  .postPage .naturalPostReactions .reactionButtons>button{
+    min-width:40px;padding:0 6px;gap:3px;
+  }
+  .postPage .naturalPostReactions .reactionButtons .reactionVoteDetails{
+    min-width:40px;padding:0 6px;
+  }
+  .postPage .reactionPanel .reactionVotePopover{width:235px;}
+}
