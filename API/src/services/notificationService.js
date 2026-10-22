@@ -52,9 +52,9 @@ export async function notifyReplyAuthor({ parentAuthorId, actorId, postId, comme
   }, database);
 }
 
-export async function notifyPositiveReaction({ targetAuthorId, actorId, postId = null, commentId = null, type }) {
+export async function notifyPositiveReaction({ targetAuthorId, actorId, postId = null, commentId = null, type }, database = pool) {
   if (!['like', 'useful', 'fire', 'thanks'].includes(type)) return false;
-  const actor = await actorLogin(actorId);
+  const actor = await actorLogin(actorId,database);
   const targetLabel = commentId ? 'answer' : 'question';
   return createNotification({
     userId: targetAuthorId,
@@ -64,7 +64,7 @@ export async function notifyPositiveReaction({ targetAuthorId, actorId, postId =
     commentId,
     title: `Your ${targetLabel} received ${type}`,
     body: `${actor} reacted to your ${targetLabel}.`,
-  });
+  }, database);
 }
 
 export async function notifyPostAuthor({ postAuthorId, actorId, postId, commentId, isReply = false }, database = pool) {
