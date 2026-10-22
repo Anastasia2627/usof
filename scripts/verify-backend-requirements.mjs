@@ -1,5 +1,9 @@
 import mysql from 'mysql2/promise';
 
+if (process.env.NODE_ENV !== 'test' || !/_(test|ci)$/.test(process.env.DB_NAME||'')) {
+  throw new Error('Assessment integration checks modify records: use only a disposable *_test or *_ci MySQL database');
+}
+
 const base = process.env.API_BASE_URL || 'http://127.0.0.1:5000/api';
 
 function assert(condition, message) {
