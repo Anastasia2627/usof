@@ -31,6 +31,9 @@ app.use((req,res,next)=>{
   next();
 });
 app.use(express.json({ limit: '1mb' }));
+// Accept standard curl -d key=value submissions as well as JSON
+// Arrays/categories should be sent as JSON for unambiguous validation
+app.use(express.urlencoded({ extended: false, limit: '1mb', parameterLimit: 100 }));
 app.use((req, res, next) => {
   if (req.body == null) req.body = {};
   next();
