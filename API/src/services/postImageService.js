@@ -27,6 +27,7 @@ export async function addPostImage(user,postId,file) {
   }
   const filename=crypto.randomUUID()+'.webp',connection=await pool.getConnection();
   let written=false;
+  let commitAttempted=false;
   try {
     await connection.beginTransaction();
     const [[row]]=await connection.execute('SELECT id,locked FROM posts WHERE id=? FOR UPDATE',[post.id]);
@@ -39,12 +40,18 @@ export async function addPostImage(user,postId,file) {
     written=true;
     const [result]=await connection.execute(
       'INSERT INTO post_images(post_id,uploader_id,filename) VALUES(?,?,?)',[post.id,user.sub,filename]);
+    // Once COMMIT is sent, a lost acknowledgement cannot tell us whether
+    // the DB row persisted — never delete the file on an ambiguous result
+    commitAttempted=true;
     await connection.commit();
     const image={id:result.insertId,url:'/uploads/posts/'+filename};
     return preparePostMedia({...post,images:[image]},user).images[0];
   } catch(error) {
     await connection.rollback();
-    if(written)await fs.unlink(path.join(dir,filename)).catch(()=>{});
+    if(written&&!commitAttempted)
+      await fs.unlink(path.join(dir,filename)).catch(()=>{});
+    // Ambiguous commit failures can leave an orphan, but never a broken
+    // database reference to a deleted image
     throw error;
   } finally {connection.release();}
 }
