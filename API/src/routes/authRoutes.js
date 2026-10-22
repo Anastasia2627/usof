@@ -22,7 +22,10 @@ export function authThrottle({ max, windowMs, accountFailLimit = 0 }) {
     const now = Date.now();
     // Express req.ip respects trust-proxy configuration; this app does not
     // trust arbitrary forwarded IP headers by default
-    const key = req.path + ':' + (req.ip || req.socket?.remoteAddress || 'unknown');
+    // Route templates, not URL parameter values: unique tokens must not
+    // each receive a fresh per-IP allowance
+    const routeKey=req.baseUrl+':'+(req.route?.path||req.path);
+    const key=routeKey+':'+(req.ip||req.socket?.remoteAddress||'unknown');
     const entry = attempts.get(key);
     if(attempts.size>=MAX_THROTTLE_RECORDS)pruneThrottleState(now);
     // Apply a tighter budget to failed attempts against the same login,
