@@ -347,4 +347,39 @@ await request('/posts/'+inactiveCheck.data.id,{
 await request(`/posts/${postA.data.id}`, { method: 'DELETE', token: asya.token, expected: 204 });
 await request(`/posts/${postB.data.id}`, { method: 'DELETE', token: asya.token, expected: 204 });
 
+// New account: prove that the password changes without changing identity
+const credentialSuffix=String(Date.now());
+const credentialLogin='pwcheck_'+credentialSuffix;
+const credentialEmail=credentialLogin+'@example.test';
+const initialCredential='FirstCredential-123!';
+const changedCredential='SecondCredential-456!';
+const fresh=await request('/auth/register',{
+  method:'POST',expected:201,
+  body:{login:credentialLogin,email:credentialEmail,password:initialCredential,
+    passwordConfirmation:initialCredential},
+});
+assert(fresh.verificationCode,'Verification must be available in the disposable test environment');
+await request('/auth/verify-email-code',{
+  method:'POST',body:{email:credentialEmail,code:fresh.verificationCode},
+});
+const signedIn=await request('/auth/login',{
+  method:'POST',body:{email:credentialEmail,password:initialCredential},
+});
+const altered=await request('/users/'+signedIn.user.id,{
+  method:'PATCH',token:signedIn.token,
+  body:{oldPassword:initialCredential,newPassword:changedCredential},
+});
+assert(altered.sessionInvalidated===true,'Password change must revoke the active session');
+await request('/auth/login',{
+  method:'POST',expected:401,
+  body:{email:credentialEmail,password:initialCredential},
+});
+const relogin=await request('/auth/login',{
+  method:'POST',body:{email:credentialEmail,password:changedCredential},
+});
+assert(relogin.token,'The new password must allow login');
+await request('/users/'+signedIn.user.id,{
+  method:'DELETE',token:admin.token,expected:204,
+});
+
 console.log('Backend PDF requirement verification passed.');
