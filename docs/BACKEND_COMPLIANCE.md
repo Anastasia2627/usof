@@ -11,7 +11,7 @@ This document maps the mandatory **Usof backend — Track Full Stack (August 31,
 | Admin panel available only to admins | React `/admin` console plus backend `requireAdmin` protection on admin API operations. The UI is not the security boundary. |
 | Database created/recreated on initialization | `npm run db:init` creates/seeds a fresh schema safely. Intentional recreation is provided by `npm run db:reset -- --confirm=<DB_NAME>`; CI uses that explicit reset only on disposable `usof_ci`. |
 | User photos stored on local server filesystem | `API/uploads/avatars/`; database stores only the relative path. Uploaded content is decoded and normalized before storage. |
-| At least five test rows in every table | Seed creates at least five rows per challenge table. `scripts/verify-backend-requirements.mjs` checks the core tables automatically. |
+| At least five test rows in every table | Fresh disposable seed data includes at least five rows in all 16 current tables, including optional moderation history. `scripts/verify-backend-requirements.mjs` checks all 16 tables; existing databases must be checked separately. |
 | Informative error handling | Central `errorHandler`, stable JSON error codes/messages, validation/upload/database errors, malformed JSON handling and 404 handler. |
 | MVC | Routes → thin controllers → services/models → MySQL, documented in `docs/ARCHITECTURE.md`. |
 | OOP | Entity classes `User`, `Post`, `Category`, `Comment`, `Reaction` inherit from `BaseModel`; `AppError` is reusable. |
