@@ -1,6 +1,7 @@
 import { pool } from '../config/db.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { Post } from '../models/Post.js';
 import { preparePostMedia } from './postMediaAccess.js';
 import { AppError } from '../utils/AppError.js';
@@ -84,6 +85,20 @@ function publishDate(value) {
   return date.toISOString().slice(0,19).replace('T',' ');
 }
 
+// A content-based revision catches edits even when MySQL TIMESTAMP values
+// are unchanged within the same second, without requiring a schema migration
+export function postRevision(post) {
+  const categories=(post.categories||[])
+    .map(item=>Number(typeof item==='object'?item.id:item))
+    .sort((a,b)=>a-b);
+  return crypto.createHash('sha256').update(JSON.stringify([
+    post.title,post.content,post.status,
+    Boolean(post.locked),Boolean(post.closed),Boolean(post.hide_likes),
+    post.publish_at ? new Date(post.publish_at).toISOString() : null,
+    categories,
+  ])).digest('hex');
+}
+
 export async function getVisiblePost(idValue, user) {
   const id = positiveInt(idValue, 'INVALID_POST_ID', 'Invalid post id');
   const post = await Post.findById(id);
@@ -93,7 +108,7 @@ export async function getVisiblePost(idValue, user) {
       (isScheduled(post) && user?.role !== 'admin')) && !isOwner) {
     throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
   }
-  return hideCounts(post,user);
+  return {...hideCounts(post,user),revision:postRevision(post)};
 }
 
 export async function listPostFeed(query, user) {
@@ -222,120 +237,134 @@ export async function createPostForUser(user, body) {
 }
 
 export async function updatePostForUser(user, idValue, body) {
-  const post = await getVisiblePost(idValue, user);
-  const isAdmin = elevated(user);
-  const isOwner = Number(user.sub) === Number(post.author_id);
-  if (!isAdmin && !isOwner) {
-    throw new AppError(403, 'FORBIDDEN', 'Only the owner or an admin can update this post');
+  const post=await getVisiblePost(idValue,user);
+  const isAdmin=elevated(user);
+  const isOwner=Number(user.sub)===Number(post.author_id);
+  if(!isAdmin&&!isOwner)
+    throw new AppError(403,'FORBIDDEN','Only the owner or an admin can update this post');
+  if(post.locked&&!isAdmin)
+    throw new AppError(423,'POST_LOCKED','This post is locked');
+  if(isAdmin&&(user.role==='admin'||!isOwner)&&
+     (body.title!==undefined||body.content!==undefined))
+    throw new AppError(403,'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
+      'Admins may moderate status/categories/lock but cannot edit post title or content');
+  if(!isAdmin&&(body.status!==undefined||body.locked!==undefined))
+    throw new AppError(403,'ADMIN_REQUIRED','Only admins can change post status or lock state');
+  if(body.closed!==undefined) {
+    if(!isOwner&&!isAdmin)
+      throw new AppError(403,'FORBIDDEN','Only the post owner or a moderator can close discussion');
+    if(typeof body.closed!=='boolean')
+      throw new AppError(422,'INVALID_CLOSED','closed must be boolean');
   }
-  if (post.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-  if (user.role === 'moderator' && !isOwner)
-    await assertMayModerateAuthors(user, [post.author_id]);
-  if (isAdmin && (user.role === 'admin' || !isOwner) &&
-      (body.title !== undefined || body.content !== undefined)) {
-    throw new AppError(
-      403,
-      'POST_CONTENT_IMMUTABLE_FOR_ADMIN',
-      'Admins may moderate status/categories/lock but cannot edit post title or content',
-    );
+  if(body.locked!==undefined&&typeof body.locked!=='boolean')
+    throw new AppError(422,'INVALID_LOCKED','locked must be boolean');
+  if(body.hideLikes!==undefined) {
+    if(!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can hide likes');
+    if(typeof body.hideLikes!=='boolean')
+      throw new AppError(422,'INVALID_HIDDEN_LIKES','hideLikes must be boolean');
   }
-  if (!isAdmin && (body.status !== undefined || body.locked !== undefined)) {
-    throw new AppError(403, 'ADMIN_REQUIRED', 'Only admins can change post status or lock state');
-  }
-
-  let title = post.title;
-  let content = post.content;
-  let status = post.status;
-  let locked = Boolean(post.locked);
-  let closed = Boolean(post.closed);
-  let hideLikes = Boolean(post.hide_likes);
-  let publishAt = post.publish_at || null;
-  if (isAdmin) {
-    if (body.status !== undefined) status = validateStatus(body.status);
-    if (body.locked !== undefined) {
-      if (typeof body.locked !== 'boolean')
-        throw new AppError(422,'INVALID_LOCKED','locked must be boolean');
-      locked = body.locked;
-    }
-  }
-  if (isOwner && user.role !== 'admin' && (body.title !== undefined || body.content !== undefined)) {
-    const normalized = normalizePostText(body.title ?? post.title, body.content ?? post.content);
-    title = normalized.title;
-    content = normalized.content;
-  }
-
-  if (body.closed !== undefined) {
-    if (!isOwner && !isAdmin) throw new AppError(403,'FORBIDDEN','Only the post owner or a moderator can close discussion');
-    if (typeof body.closed !== 'boolean') throw new AppError(422,'INVALID_CLOSED','closed must be boolean');
-    closed = body.closed;
-  }
-  if (body.hideLikes !== undefined) {
-    if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can hide likes');
-    if (typeof body.hideLikes !== 'boolean') throw new AppError(422,'INVALID_HIDDEN_LIKES','hideLikes must be boolean');
-    hideLikes = body.hideLikes;
-  }
-  if (body.publishAt !== undefined) {
-    if (!isOwner) throw new AppError(403,'FORBIDDEN','Only the post owner can reschedule');
-    publishAt = publishDate(body.publishAt);
-  }
-  if (body.categories !== undefined && user.role === 'moderator' && !isOwner)
+  if(body.publishAt!==undefined&&!isOwner)
+    throw new AppError(403,'FORBIDDEN','Only the post owner can reschedule');
+  if(body.categories!==undefined&&user.role==='moderator'&&!isOwner)
     throw new AppError(403,'ADMIN_REQUIRED','Moderators cannot change another author\'s categories');
-  const categories = body.categories !== undefined ? normalizeCategories(body.categories) : null;
-  const changedForFollowers = isOwner && user.role !== 'admin' && (
-    title !== post.title || content !== post.content || categories !== null
-  );
-  const connection = await pool.getConnection();
+  const categories=body.categories!==undefined?normalizeCategories(body.categories):null;
+  const expectedRevision=body.revision;
+  if(expectedRevision!==undefined&&expectedRevision!==null&&
+     (typeof expectedRevision!=='string'||!/^[a-f0-9]{64}$/.test(expectedRevision)))
+    throw new AppError(422,'INVALID_REVISION','Invalid post revision');
+
+  const connection=await pool.getConnection();
+  let changedForFollowers=false;
+  let finalStatus='inactive';
   try {
     await connection.beginTransaction();
-    // Lock the latest moderation state before applying any author edits
-    // Writing only submitted fields prevents stale requests from restoring
-    // an inactive/unlocked state after a moderator changed it
-    const [[fresh]] = await connection.query(
-      'SELECT id, locked, status FROM posts WHERE id=? FOR UPDATE', [post.id],
+    const [[fresh]]=await connection.execute(
+      `SELECT id,author_id,title,content,status,locked,closed,hide_likes,publish_at
+       FROM posts WHERE id=? FOR UPDATE`,[post.id],
     );
-    if (!fresh) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
-    if (fresh.locked && !isAdmin) throw new AppError(423, 'POST_LOCKED', 'This post is locked');
-    if (categories) await assertCategoriesExist(connection, categories);
-    const assignments = [];
-    const values = [];
-    const set = (column, value) => { assignments.push(column + '=?'); values.push(value); };
-    if (title !== post.title) set('title', title);
-    if (content !== post.content) set('content', content);
-    if (body.status !== undefined && isAdmin) set('status', status);
-    if (body.locked !== undefined && isAdmin) set('locked', locked ? 1 : 0);
-    if (body.closed !== undefined) set('closed', closed ? 1 : 0);
-    if (body.hideLikes !== undefined) set('hide_likes', hideLikes ? 1 : 0);
-    if (body.publishAt !== undefined) set('publish_at', publishAt);
-    if (assignments.length) {
-      await connection.query('UPDATE posts SET ' + assignments.join(',') + ' WHERE id=?', [...values, post.id]);
+    if(!fresh) throw new AppError(404,'POST_NOT_FOUND','Post not found');
+    if(!isAdmin&&Number(fresh.author_id)!==Number(user.sub))
+      throw new AppError(403,'FORBIDDEN','Only the owner or an admin can update this post');
+    if(fresh.locked&&!isAdmin)
+      throw new AppError(423,'POST_LOCKED','This post is locked');
+    if(user.role==='moderator'&&!isOwner)
+      await assertMayModerateAuthors(user,[fresh.author_id],connection);
+
+    // Read categories after locking the parent; all category changes serialize
+    // through the same post row
+    const [currentCategories]=await connection.execute(
+      'SELECT category_id AS id FROM post_categories WHERE post_id=? ORDER BY category_id',
+      [post.id],
+    );
+    if(expectedRevision && expectedRevision!==postRevision({
+      ...fresh,categories:currentCategories,
+    })) {
+      throw new AppError(409,'POST_EDIT_CONFLICT',
+        'This post changed since you opened it. Reload before saving your edits');
     }
-    if (categories) {
-      await connection.query('DELETE FROM post_categories WHERE post_id=?', [post.id]);
-      for (const categoryId of categories) {
-        await connection.query(
+    const updatedTitle=body.title!==undefined||body.content!==undefined
+      ?normalizePostText(body.title??fresh.title,body.content??fresh.content):null;
+    const fields=[];
+    const values=[];
+    const set=(name,value)=>{fields.push(name+'=?');values.push(value);};
+    if(updatedTitle?.title!==undefined&&updatedTitle.title!==fresh.title)
+      set('title',updatedTitle.title);
+    if(updatedTitle?.content!==undefined&&updatedTitle.content!==fresh.content)
+      set('content',updatedTitle.content);
+    if(body.status!==undefined&&isAdmin){
+      const status=validateStatus(body.status);
+      if(status!==fresh.status)set('status',status);
+    }
+    if(body.locked!==undefined&&isAdmin&&Number(fresh.locked)!==Number(body.locked))
+      set('locked',body.locked?1:0);
+    if(body.closed!==undefined&&Number(fresh.closed)!==Number(body.closed))
+      set('closed',body.closed?1:0);
+    if(body.hideLikes!==undefined&&Number(fresh.hide_likes)!==Number(body.hideLikes))
+      set('hide_likes',body.hideLikes?1:0);
+    if(body.publishAt!==undefined) {
+      const date=publishDate(body.publishAt);
+      const original=fresh.publish_at
+        ?new Date(fresh.publish_at).toISOString().slice(0,19).replace('T',' '):null;
+      if(date!==original)set('publish_at',date);
+    }
+    const categoryIds=currentCategories.map(item=>Number(item.id));
+    const categoryChanged=categories!==null&&(
+      categories.length!==categoryIds.length||
+      categories.some(id=>!categoryIds.includes(id))
+    );
+    if(categoryChanged)await assertCategoriesExist(connection,categories);
+    if(fields.length){
+      await connection.execute(
+        'UPDATE posts SET '+fields.join(',')+' WHERE id=?',
+        [...values,post.id],
+      );
+    }
+    if(categoryChanged){
+      await connection.execute('DELETE FROM post_categories WHERE post_id=?',[post.id]);
+      for(const id of categories)
+        await connection.execute(
           'INSERT INTO post_categories(post_id,category_id) VALUES(?,?)',
-          [post.id, categoryId],
+          [post.id,id],
         );
-      }
     }
+    changedForFollowers=isOwner&&user.role!=='admin'&&(
+      fields.some(field=>field==='title=?'||field==='content=?')||categoryChanged
+    );
+    finalStatus=body.status!==undefined&&isAdmin?body.status:fresh.status;
     await connection.commit();
-  } catch (error) {
+  } catch(error) {
     await connection.rollback();
     throw error;
-  } finally {
-    connection.release();
-  }
+  } finally {connection.release();}
 
-  if (changedForFollowers && status === 'active') {
+  if(changedForFollowers&&finalStatus==='active'){
     await deliverNotifications([
-      () => notifyPostFollowers({
-        postId: Number(post.id),
-        actorId: Number(user.sub),
-        type: 'post_updated',
+      ()=>notifyPostFollowers({
+        postId:Number(post.id),actorId:Number(user.sub),type:'post_updated',
       }),
     ]);
   }
-  return getVisiblePost(post.id, user);
+  return getVisiblePost(post.id,user);
 }
 
 export async function deletePostForUser(user, idValue) {
